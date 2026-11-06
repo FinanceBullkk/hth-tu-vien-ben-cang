@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="theme-color" content="#21140e">
+  <title>HTH – Tu viện bên cảng</title>
+  <link rel="icon" href="data:,">
+  <script type="module" src="/src/main.js"></script>
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+  <div id="app">
+    <canvas id="scene" aria-label="Cảnh tu viện 3D"></canvas>
+  </div>
+
+  <main id="welcome" hidden></main>
+
+  <div id="hud" hidden>
+    <div id="presence">
+      <button id="onlineBtn" type="button" aria-label="Xem ai đang online">
+        Đang có <b id="onlineCount">0</b> người trên tu viện
+      </button>
+      <p class="visits">Hôm nay có <b id="visitsToday">0</b> lượt lên tu viện</p>
+      <ul id="onlineList" hidden></ul>
+    </div>
+
+    <div id="toasts" aria-live="polite"></div>
+
+    <nav id="menu">
+      <button id="bookBtn" class="icon-btn" type="button"><span aria-hidden="true">📖</span><em>Sổ an</em></button>
+      <button id="boardBtn" class="icon-btn" type="button"><span aria-hidden="true">🌸</span><em>Bảng ước</em></button>
+      <button id="shareBtn" class="icon-btn" type="button"><span aria-hidden="true">📷</span><em>Chia sẻ</em></button>
+      <button id="muteBtn" class="icon-btn" type="button"></button>
+    </nav>
+
+    <div id="banner" role="status" hidden>
+      <p id="bannerText"></p>
+      <p id="bannerSub"></p>
+    </div>
+
+    <section id="wishReader" aria-live="polite" hidden></section>
+
+    <button id="actionBtn" type="button" hidden>
+      <span id="actionLabel"></span>
+      <kbd class="key-hint">E</kbd>
+    </button>
+
+    <div id="emojiBar" aria-label="Biểu cảm nhanh"></div>
+    <button id="chatBtn" class="icon-btn" type="button" aria-label="Mở ô chat"><span aria-hidden="true">💬</span><em>Chat</em><kbd class="key-hint">T</kbd></button>
+    <form id="chatForm" autocomplete="off" hidden>
+      <input id="chatInput" type="text" placeholder="Nói gì đó với cả nhà…" enterkeyhint="send" aria-label="Nội dung chat">
+      <button class="btn primary" type="submit">Gửi</button>
+    </form>
+
+    <p id="keysHint">WASD đi · Kéo chuột xoay · E hành động · T chat</p>
+
+    <div id="stick" aria-hidden="true"><div class="stick-knob"></div></div>
+  </div>
+
+  <div id="ringLayer" hidden></div>
+  <div id="medLayer" hidden></div>
+  <div id="modals"></div>
+</body>
+</html>

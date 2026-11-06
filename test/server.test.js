@@ -1,0 +1,649 @@
+// Kiểm thử server thật qua socket: vào phòng, chat, lời ước, lọc từ, chuông, restart giữ dữ liệu.
+import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { after, before, test } from 'node:test';
+import { io } from 'socket.io-client';
+import { WordFilter } from '../server/filter.js';
+import { WindowCounter, clientIp } from '../server/limits.js';
+import { localDate, zonedToTs } from '../server/time.js';
+import {
+  ABBOT, BELL, BOUNDS, BOXES, CIRCLES, CONTAINERS, MATS, PLAYER_RADIUS, POND, SPAWN, TEA, TREE, clampToWalkable, inBox, resolveCollision,
+} from '../shared/layout.js';
+
+const PORT = 3911;
+const URL_BASE = `http://127.0.0.1:${PORT}`;
+const ADMIN = 'k'.repeat(32);
+const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hth-test-'));
+const cfg = path.join(dir, 'config.json');
+const example = JSON.parse(fs.readFileSync(new URL('../config.example.json', import.meta.url), 'utf8'));
+example.bellSchedule = [];
+example.newPlayersPerMinute = 1000; // Bộ test vào phòng liên tục từ cùng một IP.
+example.maxConnectionsPerIp = 1000;
+example.joinCode = ''; // Các test chung không xét mã; test riêng bên dưới bật mã.
+fs.writeFileSync(cfg, JSON.stringify(example));
+
+/** Chạy một server riêng với cấu hình và IP giả lập như đang đứng sau Funnel. */
+let extraPort = PORT + 10;
+async function withServer(overrides, fn) {
+  const port = extraPort++;
+  const file = path.join(dir, `cfg-${port}.json`);
+  fs.writeFileSync(file, JSON.stringify({ ...example, ...overrides }));
+  const proc = await startServer({ PORT: String(port), HTH_CONFIG: file, DB_PATH: path.join(dir, `db-${port}.db`), TRUST_PROXY: '1' });
+  const open = [];
+  const connectAs = (ip) => new Promise((resolve, reject) => {
+    const s = io(`http://127.0.0.1:${port}`, { transports: ['websocket'], forceNew: true, reconnection: false, extraHeaders: { 'x-forwarded-for': ip } });
+    open.push(s);
+    s.on('connect', () => resolve(s));
+    s.on('connect_error', reject);
+  });
+  try {
+    await fn({ connectAs, base: `http://127.0.0.1:${port}`, file });
+  } finally {
+    open.forEach((s) => s.disconnect());
+    await stopServer(proc);
+  }
+}
+
+let serverProc;
+const sockets = [];
+
+function startServer(env = {}) {
+  return new Promise((resolve, reject) => {
+    const proc = spawn(process.execPath, ['server/index.js'], {
+      cwd: path.resolve(import.meta.dirname, '..'),
+      env: { ...process.env, PORT: String(PORT), ADMIN_KEY: ADMIN, DB_PATH: path.join(dir, 'test.db'), HTH_CONFIG: cfg, ...env },
+      stdio: ['ignore', 'pipe', 'inherit'],
+    });
+    proc.stdout.on('data', (d) => {
+      if (String(d).includes('đang chạy')) resolve(proc);
+    });
+    proc.on('error', reject);
+  });
+}
+
+function stopServer(proc) {
+  return new Promise((resolve) => {
+    proc.on('exit', resolve);
+    proc.kill();
+  });
+}
+
+function connect() {
+  const s = io(URL_BASE, { transports: ['websocket'], forceNew: true, reconnection: false });
+  sockets.push(s);
+  return new Promise((resolve) => s.on('connect', () => resolve(s)));
+}
+
+const call = (s, ev, data) => s.timeout(3000).emitWithAck(ev, data);
+const once = (s, ev) => new Promise((resolve) => s.once(ev, resolve));
+
+async function join(name, playerId) {
+  const s = await connect();
+  const res = await call(s, 'hello', { name, color: 1, hat: 2, playerId });
+  return { s, res };
+}
+
+function admin(pathname, method = 'GET', body) {
+  return fetch(`${URL_BASE}/admin/api${pathname}`, {
+    method,
+    headers: { 'x-admin-key': ADMIN, 'content-type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+}
+
+before(async () => {
+  serverProc = await startServer();
+});
+
+after(async () => {
+  sockets.forEach((s) => s.disconnect());
+  if (serverProc) await stopServer(serverProc);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('bộ lọc chặn từ thô nhưng không chặn nhầm tiếng Việt', () => {
+  const f = new WordFilter(example.bannedWords);
+  for (const bad of ['đm', 'DM', 'd.m', 'v c l', 'vcl', 'địt', 'dmmm', 'đụụụ', 'lồn', 'fuck', 'sh1t', 'dit me', 'Đĩ']) {
+    assert.equal(f.isBad(bad), true, `phải chặn: ${bad}`);
+  }
+  for (const ok of ['lớn', 'lon bia', 'các bạn', 'cá', 'admin', 'đi', 'mẹ tôi', 'Chúc cả nhà bình an', 'con chó nhà em', 'cảng Hải Phòng', 'd i']) {
+    assert.equal(f.isBad(ok), false, `không được chặn: ${ok}`);
+  }
+});
+
+test('va chạm: không kẹt, không xuyên, luôn trong ranh giới', () => {
+  const r = 0.4;
+  const out = { x: 0, z: 0 };
+  for (let i = 0; i < 4000; i++) {
+    const x = -35 + Math.random() * 70;
+    const z = -35 + Math.random() * 80;
+    resolveCollision(x, z, r, out);
+    const [cx, cz] = clampToWalkable(out.x, out.z);
+    assert.ok(Math.abs(cx - out.x) < 1e-6 && Math.abs(cz - out.z) < 1e-6, 'phải nằm trong vùng đi được');
+    for (const b of BOXES) {
+      const inside = out.x > b.minX + 0.01 && out.x < b.maxX - 0.01 && out.z > b.minZ + 0.01 && out.z < b.maxZ - 0.01;
+      assert.equal(inside, false, `không được nằm trong hộp tại ${out.x},${out.z}`);
+    }
+  }
+  assert.ok(CIRCLES.length > 10);
+});
+
+test('đi hết sân: từ điểm vào tới được mọi hoạt động, không chui vào hộp nào', () => {
+  // Duyệt loang bằng đúng hàm va chạm của game, bước nhỏ như một khung hình đi bộ.
+  const STEP = 0.25;
+  const key = (x, z) => `${Math.round(x / STEP)}|${Math.round(z / STEP)}`;
+  const seen = new Set([key(SPAWN.x, SPAWN.z)]);
+  const queue = [[SPAWN.x, SPAWN.z]];
+  const out = { x: 0, z: 0 };
+  const reached = [];
+  const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1], [0.7, 0.7], [-0.7, 0.7], [0.7, -0.7], [-0.7, -0.7]];
+  while (queue.length) {
+    const [x, z] = queue.pop();
+    reached.push([x, z]);
+    for (const [dx, dz] of DIRS) {
+      resolveCollision(x + dx * STEP, z + dz * STEP, PLAYER_RADIUS, out);
+      const k = key(out.x, out.z);
+      if (!seen.has(k)) {
+        seen.add(k);
+        queue.push([out.x, out.z]);
+      }
+    }
+  }
+  for (const [x, z] of reached) {
+    for (const b of BOXES) {
+      assert.equal(x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ, false, `lọt vào hộp tại ${x},${z}`);
+    }
+    assert.ok(z <= BOUNDS.maxZ && x <= BOUNDS.maxX, 'không được ra khỏi ranh giới về phía cảng');
+  }
+  const near = (tx, tz, radius) => reached.some(([x, z]) => Math.hypot(x - tx, z - tz) < radius);
+  assert.ok(near(BELL.x, BELL.z, BELL.radius), 'tới được gác chuông');
+  assert.ok(near(TREE.x, TREE.z, TREE.radius), 'tới được cây bồ đề');
+  assert.ok(near(POND.x, POND.z, POND.actionRadius), 'tới được hồ sen');
+  assert.ok(near(TEA.x, TEA.z, TEA.radius), 'tới được quán trà');
+  assert.ok(near(ABBOT.x, ABBOT.z, ABBOT.actionRadius), 'tới được chỗ thầy trụ trì');
+  assert.ok(near(0, -14, 1), 'thầy trụ trì không chắn cửa thiền đường');
+  assert.ok(reached.some(([x, z]) => inBox(x, z, CONTAINERS, CONTAINERS.actionMargin)), 'tới được container');
+  MATS.forEach((m, i) => assert.ok(near(m.x, m.z, 2.1), `tới được chiếu ${i}`));
+  assert.ok(near(-25, 25, 1) && near(25, -25, 1), 'tới được các góc sân');
+});
+
+test('hai người vào phòng thấy nhau, trùng tên tự thêm số', async () => {
+  const a = await join('Lan');
+  assert.equal(a.res.ok, true);
+  assert.match(a.res.playerId, /^[a-f0-9]{32}$/);
+  const joined = once(a.s, 'player:join');
+  const b = await join('Lan');
+  assert.equal(b.res.name, 'Lan (2)');
+  const seen = await joined;
+  assert.equal(seen.name, 'Lan (2)');
+  assert.equal(seen.playerId, undefined, 'không được lộ playerId cho người khác');
+  assert.equal(b.res.snapshot.players.length >= 1, true);
+  assert.equal(b.res.snapshot.players[0].playerId, undefined);
+
+  // Vị trí được phát lại và bị kẹp trong ranh giới.
+  a.s.emit('move', [9999, 9999, 0, 1]);
+  const state = await new Promise((resolve) => {
+    b.s.on('state', function h(m) {
+      const row = m.p.find((r) => r[0] === a.res.sid);
+      if (row && row[1] !== 0) {
+        b.s.off('state', h);
+        resolve(row);
+      }
+    });
+  });
+  assert.ok(state[1] <= 30 && state[2] <= 40, 'server phải kẹp vị trí');
+  a.s.disconnect();
+  b.s.disconnect();
+});
+
+test('chat: phát cho mọi người, chặn từ thô, giới hạn 2 giây, cắt 80 ký tự', async () => {
+  const a = await join('Minh');
+  const b = await join('Hoa');
+  const heard = once(b.s, 'chat');
+  const t0 = Date.now();
+  const res = await call(a.s, 'chat', { text: `xin chào <b>cả nhà</b> ${'a'.repeat(200)}` });
+  assert.equal(res.ok, true);
+  const msg = await heard;
+  assert.ok(Date.now() - t0 < 500, 'chat phải tới trong dưới 0,5 giây');
+  assert.equal([...msg.text].length, 80);
+  const tooFast = await call(a.s, 'chat', { text: 'nữa nè' });
+  assert.equal(tooFast.ok, false);
+  const bad = await call(b.s, 'chat', { text: 'đm' });
+  assert.equal(bad.ok, false);
+  a.s.disconnect();
+  b.s.disconnect();
+});
+
+test('lời ước: tạo, hiện cho người khác, tim, giới hạn 3/ngày, xoá, admin ẩn, sau restart vẫn còn', async () => {
+  const a = await join('An');
+  const b = await join('Bình');
+  const news = once(b.s, 'wish:new');
+  const created = await call(a.s, 'wish:create', { text: 'Mong cả nhà bình an', place: 'tree' });
+  assert.equal(created.ok, true);
+  assert.equal(created.remaining, 2);
+  const w = await news;
+  assert.equal(w.author, 'An');
+  assert.equal(w.player_id, undefined);
+  assert.equal(w.playerId, undefined);
+
+  const selfLike = await call(a.s, 'wish:like', { id: created.id });
+  assert.equal(selfLike.ok, false);
+  assert.equal((await call(b.s, 'wish:like', { id: created.id })).likes, 1);
+  assert.equal((await call(b.s, 'wish:like', { id: created.id })).likes, 1, 'mỗi người 1 tim');
+
+  assert.equal((await call(a.s, 'wish:create', { text: 'đm', place: 'tree' })).ok, false);
+  assert.equal((await call(a.s, 'wish:create', { text: 'hai', place: 'nowhere' })).ok, false);
+  assert.equal((await call(a.s, 'wish:create', { text: 'hai', place: 'pond' })).ok, true);
+  const third = await call(a.s, 'wish:create', { text: 'ba', place: 'container' });
+  assert.equal(third.ok, true);
+  assert.equal((await call(a.s, 'wish:create', { text: 'bốn', place: 'tree' })).ok, false);
+
+  // Người khác không xoá được, chính chủ thì được.
+  assert.equal((await call(b.s, 'wish:delete', { id: third.id })).ok, false);
+  const removed = once(b.s, 'wish:removed');
+  assert.equal((await call(a.s, 'wish:delete', { id: third.id })).ok, true);
+  assert.equal((await removed).id, third.id);
+
+  // Admin ẩn: biến mất ngay trên mọi máy.
+  const hidden = once(b.s, 'wish:removed');
+  const res = await admin(`/wishes/${created.id + 1}/hidden`, 'POST', { hidden: true });
+  assert.equal(res.status, 200);
+  assert.equal((await hidden).id, created.id + 1);
+
+  // Sổ cá nhân chỉ đọc được bằng playerId của mình.
+  const book = await (await fetch(`${URL_BASE}/api/me`, { headers: { 'x-player-id': a.res.playerId } })).json();
+  assert.equal(book.wishes.length, 2);
+  assert.equal(book.visits, 1);
+  assert.equal((await fetch(`${URL_BASE}/api/me`)).status, 404);
+
+  // Restart server: dữ liệu không mất.
+  const pid = a.res.playerId;
+  a.s.disconnect();
+  b.s.disconnect();
+  await stopServer(serverProc);
+  serverProc = await startServer();
+  const again = await join('An', pid);
+  assert.equal(again.res.playerId, pid);
+  const texts = again.res.snapshot.wishes.map((x) => x.text);
+  assert.ok(texts.includes('Mong cả nhà bình an'), 'lời ước phải còn sau restart');
+  const liked = again.res.snapshot.wishes.find((x) => x.id === created.id);
+  assert.equal(liked.mine, true);
+  assert.equal(liked.likes, 1);
+  again.s.disconnect();
+});
+
+test('quẻ vận đơn: một quẻ mỗi ngày, thiếu quyền thì không chạy', async () => {
+  const a = await join('Tâm');
+  const first = await call(a.s, 'fortune:draw');
+  assert.equal(first.ok, true);
+  assert.match(first.bl, /^HTH-\d{4}-\d{4}$/);
+  const second = await call(a.s, 'fortune:draw');
+  assert.equal(second.already, true);
+  assert.equal(second.text, first.text);
+  const stranger = await connect();
+  assert.equal((await call(stranger, 'fortune:draw')).ok, false, 'chưa hello thì không được rút');
+  stranger.disconnect();
+  a.s.disconnect();
+});
+
+test('chuông cá nhân: cần đứng gần, mọi người nghe, nghỉ 30 giây', async () => {
+  const a = await join('Chuông');
+  const b = await join('Nghe');
+  assert.equal((await call(a.s, 'bell:strike', { quality: 1 })).ok, false, 'đứng ở cổng thì chưa thỉnh được');
+  a.s.emit('move', [0, 4.5, 0, 0]);
+  await new Promise((r) => setTimeout(r, 60));
+  const heard = once(b.s, 'bell:ring');
+  assert.equal((await call(a.s, 'bell:strike', { quality: 5 })).ok, true);
+  assert.equal((await heard).quality, 1, 'server phải kẹp chất lượng');
+  const again = await call(a.s, 'bell:strike', { quality: 1 });
+  assert.equal(again.ok, false);
+  assert.ok(again.wait > 0);
+  a.s.disconnect();
+  b.s.disconnect();
+});
+
+test('thiền: giữ chỗ chiếu, nhịp chung, chat bị chặn khi ngồi', async () => {
+  const a = await join('Thiền A');
+  const b = await join('Thiền B');
+  // Đi vào gần chiếu số 0 ở phía nam vòng tròn.
+  a.s.emit('move', [0, -15.5, 0, 0]);
+  b.s.emit('move', [0, -15.5, 0, 0]);
+  await new Promise((r) => setTimeout(r, 60));
+  const r1 = await call(a.s, 'action:start', { kind: 'meditate', mat: 0 });
+  assert.equal(r1.ok, true);
+  const taken = await call(b.s, 'action:start', { kind: 'meditate', mat: 0 });
+  assert.equal(taken.ok, false);
+  const sync = once(a.s, 'meditation:sync');
+  const r2 = await call(b.s, 'action:start', { kind: 'meditate', mat: 1 });
+  assert.equal(r2.ok, true);
+  assert.equal(r2.epoch, r1.epoch, 'người vào sau phải theo nhịp của người đầu');
+  assert.deepEqual((await sync).mates, ['Thiền B']);
+  assert.equal((await call(a.s, 'chat', { text: 'ê' })).ok, false);
+  const early = await call(a.s, 'meditation:finish', { score: 100 });
+  assert.equal(early.saved, false, 'ngồi quá ngắn thì không lưu điểm');
+  a.s.disconnect();
+  b.s.disconnect();
+});
+
+test('sự kiện chuông: đếm ngược, chạm trong sân, kết quả đếm người', async () => {
+  const a = await join('Sự kiện A');
+  a.s.emit('move', [0, 8, 0, 0]);
+  await new Promise((r) => setTimeout(r, 60));
+  const announce = once(a.s, 'bell:event');
+  const res = await (await admin('/ring-now', 'POST', { message: 'Test chuông' })).json();
+  assert.equal(res.ok, true);
+  const e = await announce;
+  assert.equal(e.phase, 'announce');
+  assert.equal(e.message, 'Test chuông');
+  assert.equal(e.hitAt - e.at, 5000);
+  await new Promise((r) => a.s.once('bell:event', r)); // Pha open, đúng giờ server.
+  await new Promise((r) => setTimeout(r, Math.max(0, e.hitAt - Date.now())));
+  const tap = await call(a.s, 'bell:tap');
+  assert.equal(tap.ok, true);
+  assert.equal(tap.onBeat, true);
+  const result = await once(a.s, 'bell:event');
+  assert.equal(result.phase, 'result');
+  assert.equal(result.count, 1);
+  assert.ok(result.intensity > 0);
+  a.s.disconnect();
+});
+
+test('admin: sai khoá bị chặn, từ lọc có hiệu lực ngay, kích được người chơi, chống XSS ở dữ liệu thô', async () => {
+  assert.equal((await fetch(`${URL_BASE}/admin?key=sai`)).status, 403);
+  assert.equal((await fetch(`${URL_BASE}/admin?key=${ADMIN}`)).status, 200);
+  assert.equal((await fetch(`${URL_BASE}/admin/api/state`)).status, 403);
+
+  const a = await join('Ngoan');
+  const state = await (await admin('/state')).json();
+  assert.ok(state.stats.online >= 1);
+  const banned = [...state.bannedWords, 'từkhóatest'];
+  assert.equal((await admin('/banned-words', 'PUT', { bannedWords: banned })).status, 200);
+  assert.equal((await call(a.s, 'chat', { text: 'từkhóatest' })).ok, false);
+  assert.equal((await admin('/schedule', 'PUT', { bellSchedule: [{ time: '25:00', repeat: 'daily' }] })).status, 400);
+  assert.equal((await admin('/schedule', 'PUT', { bellSchedule: [{ time: '9:05', repeat: 'daily', message: 'x' }] })).status, 200);
+
+  const kicked = once(a.s, 'kicked');
+  const me = (await (await admin('/state')).json()).online.find((p) => p.name === 'Ngoan');
+  assert.equal((await (await admin('/kick', 'POST', { playerId: me.playerId })).json()).ok, true);
+  await kicked;
+  const back = await join('Ngoan', a.res.playerId);
+  assert.equal(back.res.ok, false, 'vừa bị kích thì chưa vào lại ngay');
+  back.s.disconnect();
+});
+
+test('vẫy tay và emoji tới đúng người, chặn dữ liệu rác', async () => {
+  const a = await join('Vẫy');
+  const b = await join('Được vẫy');
+  const waved = once(b.s, 'wave');
+  assert.equal((await call(a.s, 'wave', { to: b.res.sid })).ok, true);
+  const w = await waved;
+  assert.deepEqual([w.from, w.to, w.name], [a.res.sid, b.res.sid, 'Vẫy']);
+  assert.equal((await call(a.s, 'wave', { to: a.res.sid })).ok, false, 'không tự vẫy mình');
+  assert.equal((await call(b.s, 'wave', { to: 99999 })).ok, false);
+
+  const em = once(b.s, 'emoji');
+  assert.equal((await call(a.s, 'emoji', { i: 2 })).ok, true);
+  assert.equal((await em).i, 2);
+  assert.equal((await call(b.s, 'emoji', { i: 99 })).ok, false);
+
+  // Dữ liệu rác không được làm sập server.
+  for (const junk of [null, 'x', 42, [], ['a', 'b', 'c', 'd'], [NaN, NaN, NaN, 0], { __proto__: null }]) {
+    a.s.emit('move', junk);
+    a.s.emit('chat', junk);
+    a.s.emit('wish:create', junk);
+    a.s.emit('action:start', junk);
+  }
+  assert.ok((await call(a.s, 'time:sync')).now > 0, 'server vẫn trả lời sau dữ liệu rác');
+  a.s.disconnect();
+  b.s.disconnect();
+});
+
+test('mở tab thứ hai: tab cũ nhường chỗ, không tạo người chơi trùng', async () => {
+  const a = await join('Hai tab');
+  const replaced = once(a.s, 'session:replaced');
+  const b = await join('Hai tab', a.res.playerId);
+  await replaced;
+  assert.equal(b.res.sid, a.res.sid);
+  assert.equal(b.res.name, 'Hai tab', 'không bị thêm số (2) vì cùng một người');
+  b.s.disconnect();
+});
+
+test('đếm theo cửa sổ và lấy IP thật sau proxy', () => {
+  const c = new WindowCounter(1000);
+  assert.equal(c.take('a', 2, 0), true);
+  assert.equal(c.take('a', 2, 10), true);
+  assert.equal(c.take('a', 2, 20), false, 'vượt giới hạn trong cửa sổ');
+  assert.equal(c.take('b', 2, 20), true, 'IP khác đếm riêng');
+  assert.equal(c.take('a', 2, 1000), true, 'hết cửa sổ thì đếm lại');
+  c.sweep(5000);
+  assert.equal(c.map.size, 0, 'dọn mục đã hết hạn');
+
+  const hs = { address: '127.0.0.1', headers: { 'x-forwarded-for': '6.6.6.6, 203.0.113.9' } };
+  assert.equal(clientIp(hs, true), '203.0.113.9', 'chỉ tin giá trị cuối do proxy ghi');
+  assert.equal(clientIp(hs, false), '127.0.0.1', 'không bật trustProxy thì bỏ qua header giả');
+  assert.equal(clientIp({ address: '127.0.0.1', headers: {} }, true), '127.0.0.1');
+});
+
+test('giới hạn khi mở ra internet: theo IP, phòng đầy, tổng lời ước', async () => {
+  // Server riêng với giới hạn nhỏ, chạy như sau Funnel.
+  const cfg2 = path.join(dir, 'limits.json');
+  fs.writeFileSync(cfg2, JSON.stringify({ ...example, newPlayersPerMinute: 2, maxPlayers: 3, wishesPerDayTotal: 1 }));
+  const port2 = PORT + 1;
+  const proc = await startServer({ PORT: String(port2), HTH_CONFIG: cfg2, DB_PATH: path.join(dir, 'limits.db'), TRUST_PROXY: '1' });
+  const open = [];
+  const enter = async (ip, name, playerId) => {
+    const s = io(`http://127.0.0.1:${port2}`, { transports: ['websocket'], forceNew: true, reconnection: false, extraHeaders: { 'x-forwarded-for': ip } });
+    open.push(s);
+    await new Promise((resolve) => s.on('connect', resolve));
+    return { s, res: await call(s, 'hello', { name, color: 0, hat: 0, playerId }) };
+  };
+  try {
+    const a = await enter('203.0.113.1', 'A1');
+    assert.equal(a.res.ok, true);
+    assert.equal((await enter('203.0.113.1', 'A2')).res.ok, true);
+    const blocked = await enter('203.0.113.1', 'A3');
+    assert.equal(blocked.res.ok, false, 'IP thứ nhất đã hết lượt');
+    // Tự sửa phần đầu header không qua được giới hạn.
+    assert.equal((await enter('1.2.3.4, 203.0.113.1', 'A4')).res.ok, false);
+
+    assert.equal((await enter('203.0.113.2', 'B1')).res.ok, true, 'IP khác vẫn vào được');
+    const full = await enter('203.0.113.3', 'C1');
+    assert.equal(full.res.ok, false);
+    assert.match(full.res.error, /đông/, 'phòng đầy');
+
+    // Người đang online kết nối lại không bị chặn dù phòng đầy và IP hết lượt.
+    const again = await enter('203.0.113.1', 'A1', a.res.playerId);
+    assert.equal(again.res.ok, true);
+    assert.equal(again.res.resumed, true);
+
+    assert.equal((await call(again.s, 'wish:create', { text: 'Một', place: 'tree' })).ok, true);
+    const second = await call(again.s, 'wish:create', { text: 'Hai', place: 'tree' });
+    assert.equal(second.ok, false, 'hết tổng lời ước trong ngày');
+  } finally {
+    open.forEach((s) => s.disconnect());
+    await stopServer(proc);
+  }
+});
+
+test('hello lặp trên một kết nối không tạo được người chơi ma, không khoá được phòng', async () => {
+  await withServer({ maxPlayers: 5 }, async ({ connectAs }) => {
+    const attacker = await connectAs('198.51.100.1');
+    const first = await call(attacker, 'hello', { name: 'Kẻ phá' });
+    assert.equal(first.ok, true);
+    for (let i = 0; i < 20; i++) {
+      assert.equal((await call(attacker, 'hello', { name: `Ma ${i}` })).ok, false);
+    }
+    const victim = await connectAs('203.0.113.7');
+    const res = await call(victim, 'hello', { name: 'Nhân viên thật' });
+    assert.equal(res.ok, true, 'phòng không bị lấp');
+    assert.equal(res.snapshot.online, 2);
+  });
+});
+
+test('một IP không chiếm hết kết nối, kết nối rảnh bị ngắt', async () => {
+  await withServer({ maxConnectionsPerIp: 3, helloTimeoutMs: 700 }, async ({ connectAs }) => {
+    const idle = [];
+    for (let i = 0; i < 3; i++) idle.push(await connectAs('198.51.100.2'));
+    await assert.rejects(connectAs('198.51.100.2'), 'kết nối thứ tư từ cùng IP phải bị từ chối');
+    // Tự sửa phần đầu header không lách được: chỉ giá trị cuối do proxy ghi mới tính.
+    await assert.rejects(connectAs('1.2.3.4, 198.51.100.2'));
+    const other = await connectAs('203.0.113.8');
+    assert.ok(other.connected, 'IP khác vẫn vào được');
+
+    // Không hello thì bị ngắt, và chỗ được trả lại.
+    await new Promise((r) => setTimeout(r, 1200));
+    assert.equal(idle.some((s) => s.connected), false, 'kết nối rảnh đã bị ngắt');
+    await new Promise((r) => setTimeout(r, 100));
+    const again = await connectAs('198.51.100.2');
+    assert.ok(again.connected, 'hết kết nối rảnh thì IP lại vào được');
+  });
+});
+
+test('dội sự kiện: phần vượt bị bỏ, dội quá mạnh thì bị ngắt, tin phát lại bị giới hạn', async () => {
+  await withServer({}, async ({ connectAs }) => {
+    const a = await connectAs('198.51.100.3');
+    assert.equal((await call(a, 'hello', { name: 'Dội' })).ok, true);
+    a.emit('move', [0, -15.5, 0, 0]);
+    await new Promise((r) => setTimeout(r, 100));
+    const viewer = await connectAs('198.51.100.4');
+    assert.equal((await call(viewer, 'hello', { name: 'Xem' })).ok, true);
+    let got = 0;
+    viewer.on('meditation:mats', () => got++);
+    for (let round = 0; round < 15; round++) {
+      a.emit('action:start', { kind: 'meditate', mat: 0 });
+      a.emit('action:stop');
+      await new Promise((r) => setTimeout(r, 200));
+    }
+    await new Promise((r) => setTimeout(r, 200));
+    assert.ok(got <= 12, `ngồi xuống/đứng lên liên tục chỉ được phát hạn chế, nhận ${got} tin`);
+    assert.ok(a.connected, 'tốc độ thường thì không bị ngắt');
+
+    const closed = new Promise((r) => a.once('disconnect', r));
+    for (let i = 0; i < 400; i++) a.emit('time:sync');
+    await closed;
+    assert.equal(a.connected, false, 'dội quá mạnh bị ngắt');
+    assert.ok((await call(viewer, 'time:sync')).now > 0, 'người khác không bị ảnh hưởng');
+  });
+});
+
+test('mã vào cửa: sai mã không vào được, không nghe lén được, không đọc được lời ước', async () => {
+  await withServer({ joinCode: 'ABC234', codeAttemptsPer10Min: 3 }, async ({ connectAs, base }) => {
+    assert.deepEqual(await (await fetch(`${base}/api/info`)).json(), { codeRequired: true });
+
+    const insider = await connectAs('203.0.113.20');
+    const ok = await call(insider, 'hello', { name: 'Người nhà', code: ' abc 234 ' });
+    assert.equal(ok.ok, true, 'mã không phân biệt hoa thường và khoảng trắng');
+    assert.ok((await call(insider, 'wish:create', { text: 'Bình an', place: 'tree' })).ok);
+
+    // Người lạ: chưa có mã thì không nhận được bất cứ tin phát chung nào.
+    const stranger = await connectAs('198.51.100.20');
+    const heard = [];
+    stranger.onAny((ev) => heard.push(ev));
+    const wrong = await call(stranger, 'hello', { name: 'Người lạ', code: 'SAI' });
+    assert.equal(wrong.ok, false);
+    assert.equal(wrong.needCode, true);
+    assert.equal(wrong.snapshot, undefined, 'không lộ dữ liệu');
+    assert.equal((await call(stranger, 'hello', { name: 'Không mã' })).ok, false);
+    await call(insider, 'chat', { text: 'chuyện nội bộ' });
+    await call(insider, 'wish:create', { text: 'Điều riêng tư', place: 'pond' });
+    await new Promise((r) => setTimeout(r, 300));
+    assert.deepEqual(heard, [], 'kết nối chưa qua cửa không nhận được gì');
+    assert.equal((await call(stranger, 'chat', { text: 'x' })).ok, false);
+
+    // REST: chỉ người đã vào mới đọc được bảng ước, kể cả đoán ID ngẫu nhiên cũng không được.
+    assert.equal((await fetch(`${base}/api/wishes`)).status, 403);
+    assert.equal((await fetch(`${base}/api/wishes`, { headers: { 'x-player-id': 'a'.repeat(32) } })).status, 403);
+    const list = await fetch(`${base}/api/wishes`, { headers: { 'x-player-id': ok.playerId } });
+    assert.equal(list.status, 200);
+    assert.equal((await list.json()).items.length, 2);
+
+    // Dò mã: hết lượt thì mã đúng cũng bị từ chối, IP khác không bị liên luỵ.
+    assert.equal((await call(stranger, 'hello', { name: 'Dò', code: 'SAI2' })).ok, false);
+    const locked = await call(stranger, 'hello', { name: 'Dò', code: 'ABC234' });
+    assert.equal(locked.ok, false, 'đã hết lượt thử');
+    assert.match(locked.error, /10 phút/);
+    const other = await connectAs('203.0.113.21');
+    assert.equal((await call(other, 'hello', { name: 'Người khác', code: 'ABC234' })).ok, true);
+  });
+});
+
+test('admin đổi mã: mã cũ hết hiệu lực ngay, ghi vào config, tắt được mã', async () => {
+  await withServer({ joinCode: 'OLD234' }, async ({ connectAs, base, file }) => {
+    const put = (joinCode) => fetch(`${base}/admin/api/join-code`, {
+      method: 'PUT',
+      headers: { 'x-admin-key': ADMIN, 'content-type': 'application/json' },
+      body: JSON.stringify({ joinCode }),
+    });
+    assert.equal((await fetch(`${base}/admin/api/join-code`, { method: 'PUT' })).status, 403, 'cần khoá admin');
+    assert.equal((await put('có dấu!')).status, 400);
+    assert.equal((await put('new-234')).status, 200);
+    assert.equal(JSON.parse(fs.readFileSync(file, 'utf8')).joinCode, 'NEW-234');
+    const s = await connectAs('203.0.113.30');
+    assert.equal((await call(s, 'hello', { name: 'Cũ', code: 'OLD234' })).ok, false);
+    assert.equal((await call(s, 'hello', { name: 'Mới', code: 'NEW-234' })).ok, true);
+    assert.equal((await put('')).status, 200);
+    assert.deepEqual(await (await fetch(`${base}/api/info`)).json(), { codeRequired: false });
+  });
+});
+
+test('tạo rồi xoá liên tục không làm hết chỗ lời ước của cả công ty', async () => {
+  await withServer({ wishesPerDayTotal: 2, wishesPerIpPerDay: 4 }, async ({ connectAs }) => {
+    const a = await connectAs('198.51.100.40');
+    await call(a, 'hello', { name: 'Xoá hoài' });
+    for (let i = 0; i < 4; i++) {
+      const w = await call(a, 'wish:create', { text: `lần ${i}`, place: 'tree' });
+      assert.equal(w.ok, true);
+      assert.equal((await call(a, 'wish:delete', { id: w.id })).ok, true);
+    }
+    assert.equal((await call(a, 'wish:create', { text: 'nữa', place: 'tree' })).ok, false, 'hết lượt của IP này');
+    const b = await connectAs('203.0.113.40');
+    await call(b, 'hello', { name: 'Người thật' });
+    assert.equal((await call(b, 'wish:create', { text: 'Bình an', place: 'tree' })).ok, true, 'người khác vẫn ước được');
+  });
+});
+
+test('đổi HH:MM theo múi giờ Việt Nam ra đúng thời điểm', () => {
+  // 17:30 ngày 06/11/2026 giờ Việt Nam (UTC+7) là 10:30 UTC.
+  assert.equal(zonedToTs('2026-11-06', '17:30', 'Asia/Ho_Chi_Minh'), Date.UTC(2026, 10, 6, 10, 30));
+  // 00:30 giờ Việt Nam vẫn thuộc ngày mới dù UTC còn ở ngày trước.
+  assert.equal(localDate(Date.UTC(2026, 10, 5, 17, 30), 'Asia/Ho_Chi_Minh'), '2026-11-06');
+});
+
+test('lịch chuông: tới gần giờ hẹn thì tự thông báo, đúng mốc thời gian', async () => {
+  const a = await join('Chờ chuông');
+  // Hẹn phút kế tiếp: đã nằm trong cửa sổ 2 phút nên phải thông báo ngay ở nhịp kiểm tra sau.
+  const tz = 'Asia/Ho_Chi_Minh';
+  const next = Date.now() + 60_000;
+  const hm = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(next);
+  const announced = once(a.s, 'bell:event');
+  const res = await admin('/schedule', 'PUT', { bellSchedule: [{ time: hm, repeat: 'daily', message: '{time} cả nhà cùng thỉnh chuông' }] });
+  assert.equal(res.status, 200);
+  const e = await announced;
+  assert.equal(e.phase, 'announce');
+  assert.equal(e.at, zonedToTs(localDate(next, tz), hm, tz));
+  assert.equal(e.message, `${hm} cả nhà cùng thỉnh chuông`);
+  assert.ok(e.at > Date.now() && e.at - Date.now() <= 120_000);
+  // Người vào muộn vẫn nhận được đếm ngược trong snapshot.
+  const late = await join('Vào muộn');
+  assert.equal(late.res.snapshot.bellEvent.at, e.at);
+  a.s.disconnect();
+  late.s.disconnect();
+});
+
+test('kết nối lại trong 10 giây giữ nguyên người chơi, không tính thêm lượt', async () => {
+  const a = await join('Mạng yếu');
+  const before = a.res.snapshot.visitsToday;
+  const sid = a.res.sid;
+  const pid = a.res.playerId;
+  a.s.disconnect();
+  await new Promise((r) => setTimeout(r, 200));
+  const again = await join('Mạng yếu', pid);
+  assert.equal(again.res.resumed, true);
+  assert.equal(again.res.sid, sid);
+  assert.equal(again.res.name, 'Mạng yếu');
+  assert.equal(again.res.snapshot.visitsToday, before);
+  again.s.disconnect();
+});

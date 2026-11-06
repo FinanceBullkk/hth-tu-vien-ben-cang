@@ -1,0 +1,10 @@
+node_modules
+dist
+data
+config.json
+.claude
+*.log
+.git
+.github
+.env
+.env.*

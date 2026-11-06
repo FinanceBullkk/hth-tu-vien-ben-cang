@@ -1,0 +1,87 @@
+{
+  "port": 3000,
+  "adminKey": "",
+  "dbPath": "data/hth.db",
+  "timezone": "Asia/Ho_Chi_Minh",
+  "dayCycleMinutes": 20,
+  "joinCode": "auto",
+  "codeAttemptsPer10Min": 20,
+  "maxPlayers": 60,
+  "maxConnections": 200,
+  "maxConnectionsPerIp": 40,
+  "newPlayersPerMinute": 40,
+  "wishesPerDayTotal": 300,
+  "wishesPerIpPerDay": 100,
+  "welcomeMessage": "Chào mừng cả nhà lên tu viện. Hít thở một chút rồi hãy quay lại với lô hàng nhé!",
+  "bellSchedule": [
+    { "time": "17:30", "repeat": "daily", "message": "{time} cả nhà cùng thỉnh chuông — ra gác chuông nhé", "enabled": true }
+  ],
+  "fortunes": [
+    "Lô hàng tuần này thông quan trơn tru.",
+    "Không có chuyến nào bị roll-over.",
+    "Deadline của bạn sẽ không bị cut-off sớm.",
+    "Tờ khai của bạn lên luồng xanh, lòng bạn cũng xanh theo.",
+    "Container của bạn về đúng ETA, tâm trạng cũng về đúng chỗ.",
+    "Hôm nay mọi booking đều được confirm sớm.",
+    "Không phát sinh phí lưu bãi, chỉ phát sinh nụ cười.",
+    "Khách hàng phản hồi email ngay trong buổi sáng.",
+    "Bộ chứng từ của bạn khớp từng con chữ.",
+    "Chuyến tàu của bạn cập cảng êm như mặt hồ.",
+    "Sóng gió ngoài khơi, trong lòng vẫn lặng.",
+    "Mọi thứ cần đến sẽ đến, đúng cảng, đúng giờ.",
+    "Hàng nhẹ, việc gọn, đầu óc thảnh thơi.",
+    "Tuần này ít telex release, nhiều thời gian uống trà.",
+    "Ai cũng trả lời bạn bằng một câu dễ thương.",
+    "Hôm nay có một tin nhắn làm bạn mỉm cười.",
+    "Một người đồng nghiệp sẽ giúp bạn đúng lúc cần.",
+    "Bữa trưa hôm nay sẽ ngon hơn bạn nghĩ.",
+    "Có một việc tưởng khó, hoá ra làm rất nhanh.",
+    "Giấc ngủ tối nay sẽ sâu và dễ chịu.",
+    "Cuối tuần này trời đẹp, lòng cũng đẹp.",
+    "Gia đình bạn đang rất tự hào về bạn.",
+    "Một câu chuyện vui đang trên đường đến với bạn.",
+    "Bạn sẽ gặp lại một người bạn cũ theo cách thật bất ngờ.",
+    "Hôm nay bạn làm tốt hơn bạn tưởng.",
+    "Chậm lại một nhịp, mọi việc tự vào đúng chỗ.",
+    "Một tách trà ấm là đủ để bắt đầu lại.",
+    "Bạn xứng đáng được nghỉ ngơi năm phút. Ngay bây giờ cũng được.",
+    "Điều bạn đang lo sẽ nhẹ đi một nửa khi nói ra.",
+    "Lòng bình an thì đường nào cũng là đường thẳng.",
+    "Có người đang nhớ đến bạn với một nụ cười.",
+    "Niềm vui nhỏ hôm nay đủ để dùng đến cuối tuần.",
+    "Bạn đã đi xa hơn bạn nghĩ. Nhìn lại mà xem.",
+    "Một lời cảm ơn chân thành sẽ tìm đến bạn.",
+    "Ngày mai sẽ dịu dàng hơn hôm nay một chút.",
+    "Hít sâu một hơi, hôm nay vẫn còn nhiều điều đẹp.",
+    "Việc gì đến trước thì làm trước, việc gì đến sau thì uống trà đã.",
+    "Trong tuần này, bạn sẽ có một khoảnh khắc thật yên.",
+    "Tiếng cười của bạn làm cả phòng nhẹ đi.",
+    "Hôm nay, mọi điều nhỏ bé đều đang đứng về phía bạn."
+  ],
+  "meditationPhrases": {
+    "high": [
+      "Thở đều lắm, chiều nay nhẹ đầu rồi.",
+      "Nhịp thở như sóng ngoài cảng, đều và êm.",
+      "Đều thế này thì deadline cũng phải chậm lại nhìn."
+    ],
+    "mid": [
+      "Cũng đều rồi đó, thêm vài hơi nữa là an.",
+      "Tâm đang lắng dần, cứ từ từ thôi.",
+      "Một phút cho mình, vậy là đủ tốt rồi."
+    ],
+    "low": [
+      "Không sao, ngồi xuống được đã là tốt rồi.",
+      "Nhịp thở hơi vội, chắc vừa mới trả lời email xong.",
+      "Lần sau thử chậm hơn một chút nhé."
+    ]
+  },
+  "bannedWords": [
+    "đm", "dm", "đmm", "dmm", "đcm", "dcm", "đkm", "dkm", "đéo", "đếch", "deo me",
+    "địt", "djt", "dit me", "dit con", "dit cu", "đụ", "đụ má", "du ma", "đụ mẹ", "du me",
+    "lồn", "l0n", "buồi", "buoi to", "cặc", "c4c", "kặc", "cak", "đĩ", "đĩ mẹ",
+    "vcl", "vkl", "vl", "vãi lồn", "vai lon", "vãi đái", "clm", "cmn", "cmm", "cc", "ccc",
+    "mẹ mày", "me may", "bố mày", "bo may", "thằng chó", "thang cho", "óc chó", "oc cho",
+    "ngu lồn", "ngu như chó", "ngu nhu cho", "súc vật", "suc vat", "khốn nạn", "khon nan",
+    "fuck", "fck", "shit", "bitch", "asshole"
+  ]
+}

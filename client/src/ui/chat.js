@@ -1,0 +1,77 @@
+// Chat bong bóng và emoji nhanh. Không có khung lịch sử: nói chuyện tại chỗ, không thay Zalo.
+import { EMOJIS, LIMITS } from '../../../shared/protocol.js';
+import { $, h } from './dom.js';
+
+export class Chat {
+  constructor(app) {
+    this.app = app;
+    this.form = $('chatForm');
+    this.input = $('chatInput');
+    this.input.maxLength = LIMITS.chatMax;
+    this.toggleBtn = $('chatBtn');
+    this.emojiBar = $('emojiBar');
+    this.open = false;
+
+    for (let i = 0; i < EMOJIS.length; i++) {
+      const b = h('button', { type: 'button', class: 'emoji-btn', 'aria-label': `Biểu cảm ${EMOJIS[i]}` }, EMOJIS[i]);
+      b.addEventListener('click', () => this.sendEmoji(i));
+      this.emojiBar.append(b);
+    }
+
+    this.toggleBtn.addEventListener('click', () => {
+      if (this.open) this.close();
+      else this.show();
+    });
+    this.form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.send();
+    });
+    this.input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        this.close();
+      }
+    });
+  }
+
+  show() {
+    if (this.app.chatBlocked()) {
+      this.app.hud.toast('Đang thiền thì mình giữ yên lặng nhé.');
+      return;
+    }
+    this.open = true;
+    document.body.classList.add('chatting');
+    this.form.hidden = false;
+    this.input.value = '';
+    this.input.focus();
+  }
+
+  close() {
+    this.open = false;
+    document.body.classList.remove('chatting');
+    this.form.hidden = true;
+    this.input.blur();
+  }
+
+  async send() {
+    const text = this.input.value.trim();
+    if (!text) {
+      this.close();
+      return;
+    }
+    const res = await this.app.net.call('chat', { text });
+    if (res?.ok) {
+      this.close();
+    } else if (res?.error) {
+      this.app.hud.toast(res.error);
+    }
+  }
+
+  async sendEmoji(i) {
+    if (this.app.chatBlocked()) {
+      this.app.hud.toast('Đang thiền thì mình giữ yên lặng nhé.');
+      return;
+    }
+    await this.app.net.call('emoji', { i });
+  }
+}

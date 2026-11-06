@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>HTH Admin</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+  <h1>HTH – Trang quản lý</h1>
+  <p id="status" role="status"></p>
+
+  <section>
+    <h2>Thống kê</h2>
+    <div id="stats" class="stats"></div>
+  </section>
+
+  <section>
+    <h2>Mã vào cửa</h2>
+    <p class="hint">Gửi link dưới đây vào nhóm Zalo công ty, bấm vào là tự điền mã. Nghi lộ mã thì đổi mã mới: người đang chơi vẫn ở lại, ai vào mới phải dùng mã mới. Để trống là tắt mã, chỉ nên làm khi game chạy trong mạng nội bộ.</p>
+    <p class="row">
+      <input id="joinCode" maxlength="32" autocomplete="off" spellcheck="false" aria-label="Mã vào cửa">
+      <button id="saveCode" class="primary">Lưu mã</button>
+    </p>
+    <p><code id="joinLink"></code></p>
+  </section>
+
+  <section>
+    <h2>Sự kiện chuông</h2>
+    <p class="hint">Trước giờ hẹn 2 phút, mọi người sẽ thấy dòng thông báo và đếm ngược. <code>{time}</code> trong câu thông báo sẽ đổi thành giờ thật.</p>
+    <table id="schedule"></table>
+    <p>
+      <button id="addDaily">+ Lịch hằng ngày</button>
+      <button id="addOnce">+ Lịch một lần</button>
+      <button id="saveSchedule" class="primary">Lưu lịch</button>
+    </p>
+    <p class="row">
+      <input id="ringMessage" placeholder="Câu thông báo (không bắt buộc)" maxlength="160">
+      <button id="ringNow" class="primary">Đánh chuông ngay</button>
+    </p>
+  </section>
+
+  <section>
+    <h2>Người đang online</h2>
+    <table id="online"></table>
+  </section>
+
+  <section>
+    <h2>Lời ước</h2>
+    <p class="row">
+      <input id="wishQuery" placeholder="Tìm theo tên người viết">
+      <button id="wishSearch">Tìm</button>
+    </p>
+    <table id="wishes"></table>
+  </section>
+
+  <section>
+    <h2>Từ lọc</h2>
+    <p class="hint">Mỗi dòng một từ hoặc cụm từ. Có dấu và không dấu là hai từ riêng. Có hiệu lực ngay khi lưu.</p>
+    <textarea id="banned" rows="10"></textarea>
+    <p><button id="saveBanned" class="primary">Lưu từ lọc</button></p>
+  </section>
+
+  <section>
+    <h2>Nội dung</h2>
+    <label>Thông báo chào mừng<textarea id="welcome" rows="2"></textarea></label>
+    <label>Câu chúc quẻ vận đơn (mỗi dòng một câu)<textarea id="fortunes" rows="12"></textarea></label>
+    <label>Câu khen sau thiền, điểm cao (từ 75)<textarea id="medHigh" rows="4"></textarea></label>
+    <label>Câu khen sau thiền, điểm vừa (từ 45)<textarea id="medMid" rows="4"></textarea></label>
+    <label>Câu khen sau thiền, điểm thấp<textarea id="medLow" rows="4"></textarea></label>
+    <p><button id="saveContent" class="primary">Lưu nội dung</button></p>
+  </section>
+
+  <script src="/admin/admin.js"></script>
+</body>
+</html>
