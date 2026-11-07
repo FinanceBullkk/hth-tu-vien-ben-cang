@@ -80,6 +80,13 @@ function connect() {
 
 const call = (s, ev, data) => s.timeout(3000).emitWithAck(ev, data);
 const once = (s, ev) => new Promise((resolve) => s.once(ev, resolve));
+// Chờ lần phát đầu tiên thoả điều kiện. Dùng khi một bản phát cũ có thể tới muộn: các socket
+// khác nhau không giữ thứ tự với nhau, nên ack trên socket này có thể về trước sự kiện của socket kia.
+const until = (s, ev, ok, ms = 3000) => new Promise((resolve, reject) => {
+  const timer = setTimeout(() => { s.off(ev, h); reject(new Error(`hết ${ms}ms chờ ${ev}`)); }, ms);
+  const h = (v) => { if (ok(v)) { clearTimeout(timer); s.off(ev, h); resolve(v); } };
+  s.on(ev, h);
+});
 
 async function join(name, playerId) {
   const s = await connect();
@@ -615,19 +622,20 @@ test('voice: admitted near peers only; cleanup on tab replacement, disconnect an
   assert.equal((await call(a.s, 'voice:signal', payload)).ok, true);
   assert.equal((await signal).from, a.res.sid);
   assert.equal(res.peers[0].token, peers[0].token);
-  const revoked = once(b.s, 'voice:peers');
+  const noPeers = (p) => p.length === 0;
+  const revoked = until(b.s, 'voice:peers', noPeers);
   const replacement = await join('Voice A tab 2', a.res.playerId);
   assert.deepEqual(await revoked, [], 'replaced session immediately loses voice');
   assert.equal((await call(replacement.s, 'voice:signal', payload)).ok, false);
   const again = await enabled(replacement.s);
   assert.equal(again.peers.length, 1);
   assert.notEqual(again.peers[0].token, peers[0].token);
-  const disconnected = once(b.s, 'voice:peers');
+  const disconnected = until(b.s, 'voice:peers', noPeers);
   replacement.s.disconnect();
   assert.deepEqual(await disconnected, []);
   const c = await join('Voice C');
   await enabled(c.s);
-  const kicked = once(b.s, 'voice:peers');
+  const kicked = until(b.s, 'voice:peers', noPeers);
   await admin('/kick', 'POST', { playerId: c.res.playerId });
   assert.deepEqual(await kicked, []);
   b.s.disconnect(); stranger.disconnect();

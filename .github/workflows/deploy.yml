@@ -1,0 +1,41 @@
+name: Deploy
+
+# Chỉ chạy khi có người gọi: gh workflow run deploy -f ref=main
+# Chạy trên self-hosted runner đặt ở máy production (pc-chinh), xem docs/deployment.md.
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Commit, nhánh hoặc tag cần deploy
+        required: true
+        default: main
+      candidate_only:
+        description: Chỉ build, test và chạy candidate, không đụng production
+        type: boolean
+        default: false
+
+# Mỗi lúc chỉ một lần deploy; lần gọi sau xếp hàng chờ, không huỷ lần đang chạy.
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, Windows, hth-prod]
+    timeout-minutes: 30
+    env:
+      # Git trên Windows mặc định đổi xuống dòng sang CRLF; image Linux cần nguyên bản LF.
+      GIT_CONFIG_COUNT: '1'
+      GIT_CONFIG_KEY_0: core.autocrlf
+      GIT_CONFIG_VALUE_0: 'false'
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+          clean: true
+      - name: Deploy
+        shell: cmd
+        run: node scripts/deploy.mjs ${{ inputs.candidate_only && '--candidate-only' || '' }}

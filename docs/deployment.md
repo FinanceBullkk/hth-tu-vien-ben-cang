@@ -22,15 +22,51 @@ nothing public and was fully removed on 2026-11-07 (containers, volume, images
 `hth:1`–`hth:4` and `cloudflared`; its DB snapshot held 15 players / 4 wishes,
 superseded by production). Production is only on `pc-chinh`.
 
-## Releasing from the dev machine
+## Releasing: the Deploy workflow
 
-Builds must come from a clean export, never the shared working checkout:
-`git archive --format=tar.gz <commit>`, copy to `pc-chinh`, extract, run
-`npm test` in a `node:24` container, run a candidate container on a copy of
-the data volume, then cutover with the runtime flags under Operate. SSH into
-`pc-chinh` lands in cmd.exe: keep remote commands simple, do not pipe into
-`tail`/`grep` remotely (run pipes on the dev side), and use SSH
-`ServerAliveInterval` for long builds.
+Release only through the `Deploy` workflow, from any machine with `gh`:
+
+```bash
+gh workflow run deploy -f ref=main
+gh workflow run deploy -f ref=<branch> -f candidate_only=true
+gh run watch
+```
+
+`concurrency: production` queues runs, so two sessions can never cut over at
+once. The job runs `scripts/deploy.mjs` on the self-hosted runner and:
+
+1. Checks out the ref with LF line endings into a clean workspace.
+2. `docker build --target test`: `npm test` inside the same `node_modules` the
+   image ships. A failing test stops here.
+3. Builds `hth:<YYMMDD-HHMM>-<sha7>` (labels `hth.deploy=workflow`,
+   `hth.commit`).
+4. Copies the data volume (minus `backups/`) into a throwaway volume, runs a
+   candidate on `127.0.0.1:3100`, and checks health, page, bundle, Socket.IO
+   handshake and DB `quick_check`. The candidate is always removed.
+5. Unless `candidate_only`: backs up the DB (SQLite backup API) and config to
+   `backups/cutover-<tag>/` inside the data volume, stops production, renames it
+   `hth-rollback-<tag>` (`restart=no`), starts the new image with every runtime
+   flag below, and checks localhost and the public URL (bundle hash must match
+   the candidate). Any failure rolls back automatically.
+6. Tags `hth:latest` and keeps only the 3 newest `hth-rollback-*` containers
+   and their images. Older objects not created by the workflow are never touched.
+
+The run page shows a summary (image, bundle hash, DB counts, rollback name) to
+copy into the release notes below.
+
+Runner: `C:\actions-runner-hth` on `pc-chinh`, name `pc-chinh-hth`, labels
+`self-hosted, Windows, hth-prod`, running as user `anhha` because Docker
+Desktop only serves that user's session. At logon,
+`%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\hth-deploy-runner.cmd`
+waits 60 s (so the webdebit launcher checks for `Runner.Listener.exe` first),
+then starts `run.cmd` minimized if this runner is not already running. If runs
+stay queued, check that the runner is online in the repo's Settings → Actions →
+Runners, or start `C:\actions-runner-hth\run.cmd` on `pc-chinh`.
+
+Manual release (only when the runner is down): never build from the shared
+checkout. `git archive` the commit, copy to `pc-chinh`, extract, and run
+`set HTH_COMMIT=<sha>` then `node scripts/deploy.mjs` there. SSH lands in cmd.exe: keep remote commands
+simple and run pipes on the dev side.
 
 ## Operate (PowerShell)
 
