@@ -300,7 +300,7 @@ test('nhịp chuông: đứng gần mới chơi, chặn kết thúc sớm và hu
   const a = await join('Chuông');
   const b = await join('Nghe');
   assert.equal((await call(a.s, 'rhythm:start', { kind: 'bell' })).ok, false, 'đứng ở cổng thì chưa chơi được');
-  a.s.emit('move', [0, 4.5, 0, 0]);
+  a.s.emit('move', [BELL.x, BELL.z + 2.5, 0, 0]);
   await new Promise((r) => setTimeout(r, 60));
   const started = await call(a.s, 'rhythm:start', { kind: 'bell' });
   assert.equal(started.ok, true);
@@ -386,7 +386,7 @@ test('câu cá qua socket thật: quăng, cắn, giữ kim theo vùng xanh, kéo
 
 test('sự kiện chuông: đếm ngược, chạm trong sân, kết quả đếm người', async () => {
   const a = await join('Sự kiện A');
-  a.s.emit('move', [0, 8, 0, 0]);
+  a.s.emit('move', [BELL.x, BELL.z + 6, 0, 0]);
   await new Promise((r) => setTimeout(r, 60));
   const announce = once(a.s, 'bell:event');
   const res = await (await admin('/ring-now', 'POST', { message: 'Test chuông' })).json();

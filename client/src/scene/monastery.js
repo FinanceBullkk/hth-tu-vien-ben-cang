@@ -1,9 +1,10 @@
 // Khu tu viện: cổng, sân, gác chuông, thiền đường, cây bồ đề, hồ sen, vườn đá, quán trà, đèn lồng.
 import * as THREE from 'three';
 import {
-  BELL, BOUNDS, CONTAINERS, COURT_TREES, GARDEN, GARDEN_ROCKS, HALL, LANTERN_POSTS, MATS, POND, TEA, TEA_TABLES, TREE, TREE_BRANCHES,
+  BELL, BOUNDS, CONTAINERS, COURT_TREES, GARDEN, GARDEN_ROCKS, HALL, LANTERN_POSTS, MATS, PAGODA, POND, TEA, TEA_TABLES, TREE, TREE_BRANCHES,
 } from '../../../shared/layout.js';
 import { Batch, addRoof, flatMaterial, rng, textTexture } from './builders.js';
+import { buildCampusGround } from './campus-ground.js';
 
 const WOOD = '#6b4226';
 const WOOD_DARK = '#4a2c1a';
@@ -12,97 +13,12 @@ const PLASTER = '#d9c7a6';
 const STONE = '#8d8478';
 const STONE_LIGHT = '#a89e8f';
 
-function brickTexture() {
-  const size = 512;
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#6e4a38';
-  ctx.fillRect(0, 0, size, size);
-  const rand = rng(5);
-  const rows = 8;
-  const cols = 4;
-  const bh = size / rows;
-  const bw = size / cols;
-  for (let r = 0; r < rows; r++) {
-    for (let c = -1; c < cols + 1; c++) {
-      const x = c * bw + (r % 2) * (bw / 2);
-      const l = 40 + rand() * 9;
-      ctx.fillStyle = `hsl(${13 + rand() * 9},${38 + rand() * 12}%,${l}%)`;
-      ctx.fillRect(x + 2, r * bh + 2, bw - 4, bh - 4);
-    }
-  }
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
-  return tex;
-}
-
-function rakedTexture() {
-  const w = 256;
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = w;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#cfc6b4';
-  ctx.fillRect(0, 0, w, w);
-  for (let y = 0; y < w; y += 16) {
-    ctx.strokeStyle = 'rgba(120,108,90,.55)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    for (let x = 0; x <= w; x += 8) {
-      const yy = y + Math.sin((x / w) * Math.PI * 2) * 5;
-      if (x === 0) ctx.moveTo(x, yy);
-      else ctx.lineTo(x, yy);
-    }
-    ctx.stroke();
-  }
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(4, 4);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
-}
-
 function sign(lines, w, h, x, y, z, ry, opts) {
   const tex = textTexture(lines, opts);
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide }));
   mesh.position.set(x, y, z);
   mesh.rotation.y = ry;
   return mesh;
-}
-
-function buildGround(group) {
-  const brick = brickTexture();
-  brick.repeat.set(24, 24);
-  const court = new THREE.Mesh(
-    new THREE.PlaneGeometry(62, 62),
-    new THREE.MeshLambertMaterial({ map: brick }),
-  );
-  court.rotation.x = -Math.PI / 2;
-  court.receiveShadow = true;
-  group.add(court);
-
-  const raked = new THREE.Mesh(
-    new THREE.PlaneGeometry(GARDEN.maxX - GARDEN.minX, GARDEN.maxZ - GARDEN.minZ),
-    new THREE.MeshLambertMaterial({ map: rakedTexture() }),
-  );
-  raked.rotation.x = -Math.PI / 2;
-  raked.position.set((GARDEN.minX + GARDEN.maxX) / 2, 0.03, (GARDEN.minZ + GARDEN.maxZ) / 2);
-  raked.receiveShadow = true;
-  group.add(raked);
-}
-
-function buildPaths(b) {
-  // Lối đá chính từ cổng tới thiền đường, lối ngang qua gác chuông.
-  b.box(4.6, 0.04, 42, STONE_LIGHT, 0, 0.02, 9, { jitter: 0.02 });
-  b.box(48, 0.04, 4, STONE_LIGHT, 0, 0.025, 2, { jitter: 0.02 });
-  b.box(4.6, 0.04, 10, STONE_LIGHT, 0, 0.02, 34.6, { jitter: 0.02 });
-  // Mạch nối trên lối đi
-  for (let z = -11; z < 30; z += 2) b.box(4.6, 0.045, 0.06, '#7c7264', 0, 0.022, z, { jitter: 0 });
-  for (let x = -24; x < 24; x += 2) b.box(0.06, 0.045, 4, '#7c7264', x, 0.028, 2, { jitter: 0 });
-  // Thềm vào thiền đường
-  b.box(17.6, 0.3, 3.4, STONE, HALL.x, 0.15, HALL.z + HALL.halfD + 1.7);
 }
 
 function buildWalls(b) {
@@ -346,12 +262,16 @@ function buildPond(group, b) {
 
 function buildGarden(b) {
   const { minX, maxX, minZ, maxZ } = GARDEN;
-  const cx = (minX + maxX) / 2;
   const cz = (minZ + maxZ) / 2;
-  const w = maxX - minX;
   const d = maxZ - minZ;
+  // Chừa hai cửa trên trục đường lên bảo tháp.
+  for (const z of [minZ, maxZ]) {
+    for (const [left, right] of [[minX, PAGODA.x - 1.2], [PAGODA.x + 1.2, maxX]]) {
+      b.box(right - left, 0.14, 0.3, WOOD_DARK, (left + right) / 2, 0.07, z);
+    }
+  }
   for (const [bx, bz, bw, bd] of [
-    [cx, minZ, w + 0.3, 0.3], [cx, maxZ, w + 0.3, 0.3], [minX, cz, 0.3, d + 0.3], [maxX, cz, 0.3, d + 0.3],
+    [minX, cz, 0.3, d + 0.3], [maxX, cz, 0.3, d + 0.3],
   ]) {
     b.box(bw, 0.14, bd, WOOD_DARK, bx, 0.07, bz);
   }
@@ -408,22 +328,20 @@ function buildTea(group, b) {
 function buildContainers(group, b) {
   const { minX, maxX, minZ, maxZ } = CONTAINERS;
   const h = 2.6;
-  const c1 = { x: (minX + maxX) / 2, z: (minZ + maxZ) / 2, len: maxZ - minZ, col: '#9a4f33' };
-  const c2 = { x: (minX + maxX) / 2, z: 15.3, len: 6, col: '#4f6f7a' };
-  for (const c of [c1, c2]) {
-    b.box(maxX - minX, h, c.len, c.col, c.x, h / 2, c.z, { jitter: 0.02 });
-    // Gân sóng trên vách
-    for (let t = -c.len / 2 + 0.3; t < c.len / 2; t += 0.6) {
-      b.box(0.05, h - 0.3, 0.26, c.col, minX - 0.02, h / 2, c.z + t, { jitter: 0.1 });
-    }
-    b.box(maxX - minX + 0.06, 0.12, c.len + 0.06, '#5c4030', c.x, h - 0.03, c.z);
-    b.box(maxX - minX + 0.06, 0.12, c.len + 0.06, '#5c4030', c.x, 0.06, c.z);
+  const c = { x: (minX + maxX) / 2, z: (minZ + maxZ) / 2, len: maxZ - minZ, col: '#9a4f33' };
+  b.box(maxX - minX, h, c.len, c.col, c.x, h / 2, c.z, { jitter: 0.02 });
+  for (let t = -c.len / 2 + 0.3; t < c.len / 2; t += 0.6) {
+    b.box(0.05, h - 0.3, 0.26, c.col, minX - 0.02, h / 2, c.z + t, { jitter: 0.1 });
   }
-  group.add(sign('HTH LOGISTICS', 4.4, 0.42, minX - 0.08, 2.42, c1.z, -Math.PI / 2, {
+  b.box(maxX - minX + 0.06, 0.12, c.len + 0.06, '#5c4030', c.x, h - 0.03, c.z);
+  b.box(maxX - minX + 0.06, 0.12, c.len + 0.06, '#5c4030', c.x, 0.06, c.z);
+  // Mái ngói nối bảng ước với kiến trúc tu viện; giữ mặt thẻ hướng vào sân.
+  addRoof(b, 13.4, 3.8, 1.1, c.x, h + 0.12, c.z, { ry: Math.PI / 2, lift: 0.2 });
+  group.add(sign('HTH LOGISTICS', 4.4, 0.42, minX - 0.08, 2.42, c.z, -Math.PI / 2, {
     w: 1024, h: 96, bg: '#7f4029', fg: '#e8d4b0', border: null, font: 'bold 66px "Segoe UI",Roboto,Arial,sans-serif',
   }));
-  // Biển "Bảng ước" đặt trên cùng container với các thẻ lời ước (c1) thay vì c2.
-  group.add(sign('Bảng ước', 2.6, 0.42, minX - 0.08, 2.42, c1.z + 4.4, -Math.PI / 2, {
+  // Biển tên trên cùng mặt với các thẻ lời ước.
+  group.add(sign('Bảng ước', 2.6, 0.42, minX - 0.08, 2.42, c.z + 4.4, -Math.PI / 2, {
     w: 512, h: 84, bg: '#3e5a64', fg: '#f0e4cc', border: null, font: 'bold 56px "Segoe UI",Roboto,Arial,sans-serif',
   }));
 }
@@ -478,8 +396,7 @@ export function createMonastery(scene) {
   const b = new Batch(11);
   const emissive = new Batch(12);
 
-  buildGround(group);
-  buildPaths(b);
+  buildCampusGround(group, b);
   buildWalls(b);
   buildGate(group, b);
   const bell = buildBellTower(group, b);

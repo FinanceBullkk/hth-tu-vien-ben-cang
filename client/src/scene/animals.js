@@ -5,9 +5,9 @@ import { Batch, flatMaterial, rng } from './builders.js';
 
 const CAT_ROUTES = [
   // Mèo sân tây: lượn qua cây bồ đề và quán trà
-  { color: '#d9822b', stripe: '#a85c18', speed: 0.8, pts: [[-11, 12], [-11, 18], [-24, 18], [-25, 11], [-24, -1], [-11, -1]], rest: 18 },
+  { color: '#d9822b', stripe: '#a85c18', speed: 0.8, pts: [[-10, 6], [-10, 18], [-25, 18], [-25, 6]], rest: 18 },
   // Mèo vườn đá
-  { color: '#3a3a40', stripe: '#232327', speed: 0.7, pts: [[9, -8], [9, -11], [27, -10], [27, -3], [14, -4]], rest: 24 },
+  { color: '#3a3a40', stripe: '#232327', speed: 0.7, pts: [[10, -4], [10, -14], [25, -14], [25, -4]], rest: 24 },
   // Mèo trắng cổng, hay nằm gần lối đi
   { color: '#e8e2d6', stripe: '#b8ad98', speed: 0.6, pts: [[7, 26], [7, 12], [14, 8.2], [21, 8.4], [22, 15.8], [8.4, 16.4]], rest: 30 },
 ];

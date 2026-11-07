@@ -11,7 +11,7 @@ it up securely; never commit the token. A second owner-restricted copy exists
 at `%LOCALAPPDATA%\HTH-TuVien\tunnel\token` on this PC.
 
 Game container: `hth-tu-vien-ben-cang` on Docker network `hth-net`, with
-`TRUST_PROXY=1`. Only `127.0.0.1:3000` is published on the host. Persistent DB,
+`TRUST_PROXY=1` and `--restart unless-stopped`. Only `127.0.0.1:3000` is published on the host. Persistent DB,
 join code, admin key, and shared radio clock are in Docker volume
 `hth-tu-vien-ben-cang-data`. The tunnel forwards to
 `http://hth-tu-vien-ben-cang:3000`.
@@ -27,7 +27,27 @@ curl.exe --noproxy '*' https://game.hthlogistics.top/api/health
 Add `?code=<joinCode>` only when sending an invitation. Never share the admin
 key. Updating game image
 requires rebuilding and recreating the game container on `hth-net` with the
-same volume, localhost port, and `TRUST_PROXY=1`; keep `hth-tunnel-fixed` running.
+same volume, localhost port, `TRUST_PROXY=1`, and these runtime flags; keep
+`hth-tunnel-fixed` running:
+
+```text
+--restart unless-stopped --memory 768m --memory-swap 1536m --pids-limit 256
+--cap-drop ALL --security-opt no-new-privileges
+```
+
+`docker update` changes only the current container, so every recreate must pass
+these flags again.
+
+`hth:latest` may not be the running image. Check the actual image with
+`docker ps --filter name=hth` before recreating or rolling back.
+
+After moving or restarting Docker, check the site. If the containers stayed stopped,
+start them with their existing images and data:
+
+```powershell
+docker start hth-tu-vien-ben-cang
+docker start hth-tunnel-fixed
+```
 
 Stop public access without stopping the local game:
 
@@ -37,7 +57,37 @@ docker stop hth-tunnel-fixed
 
 Start it again with `docker start hth-tunnel-fixed`. Domain remains unchanged.
 
-## Latest release: 2026-11-07 Dau ho
+## Latest release: 2026-11-07 Where Winds Meet music
+
+Running image: `hth:wwm-261107-1200`, built 2026-11-07 09:45 (UTC+7). `hth:latest` still
+points to the older `hth:pitch-261107-0910`. Of the three music files in the pitch image, only
+`where-winds-meet-character-creation.mp3` remains. This section was written afterwards from the
+image and container metadata; the test results and cutover checks of this release were not recorded.
+No `cutover-wwm` backup exists in the data volume. `hth:pitch-261107-0910` is available as a
+rollback image for the previous release.
+
+Runtime difference: the first `wwm` container was created without the restart policy, resource
+limits and hardening of the earlier game containers. On 2026-11-07 at 11:47 (UTC+7) the container
+was recreated with the same image, volume, network, port and `TRUST_PROXY=1`, plus all runtime flags
+listed under Operate. Local health returned in about 7 seconds. The flags, `CapEff=0` and
+`NoNewPrivs=1` were confirmed in the running container. Public health, page, bundle hash, music
+range request and WebSocket handshake passed; browser gameplay was not tested. DB quick_check: ok;
+16 players, 3 wishes.
+
+Rollback container `hth-pre-hardening-261107-1147` is stopped and preserved with `restart=no`; it
+uses the same image without hardening. Private cutover backup is inside the data volume at
+`backups/cutover-hardening-261107-1147/`. Keep backups private.
+
+### Incident: 2026-11-07 Docker move
+
+Docker stopped both containers at 10:27 (UTC+7) during the move. The public site returned 530
+for about an hour. `hth-tunnel-fixed` did not return on its own despite `unless-stopped`; the cause
+is unknown. Both were restored with `docker start` at 11:34. Before restart: DB quick_check ok,
+15 players, 3 wishes. After restart: public health, page and Socket.IO polling returned 200; browser
+and WebSocket were not tested. The game container had `restart=no`, set to `unless-stopped` with
+`docker update` without downtime. Automatic start after a Docker restart has not been tested.
+
+## Previous release: 2026-11-07 Dau ho
 
 Pitch-pot rebuild deployed as `hth:pitch-261107-0910` (also `hth:latest`). Turn-based match
 against an NPC: hold cursors inside drifting circles until full, then throw; combo scoring;

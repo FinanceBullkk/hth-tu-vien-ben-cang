@@ -3,7 +3,12 @@
 // Toàn bộ texture vẽ bằng canvas nên không cần asset ngoài.
 // 1 Sen kim — Kim đài liên hoa, pháp trận kép, chân ngôn 禪, cánh sen dâng kèm hoa rơi;
 // 2 Lưu ly — long khí bơi quanh người, gợn nước loang từ chân, đá lưu ly lấp lánh, chân ngôn 水;
-// 3 Tinh hà — dải ngân hà nghiêng, ba vòng hào quang, sao chổi quanh vành, chân ngôn 星.
+// 3 Tinh hà — dải ngân hà nghiêng, ba vòng hào quang, sao chổi quanh vành, chân ngôn 星;
+// 4 Hỏa diễm — hỏa liên cháy dưới chân, trụ hỏa dâng, tàn lửa bay ngược lên trời, chân ngôn 炎;
+// 5 Đào hoa — mưa cánh đào hồng rơi li ti, trận đào, trụ hoa, sương hồng, chân ngôn 桃;
+// 6 Bích ngọc — lá ngọc rơi xoay, trúc khí mọc quanh chân, viên ngọc lục bay vòng vai, chân ngôn 竹;
+// 7 Nguyệt bạch — trăng lưỡi liềm bạc treo sau vai, dải sao bạc nghiêng, bụi trăng rơi, chân ngôn 月;
+// 8 Hắc ám — vũng âm khí đen nuốt sáng, khói đen quấn thân, trận lục lăng tím sẫm, quỷ hỏa tím, chân ngôn 魔.
 import * as THREE from 'three';
 
 // ---- texture vẽ tay bằng canvas, cache theo tên dùng chung mọi avatar ----
@@ -252,6 +257,141 @@ function crystalTexture() {
     ctx.moveTo(-15, 0);
     ctx.lineTo(15, 0);
     ctx.stroke();
+  });
+}
+
+// Ngọn lửa: thân lửa mềm chóp nhọn + lõi sáng, dùng cho tàn lửa và quỷ hỏa của Hỏa diễm.
+function flameTexture() {
+  return canvasTex('flame', 64, 64, (ctx) => {
+    const g = ctx.createRadialGradient(32, 38, 2, 32, 38, 26);
+    g.addColorStop(0, 'rgba(255,255,255,1)');
+    g.addColorStop(0.55, 'rgba(255,255,255,0.7)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(32, 2); // chóp lửa
+    ctx.bezierCurveTo(48, 22, 52, 40, 32, 60);
+    ctx.bezierCurveTo(12, 40, 16, 22, 32, 2);
+    ctx.fill();
+    const core = ctx.createRadialGradient(32, 44, 1, 32, 44, 12);
+    core.addColorStop(0, 'rgba(255,255,255,1)');
+    core.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = core;
+    ctx.beginPath();
+    ctx.arc(32, 44, 12, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+// Lá ngọc: lá pointed có gân giữa và gân phụ, cho lá bồ đề của Bích ngọc.
+function leafTexture() {
+  return canvasTex('leaf', 64, 64, (ctx) => {
+    const g = ctx.createLinearGradient(0, 8, 0, 58);
+    g.addColorStop(0, 'rgba(255,255,255,0.95)');
+    g.addColorStop(1, 'rgba(255,255,255,0.4)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(32, 4);
+    ctx.bezierCurveTo(52, 20, 50, 44, 32, 60);
+    ctx.bezierCurveTo(14, 44, 12, 20, 32, 4);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(32, 6);
+    ctx.lineTo(32, 58); // gân giữa
+    ctx.stroke();
+    ctx.lineWidth = 1;
+    for (let k = 0; k < 4; k++) {
+      const y = 16 + k * 10;
+      ctx.beginPath();
+      ctx.moveTo(32, y);
+      ctx.lineTo(20, y + 8);
+      ctx.moveTo(32, y);
+      ctx.lineTo(44, y + 8);
+      ctx.stroke();
+    }
+  });
+}
+
+// Trăng lưỡi liềm: khoét đĩa trăng rồi vẽ quầng mềm phía sau (destination-over).
+function moonTexture() {
+  return canvasTex('moon', 128, 128, (ctx) => {
+    ctx.fillStyle = 'rgba(255,255,255,1)';
+    ctx.beginPath();
+    ctx.arc(64, 64, 40, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(82, 54, 38, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalCompositeOperation = 'destination-over';
+    const halo = ctx.createRadialGradient(64, 64, 20, 64, 64, 62);
+    halo.addColorStop(0, 'rgba(255,255,255,0.55)');
+    halo.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(64, 64, 62, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+  });
+}
+
+// Trận lục lăng hắc ám: hai tam giác chồng nhau trong đôi vòng tròn, kèm vạch khắc quanh vành.
+function hexTexture() {
+  return canvasTex('hex', 256, 256, (ctx) => {
+    ctx.translate(128, 128);
+    ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(0, 0, 112, 0, Math.PI * 2); ctx.stroke();
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(0, 0, 96, 0, Math.PI * 2); ctx.stroke();
+    const tri = (off) => {
+      ctx.beginPath();
+      for (let k = 0; k < 3; k++) {
+        const a = off + (k / 3) * Math.PI * 2;
+        const x = Math.cos(a) * 86;
+        const y = Math.sin(a) * 86;
+        if (k) ctx.lineTo(x, y);
+        else ctx.moveTo(x, y);
+      }
+      ctx.closePath();
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    };
+    tri(-Math.PI / 2);
+    tri(Math.PI / 2);
+    ctx.lineWidth = 2.5;
+    for (let k = 0; k < 12; k++) {
+      const a = (k / 12) * Math.PI * 2 + Math.PI / 12;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * 98, Math.sin(a) * 98);
+      ctx.lineTo(Math.cos(a) * 110, Math.sin(a) * 110);
+      ctx.stroke();
+    }
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.stroke();
+  });
+}
+
+// Cục khói âm: các đốm tròn mềm chồng loang dày — vẽ màu trắng, material tô đen bằng NormalBlending.
+function smokeTexture() {
+  return canvasTex('smoke', 128, 128, (ctx) => {
+    let s = 23;
+    const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 16; i++) {
+      const x = 24 + rnd() * 80;
+      const y = 24 + rnd() * 80;
+      const r = 16 + rnd() * 32;
+      const g = ctx.createRadialGradient(x, y, 1, x, y, r);
+      g.addColorStop(0, 'rgba(255,255,255,0.72)');
+      g.addColorStop(0.6, 'rgba(255,255,255,0.3)');
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
   });
 }
 
@@ -646,11 +786,17 @@ function domeTexture() {
   });
 }
 
-// Bảng màu theo hiệu ứng: [Sen kim, Lưu ly, Tinh hà (2 tông xen nhau)].
+// Bảng màu theo hiệu ứng: [Sen kim, Lưu ly, Tinh hà, Hỏa diễm, Đào hoa, Bích ngọc, Nguyệt bạch, Hắc ám]
+// — mỗi mục 1-2 tông xen nhau cho phần tử phụ và chính.
 const PALETTES = [
   [0xffd98a],
   [0x7ee8e0, 0xbff5ef],
   [0xcdd8ff, 0xffd98a],
+  [0xff9a5c, 0xffd268],
+  [0xffa8cc, 0xffdfef],
+  [0x7ee8a0, 0xd0ffd8],
+  [0xf6f7ff, 0xcdd9ff],
+  [0x7a2ecc, 0x2a0d4a],
 ];
 const BASE_OPACITY = 0.9;
 
@@ -659,8 +805,12 @@ let nightAmt = 0;
 export function setAuraNight(v) {
   nightAmt = Math.min(1, Math.max(0, v ?? 0));
 }
-// [độ sáng ban ngày, độ sáng ban đêm] theo thứ tự hiệu ứng: sen kim rực ban ngày, tinh hà rực ban đêm.
-const TIME_GLOW = [[1.12, 0.92], [1, 1.05], [0.86, 1.2]];
+// [độ sáng ban ngày, độ sáng ban đêm] theo thứ tự hiệu ứng: sen kim rực ban ngày,
+// nguyệt bạch và hắc ám rực ban đêm, hỏa diễm bùng hơn khi trời tối.
+const TIME_GLOW = [
+  [1.12, 0.92], [1, 1.05], [0.86, 1.2], [0.95, 1.15],
+  [1.08, 0.95], [1.05, 1.0], [0.85, 1.25], [1.05, 1.25],
+];
 
 function fillSeeds(seed, count) {
   for (let i = 0; i < count; i++) {
@@ -743,7 +893,10 @@ export function createEffect(effect, lowQuality = false) {
   };
 
   // Phù văn: chữ Hán nhỏ lửng lơ bay lên từ trận rồi tan, mỗi hiệu ứng một bộ chữ riêng.
-  const GLYPHS = [['禪', '蓮', '光'], ['水', '冰', '澄'], ['星', '月', '河']][effect - 1] ?? ['咒'];
+  const GLYPHS = [
+    ['禪', '蓮', '光'], ['水', '冰', '澄'], ['星', '月', '河'], ['炎', '焱', '焚'],
+    ['桃', '花', '蕊'], ['竹', '青', '翠'], ['月', '明', '輝'], ['魔', '冥', '影'],
+  ][effect - 1] ?? ['咒'];
   const makeGlyphs = (count, radius) => {
     const items = [];
     for (let i = 0; i < count; i++) {
@@ -1088,7 +1241,7 @@ export function createEffect(effect, lowQuality = false) {
       }
       updateGlyphs(glyphs, t);
     };
-  } else {
+  } else if (effect === 3) {
     // TINH HÀ — dải ngân hà nghiêng quay chậm, ba vòng hào quang chồng nghịch, sao chổi quanh vành,
     // vòng chân ngôn 星 dưới chân, sao băng kéo lửa và bụi sao.
     const count = lowQuality ? 16 : 28;
@@ -1242,6 +1395,612 @@ export function createEffect(effect, lowQuality = false) {
       }
       dust.geo.attributes.position.needsUpdate = true;
       dust.geo.attributes.color.needsUpdate = true;
+      updateGlyphs(glyphs, t);
+    };
+  } else if (effect === 4) {
+    // HỎA DIỄM — hỏa liên cháy dưới chân, trụ hỏa dâng quanh người, tàn lửa bay ngược lên trời,
+    // quỷ hỏa chớp tắt lượn vòng, bụi lửa lấp lánh, chân ngôn 炎.
+    const count = lowQuality ? 14 : 26;
+    const sparkCount = lowQuality ? 12 : 22;
+    fillSeeds(seed, count);
+    const pool = sprite(glowTexture(), colors[0], 1.25, 1.25, 0, 0.04, 0, 0.32);
+    const pillar = sprite(wispTexture(), colors[0], 0.5, 1.7, 0, 0.85, 0, 0.15);
+    const lotus = flatMesh(lotusTexture(), colors[0], 1.7, 0.02, 0.85); // hỏa liên cõng người
+    const mantra = flatMesh(runeRingTexture('rune-yan', '炎'), colors[0], 1.5, 0.06, 0.8);
+    const counterRing = flatMesh(ringTexture(), colors[0], 1.0, 0.035, 0.35);
+
+    // vòm hỏa khí: ống khí cam bao toàn thân — cùng cấu trúc vòm với các hiệu ứng khác
+    const domeTex = domeTexture();
+    domeTex.wrapS = THREE.RepeatWrapping;
+    domeTex.wrapT = THREE.RepeatWrapping;
+    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
+      map: domeTex, color: colors[0], transparent: true, depthWrite: false,
+      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.14,
+    }), 0.14);
+    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.0, 1.95, 48, 1, true)), domeEntry.mat);
+    dome.position.y = 0.97;
+    group.add(dome);
+
+    // trụ hỏa: 4 cột lửa dâng nhanh quanh đài
+    const pillars = [];
+    for (let i = 0; i < (lowQuality ? 2 : 4); i++) {
+      const entry = dynMat(() => new THREE.SpriteMaterial({
+        map: wispTexture(), color: colors[0], transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending, opacity: 0, rotation: 0.04 * (i - 1.5),
+      }), 0);
+      const sp = new THREE.Sprite(entry.mat);
+      group.add(sp);
+      pillars.push({ sp, entry, a0: (i / 4) * Math.PI * 2 + 0.8, r: 0.8 + ((i * 13) % 10) / 10 * 0.18, tw: ((i * 29) % 10) / 10 });
+    }
+
+    // quỷ hỏa: 3 ngọn lửa nhỏ bay vòng ngoài, chớp tắt dữ hơn hỏa ngọc của Sen kim
+    const orbs = [];
+    for (let i = 0; i < (lowQuality ? 2 : 3); i++) {
+      const entry = dynMat(() => new THREE.SpriteMaterial({
+        map: flameTexture(), color: colors[0], transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending, opacity: 0.7,
+      }), 0.7);
+      const sp = new THREE.Sprite(entry.mat);
+      group.add(sp);
+      orbs.push({ sp, entry, a0: (i / 3) * Math.PI * 2, r: 1.0 + i * 0.13, y: 0.5 + i * 0.42, tw: ((i * 29) % 10) / 10 });
+    }
+
+    // tàn lửa bay ngược: ngọn lửa nhỏ từ chân dâng thẳng lên trời rồi tan
+    const flames = new THREE.InstancedMesh(track(new THREE.PlaneGeometry(0.15, 0.2)), glowMat({
+      map: flameTexture(), color: colors[0],
+    }), count);
+    group.add(flames);
+
+    const sparks = makeTwinkles(sparkCount, 0.055, (i, n) => ({
+      a0: (i / n) * Math.PI * 3.1,
+      r: 0.3 + ((i * 37) % 20) / 20 * 0.4,
+      y: 0.1 + ((i * 53) % 30) / 30 * 1.3,
+      tw: ((i * 29) % 10) / 10,
+      speed: 0.5 + ((i * 61) % 10) / 10,
+    }), colors[0]);
+    const glyphs = makeGlyphs(lowQuality ? 3 : 6, 0.62);
+
+    variantUpdate = (t) => {
+      pool.scale.setScalar(1.25 * (1 + Math.sin(t * 2.6) * 0.07)); // vũng lửa bùng nhịp nhanh
+      pool.scale.y = pool.scale.x;
+      pillar.scale.y = 1.7 * (1 + Math.sin(t * 1.7) * 0.06);
+      lotus.rotation.z = t * 0.16; // hỏa liên xoay chậm
+      mantra.rotation.z = -t * 0.42; // chân ngôn chạy ngược như lửa gió
+      counterRing.rotation.z = t * 0.5;
+      dome.rotation.y = t * 0.07;
+      domeTex.offset.y = -(t * 0.08) % 1; // khí lửa cuộn lên nhanh
+      domeEntry.base = 0.11 + 0.05 * (0.5 + 0.5 * Math.sin(t * 1.5));
+      for (const pl of pillars) {
+        const yn = (t * 0.26 + pl.tw) % 1; // trụ hỏa dâng nhanh hơn sen kim
+        const life = Math.sin(yn * Math.PI);
+        const a = pl.a0 + t * 0.14;
+        pl.sp.position.set(Math.cos(a) * pl.r, 0.1 + yn * 1.5, Math.sin(a) * pl.r);
+        pl.sp.scale.set(0.14, Math.max(0.001, life * 1.15), 1);
+        pl.entry.base = life * 0.3;
+      }
+      for (const ob of orbs) {
+        const a = ob.a0 + t * 0.2;
+        ob.sp.position.set(Math.cos(a) * ob.r, ob.y + Math.sin(t * 1.1 + ob.tw * 7) * 0.09, Math.sin(a) * ob.r);
+        ob.sp.scale.setScalar((0.09 + ob.tw * 0.04) * (1 + 0.2 * Math.sin(t * 3.1 + ob.tw * 8)));
+        ob.entry.base = 0.4 + 0.4 * Math.pow(0.5 + 0.5 * Math.sin(t * 2.6 + ob.tw * 11), 2); // quỷ hỏa chớp tắt
+      }
+      for (let i = 0; i < count; i++) {
+        const a0 = seed[i * 4], r0 = seed[i * 4 + 1], speed = seed[i * 4 + 2], tw = seed[i * 4 + 3];
+        const yn = (t * 0.3 * speed + tw) % 1; // tàn lửa bay ngược lên rồi lặp
+        const a = a0 + t * 0.3 * speed;
+        const r = r0 * (1 - yn * 0.3) + Math.sin(t * 1.1 + tw * 7) * 0.03;
+        e.set(0, 0, t * 2.2 * speed + tw * 6.28); // lửa dựng đứng, tự xoay quanh trục mình
+        q.setFromEuler(e);
+        const sc = Math.max(0.001, Math.sin(yn * Math.PI)) * 0.9;
+        v.set(Math.cos(a) * r, 0.05 + yn * 1.5, Math.sin(a) * r);
+        s.set(sc, sc, sc);
+        m4.compose(v, q, s);
+        flames.setMatrixAt(i, m4);
+      }
+      flames.instanceMatrix.needsUpdate = true;
+      for (let i = 0; i < sparkCount; i++) {
+        const st = sparks.seeds[i];
+        const a = st.a0 + t * 0.08 * st.speed;
+        const yn = (t * 0.35 * st.speed + st.tw) % 1; // bụi lửa cũng bay ngược theo tàn lửa
+        sparks.pos[i * 3] = Math.cos(a) * st.r;
+        sparks.pos[i * 3 + 1] = 0.1 + yn * 1.5;
+        sparks.pos[i * 3 + 2] = Math.sin(a) * st.r;
+        const shine = 0.35 + 0.65 * (0.55 + 0.45 * Math.sin(t * 3 + st.tw * 12.6));
+        c.set(sparks.tint).multiplyScalar(shine);
+        sparks.col[i * 3] = c.r;
+        sparks.col[i * 3 + 1] = c.g;
+        sparks.col[i * 3 + 2] = c.b;
+      }
+      sparks.geo.attributes.position.needsUpdate = true;
+      sparks.geo.attributes.color.needsUpdate = true;
+      updateGlyphs(glyphs, t);
+    };
+  } else if (effect === 5) {
+    // ĐÀO HOA — mưa cánh đào hồng rơi li ti là chủ đạo, bông đào xoay quanh thân,
+    // trụ hoa dâng, sương hồng bao người, chân ngôn 桃.
+    const count = lowQuality ? 10 : 18;
+    const fallCount = lowQuality ? 8 : 14;
+    const sparkCount = lowQuality ? 10 : 16;
+    fillSeeds(seed, count);
+    const pool = sprite(glowTexture(), colors[0], 1.15, 1.15, 0, 0.04, 0, 0.26);
+    const pillar = sprite(wispTexture(), colors[1] ?? colors[0], 0.46, 1.7, 0, 0.85, 0, 0.12);
+    const mandala = flatMesh(mandalaTexture(), colors[0], 1.32, 0.045, 0.7); // trận đào dưới chân
+    const mantra = flatMesh(runeRingTexture('rune-thao', '桃'), colors[0], 1.5, 0.06, 0.78);
+    const counterRing = flatMesh(ringTexture(), colors[0], 0.95, 0.035, 0.32);
+
+    // vòm sương hồng bao thân
+    const domeTex = domeTexture();
+    domeTex.wrapS = THREE.RepeatWrapping;
+    domeTex.wrapT = THREE.RepeatWrapping;
+    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
+      map: domeTex, color: colors[0], transparent: true, depthWrite: false,
+      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.12,
+    }), 0.12);
+    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.0, 1.95, 48, 1, true)), domeEntry.mat);
+    dome.position.y = 0.97;
+    group.add(dome);
+
+    // trụ hoa: 4 cột hồng dâng chậm quanh người
+    const pillars = [];
+    for (let i = 0; i < (lowQuality ? 2 : 4); i++) {
+      const entry = dynMat(() => new THREE.SpriteMaterial({
+        map: wispTexture(), color: colors[0], transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending, opacity: 0, rotation: 0.04 * (i - 1.5),
+      }), 0);
+      const sp = new THREE.Sprite(entry.mat);
+      group.add(sp);
+      pillars.push({ sp, entry, a0: (i / 4) * Math.PI * 2 + 0.4, r: 0.82 + ((i * 13) % 10) / 10 * 0.18, tw: ((i * 29) % 10) / 10 });
+    }
+
+    // quầng hoa: 3 đốm hồng bay vòng ngoài
+    const orbs = [];
+    for (let i = 0; i < (lowQuality ? 2 : 3); i++) {
+      const entry = dynMat(() => new THREE.SpriteMaterial({
+        map: glowTexture(), color: colors[1] ?? colors[0], transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending, opacity: 0.6,
+      }), 0.6);
+      const sp = new THREE.Sprite(entry.mat);
+      group.add(sp);
+      orbs.push({ sp, entry, a0: (i / 3) * Math.PI * 2, r: 1.0 + i * 0.12, y: 0.55 + i * 0.4, tw: ((i * 29) % 10) / 10 });
+    }
+
+    // mưa cánh đào: cánh lớn rơi chậm, phất phơ — phần chính của hiệu ứng
+    const fallers = new THREE.InstancedMesh(track(new THREE.PlaneGeometry(0.17, 0.12)), glowMat({
+      map: petalTexture(), color: colors[0],
+    }), fallCount);
+    group.add(fallers);
+
+    // bông đào xoay quanh thân: cánh nhỏ dâng nhẹ mềm hơn sen kim
+    const petals = new THREE.InstancedMesh(track(new THREE.PlaneGeometry(0.15, 0.1)), glowMat({
+      map: petalTexture(), color: colors[1] ?? colors[0],
+    }), count);
+    group.add(petals);
+
+    const sparks = makeTwinkles(sparkCount, 0.05, (i, n) => ({
+      a0: (i / n) * Math.PI * 3.2,
+      r: 0.32 + ((i * 37) % 20) / 20 * 0.34,
+      y: 0.15 + ((i * 53) % 30) / 30 * 1.2,
+      tw: ((i * 29) % 10) / 10,
+      speed: 0.5 + ((i * 61) % 10) / 10,
+    }), colors[1] ?? colors[0]); // bụi phấn hồng lơ lửng
+    const glyphs = makeGlyphs(lowQuality ? 3 : 6, 0.62);
+
+    variantUpdate = (t) => {
+      pool.scale.setScalar(1.15 * (1 + Math.sin(t * 1.9) * 0.06)); // sương hồng thở
+      pool.scale.y = pool.scale.x;
+      pillar.scale.y = 1.7 * (1 + Math.sin(t * 1.2) * 0.05);
+      mandala.rotation.z = t * 0.35; // trận đào xoay
+      mantra.rotation.z = -t * 0.28;
+      counterRing.rotation.z = t * 0.42;
+      dome.rotation.y = t * 0.06;
+      domeTex.offset.y = -(t * 0.05) % 1;
+      domeEntry.base = 0.1 + 0.04 * (0.5 + 0.5 * Math.sin(t * 1.1));
+      for (const pl of pillars) {
+        const yn = (t * 0.16 + pl.tw) % 1; // trụ hoa dâng thong thả
+        const life = Math.sin(yn * Math.PI);
+        const a = pl.a0 + t * 0.12;
+        pl.sp.position.set(Math.cos(a) * pl.r, 0.1 + yn * 1.5, Math.sin(a) * pl.r);
+        pl.sp.scale.set(0.15, Math.max(0.001, life * 1.1), 1);
+        pl.entry.base = life * 0.26;
+      }
+      for (const ob of orbs) {
+        const a = ob.a0 + t * 0.13;
+        ob.sp.position.set(Math.cos(a) * ob.r, ob.y + Math.sin(t * 0.85 + ob.tw * 7) * 0.07, Math.sin(a) * ob.r);
+        ob.sp.scale.setScalar((0.1 + ob.tw * 0.05) * (1 + 0.15 * Math.sin(t * 1.8 + ob.tw * 8)));
+        ob.entry.base = 0.4 + 0.28 * (0.55 + 0.45 * Math.sin(t * 1.6 + ob.tw * 10));
+      }
+      for (let i = 0; i < fallCount; i++) {
+        const a0 = seed[i * 4], speed = seed[i * 4 + 2], tw = seed[i * 4 + 3];
+        const yn = (t * 0.09 * speed + tw * 1.3) % 1; // rơi chậm hơn sen kim, lượn rộng
+        const a = a0 * 2.3 + t * 0.08 * speed;
+        const r = 0.45 + tw * 0.42 + Math.sin(t * 0.8 + tw * 6) * 0.07;
+        e.set(Math.sin(t * 1.6 + tw * 8) * 0.8, Math.sin(t * 1.1 + tw * 5) * 0.6, t * 0.9 * speed + tw * 6.28);
+        q.setFromEuler(e);
+        const sc = (0.75 + tw * 0.5) * Math.min(1, yn * 5, (1 - yn) * 4);
+        v.set(Math.cos(a) * r + Math.sin(t * 1.4 + tw * 9) * 0.12, 1.95 - yn * 1.88, Math.sin(a) * r + Math.cos(t * 1.2 + tw * 7) * 0.12);
+        s.set(sc, sc, sc);
+        m4.compose(v, q, s);
+        fallers.setMatrixAt(i, m4);
+      }
+      fallers.instanceMatrix.needsUpdate = true;
+      for (let i = 0; i < count; i++) {
+        const a0 = seed[i * 4], r0 = seed[i * 4 + 1], speed = seed[i * 4 + 2], tw = seed[i * 4 + 3];
+        const yn = (t * 0.18 * speed + tw) % 1; // cánh nhỏ dâng quanh thân
+        const a = a0 + t * 0.3 * speed;
+        const r = r0 * (1 - yn * 0.35) + Math.sin(t * 0.7 + tw * 7) * 0.03;
+        e.set(1.0 + Math.sin(t * 1.2 + tw * 8) * 0.5, Math.sin(t * 0.85 + tw * 5) * 0.4, t * 1.3 * speed + tw * 6.28);
+        q.setFromEuler(e);
+        const sc = Math.max(0.001, Math.sin(yn * Math.PI)) * 0.85;
+        v.set(Math.cos(a) * r, 0.06 + yn * 1.28, Math.sin(a) * r);
+        s.set(sc, sc, sc);
+        m4.compose(v, q, s);
+        petals.setMatrixAt(i, m4);
+      }
+      petals.instanceMatrix.needsUpdate = true;
+      for (let i = 0; i < sparkCount; i++) {
+        const st = sparks.seeds[i];
+        const a = st.a0 + t * 0.06 * st.speed;
+        sparks.pos[i * 3] = Math.cos(a) * st.r;
+        sparks.pos[i * 3 + 1] = st.y + Math.sin(t * 0.65 + st.tw * 9) * 0.05;
+        sparks.pos[i * 3 + 2] = Math.sin(a) * st.r;
+        const shine = 0.35 + 0.65 * (0.55 + 0.45 * Math.sin(t * 2 + st.tw * 12.6));
+        c.set(sparks.tint).multiplyScalar(shine);
+        sparks.col[i * 3] = c.r;
+        sparks.col[i * 3 + 1] = c.g;
+        sparks.col[i * 3 + 2] = c.b;
+      }
+      sparks.geo.attributes.position.needsUpdate = true;
+      sparks.geo.attributes.color.needsUpdate = true;
+      updateGlyphs(glyphs, t);
+    };
+  } else if (effect === 6) {
+    // BÍCH NGỌC — lá bồ đề ngọc rơi xoay chậm quanh người, trúc khí mọc quanh chân,
+    // viên ngọc lục lấp lánh bay vòng vai, chân ngôn 竹.
+    const count = lowQuality ? 10 : 18; // lá rơi
+    const crysCount = lowQuality ? 4 : 7; // viên ngọc
+    const sparkCount = lowQuality ? 10 : 16;
+    fillSeeds(seed, count);
+    const pool = sprite(glowTexture(), colors[0], 1.1, 1.1, 0, 0.04, 0, 0.24);
+    const mantra = flatMesh(runeRingTexture('rune-chuc', '竹'), colors[0], 1.45, 0.05, 0.8);
+    const counterRing = flatMesh(ringTexture(), colors[0], 0.95, 0.04, 0.3);
+
+    // vòm trúc khí: ống khí lục bao thân
+    const domeTex = domeTexture();
+    domeTex.wrapS = THREE.RepeatWrapping;
+    domeTex.wrapT = THREE.RepeatWrapping;
+    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
+      map: domeTex, color: colors[0], transparent: true, depthWrite: false,
+      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.13,
+    }), 0.13);
+    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.0, 1.95, 48, 1, true)), domeEntry.mat);
+    dome.position.y = 0.97;
+    group.add(dome);
+
+    // trúc khí: 4 cột thon cao dâng quanh chân
+    const pillars = [];
+    for (let i = 0; i < (lowQuality ? 2 : 4); i++) {
+      const entry = dynMat(() => new THREE.SpriteMaterial({
+        map: wispTexture(), color: colors[0], transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending, opacity: 0, rotation: 0.03 * (i - 1.5),
+      }), 0);
+      const sp = new THREE.Sprite(entry.mat);
+      group.add(sp);
+      pillars.push({ sp, entry, a0: (i / 4) * Math.PI * 2 + 0.2, r: 0.86 + ((i * 13) % 10) / 10 * 0.16, tw: ((i * 29) % 10) / 10 });
+    }
+
+    // viên ngọc lục: múi kim ngọc bay vòng vai, lấp lánh kiểu Lưu ly
+    const crystalTex = crystalTexture();
+    const crystals = [];
+    for (let i = 0; i < crysCount; i++) {
+      const entry = dynMat(() => new THREE.SpriteMaterial({
+        map: crystalTex, color: colors[i % colors.length], transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending, opacity: 0.8,
+      }), 0.8);
+      const sp = new THREE.Sprite(entry.mat);
+      group.add(sp);
+      crystals.push({
+        sp, entry,
+        a0: (i / crysCount) * Math.PI * 2,
+        r: 0.55 + ((i * 23) % 18) / 18 * 0.2,
+        y: 0.6 + ((i * 41) % 30) / 30 * 0.85,
+        tw: ((i * 29) % 10) / 10,
+      });
+    }
+
+    // lá ngọc rơi: lá xoay lượn từ trên cao xuống, tan trước khi chạm đất
+    const leaves = new THREE.InstancedMesh(track(new THREE.PlaneGeometry(0.16, 0.2)), glowMat({
+      map: leafTexture(), color: colors[0],
+    }), count);
+    group.add(leaves);
+
+    // linh quàng lục: đốm ngọc lớn bay vòng ngoài
+    const orbs = [];
+    for (let i = 0; i < (lowQuality ? 3 : 4); i++) {
+      const entry = dynMat(() => new THREE.SpriteMaterial({
+        map: glowTexture(), color: colors[i % colors.length], transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending, opacity: 0.65,
+      }), 0.65);
+      const sp = new THREE.Sprite(entry.mat);
+      group.add(sp);
+      orbs.push({ sp, entry, a0: (i / 4) * Math.PI * 2, r: 1.05 + ((i * 7) % 10) / 10 * 0.18, y: 0.5 + ((i * 19) % 30) / 30 * 1.05, tw: ((i * 29) % 10) / 10 });
+    }
+
+    const sparks = makeTwinkles(sparkCount, 0.05, (i, n) => ({
+      a0: (i / n) * Math.PI * 3.3,
+      r: 0.32 + ((i * 37) % 20) / 20 * 0.36,
+      y: 0.12 + ((i * 53) % 30) / 30 * 1.25,
+      tw: ((i * 29) % 10) / 10,
+      speed: 0.5 + ((i * 61) % 10) / 10,
+    }), colors[0]);
+    const glyphs = makeGlyphs(lowQuality ? 3 : 6, 0.62);
+
+    variantUpdate = (t) => {
+      pool.scale.setScalar(1.1 * (1 + Math.sin(t * 1.7) * 0.06)); // vũng ngọc thở
+      pool.scale.y = pool.scale.x;
+      mantra.rotation.z = t * 0.24;
+      counterRing.rotation.z = -t * 0.45;
+      dome.rotation.y = t * 0.06;
+      domeTex.offset.y = -(t * 0.055) % 1; // trúc khí cuộn lên
+      domeEntry.base = 0.1 + 0.04 * (0.5 + 0.5 * Math.sin(t * 1.05));
+      for (const pl of pillars) {
+        const yn = (t * 0.19 + pl.tw) % 1; // trúc khí mọc lên chậm
+        const life = Math.sin(yn * Math.PI);
+        const a = pl.a0 + t * 0.13;
+        pl.sp.position.set(Math.cos(a) * pl.r, 0.1 + yn * 1.55, Math.sin(a) * pl.r);
+        pl.sp.scale.set(0.12, Math.max(0.001, life * 1.2), 1); // thon và cao hơn trụ hoa
+        pl.entry.base = life * 0.28;
+      }
+      for (const ob of orbs) {
+        const a = ob.a0 + t * 0.11;
+        ob.sp.position.set(Math.cos(a) * ob.r, ob.y + Math.sin(t * 0.8 + ob.tw * 7) * 0.07, Math.sin(a) * ob.r);
+        ob.sp.scale.setScalar((0.11 + ob.tw * 0.05) * (1 + 0.15 * Math.sin(t * 1.9 + ob.tw * 8)));
+        ob.entry.base = 0.45 + 0.28 * (0.55 + 0.45 * Math.sin(t * 1.7 + ob.tw * 10));
+      }
+      for (const cr of crystals) {
+        const a = cr.a0 + t * 0.1;
+        cr.sp.position.set(Math.cos(a) * cr.r, cr.y + Math.sin(t * 0.9 + cr.tw * 7) * 0.06, Math.sin(a) * cr.r);
+        cr.sp.material.rotation = cr.tw * 6.28 + t * 0.4;
+        cr.sp.scale.setScalar(0.12 + cr.tw * 0.05);
+        cr.entry.base = 0.55 + 0.4 * (0.7 + 0.3 * Math.sin(t * 2.4 + cr.tw * 12.6));
+      }
+      for (let i = 0; i < count; i++) {
+        const a0 = seed[i * 4], r0 = seed[i * 4 + 1], speed = seed[i * 4 + 2], tw = seed[i * 4 + 3];
+        const yn = (t * 0.13 * speed + tw) % 1; // lá rơi từ trên cao, lượn ngang rộng
+        const a = a0 + t * 0.12 * speed;
+        const r = 0.3 + r0 * 0.55 + Math.sin(t * 0.75 + tw * 6) * 0.06;
+        e.set(Math.sin(t * 1.4 + tw * 8) * 0.9, t * 0.5 * speed + tw * 6.28, Math.sin(t * 1.1 + tw * 5) * 0.5);
+        q.setFromEuler(e);
+        const sc = (0.7 + tw * 0.5) * Math.min(1, yn * 5, (1 - yn) * 4);
+        v.set(Math.cos(a) * r + Math.sin(t * 1.2 + tw * 9) * 0.09, 1.95 - yn * 1.9, Math.sin(a) * r + Math.cos(t * 1.05 + tw * 7) * 0.09);
+        s.set(sc, sc, sc);
+        m4.compose(v, q, s);
+        leaves.setMatrixAt(i, m4);
+      }
+      leaves.instanceMatrix.needsUpdate = true;
+      for (let i = 0; i < sparkCount; i++) {
+        const st = sparks.seeds[i];
+        const a = st.a0 + t * 0.06 * st.speed;
+        sparks.pos[i * 3] = Math.cos(a) * st.r;
+        sparks.pos[i * 3 + 1] = st.y + Math.sin(t * 0.7 + st.tw * 9) * 0.05;
+        sparks.pos[i * 3 + 2] = Math.sin(a) * st.r;
+        const shine = 0.35 + 0.65 * (0.55 + 0.45 * Math.sin(t * 2.1 + st.tw * 12.6));
+        c.set(sparks.tint).multiplyScalar(shine);
+        sparks.col[i * 3] = c.r;
+        sparks.col[i * 3 + 1] = c.g;
+        sparks.col[i * 3 + 2] = c.b;
+      }
+      sparks.geo.attributes.position.needsUpdate = true;
+      sparks.geo.attributes.color.needsUpdate = true;
+      updateGlyphs(glyphs, t);
+    };
+  } else if (effect === 7) {
+    // NGUYỆT BẠCH — trăng lưỡi liềm bạc treo sau vai phát quầng, dải sao bạc nghiêng quanh người,
+    // hai vòng bạc xoay nghịch quanh đầu, bụi trăng rơi lác đác, chân ngôn 月.
+    const motes = [];
+    const moteCount = lowQuality ? 4 : 8;
+    const dustCount = lowQuality ? 6 : 12;
+    const pool = sprite(glowTexture(), colors[0], 1.1, 1.1, 0, 0.04, 0, 0.22);
+    const mantra = flatMesh(runeRingTexture('rune-nguyet', '月'), colors[0], 1.35, 0.03, 0.55);
+    const counterRing = flatMesh(ringTexture(), colors[0], 1.05, 0.035, 0.32);
+
+    // vòm khí bạc: ống mỏng bao thân, dịu hơn các hiệu ứng lửa
+    const domeTex = domeTexture();
+    domeTex.wrapS = THREE.RepeatWrapping;
+    domeTex.wrapT = THREE.RepeatWrapping;
+    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
+      map: domeTex, color: colors[0], transparent: true, depthWrite: false,
+      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.1,
+    }), 0.1);
+    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.0, 1.95, 48, 1, true)), domeEntry.mat);
+    dome.position.y = 0.97;
+    group.add(dome);
+
+    // huyền nguyệt: quầng mềm ôm ngoài lưỡi liềm, treo sau gáy trên cao
+    const halo = sprite(glowTexture(), colors[1] ?? colors[0], 0.72, 0.72, 0, 2.02, -0.52, 0.3);
+    const moon = sprite(moonTexture(), 0xffffff, 0.46, 0.46, 0, 2.02, -0.51, 0.95);
+
+    // dải sao bạc nghiêng — chỉ một vành, khác Tinh hà có hai vành bắt chéo
+    const bandTilt = new THREE.Group();
+    bandTilt.position.set(0, 0.95, 0);
+    bandTilt.rotation.x = -Math.PI / 2 + 0.35;
+    group.add(bandTilt);
+    const band = new THREE.Mesh(track(new THREE.RingGeometry(0.58, 0.95, 64)), glowMat({
+      map: starfieldTexture(), color: colors[0], opacity: 0.45,
+    }), 0.45);
+    bandTilt.add(band);
+
+    // hai vòng bạc xoay nghịch quanh đầu
+    const mkRing = (size, col, base) => {
+      const mesh = new THREE.Mesh(track(new THREE.PlaneGeometry(size, size)), glowMat({
+        map: ringTexture(), color: col, opacity: base,
+      }), base);
+      mesh.position.set(0, 1.14, -0.3);
+      group.add(mesh);
+      return mesh;
+    };
+    const ring1 = mkRing(1.0, colors[0], 0.35);
+    const ring2 = mkRing(0.78, colors[1] ?? colors[0], 0.55);
+
+    // bụi trăng rơi từ trên cao
+    for (let i = 0; i < moteCount; i++) {
+      const entry = dynMat(() => new THREE.SpriteMaterial({
+        map: glowTexture(), color: colors[i % colors.length], transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending, opacity: 0, rotation: ((i * 29) % 10) / 10 * 3,
+      }), 0);
+      const sp = new THREE.Sprite(entry.mat);
+      group.add(sp);
+      motes.push({ sp, entry, a0: (i / moteCount) * 6.283, r: 0.35 + ((i * 37) % 20) / 20 * 0.65, tw: ((i * 29) % 10) / 10, fall: 0.3 + ((i * 61) % 10) / 10 * 0.3 });
+    }
+
+    const dust = makeTwinkles(dustCount, 0.05, (i, n) => ({
+      a0: (i / n) * Math.PI * 2,
+      r: 0.3 + ((i * 37) % 20) / 20 * 0.24,
+      tw: ((i * 29) % 10) / 10,
+      speed: 0.5 + ((i * 61) % 10) / 10,
+    }), colors[1] ?? colors[0]);
+    const glyphs = makeGlyphs(lowQuality ? 3 : 6, 0.62);
+
+    variantUpdate = (t, walkAmt) => {
+      const boost = 1 + walkAmt * 0.6;
+      pool.scale.setScalar(1.1 * (1 + Math.sin(t * 1.5) * 0.06)); // vũng bạc thở
+      pool.scale.y = pool.scale.x;
+      mantra.rotation.z = -t * 0.2;
+      counterRing.rotation.z = t * 0.35;
+      band.rotation.z = t * 0.08; // dải sao trôi rất chậm
+      dome.rotation.y = t * 0.05;
+      domeTex.offset.y = -(t * 0.045) % 1;
+      domeEntry.base = 0.08 + 0.03 * (0.5 + 0.5 * Math.sin(t * 1.0));
+      // trăng bồng bềnh và quầng thở nhịp chậm
+      moon.position.y = 2.02 + Math.sin(t * 0.7) * 0.04;
+      halo.position.y = moon.position.y;
+      halo.scale.setScalar(0.72 * (1 + Math.sin(t * 0.9) * 0.05));
+      moon.material.rotation = Math.sin(t * 0.23) * 0.2; // lưỡi liềm lắc lư rất khẽ
+      ring1.rotation.z = t * 0.3;
+      ring2.rotation.z = -t * 0.7;
+      for (const mo of motes) {
+        const yn = (t * 0.09 * mo.fall + mo.tw) % 1; // bụi trăng rơi từ trời xuống
+        const a = mo.a0 + t * 0.07;
+        mo.sp.position.set(Math.cos(a) * mo.r + Math.sin(t + mo.tw * 9) * 0.04, 2.0 - yn * 1.9, Math.sin(a) * mo.r);
+        mo.sp.scale.setScalar(0.03 + mo.tw * 0.02);
+        mo.entry.base = Math.min(1, yn * 4, (1 - yn) * 4) * 0.45;
+      }
+      for (let i = 0; i < dustCount; i++) {
+        const st = dust.seeds[i];
+        const a = st.a0 + t * 0.35 * st.speed * boost;
+        dust.pos[i * 3] = Math.cos(a) * st.r;
+        dust.pos[i * 3 + 1] = 0.6 + Math.sin(a * 2) * 0.28 + Math.sin(t + st.tw * 7) * 0.05;
+        dust.pos[i * 3 + 2] = Math.sin(a) * st.r;
+        const shine = 0.35 + 0.65 * (0.55 + 0.45 * Math.sin(t * 2 + st.tw * 12.6));
+        c.set(dust.tint).multiplyScalar(shine);
+        dust.col[i * 3] = c.r;
+        dust.col[i * 3 + 1] = c.g;
+        dust.col[i * 3 + 2] = c.b;
+      }
+      dust.geo.attributes.position.needsUpdate = true;
+      dust.geo.attributes.color.needsUpdate = true;
+      updateGlyphs(glyphs, t);
+    };
+  } else {
+    // HẮC ÁM — vũng âm khí đen nuốt sáng dưới chân, khói đen quấn thân là chủ đạo,
+    // trận lục lăng và quỷ hỏa chỉ còn viền tím sẫm để nổi hình trên nền đêm, chân ngôn 魔.
+    // Phần đen dùng NormalBlending màu gần đen để tối thật sự (blending cộng sáng không ra được màu đen).
+    const smokeCount = lowQuality ? 6 : 12;
+    const soulCount = lowQuality ? 2 : 4;
+    const sparkCount = lowQuality ? 8 : 14;
+    // vũng âm khí: đĩa đen dưới chân, nhấp nhô như hố tối
+    const voidEntry = childMat(new THREE.MeshBasicMaterial({
+      map: glowTexture(), color: 0x020008, transparent: true, depthWrite: false, opacity: 0.72,
+    }), 0.72);
+    const voidPool = new THREE.Mesh(track(new THREE.PlaneGeometry(2.05, 2.05)), voidEntry);
+    voidPool.rotation.x = -Math.PI / 2;
+    voidPool.position.y = 0.015;
+    group.add(voidPool);
+    const rim = flatMesh(ringTexture(), colors[0], 1.5, 0.028, 0.4);
+    const hex = flatMesh(hexTexture(), colors[0], 1.32, 0.05, 0.55); // lục lăng ma trận
+    const mantra = flatMesh(runeRingTexture('rune-mo', '魔'), colors[0], 1.52, 0.06, 0.6);
+
+    // vòm khói đen: NormalBlending màu gần đen — tối thật chứ không phải glow
+    const domeTex = domeTexture();
+    domeTex.wrapS = THREE.RepeatWrapping;
+    domeTex.wrapT = THREE.RepeatWrapping;
+    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
+      map: domeTex, color: 0x010105, transparent: true, depthWrite: false,
+      side: THREE.DoubleSide, opacity: 0.34,
+    }), 0.34);
+    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.02, 1.95, 48, 1, true)), domeEntry.mat);
+    dome.position.y = 0.97;
+    group.add(dome);
+
+    // khói đen bốc lên quanh chân, tan trước ngực — dày và rộng hơn để đen là màu chính
+    const smokes = [];
+    for (let i = 0; i < smokeCount; i++) {
+      const entry = dynMat(() => new THREE.SpriteMaterial({
+        map: smokeTexture(), color: 0x030109, transparent: true, depthWrite: false,
+        opacity: 0, rotation: ((i * 29) % 10) / 10 * 3,
+      }), 0);
+      const sp = new THREE.Sprite(entry.mat);
+      group.add(sp);
+      smokes.push({ sp, entry, a0: (i / smokeCount) * 6.283, r: 0.28 + ((i * 37) % 20) / 20 * 0.52, tw: ((i * 29) % 10) / 10, speed: 0.5 + ((i * 61) % 10) / 10 });
+    }
+
+    // quỷ hỏa tím: chớp tắt thất thường quanh người
+    const souls = [];
+    for (let i = 0; i < soulCount; i++) {
+      const entry = dynMat(() => new THREE.SpriteMaterial({
+        map: glowTexture(), color: colors[0], transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending, opacity: 0.7,
+      }), 0.7);
+      const sp = new THREE.Sprite(entry.mat);
+      group.add(sp);
+      souls.push({ sp, entry, a0: (i / soulCount) * 6.283 + 0.5, r: 0.78 + ((i * 17) % 10) / 10 * 0.25, y: 0.4 + ((i * 23) % 30) / 30 * 1.0, tw: ((i * 29) % 10) / 10, size: 0.09 + ((i * 41) % 10) / 10 * 0.04 });
+    }
+
+    const sparks = makeTwinkles(sparkCount, 0.05, (i, n) => ({
+      a0: (i / n) * Math.PI * 3.4,
+      r: 0.3 + ((i * 37) % 20) / 20 * 0.38,
+      y: 0.1 + ((i * 53) % 30) / 30 * 1.3,
+      tw: ((i * 29) % 10) / 10,
+      speed: 0.5 + ((i * 61) % 10) / 10,
+    }), colors[0]);
+    const glyphs = makeGlyphs(lowQuality ? 3 : 6, 0.62);
+
+    variantUpdate = (t) => {
+      voidEntry.base = 0.72 + 0.12 * (0.5 + 0.5 * Math.sin(t * 0.9)); // hố tối nhấp nhô
+      rim.rotation.z = t * 0.25;
+      hex.rotation.z = -t * 0.4; // trận lục lăng xoay ngược
+      mantra.rotation.z = t * 0.18;
+      dome.rotation.y = -t * 0.05;
+      domeTex.offset.y = -(t * 0.045) % 1; // khói trong vòm cuộn lên chậm
+      domeEntry.base = 0.3 + 0.1 * (0.5 + 0.5 * Math.sin(t * 0.8));
+      for (const sm of smokes) {
+        const yn = (t * 0.13 * sm.speed + sm.tw) % 1; // khói bốc lên rồi tan
+        const life = Math.sin(yn * Math.PI);
+        const a = sm.a0 + t * 0.1;
+        sm.sp.position.set(Math.cos(a) * sm.r + Math.sin(t * 0.7 + sm.tw * 8) * 0.05, 0.15 + yn * 1.45, Math.sin(a) * sm.r);
+        sm.sp.scale.setScalar(0.5 + yn * 0.75); // khói loang rộng khi dâng
+        sm.sp.material.rotation = sm.tw * 6.28 + t * 0.06 * sm.speed;
+        sm.entry.base = life * 0.8;
+      }
+      for (const so of souls) {
+        const a = so.a0 + t * 0.16;
+        so.sp.position.set(Math.cos(a) * so.r, so.y + Math.sin(t * 1.2 + so.tw * 9) * 0.1, Math.sin(a) * so.r);
+        so.sp.scale.setScalar(so.size * (1 + 0.2 * Math.sin(t * 3.4 + so.tw * 8)));
+        so.entry.base = 0.3 + 0.45 * Math.pow(0.5 + 0.5 * Math.sin(t * 2.8 + so.tw * 13), 3); // chớp tắt ma quái
+      }
+      for (let i = 0; i < sparkCount; i++) {
+        const st = sparks.seeds[i];
+        const a = st.a0 + t * 0.07 * st.speed;
+        sparks.pos[i * 3] = Math.cos(a) * st.r;
+        sparks.pos[i * 3 + 1] = st.y + Math.sin(t * 0.75 + st.tw * 9) * 0.05;
+        sparks.pos[i * 3 + 2] = Math.sin(a) * st.r;
+        const shine = 0.35 + 0.65 * (0.55 + 0.45 * Math.sin(t * 2.4 + st.tw * 12.6));
+        c.set(sparks.tint).multiplyScalar(shine);
+        sparks.col[i * 3] = c.r;
+        sparks.col[i * 3 + 1] = c.g;
+        sparks.col[i * 3 + 2] = c.b;
+      }
+      sparks.geo.attributes.position.needsUpdate = true;
+      sparks.geo.attributes.color.needsUpdate = true;
       updateGlyphs(glyphs, t);
     };
   }

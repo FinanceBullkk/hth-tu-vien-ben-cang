@@ -9,7 +9,7 @@ import { Batch, addRoof, flatMaterial, textTexture } from './builders.js';
 import { placeProp } from './props.js';
 
 // Dây đèn lồng vắt qua lối đi, treo giữa các cột cờ — sáng rực khi đêm về.
-const STRING_Z = [6, 14, 22];
+const STRING_Z = [...new Set(BANNERS.map((banner) => banner.z))];
 const STRING_TOP = 4.42;
 const STRING_SAG = 0.6;
 const STRING_T = [0.07, 0.285, 0.5, 0.715, 0.93];

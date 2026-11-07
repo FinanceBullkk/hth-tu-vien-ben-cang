@@ -6,10 +6,10 @@ export const LANDING = { minX: -4.2, maxX: 4.2, minZ: 30, maxZ: 40 };
 export const SPAWN = { x: 0, z: 36.5, rot: Math.PI };
 export const PLAYER_RADIUS = 0.4;
 
-export const BELL = { x: 0, z: 2, radius: 3.6, yardRadius: 12 };
+export const BELL = { x: -18, z: -1, radius: 3.6, yardRadius: 12 };
 export const HALL = { x: 0, z: -20, halfW: 8, halfD: 6, doorHalf: 2.2, height: 4.6 };
 // radius: vùng tương tác treo lời ước, nới đúng tới rìa dải lụa trên cành.
-export const TREE = { x: -18, z: 6, radius: 5.4 };
+export const TREE = { x: -18, z: 11, radius: 5.4 };
 // 8 cành tỏa ngang để treo dải lụa: dùng chung cho scene (monastery) và vị trí ribbon (wishes3d)
 // để lời ước bám đúng cành thay vì lơ lửng. Cành nghiêng nhẹ lên về phía ngọn (0.1206/m ngang).
 export const TREE_BRANCHES = Array.from({ length: 8 }, (_, i) => ({
@@ -17,29 +17,27 @@ export const TREE_BRANCHES = Array.from({ length: 8 }, (_, i) => ({
   len: 4.3 + (i % 4) * 0.42,
   y: 4.9 + (i % 3) * 0.14,
 }));
-export const POND = { x: -19, z: -12, radius: 5.5, actionRadius: 7.6 };
+export const POND = { x: -19, z: -17, radius: 5.5, actionRadius: 7.6 };
 export const CONTAINERS = { minX: 26.6, maxX: 29.2, minZ: 0, maxZ: 12, actionMargin: 2.4 };
-export const TEA = { x: -18, z: 22, radius: 3.4 };
-export const GARDEN = { minX: 10, maxX: 26, minZ: -28, maxZ: -12 };
+export const TEA = { x: -18, z: 23, radius: 3.4 };
+export const GARDEN = { minX: 12, maxX: 25, minZ: -12, maxZ: -6 };
 // Asset võ hiệp dựng bằng Blender (tools/blender/): bảo tháp, cầu vòm, cờ băng, đèn đá, non bộ.
-export const PAGODA = { x: 17, z: 12, radius: 3.9, roofY: 12.5 };
-export const BRIDGE = { x1: -24.6, x2: -13.4, z: -12, halfW: 0.95, peak: 1.15 };
+export const PAGODA = { x: 18, z: -21, radius: 3.9, roofY: 12.5 };
+export const BRIDGE = { x1: POND.x - 5.6, x2: POND.x + 5.6, z: POND.z, halfW: 0.95, peak: 1.15 };
 export const BANNERS = [
-  { x: -5.6, z: 6, ry: 0 }, { x: 5.6, z: 6, ry: Math.PI },
-  { x: -5.6, z: 14, ry: 0 }, { x: 5.6, z: 14, ry: Math.PI },
   { x: -5.6, z: 22, ry: 0 }, { x: 5.6, z: 22, ry: Math.PI },
 ];
 // Quanh hồ sen (né dải cầu), hai bên bậc tháp, mép vườn thiền.
 export const STONE_LANTERNS = [
-  { x: -14.1, z: -7.1, ry: Math.PI * 0.75 }, { x: -23.9, z: -7.1, ry: Math.PI * 0.25 },
-  { x: -14.1, z: -16.9, ry: Math.PI * 1.25 }, { x: -23.9, z: -16.9, ry: Math.PI * 1.75 },
-  { x: 14.4, z: 15.6, ry: 0 }, { x: 19.6, z: 15.6, ry: 0 },
+  { x: POND.x - 4.9, z: POND.z + 4.9, ry: Math.PI * 0.25 },
+  { x: POND.x + 4.9, z: POND.z - 4.9, ry: Math.PI * 1.25 },
+  { x: PAGODA.x - 2.8, z: PAGODA.z + 5, ry: 0 },
+  { x: PAGODA.x + 2.8, z: PAGODA.z + 5, ry: 0 },
   { x: 9.6, z: 19, ry: 0.6 }, { x: 28.4, z: 20, ry: -0.6 },
-  { x: 8.9, z: -10.6, ry: 0 }, { x: 27.1, z: -10.6, ry: 0 },
 ];
 export const NONBO = [
-  { x: -7, z: 18, s: 1.0, ry: 0.6, r: 2.0 },
-  { x: 7, z: -9, s: 0.75, ry: 2.2, r: 1.5 },
+  { x: -26, z: -26, s: 0.75, ry: 0.6, r: 1.5 },
+  { x: 26, z: -26, s: 0.75, ry: 2.2, r: 1.5 },
 ];
 // Thầy trụ trì đứng ở hiên thiền đường, bên phải cửa, dưới một chiếc đèn lồng.
 export const ABBOT = { x: 5.2, z: -12.4, rot: 0, radius: 0.35, actionRadius: 2.6 };
@@ -70,12 +68,12 @@ export const PITCH_ZONE = {
 // Menu "Chơi gì?": mỗi trò một chỗ đứng hợp lệ, chọn là được đưa tới và bắt đầu luôn.
 export const PLACES = [
   { key: 'fish', icon: '🎣', name: 'Câu cá', desc: 'Thả câu ở hồ, gom đủ các loài cá', x: 19, z: 16.7 },
-  { key: 'bell', icon: '🔔', name: 'Thỉnh chuông', desc: 'Bấm theo nhịp để chuông ngân', x: 0, z: 5.2 },
+  { key: 'bell', icon: '🔔', name: 'Thỉnh chuông', desc: 'Bấm theo nhịp để chuông ngân', x: BELL.x, z: BELL.z + 3.2 },
   { key: 'mat', icon: '🪷', name: 'Ngồi thiền', desc: 'Bấm theo nhịp cho sen nở', x: 0, z: -15.6 },
   { key: 'pitch', icon: '🏺', name: 'Đầu hồ', desc: 'Ném tên vào bình, đấu với sư trong chùa', x: 23.4, z: 3 },
   { key: 'riddle', icon: '📜', name: 'Câu đố của sư chú', desc: 'Đoán vui về nghề logistics', x: 3.2, z: 26.6 },
-  { key: 'tea', icon: '🍵', name: 'Rút quẻ vận đơn', desc: 'Lắc ống quẻ xin lời chúc hôm nay', x: -18, z: 19.6 },
-  { key: 'tree', icon: '🌳', name: 'Treo lời ước', desc: 'Viết điều mong muốn lên cây bồ đề', x: -18, z: 9 },
+  { key: 'tea', icon: '🍵', name: 'Rút quẻ vận đơn', desc: 'Lắc ống quẻ xin lời chúc hôm nay', x: TEA.x, z: TEA.z - 2.4 },
+  { key: 'tree', icon: '🌳', name: 'Treo lời ước', desc: 'Viết điều mong muốn lên cây bồ đề', x: TREE.x + 3, z: TREE.z },
 ];
 
 export const MAT_COUNT = 12;
@@ -89,27 +87,41 @@ export const MATS = Array.from({ length: MAT_COUNT }, (_, i) => {
 });
 
 export const LANTERN_POSTS = [
-  ...[26, 20, 14, 8].flatMap((z) => [{ x: -3.4, z }, { x: 3.4, z }]),
-  ...[-5, -10].flatMap((z) => [{ x: -3.4, z }, { x: 3.4, z }]),
-  ...[-9, -14].map((x) => ({ x, z: 5.4 })),
-  ...[-9, -14].map((x) => ({ x, z: -1.4 })),
-  ...[9, 15, 21].map((x) => ({ x, z: 5.4 })),
-  ...[9, 15, 21].map((x) => ({ x, z: -1.4 })),
+  ...[26, 14, 2, -8].flatMap((z) => [{ x: -4.2, z }, { x: 4.2, z }]),
+  { x: -11.5, z: 20 }, { x: -11.5, z: -4 },
+  { x: 11.5, z: 14 }, { x: 24.5, z: 14 },
 ];
 
 export const COURT_TREES = [
-  { x: 11.4, z: 17.2, s: 1.1 }, { x: 26, z: 17.6, s: 0.85 },
-  { x: 6.6, z: 27.6, s: 0.7 }, { x: -8, z: 26, s: 0.8 },
-  { x: -26, z: -25, s: 1.1 }, { x: -13, z: -27, s: 0.8 }, { x: -26, z: -2, s: 0.9 },
-  { x: 25, z: -7, s: 0.8 }, { x: -26, z: 14, s: 0.9 },
+  { x: -7.5, z: 26, s: 0.8 }, { x: 7.5, z: 26, s: 0.8 },
+  { x: -7.5, z: 15, s: 0.85 }, { x: 7.5, z: 15, s: 0.85 },
+  { x: -7.5, z: 3, s: 0.85 }, { x: 7.5, z: 3, s: 0.85 },
+  { x: -27, z: 11, s: 1 }, { x: -27, z: -4, s: 0.9 },
+  { x: -13, z: -27, s: 0.8 }, { x: 27, z: -14, s: 0.8 },
+  { x: 26, z: 17.6, s: 0.85 },
 ];
 
 export const GARDEN_ROCKS = [
-  { x: 16, z: -22, r: 1.7 }, { x: 21.5, z: -16.5, r: 1.15 }, { x: 13, z: -16, r: 0.9 },
+  { x: 15, z: -9, r: 1.2 }, { x: 22, z: -9, r: 0.9 },
 ];
 
-export const TEA_TABLES = [
-  { x: -18, z: 22 }, { x: -21.4, z: 24.6 }, { x: -14.6, z: 24.6 },
+export const TEA_TABLES = [[0, 0], [-3.4, 2.6], [3.4, 2.6]]
+  .map(([dx, dz]) => ({ x: TEA.x + dx, z: TEA.z + dz }));
+
+// Lối chính 6 m, đường dạo 2.4 m; mặt đường cao tối đa 0.04 m như floorHeight.
+export const COURT_PATHS = [
+  { x: 0, z: 9, w: 6, d: 42 },
+  { x: 0, z: 35, w: 4.6, d: 10 },
+  { x: -10, z: 5.5, w: 2.4, d: 45 },
+  { x: 10, z: 1, w: 2.4, d: 36 },
+  { x: 0, z: 8, w: 49, d: 3 },
+  { x: 0, z: -8, w: 22.4, d: 3 },
+  { x: -14, z: 18, w: 8, d: 2.4 },
+  { x: -14, z: BELL.z, w: 8, d: 2.4 },
+  { x: -11.7, z: BRIDGE.z, w: 3.4, d: 1.4 },
+  { x: 17, z: 16, w: 14, d: 2.4 },
+  { x: 14, z: -14, w: 8, d: 2.4 },
+  { x: PAGODA.x, z: -11.5, w: 2.4, d: 11 },
 ];
 
 const WALL_T = 0.4;
@@ -126,8 +138,8 @@ export const BOXES = [
   { minX: h.x + h.halfW - 0.25, maxX: h.x + h.halfW + 0.25, minZ: h.z - h.halfD, maxZ: h.z + h.halfD, cam: true },
   { minX: h.x - h.halfW, maxX: h.x - h.doorHalf, minZ: h.z + h.halfD - 0.25, maxZ: h.z + h.halfD + 0.25, cam: true },
   { minX: h.x + h.doorHalf, maxX: h.x + h.halfW, minZ: h.z + h.halfD - 0.25, maxZ: h.z + h.halfD + 0.25, cam: true },
-  // Container cũ sát rào: gộp cả hai và kéo tới rào để không còn khe, túi không gian phía sau.
-  { minX: CONTAINERS.minX, maxX: 30, minZ: CONTAINERS.minZ, maxZ: 18.3 },
+  // Giữ một container làm bảng ước, mở lối đi ra bờ hồ phía nam.
+  { minX: CONTAINERS.minX, maxX: 30, minZ: CONTAINERS.minZ, maxZ: CONTAINERS.maxZ },
   // Lan can cầu vòm qua hồ sen: giữ người chơi trên dải cầu.
   { minX: BRIDGE.x1, maxX: BRIDGE.x2, minZ: BRIDGE.z - 0.98, maxZ: BRIDGE.z - 0.72, cam: true },
   { minX: BRIDGE.x1, maxX: BRIDGE.x2, minZ: BRIDGE.z + 0.72, maxZ: BRIDGE.z + 0.98, cam: true },

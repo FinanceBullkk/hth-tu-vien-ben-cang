@@ -13,7 +13,7 @@ export const LIMITS = {
   moveMaxPerSec: 20,
 };
 
-export const AVATAR = { colors: 10, hats: 6, attires: 3, weapons: 3, effects: 4 };
+export const AVATAR = { colors: 10, hats: 6, attires: 3, weapons: 3, effects: 9 };
 
 export const SHIRT_COLORS = [
   '#c0392b', '#e67e22', '#d4a017', '#3f8f5f', '#2d7f8f', '#3b5ea8', '#7d4a9e', '#8a5a3c',
@@ -25,7 +25,7 @@ export const HAT_NAMES = ['Tóc ngắn', 'Tóc dài', 'Tóc búi', 'Mũ lưỡi 
 // Trang phục tiên hiệp, vũ khí và hào quang: chọn ở màn vào game, đồng bộ qua server.
 export const ATTIRE_NAMES = ['Lữ khách', 'Đạo bào vân thủy', 'Bạch y hiệp khách'];
 export const WEAPON_NAMES = ['Không', 'Kiếm', 'Phất trần'];
-export const EFFECT_NAMES = ['Không', 'Sen kim', 'Lưu ly', 'Tinh hà'];
+export const EFFECT_NAMES = ['Không', 'Sen kim', 'Lưu ly', 'Tinh hà', 'Hỏa diễm', 'Đào hoa', 'Bích ngọc', 'Nguyệt bạch', 'Hắc ám'];
 
 export const EMOJIS = ['🙏', '🌸', '😊', '❤️', '👋', '🍵'];
 
