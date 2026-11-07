@@ -48,7 +48,7 @@ Làm theo mẫu câu cá (`fishing`):
 
 ## Git
 
-Chủ dự án cấp quyền thường trực cho ba việc: **commit, push lên nhánh làm việc, mở PR**. Khi một việc đã xong và kiểm chứng (test/build xanh) thì tự commit, push, mở PR mà không phải hỏi lại mỗi lần. Còn **merge và deploy vẫn phải được yêu cầu rõ**.
+Chủ dự án cấp quyền thường trực cho bốn việc: **commit, push lên nhánh làm việc, mở PR, merge PR** (squash sau khi CI xanh). Khi một việc đã xong và kiểm chứng (test/build xanh) thì tự làm cả bốn mà không phải hỏi lại mỗi lần. Gặp conflict thì tự xử: merge `main` vào nhánh, giữ đủ ý hai phía, push lại bình thường. Còn **deploy vẫn phải được yêu cầu rõ**.
 
 Không bao giờ tự ý: force push, push thẳng vào `main`, bỏ qua hook bằng `--no-verify`, viết lại lịch sử đã push. GitHub hiện không chặn push vào `main`, nên quy tắc này chỉ dựa vào việc tuân thủ.
 
