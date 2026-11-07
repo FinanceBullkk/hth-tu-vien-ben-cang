@@ -256,7 +256,7 @@ function main() {
   };
 
   net.on('chat', ({ sid, text }) => avatarOf(sid)?.say(text));
-  net.on('cultivation:update', ({ sid, tier }) => avatarOf(sid)?.setCultivation(tier));
+  net.on('cultivation:update', ({ sid, tier }) => avatarOf(sid)?.setCultivation(tier, true));
   net.on('emoji', ({ sid, i }) => avatarOf(sid)?.say(EMOJIS[i] ?? '', 2500));
   net.on('wave', ({ from, to, name }) => {
     avatarOf(from)?.wave();
