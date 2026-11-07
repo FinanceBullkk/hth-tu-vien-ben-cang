@@ -430,15 +430,17 @@ export class Room {
       const res = this.meditation.sit(p, data?.mat);
       if (!res.ok) return res;
       p.lastSit = now;
-      const mat = MATS[res.mat];
-      p.x = round2(mat.x);
-      p.z = round2(mat.z);
-      p.rot = round2(mat.rot);
+      const pos = MATS[res.mat];
+      if (pos) {
+        p.x = round2(pos.x);
+        p.z = round2(pos.z);
+        p.rot = round2(pos.rot);
+      }
       p.anim = 0;
       p.moveAt = now;
       p.activity = code;
       p.dirty = true;
-      return res;
+      return { ...res, x: p.x, z: p.z, rot: p.rot };
     }
     if (p.mat != null) return { ok: false, error: 'Đứng dậy trước khi bắt đầu hoạt động khác nhé.' };
     p.activity = code;

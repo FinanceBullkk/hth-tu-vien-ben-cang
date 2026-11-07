@@ -28,7 +28,16 @@ export function openPlacesMenu(app) {
   document.getElementById('playBtn')?.classList.remove('nudge');
   const modal = openModal({
     title: 'Hôm nay chơi gì?',
-    content: h('ul', { class: 'place-list' }, PLACES.map((place) => h('li', {},
+    content: h('ul', { class: 'place-list' },
+      h('li', {}, h('button', {
+        type: 'button', class: 'place-row',
+        onClick: () => {
+          modal.close();
+          if (app.activities.current) app.activities.exit();
+          app.activities.meditation.start();
+        },
+      }, h('span', { class: 'place-text' }, h('b', {}, 'Thiền tại chỗ'), h('small', {}, 'Ngồi ngay đây, tích Chân khí và tăng tầng')))),
+      PLACES.map((place) => h('li', {},
       h('button', {
         type: 'button',
         class: 'place-row',

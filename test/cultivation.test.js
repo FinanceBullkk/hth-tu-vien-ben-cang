@@ -6,6 +6,7 @@ import path from 'node:path';
 import { Db } from '../server/db.js';
 import { Meditation } from '../server/meditation.js';
 import { Room } from '../server/rooms.js';
+import { RhythmGame } from '../server/rhythm.js';
 import { MATS } from '../shared/layout.js';
 import { cultivation, cultivationProgress, QI_TIERS, QI_INTERVAL_MS } from '../shared/cultivation.js';
 import { createCultivation, cultivationPoint } from '../client/src/player/avatar-cultivation.js';
@@ -74,6 +75,49 @@ function fixture(t) {
   const p = { pid: 'test', sid: 1, name: 'Thiền', ...MATS[0], mat: null, activity: 0, lastSit: 0, socket: { emit() {} } };
   return { db, meditation, p, events };
 }
+
+test('thiền tại chỗ giữ vị trí server, tích khí và lưu thời gian lẻ khi đứng dậy', (t) => {
+  const { db, meditation, p } = fixture(t);
+  Object.assign(p, { x: 12, z: 9, rot: 0.5 });
+  const room = new Room({ db, meditation, config: {}, io: { to: () => ({ emit() {} }) } });
+  const seated = room.onActionStart(p, { kind: 'meditate', x: 999, z: 999, qi: 999 });
+  assert.equal(seated.ok, true);
+  assert.equal(seated.mat, -1);
+  assert.deepEqual([seated.x, seated.z, seated.rot], [12, 9, 0.5]);
+  assert.equal(meditation.occupancy().some(Boolean), false);
+  assert.deepEqual(meditation.scene().seats, []);
+  assert.equal(new RhythmGame({}).allowed(p, 'meditate'), false, 'Nhịp sen vẫn cần chiếu');
+  room.onMove(p, [20, 20, 1, 1]);
+  assert.deepEqual([p.x, p.z, p.rot], [12, 9, 0.5]);
+  assert.equal(room.onActionStart(p, { kind: 'fish' }).ok, false);
+  t.mock.timers.tick(6500);
+  meditation.sweep();
+  assert.equal(db.book(p.pid).qi, 1);
+  meditation.leave(p);
+  meditation.leave(p);
+  assert.equal(meditation.members().length, 0);
+  assert.equal(db.playerRow(p.pid).cultivation_ms, 6500);
+  t.mock.timers.tick(60_000);
+  meditation.sweep();
+  assert.equal(db.playerRow(p.pid).cultivation_ms, 6500);
+});
+
+test('chuyển giữa thiền tại chỗ và chiếu giữ khí, không giải phóng chiếu người khác', (t) => {
+  const { db, meditation, p } = fixture(t);
+  meditation.sit(p);
+  t.mock.timers.tick(3500);
+  assert.equal(meditation.sit(p, 0).ok, true);
+  assert.equal(meditation.members().length, 1);
+  t.mock.timers.tick(2500);
+  assert.equal(meditation.sit(p).ok, true);
+  assert.equal(db.book(p.pid).qi, 1);
+  assert.equal(meditation.occupancy()[0], 0);
+  const other = { ...p, pid: 'other', sid: 2, mat: null };
+  assert.equal(meditation.sit(other, 0).ok, true);
+  meditation.leave(p);
+  assert.equal(meditation.occupancy()[0], 2);
+  assert.deepEqual(meditation.members(), [other]);
+});
 
 test('five tier boundaries and bounded, monotonic aura scale', () => {
   for (const [i, tier] of QI_TIERS.entries()) {

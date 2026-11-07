@@ -26,3 +26,25 @@ Không thêm cột DB. Tối đa 288 hạt bổ sung/nhân vật, chế độ nh
 gom trong một draw call; không tạo texture hay tải tài nguyên ngoài.
 
 Kiểm tra: `node --test test/cultivation.test.js test/rhythm.test.js`, `npm test`, `npm run build`.
+
+## Chân khí từ tĩnh tu
+
+Chân khí là tiến độ riêng với công pháp Nhịp sen. Bấm **Thiền tại chỗ** ở sân hoặc
+trong menu **Chơi gì?** để ngồi ngay chỗ đang đứng. Server giữ nguyên vị trí của
+người chơi, không nhận vị trí hay khí do client tự khai. Chọn **Ngồi thiền** trong
+menu vẫn đưa tới chiếu trong thiền đường; chỉ chiếu mới mở trò Nhịp sen.
+
+Mỗi 6 giây ngồi online nhận 1 Chân khí, lưu trong cột `cultivation_ms` đã có.
+Đứng dậy, mất mạng hoặc đổi tab lưu cả thời gian lẻ; không cộng thời gian offline.
+Các tầng Tụ khí / Dẫn khí / Ngưng khí / Hóa khí / Viên mãn bắt đầu ở 0 / 50 / 150 /
+350 / 750 khí. Sổ an và bảng tĩnh tu hiển thị tiến độ này.
+
+`action:start` với `kind: 'meditate'` không gửi `mat` là ngồi tại chỗ. Server dùng
+`mat: -1` nội bộ để giữ các luật khóa di chuyển, chat và hoạt động khác; các id chiếu
+thật vẫn giữ nguyên. Mọi người đang tĩnh tu đều được tính khí; snapshot chiếu và
+hoa sen chỉ chứa những người ngồi trên chiếu thật.
+
+Kiểm tra thêm trên desktop và mobile: build rồi chạy
+`node test/meditation-anywhere-browser-check.mjs` (cần Playwright có sẵn,
+có thể truyền `PLAYWRIGHT_MODULE`). Kiểm tra cả nút mặc bộ Lee Sin, lưu trang phục
+qua tải lại, thiền không dịch chuyển, nhận khí và đứng dậy.

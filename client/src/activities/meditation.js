@@ -41,7 +41,8 @@ export class MeditationActivity {
     this.panel.hidden = false;
     this.panel.focus({ preventScroll: true });
     document.body.classList.add('meditating');
-    this.notice.textContent = 'Đang chọn chiếu…';
+    this.notice.textContent = 'Đang ngồi xuống…';
+    this.lotus.hidden = mat === undefined;
     this.lotus.disabled = true;
     this.paint(app.me.avatar.qi ?? 0);
     if (app.chat.open) app.chat.close();
@@ -52,8 +53,8 @@ export class MeditationActivity {
       app.activities.exit();
       return;
     }
-    const m = MATS[mat];
-    app.me.placeAt(m.x, m.z, m.rot);
+    this.mat = seated.mat;
+    app.me.placeAt(seated.x, seated.z, seated.rot);
     app.me.avatar.setActivity(1);
     app.me.avatar.setQi(seated.qi);
     app.follow.meditating = true;
@@ -90,7 +91,7 @@ export class MeditationActivity {
   }
 
   playRhythm() {
-    if (!this.ready) return;
+    if (!this.ready || this.mat < 0) return;
     const mat = this.mat;
     const mates = this.mates;
     this.app.activities.current = null;

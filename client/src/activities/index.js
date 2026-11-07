@@ -70,7 +70,6 @@ export class Activities {
     if (isInsideHall(x, z)) {
       const mat = this.meditation.nearestFreeMat(x, z);
       if (mat >= 0) return { key: `mat${mat}`, label: 'Ngồi thiền', run: () => this.meditation.start(mat) };
-      return null;
     }
     if (dist2d(x, z, ABBOT.x, ABBOT.z) < ABBOT.actionRadius) {
       return { key: 'abbot', label: 'Xin thầy một lời', run: () => this.app.world.abbot.advise() };
@@ -104,7 +103,7 @@ export class Activities {
     if (dist2d(x, z, TEA.x, TEA.z) < TEA.radius) {
       return { key: 'tea', label: 'Rút quẻ vận đơn', run: () => this.fortune.start() };
     }
-    return null;
+    return { key: 'meditate-anywhere', label: 'Thiền tại chỗ', run: () => this.meditation.start() };
   }
 
   update(dt) {
