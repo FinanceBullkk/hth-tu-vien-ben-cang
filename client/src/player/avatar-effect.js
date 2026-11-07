@@ -10,7 +10,8 @@
 // 7 Nguyệt bạch — trăng lưỡi liềm bạc treo sau vai, dải sao bạc nghiêng, bụi trăng rơi, chân ngôn 月;
 // 8 Hắc ám — hắc viêm lửa đen lõi tím vờn quanh người, vũng âm khí nuốt sáng, trận lục lăng, quỷ hỏa, chân ngôn 魔;
 // 9 Long quyền — song long lửa quấn thân ngược chiều, vương miện lửa trên đầu, hỏa quyền bùng
-// kèm lõi trắng, sóng xung kích dội từ chân, tàn lửa bay ngược trời, chân ngôn 龍.
+// kèm lõi trắng, chấn địa kiểu Tempest: sóng xung kích cam vàng dội từ chân kèm chỏm lửa bùng
+// theo rìa sóng, chân ngôn 龍.
 import * as THREE from 'three';
 
 // ---- texture vẽ tay bằng canvas, cache theo tên dùng chung mọi avatar ----
@@ -778,7 +779,7 @@ const PALETTES = [
   [0x7ee8a0, 0xd0ffd8],
   [0xf6f7ff, 0xcdd9ff],
   [0x7a2ecc, 0x2a0d4a],
-  [0xff5c3f, 0xffc95c],
+  [0xff3d00, 0xffa200],
 ];
 const BASE_OPACITY = 0.9;
 
@@ -2015,12 +2016,10 @@ export function createEffect(effect, lowQuality = false) {
     };
   } else {
     // LONG QUYỀN — song long lửa quấn thân ngược chiều là chủ đạo, hỏa liên kèm trận tâm xoay,
-    // vương miện lửa trên đầu, hỏa quyền bùng đan nhau kèm lõi trắng, sóng xung kích dội từ chân,
-    // tàn lửa bay ngược trời, bước đi thì cả trận bùng theo, chân ngôn 龍.
-    const emberCount = lowQuality ? 14 : 28;
+    // vương miện lửa trên đầu, hỏa quyền bùng đan nhau kèm lõi trắng, chấn địa Tempest:
+    // sóng xung kích dội từ chân kèm chỏm lửa bùng theo rìa sóng, chân ngôn 龍.
     const sparkCount = lowQuality ? 12 : 22;
-    fillSeeds(seed, emberCount);
-    const pool = sprite(glowTexture(), colors[0], 1.35, 1.35, 0, 0.04, 0, 0.34);
+    const pool = sprite(glowTexture(), colors[0], 1.35, 1.35, 0, 0.04, 0, 0.4);
     const pillar = sprite(wispTexture(), colors[0], 0.55, 1.8, 0, 0.9, 0, 0.16);
     const lotus = flatMesh(lotusTexture(), colors[0], 1.8, 0.02, 0.9); // hỏa liên cõng người
     const core = flatMesh(mandalaTexture(), colors[1] ?? colors[0], 1.42, 0.045, 0.6); // trận tâm xoay ngược
@@ -2086,27 +2085,34 @@ export function createEffect(effect, lowQuality = false) {
       fists.push({ spBody, spHot, body, hot, side });
     }
 
-    // sóng xung kích: vòng sáng dội từ chân ra, hai nhịp lệch pha, mạnh hơn khi bước
-    const pulses = [];
-    for (let k = 0; k < 2; k++) {
+    // chấn địa Tempest (E): ba vòng sóng xung kích dội từ chân ra lệch pha, mỗi vòng kéo theo
+    // chỏm lửa bùng lên theo rìa — sóng lan đến đâu lửa bùng đến đó; bước đi thì dội mạnh hơn
+    const waves = [];
+    const waveCount = lowQuality ? 2 : 3;
+    const crestCount = lowQuality ? 4 : 6;
+    for (let k = 0; k < waveCount; k++) {
       const entry = dynMat(() => new THREE.MeshBasicMaterial({
         map: ringTexture(), color: colors[k % colors.length], transparent: true, depthWrite: false,
         blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0,
       }), 0);
-      const mesh = new THREE.Mesh(track(new THREE.PlaneGeometry(1, 1)), entry.mat);
-      mesh.rotation.x = -Math.PI / 2;
-      mesh.position.y = 0.03;
-      mesh.userData.entry = entry;
-      mesh.userData.k = k;
-      group.add(mesh);
-      pulses.push(mesh);
+      const ring = new THREE.Mesh(track(new THREE.PlaneGeometry(1, 1)), entry.mat);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.03;
+      ring.userData.entry = entry;
+      ring.userData.k = k;
+      group.add(ring);
+      const crest = dynMat(() => new THREE.SpriteMaterial({
+        map: flameTexture(), color: colors[k % colors.length], transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending, opacity: 0,
+      }), 0);
+      const flames = [];
+      for (let i = 0; i < crestCount; i++) {
+        const sp = new THREE.Sprite(crest.mat);
+        group.add(sp);
+        flames.push(sp);
+      }
+      waves.push({ ring, entry, crest, flames, k });
     }
-
-    // tàn lửa bay ngược: dày và to hơn, bước đi thì bốc nhanh hơn
-    const embers = new THREE.InstancedMesh(track(new THREE.PlaneGeometry(0.16, 0.2)), glowMat({
-      map: flameTexture(), color: colors[1] ?? colors[0],
-    }), emberCount);
-    group.add(embers);
 
     const sparks = makeTwinkles(sparkCount, 0.06, (i, n) => ({
       a0: (i / n) * Math.PI * 3.2,
@@ -2145,31 +2151,27 @@ export function createEffect(effect, lowQuality = false) {
         const punch = Math.pow(0.5 + 0.5 * Math.sin(t * 4.2 + (f.side > 0 ? 0 : Math.PI / 2)), 3);
         f.spBody.position.set(f.side * (0.31 + walkAmt * 0.07), 0.76 + punch * 0.12, 0.08 - walkAmt * 0.14);
         f.spBody.scale.set(0.11 + punch * 0.13, 0.16 + punch * 0.19, 1);
-        f.body.base = 0.5 + punch * 0.55;
+        f.body.base = 0.55 + punch * 0.6;
         f.spHot.position.copy(f.spBody.position);
         f.spHot.position.y += 0.03 + punch * 0.05;
         f.spHot.scale.setScalar(0.06 + punch * 0.1);
-        f.hot.base = 0.35 + punch * 0.65;
+        f.hot.base = 0.45 + punch * 0.6;
       }
-      for (const pu of pulses) {
-        const p = (t * 0.42 + pu.userData.k * 0.5) % 1; // sóng dội từ chân rồi tan
-        pu.scale.setScalar(0.4 + p * 1.9);
-        pu.userData.entry.base = (1 - p) * (0.34 + walkAmt * 0.3);
+      for (const w of waves) {
+        const p = (t * 0.55 + w.k / waveCount) % 1; // sóng dội dày, lệch pha đều nhau
+        const reach = 0.35 + p * 2.05;
+        w.ring.scale.setScalar(reach);
+        const life = Math.pow(Math.sin(p * Math.PI), 0.7); // rực nhất lúc sóng đang lan rộng
+        w.entry.base = life * (0.62 + walkAmt * 0.3);
+        // chỏm lửa bùng theo rìa sóng: cao lên lúc sóng lan xa rồi tắt khi sóng tan
+        const rEdge = reach * 0.485;
+        for (let i = 0; i < w.flames.length; i++) {
+          const a = (i / w.flames.length) * 6.283 + w.k * 0.7 + t * 0.25;
+          w.flames[i].position.set(Math.cos(a) * rEdge, 0.1 + life * 0.24, Math.sin(a) * rEdge);
+          w.flames[i].scale.set(0.1, 0.16 + life * 0.2, 1);
+        }
+        w.crest.base = Math.pow(Math.sin(p * Math.PI), 0.8) * (0.55 + walkAmt * 0.25);
       }
-      for (let i = 0; i < emberCount; i++) {
-        const a0 = seed[i * 4], r0 = seed[i * 4 + 1], speed = seed[i * 4 + 2], tw = seed[i * 4 + 3];
-        const yn = (t * 0.34 * speed + tw) % 1; // tàn lửa bay ngược lên rồi lặp
-        const a = a0 + t * 0.32 * speed * boost;
-        const r = r0 * (1 - yn * 0.3) + Math.sin(t * 1.1 + tw * 7) * 0.03;
-        e.set(0, 0, t * 2.4 * speed + tw * 6.28); // lửa dựng đứng, tự xoay quanh trục mình
-        q.setFromEuler(e);
-        const sc = Math.max(0.001, Math.sin(yn * Math.PI)) * 0.95;
-        v.set(Math.cos(a) * r, 0.05 + yn * 1.55, Math.sin(a) * r);
-        s.set(sc, sc, sc);
-        m4.compose(v, q, s);
-        embers.setMatrixAt(i, m4);
-      }
-      embers.instanceMatrix.needsUpdate = true;
       for (let i = 0; i < sparkCount; i++) {
         const st = sparks.seeds[i];
         const a = st.a0 + t * 0.08 * st.speed * boost;
