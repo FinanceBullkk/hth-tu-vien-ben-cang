@@ -53,10 +53,11 @@ export function createAdminRouter({ config, saveContent, db, room, wishes, bell,
       res.status(403).type('text/plain; charset=utf-8').send('Link admin không đúng.');
       return;
     }
-    res.sendFile(path.join(UI_DIR, 'admin.html'));
+    // Fixed filenames only; checkouts may live beneath a hidden directory.
+    res.sendFile(path.join(UI_DIR, 'admin.html'), { dotfiles: 'allow' });
   });
-  router.get('/admin/admin.js', (_req, res) => res.sendFile(path.join(UI_DIR, 'admin-client.js')));
-  router.get('/admin/admin.css', (_req, res) => res.sendFile(path.join(UI_DIR, 'admin.css')));
+  router.get('/admin/admin.js', (_req, res) => res.sendFile(path.join(UI_DIR, 'admin-client.js'), { dotfiles: 'allow' }));
+  router.get('/admin/admin.css', (_req, res) => res.sendFile(path.join(UI_DIR, 'admin.css'), { dotfiles: 'allow' }));
 
   const api = express.Router();
   api.use((req, res, next) => {
