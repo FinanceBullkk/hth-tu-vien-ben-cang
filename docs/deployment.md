@@ -57,7 +57,29 @@ docker stop hth-tunnel-fixed
 
 Start it again with `docker start hth-tunnel-fixed`. Domain remains unchanged.
 
-## Latest release: 2026-11-07 campus layout and auras
+## Latest release: 2026-11-07 campus healing
+
+Deployed at 13:22 (UTC+7) from `codex/campus-healing` commit `ffa4ccb` as
+`hth:campus-healing-261107-1320`. Brighter grass, forest and jade-roof GLBs,
+visible entrance steps, and static page paths that work in isolated checkouts.
+No database schema change. No player, wish or config reset.
+
+Windows local suite: 90/90 and Vite build passed. Clean `node:24` Docker build:
+90/90 and Vite build passed. Candidate container using a private copy of live
+data: health, page bundle (`index-BAp98ZR1.js`), model and DB quick_check passed.
+
+Public cutover kept `hth-net`, `127.0.0.1:3000`, `TRUST_PROXY=1`, the data volume,
+restart policy, memory/PID limits and security flags. After cutover, local and
+public health, bundle hash, pagoda GLB, Socket.IO polling handshake, music range
+request (206) and DB quick_check passed. `CapEff=0`, `NoNewPrivs=1` confirmed.
+18 players and 7 wishes matched the backup; tunnel stayed running.
+
+Rollback container `hth-pre-healing-261107-1320` is stopped with `restart=no`,
+using `hth:campus-261107-1155`. Private DB/config snapshot is in the data volume
+at `backups/cutover-healing-261107-1320/`. Restoring its DB would discard newer
+activity; switch image without restoring DB when possible.
+
+## Previous release: 2026-11-07 campus layout and auras
 
 Deployed as `hth:campus-261107-1155` (also `hth:latest`) at 12:00 (UTC+7), built from a clean export
 of commit `5ee7e0d`. Campus areas are rearranged and five auras added. No `server/` change and no DB
