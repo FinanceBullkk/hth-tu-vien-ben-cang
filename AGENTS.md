@@ -53,8 +53,21 @@ Chủ dự án cấp quyền thường trực cho bốn việc: **commit, push l
 Không bao giờ tự ý: force push, push thẳng vào `main`, bỏ qua hook bằng `--no-verify`, viết lại lịch sử đã push. GitHub hiện không chặn push vào `main`, nên quy tắc này chỉ dựa vào việc tuân thủ.
 
 - Nhánh: `feat/...`, `fix/...`, `chore/...`, lấy từ `main` mới nhất. Không đặt tiền tố theo tên công cụ. Nhánh `codex/...` đang có chỉ dùng tiếp đến khi merge.
+- **Mỗi việc một nhánh và một worktree riêng**, kể cả việc nhỏ. Không sửa trên `main` hay trên checkout chính `D:\dichua`, vì phiên khác có thể đang làm dở ở đó. Xem mục "Mỗi việc một worktree" bên dưới.
 - Commit message: `<type>: <mô tả ngắn>`, với `type` là `feat`, `fix`, `refactor`, `test`, `docs` hoặc `chore`. Mỗi commit một việc. Không nhắc tới AI hay tên công cụ.
 - PR vào `main`, squash merge sau khi CI xanh. CI chỉ chạy với PR và push vào `main`, không chạy khi push lên nhánh chưa có PR.
+
+### Mỗi việc một worktree
+
+Nhiều phiên (người và AI) làm song song trên cùng máy. Mỗi phiên làm trong worktree riêng thì không ai ghi đè hay làm bẩn file của người khác.
+
+1. Bắt đầu: `git fetch origin`, rồi `git worktree add .claude/worktrees/<tên-việc> -b <nhánh> origin/main`, rồi làm mọi thứ trong thư mục đó.
+2. `node_modules`: tạo junction tới bản của checkout chính thay vì cài lại (`New-Item -ItemType Junction -Path <worktree>
+ode_modules -Target D:\dichua
+ode_modules` trên Windows, `ln -s` trên Linux).
+3. Trước khi mở PR và trước khi merge: merge `origin/main` mới nhất vào nhánh, chạy lại test. Trong lúc mình làm, `main` có thể đã có PR khác.
+4. Xong việc (PR đã merge): **gỡ junction `node_modules` trước**, rồi `git worktree remove .claude/worktrees/<tên-việc>` và xoá nhánh. Nếu chưa gỡ junction, lệnh xoá worktree có thể xoá luôn `node_modules` thật của checkout chính.
+5. Không động vào worktree, nhánh hay stash của phiên khác. Thay vì `git stash` trần, dùng commit tạm trên nhánh của mình.
 
 Trước khi commit:
 
