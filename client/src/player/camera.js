@@ -2,8 +2,9 @@
 import * as THREE from 'three';
 import { CIRCLES, ROOF_ZONES, cameraSegmentT, inBox } from '../../../shared/layout.js';
 
-const MIN_PITCH = 0.08;
-const MAX_PITCH = 0.95;
+// Cho nhìn thấp gần ngang mặt đất và từ trên cao xuống sâu, kiểu Trove/Where Winds Meet.
+const MIN_PITCH = -0.1;
+const MAX_PITCH = 1.25;
 
 export class FollowCamera {
   constructor(camera) {
@@ -15,7 +16,7 @@ export class FollowCamera {
     this.shot = null; // { pos, look }: góc máy cố định do minigame đặt.
     this.reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.minDist = 3.2;
-    this.maxDist = 13;
+    this.maxDist = 16;
     this.currentDist = 7.5;
     this.target = new THREE.Vector3(0, 1, 36.5);
     this.look = new THREE.Vector3(0, 1, 36.5);

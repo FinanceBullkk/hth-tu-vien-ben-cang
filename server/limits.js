@@ -1,17 +1,4 @@
-// Giới hạn chống spam khi game mở ra internet: đếm theo IP trong một cửa sổ thời gian, mã vào cửa.
-import crypto from 'node:crypto';
-
-/** Chuẩn hoá mã vào cửa: bỏ khoảng trắng, viết hoa, để gõ trên điện thoại khỏi sai vặt. */
-export function normalizeCode(value) {
-  return typeof value === 'string' ? value.replace(/\s+/g, '').toUpperCase().slice(0, 64) : '';
-}
-
-/** So sánh mã qua băm để thời gian so sánh không để lộ độ dài hay phần đúng. */
-export function codeMatches(input, expected) {
-  const a = crypto.createHash('sha256').update(normalizeCode(input)).digest();
-  const b = crypto.createHash('sha256').update(normalizeCode(expected)).digest();
-  return crypto.timingSafeEqual(a, b);
-}
+// Giới hạn chống spam khi game mở ra internet: đếm theo IP trong một cửa sổ thời gian.
 
 export class WindowCounter {
   /** @param {number} windowMs độ dài cửa sổ đếm */

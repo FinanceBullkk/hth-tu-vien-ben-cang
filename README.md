@@ -94,12 +94,6 @@ Voice gần kiểu Goose Goose Duck: **Bật voice**, cho phép mic, rồi giữ
 
 Mic cần HTTPS hoặc localhost. Khác mạng có thể cần TURN; Cloudflare Tunnel không chuyển tiếp tiếng WebRTC. Xem [thiết lập voice](docs/proximity-voice.md).
 
-## Mã vào cửa
-
-Game có một mã dùng chung cho cả công ty, không phải tài khoản từng người. Trang admin hiển thị sẵn link dạng `https://.../?code=ABC234`: gửi link đó vào nhóm Zalo, bấm vào là tự điền mã.
-
-Khi nghi lộ mã, vào trang admin đổi mã mới rồi gửi lại link. Người đang chơi vẫn ở lại, ai vào mới hoặc rớt mạng phải dùng mã mới. Nếu cần đẩy hết mọi người ra, khởi động lại server sau khi đổi mã.
-
 ## Đổi nội dung (không cần biết lập trình)
 
 **Cách dễ nhất là dùng trang admin:** mở `http://<địa chỉ server>:3000/admin?key=<adminKey>`. Khoá `adminKey` nằm trong file `config.json`. Mọi thay đổi ở đây có hiệu lực ngay, không cần khởi động lại.
@@ -129,8 +123,6 @@ Tên và lời nói của thầy trụ trì nằm ở đầu file `client/src/sc
 | `dbPath` | `DB_PATH` | Đường dẫn file dữ liệu, mặc định `data/hth.db` |
 | `timezone` | `TZ_GAME` | Múi giờ tính "hôm nay" và giờ chuông |
 | `dayCycleMinutes` | | Độ dài một vòng hoàng hôn → đêm, mặc định 20 phút |
-| `joinCode` | | Mã vào cửa. `"auto"` thì tự tạo ở lần chạy đầu, `""` thì tắt mã. Đổi được trên trang admin |
-| `codeAttemptsPer10Min` | | Số lần nhập sai mã từ một IP trong 10 phút, mặc định 20 |
 | `maxPlayers` | | Số người online tối đa, mặc định 60 |
 | `maxConnections` | | Số kết nối mạng tối đa, mặc định 200 |
 | `maxConnectionsPerIp` | | Số kết nối từ một IP, mặc định 40. Cả văn phòng thường chung một IP nên đừng đặt quá thấp |
@@ -210,7 +202,7 @@ server/
   voice.js       Ghép cặp và chuyển tín hiệu voice theo khoảng cách
   admin.js       API và trang admin (giao diện ở admin-ui/)
   filter.js      Lọc từ có phân biệt dấu
-  limits.js      Giới hạn theo IP, mã vào cửa
+  limits.js      Giới hạn theo IP
   db.js          SQLite
 client/src/
   scene/         Tu viện, cảng, địa hình, trời, hạt, con vật, lời ước 3D, sân chơi của từng hoạt động

@@ -25,22 +25,6 @@ export class Welcome {
       autocomplete: 'nickname',
       enterKeyHint: 'go',
     });
-    this.codeInput = h('input', {
-      id: 'codeInput',
-      class: 'code-input',
-      type: 'text',
-      maxLength: 32,
-      placeholder: 'Mã trong nhóm Zalo công ty',
-      value: this.profile.code ?? '',
-      autocomplete: 'off',
-      autocapitalize: 'characters',
-      spellcheck: false,
-      enterKeyHint: 'go',
-    });
-    this.codeInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') this.submit();
-    });
-    this.codeField = h('label', { class: 'field', for: 'codeInput', hidden: true }, 'Mã vào cửa', this.codeInput);
     this.errorEl = h('p', { class: 'welcome-error', role: 'alert' });
     this.enterBtn = h('button', { class: 'btn primary big', type: 'button', id: 'enterBtn' }, 'Vào');
 
@@ -100,7 +84,6 @@ export class Welcome {
         h('p', { class: 'welcome-sub' }, 'Hít thở một chút giữa giờ nghỉ, cùng cả nhà.'),
         this.music.button,
         this.music.audio,
-        this.codeField,
         h('label', { class: 'field', for: 'nameInput' }, 'Tên của bạn', this.nameInput),
         this.errorEl,
         this.enterBtn,
@@ -167,19 +150,7 @@ export class Welcome {
     this.onPreview(this.profile);
   }
 
-  /** Server cho biết có cần mã không; chỉ khi đó mới hiện ô nhập. */
-  setNeedCode(need) {
-    this.needCode = need;
-    this.codeField.hidden = !need;
-  }
-
   submit() {
-    const code = this.codeInput.value.replace(/\s+/g, '');
-    if (this.needCode && !code) {
-      this.showError('Nhập mã vào cửa nhé, mã có trong nhóm Zalo công ty.');
-      this.codeInput.focus();
-      return;
-    }
     const name = this.nameInput.value.replace(/\s+/g, ' ').trim();
     if (!name) {
       this.showError('Nhập tên hiển thị để cả nhà nhận ra bạn nhé.');
@@ -187,22 +158,16 @@ export class Welcome {
       return;
     }
     this.profile.name = name;
-    this.profile.code = code;
     this.enterBtn.disabled = true;
     this.enterBtn.textContent = 'Đang lên tu viện…';
     this.errorEl.textContent = '';
     this.onEnter({ ...this.profile });
   }
 
-  showError(message, focusCode = false) {
+  showError(message) {
     this.errorEl.textContent = message;
     this.enterBtn.disabled = false;
     this.enterBtn.textContent = 'Vào';
-    if (focusCode) {
-      this.setNeedCode(true);
-      this.codeInput.focus();
-      this.codeInput.select();
-    }
   }
 
   hide() {

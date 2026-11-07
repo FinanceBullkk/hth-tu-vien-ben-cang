@@ -175,17 +175,6 @@
     say('Đã lưu nội dung.');
   });
 
-  // Mã vào cửa
-  function showJoinLink(code) {
-    $('joinLink').textContent = code ? `${location.origin}/?code=${encodeURIComponent(code)}` : `${location.origin}/ (đang tắt mã)`;
-  }
-  $('saveCode').onclick = run(async () => {
-    const res = await api('/join-code', 'PUT', { joinCode: $('joinCode').value });
-    $('joinCode').value = res.joinCode;
-    showJoinLink(res.joinCode);
-    say(res.joinCode ? 'Đã đổi mã vào cửa.' : 'Đã tắt mã vào cửa: ai có link cũng vào được.');
-  });
-
   let formsFilled = false;
 
   async function refresh() {
@@ -194,8 +183,6 @@
     renderOnline(s.online);
     if (!formsFilled) {
       formsFilled = true;
-      $('joinCode').value = s.joinCode || '';
-      showJoinLink(s.joinCode);
       schedule = s.bellSchedule || [];
       renderSchedule();
       $('banned').value = (s.bannedWords || []).join('\n');

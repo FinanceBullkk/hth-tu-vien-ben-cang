@@ -33,7 +33,8 @@ input, textarea { font: inherit; }
 kbd { font: inherit; }
 
 #app, #scene, #labels { position: fixed; inset: 0; }
-#scene { width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
+#scene { width: 100%; height: 100%; display: block; touch-action: none; outline: none; cursor: grab; }
+#scene.cam-dragging { cursor: grabbing; }
 #labels { pointer-events: none; z-index: 1; overflow: hidden; }
 
 /* Vignette thủy mặc phủ lên cảnh, dưới lớp UI: đậm dần theo mép, thêm vân giấy rất nhẹ. */
@@ -129,8 +130,6 @@ kbd { font: inherit; }
 .welcome-sub { margin: 0 0 16px; color: var(--muted); }
 .field { display: block; margin: 0 0 14px; font: 600 14.5px/1.3 var(--serif); color: #4a3016; letter-spacing: .02em; }
 .field input { display: block; width: 100%; margin-top: 5px; padding: 10px 12px; border: 1px solid #cdbda2; border-radius: 9px; background: #fffdf8; }
-.field input.code-input { text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
-.field input.code-input::placeholder { text-transform: none; letter-spacing: 0; font-weight: 400; }
 .swatches { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 6px; }
 .swatch { position: relative; aspect-ratio: 1; border: 3px solid transparent; border-radius: 50%; padding: 0; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .15); }
 .swatch.on { border-color: #2b1c13; }

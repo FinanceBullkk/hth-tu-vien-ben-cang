@@ -12,7 +12,7 @@ at `%LOCALAPPDATA%\HTH-TuVien\tunnel\token` on this PC.
 
 Game container: `hth-tu-vien-ben-cang` on Docker network `hth-net`, with
 `TRUST_PROXY=1` and `--restart unless-stopped`. Only `127.0.0.1:3000` is published on the host. Persistent DB,
-join code, admin key, and shared radio clock are in Docker volume
+admin key, and shared radio clock are in Docker volume
 `hth-tu-vien-ben-cang-data`. The tunnel forwards to
 `http://hth-tu-vien-ben-cang:3000`.
 
@@ -24,7 +24,7 @@ docker logs hth-tunnel-fixed --tail 30
 curl.exe --noproxy '*' https://game.hthlogistics.top/api/health
 ```
 
-Add `?code=<joinCode>` only when sending an invitation. Never share the admin
+Never share the admin
 key. Updating game image
 requires rebuilding and recreating the game container on `hth-net` with the
 same volume, localhost port, `TRUST_PROXY=1`, and these runtime flags; keep

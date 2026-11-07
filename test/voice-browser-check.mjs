@@ -8,7 +8,7 @@ import { once } from 'node:events';
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hth-voice-'));
 const cfg = JSON.parse(fs.readFileSync(new URL('../config.example.json', import.meta.url), 'utf8'));
-Object.assign(cfg, { port: 3938, joinCode: '', bellSchedule: [], adminKey: 'v'.repeat(32) });
+Object.assign(cfg, { port: 3938, bellSchedule: [], adminKey: 'v'.repeat(32) });
 fs.writeFileSync(path.join(dir, 'config.json'), JSON.stringify(cfg));
 const proc = spawn(process.execPath, ['server/index.js'], {
   cwd: path.resolve(import.meta.dirname, '..'),
