@@ -1,18 +1,15 @@
 // Câu cá ở hồ: chạm mặt nước để thả → chờ → cá cắn thì giữ chấm trong vùng xanh → đầy vòng tự kéo lên.
-// Client mô phỏng để vẽ mượt; server mới là bên quyết định bóng nào, cá nào, đầy hay tuột.
+// File này giữ vòng trạng thái và nói chuyện với server; ngắm và giằng co nằm ở hai pha riêng.
 import { SHADOW_SIZES } from '../../../shared/fish-lake-shadows.js';
-import { BAITS, DEFAULT_BAIT, FISH_FIGHT, castSpot, fightAdvance, fightGreen, fightNew, fightTune } from '../../../shared/fish.js';
+import { BAITS, DEFAULT_BAIT } from '../../../shared/fish.js';
 import { LAKE } from '../../../shared/layout.js';
 import { FishingPanel } from '../ui/fishing-panel.js';
+import { FishingAimPhase, SHADOW_TALK_FROM } from './fishing-aim-phase.js';
 import { lakeShot } from './fishing-camera-shot.js';
 import { baitUnlocked, catchesSoFar, coachLines, noteCatch } from './fishing-coach.js';
+import { FishingFightPhase } from './fishing-fight-phase.js';
 
-const KEY_NEEDLE_PER_SEC = 1.3;
-const NEEDLE_FOLLOW_RATE = 16;
-const PULL_INTERVAL_MS = 120;
 const COMPANY_INTERVAL_S = 1;
-const OFF_ZONE_HINT_S = 0.7; // lệch lâu chừng này mới nhắc, để khỏi nhấp nháy khi chỉ trượt nhẹ
-const SHADOW_TALK_FROM = 2; // chỉ gọi tên bóng cá sau khi đã giới thiệu khái niệm này
 const LEFT_KEYS = new Set(['KeyA', 'ArrowLeft']);
 const RIGHT_KEYS = new Set(['KeyD', 'ArrowRight']);
 const WALK_KEYS = new Set([...LEFT_KEYS, ...RIGHT_KEYS, 'KeyW', 'KeyS', 'ArrowUp', 'ArrowDown']);
@@ -30,7 +27,6 @@ export class FishingActivity {
     this.generation = 0;
     this.state = 'idle';
     this.bait = DEFAULT_BAIT;
-    this.aimX = 0.5;
     this.lines = coachLines(app.isTouch);
     this.panel = new FishingPanel({
       onPress: (p) => this.press(p),
@@ -39,6 +35,9 @@ export class FishingActivity {
       onBait: (id) => this.setBait(id),
       onExit: () => app.activities.exit(),
     });
+    const phase = { app, panel: this.panel, lines: this.lines };
+    this.aiming = new FishingAimPhase(phase);
+    this.fighting = new FishingFightPhase({ ...phase, onFull: () => this.reel() });
   }
 
   start() {
@@ -49,28 +48,23 @@ export class FishingActivity {
     this.earned = 0;
     this.total = catchesSoFar();
     this.companyClock = COMPANY_INTERVAL_S;
-    this.showRing = false;
     this.panel.show();
     this.panel.setBait(this.bait);
     this.panel.setTally(0, 0);
-    const { me, world, follow } = app;
-    this.target = castSpot(me.x, me.z);
+    this.aiming.reset();
     this.aim();
     if (app.chat.open) app.chat.close();
+    const { me, world, follow } = app;
     me.rot = Math.atan2(LAKE.x - me.x, LAKE.z - me.z);
     world.fishing.setRod(app.sid, { x: me.x, z: me.z, on: true });
     follow.shot = lakeShot(me.x, me.z);
     app.audio.rustle();
   }
 
-  /** message là lời nhắc ở lại tới khi người chơi thả câu tiếp (tip, cá vừa thoát). */
   aim(message) {
     this.state = 'aim';
     this.pressing = false;
-    this.aimMessage = message ?? null;
-    this.lastAimHint = null;
-    this.panel.mode('aim', baitUnlocked(this.total));
-    this.panel.setHint(message ?? this.lines.aim, { coach: this.total === 0 });
+    this.aiming.enter(message, this.total);
   }
 
   setBait(id) {
@@ -86,39 +80,21 @@ export class FishingActivity {
     this.setBait(BAITS[(index + 1) % BAITS.length].id);
   }
 
-  /** Đổi điểm trên màn hình sang chỗ phao sẽ rơi; chạm đâu cũng ra một điểm trên mặt nước. */
-  aimAt({ x, y }) {
-    const { app } = this;
-    const point = app.world.fishing.waterPoint(x, y, app.camera);
-    this.target = castSpot(app.me.x, app.me.z, point?.x, point?.z);
-    this.showRing = true;
-  }
-
   press(pointer) {
     this.panel.hideCatch();
     if (this.state === 'aim') {
       this.pressing = true;
-      this.aimAt(pointer);
+      this.aiming.aimAt(pointer);
     } else if (this.state === 'waiting') {
       this.wiggle();
     } else if (this.state === 'fighting') {
-      this.dragX = pointer.clientX;
-      if (!pointer.touch) this.aimX = this.panel.spanValue(pointer.clientX);
+      this.fighting.press(pointer);
     }
   }
 
   move(pointer) {
-    if (this.state === 'aim') {
-      this.aimAt(pointer);
-    } else if (this.state === 'fighting') {
-      // Cảm ứng kéo tương đối: đặt ngón ở đâu cũng được, chấm không nhảy theo chỗ đặt ngón.
-      if (pointer.touch) {
-        this.aimX = Math.min(1, Math.max(0, this.aimX + this.panel.spanDelta(pointer.clientX - (this.dragX ?? pointer.clientX))));
-        this.dragX = pointer.clientX;
-      } else {
-        this.aimX = this.panel.spanValue(pointer.clientX);
-      }
-    }
+    if (this.state === 'aim') this.aiming.aimAt(pointer);
+    else if (this.state === 'fighting') this.fighting.move(pointer);
   }
 
   release() {
@@ -128,7 +104,7 @@ export class FishingActivity {
   async cast() {
     const { app } = this;
     const generation = this.generation;
-    const { bx, bz } = this.target;
+    const { bx, bz } = this.aiming.target;
     this.state = 'casting';
     this.pressing = false;
     this.panel.hideCatch();
@@ -157,42 +133,15 @@ export class FishingActivity {
   }
 
   /** Cá cắn: không có pha canh giờ móc, vòng cung chạy ngay sau một nhịp chuẩn bị. */
-  onBite({ seed, rarity, startAt, assist }) {
+  onBite(bite) {
     if (this.state !== 'waiting' && this.state !== 'casting') return;
-    const { app } = this;
-    const generation = this.generation;
+    const { audio } = this.app;
     this.state = 'fighting';
-    this.fight = fightNew({ seed, rarity, startAt, assist });
-    this.needle = 0.5;
-    this.aimX = 0.5;
-    this.dragX = null;
-    this.lastPull = 0;
-    this.offZone = 0;
-    this.nudging = false;
     this.panel.mode('fighting');
-    this.panel.setHint(this.lines.bite, { coach: true });
-    this.panel.gauge.setRarity(rarity);
-    this.renderFight();
-    app.audio.plop();
-    app.audio.splash(0.6);
+    this.fighting.begin(bite, this.total);
+    audio.plop();
+    audio.splash(0.6);
     buzz(180);
-    setTimeout(() => {
-      if (generation === this.generation && this.state === 'fighting') this.showFightHint();
-    }, FISH_FIGHT.graceMs);
-  }
-
-  /** Người mới giữ lời dẫn suốt con cá; người đã quen thì lời dẫn tự mờ. */
-  showFightHint() {
-    this.panel.setHint(this.lines.fight, this.total === 0 ? { coach: true } : { fadeAfter: 3500 });
-  }
-
-  async sendPull() {
-    const generation = this.generation;
-    const res = await this.app.net.call('fish:pull', { x: Math.round(this.needle * 1000) / 1000 }).catch(() => null);
-    if (generation !== this.generation || this.state !== 'fighting' || !res?.ok) return;
-    if (res.ready) { this.reel(); return; }
-    // Kéo số bên client về gần số server; lệch ít nên không thấy giật.
-    if (typeof res.progress === 'number') this.fight.progress += (res.progress - this.fight.progress) * 0.5;
   }
 
   /** Đầy vòng là cá về tay luôn: không bắt người chơi bấm thêm một bước để rồi mất cá vì chậm tay. */
@@ -200,8 +149,7 @@ export class FishingActivity {
     const { app } = this;
     const generation = this.generation;
     this.state = 'reeling';
-    this.fight.progress = 1;
-    this.renderFight();
+    this.fighting.finish();
     this.panel.mode('reeling');
     this.panel.setHint('');
     const res = await app.net.call('fish:reel').catch(() => null);
@@ -218,14 +166,15 @@ export class FishingActivity {
     app.audio.splash(1);
     app.audio.chime(0.06);
     buzz([60, 40, 90]);
-    this.showRing = false;
+    this.aiming.hideRing();
     this.aim(this.lines.tips[this.total]);
   }
 
   escaped() {
     if (this.state === 'idle') return;
+    this.fighting.stop();
     this.app.audio.rustle();
-    this.showRing = false;
+    this.aiming.hideRing();
     this.aim(this.lines.escaped);
   }
 
@@ -246,60 +195,9 @@ export class FishingActivity {
       this.app.activities.exit();
       return false;
     }
-    if (LEFT_KEYS.has(code)) { this.keyLeft = down; return true; }
-    if (RIGHT_KEYS.has(code)) { this.keyRight = down; return true; }
+    if (LEFT_KEYS.has(code)) { this.fighting.keyLeft = down; return true; }
+    if (RIGHT_KEYS.has(code)) { this.fighting.keyRight = down; return true; }
     return false;
-  }
-
-  renderFight() {
-    const { fight, needle } = this;
-    const { half } = fightTune(fight.rarity, fight.assist);
-    const center = fightGreen(this.app.net.now() - fight.startAt, fight.seed, fight.rarity, fight.assist);
-    this.panel.gauge.render({ center, half, needle, progress: fight.progress, ready: this.state === 'reeling' });
-    return { center, half };
-  }
-
-  /** Vòng ngắm đổi màu khi chạm bóng cá. Bóng di chuyển nên phải dò lại mỗi khung hình. */
-  updateAim() {
-    const { app } = this;
-    const shadow = app.world.fishing.setAim(this.showRing ? this.target : null, app.net.now());
-    if (this.aimMessage || this.total < SHADOW_TALK_FROM) return;
-    const hint = shadow ? `${SHADOW_SIZES[shadow.size].label} ở đây, thả đi!` : this.lines.aim;
-    if (hint === this.lastAimHint) return;
-    this.lastAimHint = hint;
-    this.panel.setHint(hint);
-  }
-
-  updateFight(dt) {
-    const { app } = this;
-    const keyDir = (this.keyRight ? 1 : 0) - (this.keyLeft ? 1 : 0);
-    if (keyDir) this.aimX = Math.min(1, Math.max(0, this.aimX + keyDir * KEY_NEEDLE_PER_SEC * dt));
-    this.needle += (this.aimX - this.needle) * (1 - Math.exp(-dt * NEEDLE_FOLLOW_RATE));
-    const now = app.net.now();
-    fightAdvance(this.fight, this.needle, now);
-    // Giữ dưới 1 chờ server xác nhận, tránh vòng đầy mà chưa có cá.
-    this.fight.progress = Math.min(0.995, Math.max(0.01, this.fight.progress));
-    const { center, half } = this.renderFight();
-    app.world.fishing.struggle(app.sid, center - 0.5, this.needle - 0.5);
-    this.updateDirectionHint(dt, center, half, now);
-    if (now - this.lastPull >= PULL_INTERVAL_MS) {
-      this.lastPull = now;
-      this.sendPull();
-    }
-  }
-
-  /** Lệch khỏi vùng xanh một lúc thì nói thẳng phải kéo về bên nào. */
-  updateDirectionHint(dt, center, half, now) {
-    if (now < this.fight.startAt) return;
-    const off = Math.abs(this.needle - center) > half;
-    this.offZone = off ? this.offZone + dt : 0;
-    if (this.offZone >= OFF_ZONE_HINT_S) {
-      this.nudging = true;
-      this.panel.setHint(center < this.needle ? this.lines.pullLeft : this.lines.pullRight, { coach: true });
-    } else if (this.nudging && !off) {
-      this.nudging = false;
-      this.showFightHint();
-    }
   }
 
   /** Ai khác đang cầm cần quanh hồ: rods giữ cả lúc giữa hai lượt nên danh sách không nhấp nháy. */
@@ -317,8 +215,8 @@ export class FishingActivity {
 
   update(dt) {
     this.updateCompany(dt);
-    if (this.state === 'aim') this.updateAim();
-    else if (this.state === 'fighting') this.updateFight(dt);
+    if (this.state === 'aim') this.aiming.update();
+    else if (this.state === 'fighting') this.fighting.update(dt);
   }
 
   cancel() {
@@ -326,8 +224,7 @@ export class FishingActivity {
     ++this.generation;
     this.state = 'idle';
     this.pressing = false;
-    this.keyLeft = false;
-    this.keyRight = false;
+    this.fighting.stop();
     this.panel.hide();
     app.follow.shot = null;
     app.world.fishing.setAim(null);
