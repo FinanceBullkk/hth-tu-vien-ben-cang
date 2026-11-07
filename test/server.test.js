@@ -281,9 +281,10 @@ test('vị trí phát 20 lần/giây và kèm tuổi mẫu theo mốc client, m�
 test('ngoại hình: nhận đủ bộ skin mới, người khác nhìn thấy, giá trị ngoài phạm vi bị kẹp', async () => {
   const a = await connect();
   const res = await call(a, 'hello', {
-    name: 'Võ Sư', color: 0, hat: 6, attire: 3, weapon: 3, effect: 9, playerId: 'b'.repeat(32),
+    name: 'Võ Sư', color: 0, hair: 3, hat: 6, attire: 3, weapon: 3, effect: 9, playerId: 'b'.repeat(32),
   });
   assert.equal(res.ok, true);
+  assert.equal(res.snapshot.me.hair, 3);
   assert.equal(res.snapshot.me.hat, 6);
   assert.equal(res.snapshot.me.attire, 3);
   assert.equal(res.snapshot.me.weapon, 3);
@@ -292,6 +293,7 @@ test('ngoại hình: nhận đủ bộ skin mới, người khác nhìn thấy, 
   // Người vào sau nhìn thấy đúng ngoại hình qua snapshot.
   const b = await join('Khán Giả');
   const row = b.res.snapshot.players.find((p) => p.sid === res.sid);
+  assert.equal(row.hair, 3);
   assert.equal(row.hat, 6);
   assert.equal(row.attire, 3);
   assert.equal(row.weapon, 3);
@@ -301,9 +303,10 @@ test('ngoại hình: nhận đủ bộ skin mới, người khác nhìn thấy, 
   // mỗi kết nối chỉ vào phòng một lần; trùng playerId để nối tiếp người chơi cũ).
   const junkSock = await connect();
   const junk = await call(junkSock, 'hello', {
-    name: 'Võ Sư', hat: 99, attire: -5, weapon: 'kiếm', effect: 1e9, playerId: 'b'.repeat(32),
+    name: 'Võ Sư', hair: 99, hat: 99, attire: -5, weapon: 'kiếm', effect: 1e9, playerId: 'b'.repeat(32),
   });
   assert.equal(junk.ok, true);
+  assert.equal(junk.snapshot.me.hair, 0);
   assert.equal(junk.snapshot.me.hat, 0);
   assert.equal(junk.snapshot.me.attire, 0);
   assert.equal(junk.snapshot.me.weapon, 0);
@@ -311,6 +314,25 @@ test('ngoại hình: nhận đủ bộ skin mới, người khác nhìn thấy, 
   a.disconnect();
   junkSock.disconnect();
   b.s.disconnect();
+});
+
+test('slot tóc: chọn riêng, client cũ không gửi hair thì di trú từ id mũ cũ', async () => {
+  // Client bản cũ không có slot tóc: id hat 0-2 là kiểu tóc, id mũ thật thì tóc về mặc định.
+  const legacyBun = await connect();
+  const resBun = await call(legacyBun, 'hello', { name: 'Tóc Cũ', color: 0, hat: 2, playerId: 'd'.repeat(32) });
+  assert.equal(resBun.snapshot.me.hair, 2);
+  const legacyHat = await connect();
+  const resHat = await call(legacyHat, 'hello', { name: 'Mũ Cũ', color: 0, hat: 5, playerId: 'c'.repeat(32) });
+  assert.equal(resHat.snapshot.me.hair, 0);
+
+  // Client mới gửi hair: chọn riêng tóc + mũ, vào lại với look mới thì nhận look mới.
+  const fresh = await connect();
+  const resNew = await call(fresh, 'hello', { name: 'Tóc Mới', color: 0, hair: 5, hat: 7, playerId: 'd'.repeat(32) });
+  assert.equal(resNew.snapshot.me.hair, 5);
+  assert.equal(resNew.snapshot.me.hat, 7);
+  legacyBun.disconnect();
+  legacyHat.disconnect();
+  fresh.disconnect();
 });
 
 test('chat: phát cho mọi người, chặn từ thô, giới hạn 2 giây, cắt 80 ký tự', async () => {

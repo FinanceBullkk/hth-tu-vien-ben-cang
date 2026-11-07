@@ -23,6 +23,7 @@ export class Remotes {
     const avatar = new Avatar({
       name: p.name,
       color: p.color,
+      hair: p.hair ?? (p.hat <= 2 ? p.hat : 0),
       hat: p.hat,
       attire: p.attire ?? 0,
       weapon: p.weapon ?? 0,

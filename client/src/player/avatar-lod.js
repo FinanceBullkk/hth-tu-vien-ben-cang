@@ -7,7 +7,8 @@ function shadowParts(avatar) {
   return [
     avatar.body,
     avatar.head.children[0],
-    avatar.hatGroup.children[0],
+    // hatGroup giờ gộp tóc + mũ thành nhóm lồng nhau: lấy mesh đầu tiên tìm được.
+    avatar.hatGroup.getObjectByProperty('isMesh', true),
     avatar.armL.children[0],
     avatar.armR.children[0],
     avatar.legL.children[0],
