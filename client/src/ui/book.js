@@ -116,6 +116,11 @@ export async function openBook(app) {
       stat('độ chuẩn cao nhất (%)', book.meditation.best),
       stat('lần thỉnh chuông', book.bellCount),
       stat('sự kiện chuông đã cùng', book.bellEvents)),
+    h('h3', {}, 'Công pháp'),
+    h('p', {}, book.cultivation
+      ? `${book.cultivation.name} · ${book.cultivation.points}${book.cultivation.next ? `/${book.cultivation.next}` : ' · viên mãn'} công pháp`
+      : 'Khởi khí · 0 công pháp'),
+    h('p', { class: 'muted small' }, 'Hoàn thành Nhịp sen để tích công pháp, nâng hình thái aura đã chọn. Bỏ dở không nhận điểm. Chọn Không vẫn tích điểm nhưng không hiện aura.'),
     h('h3', {}, 'Sổ cá'),
     fishList,
     h('h3', {}, 'Quầy đổi quà'),

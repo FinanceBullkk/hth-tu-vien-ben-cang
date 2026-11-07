@@ -72,6 +72,7 @@ export class Room {
       attire: p.attire,
       weapon: p.weapon,
       effect: p.effect,
+      cultivationTier: p.cultivationTier ?? 0,
       x: p.x,
       z: p.z,
       rot: p.rot,
@@ -296,6 +297,7 @@ export class Room {
 
     const date = localDate(now, this.config.timezone);
     this.db.touchPlayer({ id: pid, name: player.name, color: player.color, hat: player.hat, attire: player.attire, weapon: player.weapon, effect: player.effect, now, isVisit: !isResume });
+    player.cultivationTier = this.db.cultivation(pid).tier;
     if (!isResume) {
       this.db.bumpStat(date, { visits: 1 });
       socket.to(PLAYERS_ROOM).emit('player:join', this.publicPlayer(player));

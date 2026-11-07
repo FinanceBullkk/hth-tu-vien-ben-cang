@@ -109,7 +109,12 @@ export class RhythmGame {
     this.sweepNotes(game, Date.now());
     const summary = rhythmSummary(game.notes.flat());
     if (!game.finished) {
-      if (game.kind === 'meditate') this.db.addMeditation(player.pid, summary.score, Date.now());
+      if (game.kind === 'meditate') {
+        this.db.addMeditation(player.pid, summary.score, Date.now());
+        game.cultivation = this.db.cultivation(player.pid);
+        player.cultivationTier = game.cultivation.tier;
+        this.io.emit('cultivation:update', { sid: player.sid, tier: player.cultivationTier });
+      }
       else {
         this.db.bumpBell(player.pid);
         this.db.bumpStat(localDate(Date.now(), this.config.timezone), { bells: 1 });
@@ -120,6 +125,6 @@ export class RhythmGame {
     }
     const tier = summary.score >= 75 ? 'high' : summary.score >= 45 ? 'mid' : 'low';
     const list = this.config.meditationPhrases?.[tier] || [];
-    return { ok: true, saved: true, teu: Math.floor(summary.score / 25) * TEU.rhythmPer25, ...summary, mates: [...(player.medMates || [])], phrase: list.length ? list[crypto.randomInt(list.length)] : 'Một bản nhạc cho mình, một khoảng yên cho cả ngày.' };
+    return { ok: true, saved: true, cultivation: game.cultivation, teu: Math.floor(summary.score / 25) * TEU.rhythmPer25, ...summary, mates: [...(player.medMates || [])], phrase: list.length ? list[crypto.randomInt(list.length)] : 'Một bản nhạc cho mình, một khoảng yên cho cả ngày.' };
   }
 }

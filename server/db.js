@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import Database from 'better-sqlite3';
+import { cultivationProgress } from '../shared/cultivation.js';
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS players (
@@ -180,7 +181,7 @@ export class Db {
         VALUES (@playerId,@date,@text,@bl,@now)`),
       fortunesOf: p('SELECT local_date,text,bl_number FROM fortunes WHERE player_id=? ORDER BY local_date DESC LIMIT 100'),
       medInsert: p('INSERT INTO meditations (player_id,score,created_at) VALUES (?,?,?)'),
-      medStats: p(`SELECT COUNT(*) sessions, MAX(score) best,
+      medStats: p(`SELECT COUNT(*) sessions, MAX(score) best, COALESCE(SUM(score), 0) points,
         (SELECT score FROM meditations m2 WHERE m2.player_id=m.player_id ORDER BY id DESC LIMIT 1) last
         FROM meditations m WHERE player_id=?`),
       bellEventInsert: p('INSERT INTO bell_events (at,participants,on_beat) VALUES (?,?,?)'),
@@ -320,6 +321,10 @@ export class Db {
     this.s.medInsert.run(playerId, score, now);
   }
 
+  cultivation(playerId) {
+    return cultivationProgress(this.s.medStats.get(playerId).points);
+  }
+
   bumpBell(playerId) {
     this.s.bumpBell.run(playerId);
   }
@@ -398,6 +403,7 @@ export class Db {
       pitch: { best: pitch.best, plays: pitch.plays },
       fish: this.s.fishCaughtOf.all(playerId).map((f) => ({ id: f.fish_id, count: f.count, best: f.best_weight, firstAt: f.first_caught_at })),
       meditation: { sessions: med.sessions, best: med.best, last: med.last },
+      cultivation: cultivationProgress(med.points),
       wishes: this.s.wishesOf.all(playerId).map((r) => ({
         id: r.id,
         text: r.text,

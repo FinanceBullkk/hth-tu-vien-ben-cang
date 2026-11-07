@@ -144,8 +144,14 @@ test('Nhịp sen lưu điểm server đúng một lần, hoa sen mở theo tổn
   f.jump(a.rhythm.endsAt);
   const done = f.engine.finish(a, { id: a.rhythm.id, score: -99 });
   assert.equal(done.score, 100);
+  assert.equal(done.cultivation.points, 100);
+  assert.equal(a.cultivationTier, 0);
   assert.deepEqual(done.mates, ['Bình']);
   assert.equal(f.engine.finish(a, { id: a.rhythm.id }).saved, true);
+  assert.equal(f.db.cultivation(a.pid).points, 100);
+  assert.deepEqual(f.events.filter((e) => e.event === 'cultivation:update'), [
+    { event: 'cultivation:update', data: { sid: a.sid, tier: 0 } },
+  ]);
   assert.deepEqual(f.db.db.prepare('SELECT COUNT(*) n, MAX(score) score FROM meditations WHERE player_id=?').get(a.pid), { n: 1, score: 100 });
   assert.equal(f.db.db.prepare('SELECT teu FROM players WHERE id=?').get(a.pid).teu, 4, 'score 100 -> 4 TEU');
   meditation.leave(a);
@@ -163,4 +169,31 @@ test('không bấm vẫn kết thúc với Miss, lưu một lượt chuông, kh�
   f.engine.finish(a, { id: a.rhythm.id });
   assert.equal(f.db.db.prepare('SELECT bell_count FROM players WHERE id=?').get(a.pid).bell_count, 1);
   assert.equal(f.events.length, 0);
+});
+
+test('thiền nâng tầng theo điểm server; bỏ dở, giả điểm và ngồi im không thưởng', (t) => {
+  const f = fixture(t);
+  const a = f.player('An', 1);
+  a.mat = 0;
+  f.db.addMeditation(a.pid, 200, Date.now());
+  f.engine.start(a, { kind: 'meditate' });
+  assert.equal(f.engine.finish(a, { id: a.rhythm.id, score: 99999 }).saved, false);
+  assert.equal(f.db.cultivation(a.pid).points, 200);
+  for (let round = 0; round < a.rhythm.rounds; round++) {
+    for (let idx = 0; idx < (round >= 6 ? 4 : 3); idx++) f.tap(a, round, idx);
+  }
+  f.jump(a.rhythm.endsAt);
+  const done = f.engine.finish(a, { id: a.rhythm.id, score: 99999 });
+  assert.equal(done.cultivation.tier, 1);
+  assert.equal(done.cultivation.points, 300);
+  assert.equal(a.cultivationTier, 1);
+  f.engine.start(a, { kind: 'meditate' });
+  f.jump(a.rhythm.endsAt);
+  const idle = f.engine.finish(a, { id: a.rhythm.id, score: 99999 });
+  assert.equal(idle.cultivation.points, 300);
+  f.engine.start(a, { kind: 'meditate' });
+  a.mat = null;
+  f.jump(a.rhythm.endsAt);
+  assert.equal(f.engine.finish(a, { id: a.rhythm.id }).saved, false);
+  assert.equal(f.db.cultivation(a.pid).points, 300);
 });
