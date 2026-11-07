@@ -10,7 +10,7 @@ export function showTutorial(store, isTouch) {
       ['Tự dạo chơi', 'Đi tới gần chỗ nào có nút to hiện ở góc dưới bên phải, chạm một lần là chơi.'],
     ]
     : [
-      ['Đi lại', 'Dùng WASD hoặc phím mũi tên để đi. Giữ chuột phải (hoặc trái) rồi kéo để xoay góc nhìn, lăn chuột để zoom.'],
+      ['Đi lại', 'Dùng WASD hoặc phím mũi tên để đi. Bấm chuột phải để bật/tắt xoay góc nhìn tự do: di chuột là camera xoay theo, không cần giữ. Kéo chuột trái cũng xoay được, bấm chuột trái để tương tác, lăn chuột để zoom.'],
       ['Chơi gì?', 'Bấm nút Chơi gì? ở góc trên, chọn một trò là game đưa bạn tới ngay.'],
       ['Tự dạo chơi', 'Đi tới gần chỗ nào có nút to hiện giữa màn hình, bấm nút hoặc phím E là chơi. Phím T để chat.'],
     ];

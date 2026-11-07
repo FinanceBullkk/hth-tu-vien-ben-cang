@@ -433,6 +433,11 @@ function main() {
     const look = app.input.consumeLook();
     // Đang mở hộp thoại hoặc đang làm hoạt động thì nhân vật đứng yên.
     me.locked = !entered || app.isBusy();
+    // Mở hộp thoại hay gõ chat là cần con trỏ: thoát xoay tự do để bấm được UI.
+    const ae = document.activeElement;
+    if (me.locked || (ae instanceof HTMLElement && (ae.isContentEditable || ['INPUT', 'TEXTAREA'].includes(ae.tagName)))) {
+      app.input.endFreeLook();
+    }
     me.update(dt, app.input, app.follow.yaw, net);
     remotes.update(dt, nowMs, camera);
     app.activities.update(dt);
