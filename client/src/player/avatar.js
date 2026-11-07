@@ -130,7 +130,7 @@ export class Avatar {
     this.legL = limb(-0.1, 0.36, M.pants);
     this.legR = limb(0.1, 0.36, M.pants);
     this.rig.add(this.body, this.head, this.armL, this.armR, this.legL, this.legR);
-    this.attire = createAttire(attire, color, this.armL, this.armR);
+    this.attire = createAttire(attire, color, this.armL, this.armR, this.legL, this.legR);
     this.rig.add(this.attire.group);
 
     // Vũ khí gác sau lưng, nghiêng chéo: gốc group đặt tại lưng, gốc model tại cán.
@@ -188,7 +188,7 @@ export class Avatar {
     if (attire !== this.attireIndex) {
       this.attireIndex = attire;
       this.rig.remove(this.attire.group);
-      this.attire = createAttire(attire, color, this.armL, this.armR);
+      this.attire = createAttire(attire, color, this.armL, this.armR, this.legL, this.legR);
       this.rig.add(this.attire.group);
     } else {
       this.attire.setColor(color);

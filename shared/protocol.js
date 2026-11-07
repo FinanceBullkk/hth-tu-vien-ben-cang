@@ -13,17 +13,34 @@ export const LIMITS = {
   moveMaxPerSec: 20,
 };
 
-export const AVATAR = { colors: 10, hats: 6, attires: 3, weapons: 3, effects: 9 };
+export const AVATAR = { colors: 10, hats: 6, attires: 7, weapons: 3, effects: 9 };
 
+// Màu áo: 4 màu đầu là màu cơ bản ai cũng có; phần sau là màu quý mở bằng TEU,
+// bitmask theo thứ tự trong PREMIUM_COLORS. Hai màu quý đầu giữ nguyên vị trí
+// để bitmask của người đã mở khoá không bị lệch nghĩa.
 export const SHIRT_COLORS = [
-  '#c0392b', '#e67e22', '#d4a017', '#3f8f5f', '#2d7f8f', '#3b5ea8', '#7d4a9e', '#8a5a3c',
-  '#e8c34a', '#3aa8a0',
+  // Cơ bản
+  '#c0392b', // đỏ
+  '#d4a017', // hoàng
+  '#3f8f5f', // lục
+  '#3b5ea8', // lam
+  // Quý
+  '#e8c34a', // Vàng kim
+  '#3aa8a0', // Lam ngọc
+  '#d9767f', // Hồng đào
+  '#7d4a9e', // Tử vi
+  '#e3e6ea', // Bạch ngân
+  '#23202e', // Huyền hắc
 ];
 
 export const HAT_NAMES = ['Tóc ngắn', 'Tóc dài', 'Tóc búi', 'Mũ lưỡi trai', 'Nón lá', 'Mũ bảo hộ'];
 
 // Trang phục tiên hiệp, vũ khí và hào quang: chọn ở màn vào game, đồng bộ qua server.
-export const ATTIRE_NAMES = ['Lữ khách', 'Đạo bào vân thủy', 'Bạch y hiệp khách'];
+// 3 bộ mới từ 4 nước: Hán phục (Trung), hanbok (Hàn), kimono (Nhật), áo dài (Việt).
+export const ATTIRE_NAMES = [
+  'Lữ khách', 'Đạo bào vân thủy', 'Bạch y hiệp khách',
+  'Hán phục vân kiêm', 'Hàn phục đan thanh', 'Hòa phục hồng diệp', 'Áo dài quốc hương',
+];
 export const WEAPON_NAMES = ['Không', 'Kiếm', 'Phất trần'];
 export const EFFECT_NAMES = ['Không', 'Sen kim', 'Lưu ly', 'Tinh hà', 'Hỏa diễm', 'Đào hoa', 'Bích ngọc', 'Nguyệt bạch', 'Hắc ám'];
 
@@ -70,6 +87,10 @@ export const TEU = {
 export const PREMIUM_COLORS = [
   { hex: '#e8c34a', name: 'Vàng kim', price: 25 },
   { hex: '#3aa8a0', name: 'Lam ngọc', price: 25 },
+  { hex: '#d9767f', name: 'Hồng đào', price: 25 },
+  { hex: '#7d4a9e', name: 'Tử vi', price: 35 },
+  { hex: '#e3e6ea', name: 'Bạch ngân', price: 35 },
+  { hex: '#23202e', name: 'Huyền hắc', price: 40 },
 ];
 
 // Nhịp thở: hít 4s, giữ 2s, thở 6s; 5 chu kì khoảng 1 phút.
