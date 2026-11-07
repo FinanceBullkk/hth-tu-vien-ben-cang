@@ -16,7 +16,6 @@ const NETWORK = 'hth-net';
 const PROD_PORT = Number(process.env.HTH_PROD_PORT || 3000);
 const LOCAL_URL = `http://127.0.0.1:${PROD_PORT}`;
 const PUBLIC_URL = process.env.HTH_PUBLIC_URL || 'https://game.hthlogistics.top';
-const CANDIDATE_PORT = 3100;
 const ROLLBACK_PREFIX = 'hth-rollback-';
 const KEEP_ROLLBACKS = 3;
 const LABEL = 'hth.deploy=workflow';
@@ -198,7 +197,7 @@ async function main() {
   log(`Build ${image}`);
   docker(['build', '--label', LABEL, '--label', `hth.commit=${commit}`, '-t', image, '.'], { stream: true });
 
-  log(`Chạy candidate trên bản sao dữ liệu, cổng ${CANDIDATE_PORT}`);
+  log('Chạy candidate trên bản sao dữ liệu');
   removeCandidate();
   docker(['volume', 'create', '--label', LABEL, candidate]);
   // Chép dữ liệu production (bỏ thư mục backups) sang volume riêng của candidate.
@@ -209,10 +208,14 @@ async function main() {
   let site;
   try {
     docker([
-      'run', '-d', '--name', candidate, '--label', LABEL, '-p', `127.0.0.1:${CANDIDATE_PORT}:3000`,
+      'run', '-d', '--name', candidate, '--label', LABEL, '-p', '127.0.0.1::3000',
       '-v', `${candidate}:/app/data`, ...LIMITS, image,
     ]);
-    const base = `http://127.0.0.1:${CANDIDATE_PORT}`;
+    // Cổng do Docker tự chọn nên không đụng container nào khác đang giữ cổng cố định.
+    const port = docker(['port', candidate, '3000/tcp']).match(/127\.0\.0\.1:(\d+)/)?.[1];
+    if (!port) throw new Error('Không đọc được cổng của candidate');
+    const base = `http://127.0.0.1:${port}`;
+    console.log(`Candidate ở ${base}`);
     await waitHealthy(base, 60);
     site = await checkSite(base);
     const db = probeDb(candidate);
