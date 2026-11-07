@@ -175,6 +175,11 @@ export class RhythmActivity {
     const teu = res.teu ? ` · +${res.teu} TEU` : '';
     this.panel.feedback.textContent = `${res.perfect} Perfect · ${res.good} Good · ${res.miss} Miss · ${res.score}% chuẩn${teu}`;
     this.panel.status.textContent = this.kind === 'meditate' ? res.phrase : 'Tiếng chuông của bạn đã hòa vào tu viện.';
+    if (res.cultivation) {
+      const c = res.cultivation;
+      this.app.me.avatar.setCultivation(c.tier);
+      this.panel.status.textContent = `+${res.score} công pháp · ${c.name} · ${c.points}${c.next ? `/${c.next}` : ' · viên mãn'}`;
+    }
     this.panel.leave.textContent = 'Quay lại sân';
     this.app.audio.chime(0.08);
   }

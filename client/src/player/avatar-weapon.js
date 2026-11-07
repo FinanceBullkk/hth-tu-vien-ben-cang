@@ -1,6 +1,7 @@
-// Vũ khí mang sau lưng: dựng trong Blender, export .glb, mọi nhân vật dùng chung bản đã tải.
-// Node tên "blade" (kiếm) / "strands" (phất trần) được code xoay và nhấp sáng. Nếu file chưa
-// có hoặc tải lỗi thì dựng bản code đơn giản thay thế, game không bao giờ vỡ.
+// Vũ khí mang sau lưng: kiếm và phất trần dựng trong Blender, export .glb, mọi nhân vật
+// dùng chung bản đã tải. Node tên "blade" (kiếm) / "strands" (phất trần) được code xoay và
+// nhấp sáng. Nếu file chưa có hoặc tải lỗi thì dựng bản code đơn giản thay thế, game không
+// bao giờ vỡ. Băng quyền không có GLB, dựng thuần code ngay từ đầu.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { glowTexture } from '../scene/builders.js';
@@ -85,6 +86,38 @@ function addGlow(group) {
   return sprite;
 }
 
+// Băng quyền: hai cuộn băng vải bắt chéo sau lưng, dựng thuần code — võ tăng dùng
+// tay không nên không có GLB; sọc đỏ và khoen vàng theo chất võ tăng.
+function fallbackWraps() {
+  const g = new THREE.Group();
+  const roll = (x, z, tilt) => {
+    const rollGroup = new THREE.Group();
+    rollGroup.position.set(x, 0, z);
+    rollGroup.rotation.z = tilt;
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.42, 8), mats.strand.clone());
+    body.rotation.z = Math.PI / 2;
+    rollGroup.add(body);
+    const stripe = new THREE.Mesh(new THREE.CylinderGeometry(0.047, 0.047, 0.09, 8), mats.hilt);
+    stripe.rotation.z = Math.PI / 2;
+    rollGroup.add(stripe);
+    for (const end of [-0.21, 0.21]) {
+      const hoop = new THREE.Mesh(new THREE.TorusGeometry(0.048, 0.011, 5, 10), mats.gold);
+      hoop.position.y = end;
+      hoop.rotation.x = Math.PI / 2;
+      rollGroup.add(hoop);
+    }
+    return rollGroup;
+  };
+  g.add(roll(-0.05, 0.02, 0.95), roll(0.05, -0.02, -0.75));
+  // dải đỏ buông từ tâm chéo, update() làm đung đưa
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.3, 0.012), mats.hilt.clone());
+  tail.position.set(0, -0.24, 0.04);
+  tail.rotation.z = 0.2;
+  tail.name = 'wrapTail';
+  g.add(tail);
+  return g;
+}
+
 export function createWeapon(weapon) {
   const group = new THREE.Group();
   if (!weapon) return { group, update() {}, discard() {} };
@@ -92,25 +125,35 @@ export function createWeapon(weapon) {
   let glowSprite = null;
   let bladeMat = null;
   let strands = null;
+  let wrapTail = null;
   let discarded = false;
 
-  const file = weapon === 1 ? 'sword.glb' : 'whisk.glb';
-  loadModel(file).then((scene) => {
-    if (discarded) return; // đã đổi look trước khi file tải xong
-    const rig = scene ?? (weapon === 1 ? fallbackSword() : fallbackWhisk());
-    rig.traverse((o) => {
-      if (o.name === 'blade') {
-        o.material = o.material.clone();
-        o.material.emissive = new THREE.Color(0x4d78a8);
-        bladeMat = o.material;
-      }
-      if (o.name === 'strands') strands = o;
-    });
-    if (weapon === 1) glowSprite = addGlow(rig);
+  if (weapon === 3) {
+    // Băng quyền dựng thuần code, không cần tải file.
+    const rig = fallbackWraps();
+    wrapTail = rig.getObjectByName('wrapTail');
     // Gốc vũ khí ở giữa cán; nghiêng chéo sau lưng do group của avatar xoay.
     rig.position.set(0, -0.08, 0);
     group.add(rig);
-  });
+  } else {
+    const file = weapon === 1 ? 'sword.glb' : 'whisk.glb';
+    loadModel(file).then((scene) => {
+      if (discarded) return; // đã đổi look trước khi file tải xong
+      const rig = scene ?? (weapon === 1 ? fallbackSword() : fallbackWhisk());
+      rig.traverse((o) => {
+        if (o.name === 'blade') {
+          o.material = o.material.clone();
+          o.material.emissive = new THREE.Color(0x4d78a8);
+          bladeMat = o.material;
+        }
+        if (o.name === 'strands') strands = o;
+      });
+      if (weapon === 1) glowSprite = addGlow(rig);
+      // Gốc vũ khí ở giữa cán; nghiêng chéo sau lưng do group của avatar xoay.
+      rig.position.set(0, -0.08, 0);
+      group.add(rig);
+    });
+  }
 
   return {
     group,
@@ -126,6 +169,10 @@ export function createWeapon(weapon) {
       if (weapon === 2 && strands) {
         strands.rotation.x = Math.sin(t * 2.6) * 0.12 + walkAmt * 0.3;
         strands.rotation.z = Math.sin(t * 1.9) * 0.08;
+      }
+      if (weapon === 3 && wrapTail) {
+        wrapTail.rotation.x = Math.sin(t * 2.1) * 0.18 + walkAmt * 0.25;
+        wrapTail.rotation.z = 0.2 + Math.sin(t * 1.6) * 0.1;
       }
     },
   };

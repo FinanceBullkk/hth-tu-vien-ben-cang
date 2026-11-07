@@ -176,6 +176,7 @@ function main() {
     store.set('playerId', res.playerId);
     app.myName = res.name;
     me.avatar.setName(res.name);
+    me.avatar.setCultivation(snap.me.cultivationTier ?? 0);
     const nowMs = net.now();
     remotes.sync(snap.players, nowMs);
     world.dayCycleMs = snap.dayCycleMs;
@@ -247,6 +248,7 @@ function main() {
   };
 
   net.on('chat', ({ sid, text }) => avatarOf(sid)?.say(text));
+  net.on('cultivation:update', ({ sid, tier }) => avatarOf(sid)?.setCultivation(tier));
   net.on('emoji', ({ sid, i }) => avatarOf(sid)?.say(EMOJIS[i] ?? '', 2500));
   net.on('wave', ({ from, to, name }) => {
     avatarOf(from)?.wave();

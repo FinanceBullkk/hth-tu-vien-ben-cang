@@ -278,6 +278,41 @@ test('vị trí phát 20 lần/giây và kèm tuổi mẫu theo mốc client, m�
   b.s.disconnect();
 });
 
+test('ngoại hình: nhận đủ bộ skin mới, người khác nhìn thấy, giá trị ngoài phạm vi bị kẹp', async () => {
+  const a = await connect();
+  const res = await call(a, 'hello', {
+    name: 'Võ Sư', color: 0, hat: 6, attire: 3, weapon: 3, effect: 9, playerId: 'b'.repeat(32),
+  });
+  assert.equal(res.ok, true);
+  assert.equal(res.snapshot.me.hat, 6);
+  assert.equal(res.snapshot.me.attire, 3);
+  assert.equal(res.snapshot.me.weapon, 3);
+  assert.equal(res.snapshot.me.effect, 9);
+
+  // Người vào sau nhìn thấy đúng ngoại hình qua snapshot.
+  const b = await join('Khán Giả');
+  const row = b.res.snapshot.players.find((p) => p.sid === res.sid);
+  assert.equal(row.hat, 6);
+  assert.equal(row.attire, 3);
+  assert.equal(row.weapon, 3);
+  assert.equal(row.effect, 9);
+
+  // Giá trị rác ngoài phạm vi bị kẹp về mặc định, không vỡ server (kết nối mới vì
+  // mỗi kết nối chỉ vào phòng một lần; trùng playerId để nối tiếp người chơi cũ).
+  const junkSock = await connect();
+  const junk = await call(junkSock, 'hello', {
+    name: 'Võ Sư', hat: 99, attire: -5, weapon: 'kiếm', effect: 1e9, playerId: 'b'.repeat(32),
+  });
+  assert.equal(junk.ok, true);
+  assert.equal(junk.snapshot.me.hat, 0);
+  assert.equal(junk.snapshot.me.attire, 0);
+  assert.equal(junk.snapshot.me.weapon, 0);
+  assert.equal(junk.snapshot.me.effect, 0);
+  a.disconnect();
+  junkSock.disconnect();
+  b.s.disconnect();
+});
+
 test('chat: phát cho mọi người, chặn từ thô, giới hạn 2 giây, cắt 80 ký tự', async () => {
   const a = await join('Minh');
   const b = await join('Hoa');
