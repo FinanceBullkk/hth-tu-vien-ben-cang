@@ -9,6 +9,7 @@ const TAP_MOVE_PX = 8;
 const TAP_MS = 350;
 const MOUSE_SENS = 0.0045;
 const SENS_PITCH = 0.7; // Trục dọc nhuộm nhẹ cho đỡ hoa mắt.
+const FREELOOK_MAX_STEP = 80; // Delta xa hơn vậy chắc là vọt lóc của trình duyệt, không phải tay người dùng.
 
 export class Input {
   constructor(canvas, stick) {
@@ -28,6 +29,7 @@ export class Input {
     this.camButton = 0;
     this.rotating = false; // Đang giữ nút xoay camera (để nhân vật hướng theo ống kính).
     this.freeLook = false; // Chế độ xoay tự do: di chuột là xoay camera, không cần giữ phím.
+    this.skipMove = 0; // Số event move bỏ qua ngay sau khi khóa con trỏ.
     this.onTap = null;
     this.onKeyDown = null;
     this.onKeyUp = null;
@@ -47,6 +49,9 @@ export class Input {
     document.addEventListener('pointerlockchange', () => {
       this.freeLook = document.pointerLockElement === this.canvas;
       this.rotating = this.freeLook;
+      // Vừa khóa con trỏ, Chrome hay báo một delta ảo rất lớn làm camera tự quay vòng:
+      // bỏ qua vài event đầu và kẹp biên mỗi event ở nhánh freeLook.
+      this.skipMove = this.freeLook ? 2 : 0;
       if (!this.freeLook) this.canvas.classList.remove('cam-dragging');
     });
 
@@ -122,8 +127,14 @@ export class Input {
     }
     if (this.freeLook && e.pointerType === 'mouse') {
       // Con trỏ bị khóa: chỉ còn movementX/Y, camera xoay theo chuột lúc nào cũng được.
-      this.yawDelta -= e.movementX * MOUSE_SENS;
-      this.pitchDelta += e.movementY * MOUSE_SENS * SENS_PITCH;
+      if (this.skipMove > 0) {
+        this.skipMove--;
+        return;
+      }
+      const mx = Math.max(-FREELOOK_MAX_STEP, Math.min(FREELOOK_MAX_STEP, e.movementX));
+      const my = Math.max(-FREELOOK_MAX_STEP, Math.min(FREELOOK_MAX_STEP, e.movementY));
+      this.yawDelta -= mx * MOUSE_SENS;
+      this.pitchDelta += my * MOUSE_SENS * SENS_PITCH;
       return;
     }
     if (e.pointerId !== this.camId) return;
