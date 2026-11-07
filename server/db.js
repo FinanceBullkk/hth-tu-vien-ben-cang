@@ -140,7 +140,7 @@ export class Db {
   // CREATE TABLE IF NOT EXISTS không thêm cột cho DB cũ: kiểm tra rồi ALTER từng cột cosmetic.
   #migrate() {
     const have = new Set(this.db.pragma('table_info(players)').map((c) => c.name));
-    for (const col of ['attire', 'weapon', 'effect', 'teu', 'riddle_correct', 'pitch_best', 'unlocked']) {
+    for (const col of ['hair', 'attire', 'weapon', 'effect', 'teu', 'riddle_correct', 'pitch_best', 'unlocked']) {
       if (!have.has(col)) this.db.exec(`ALTER TABLE players ADD COLUMN ${col} INTEGER NOT NULL DEFAULT 0`);
     }
   }
@@ -148,9 +148,9 @@ export class Db {
   #prepare() {
     const p = (sql) => this.db.prepare(sql);
     this.s = {
-      upsertPlayer: p(`INSERT INTO players (id,name,color,hat,attire,weapon,effect,first_seen,last_seen,visits)
-        VALUES (@id,@name,@color,@hat,@attire,@weapon,@effect,@now,@now,@inc)
-        ON CONFLICT(id) DO UPDATE SET name=@name,color=@color,hat=@hat,attire=@attire,weapon=@weapon,effect=@effect,last_seen=@now,visits=visits+@inc`),
+      upsertPlayer: p(`INSERT INTO players (id,name,color,hair,hat,attire,weapon,effect,first_seen,last_seen,visits)
+        VALUES (@id,@name,@color,@hair,@hat,@attire,@weapon,@effect,@now,@now,@inc)
+        ON CONFLICT(id) DO UPDATE SET name=@name,color=@color,hair=@hair,hat=@hat,attire=@attire,weapon=@weapon,effect=@effect,last_seen=@now,visits=visits+@inc`),
       player: p('SELECT * FROM players WHERE id=?'),
       bumpBell: p('UPDATE players SET bell_count=bell_count+1 WHERE id=?'),
       stat: p(`INSERT INTO daily_stats (local_date,visits,wishes,bells) VALUES (@d,@v,@w,@b)
@@ -239,8 +239,8 @@ export class Db {
     });
   }
 
-  touchPlayer({ id, name, color, hat, attire = 0, weapon = 0, effect = 0, now, isVisit }) {
-    this.s.upsertPlayer.run({ id, name, color, hat, attire, weapon, effect, now, inc: isVisit ? 1 : 0 });
+  touchPlayer({ id, name, color, hair = 0, hat, attire = 0, weapon = 0, effect = 0, now, isVisit }) {
+    this.s.upsertPlayer.run({ id, name, color, hair, hat, attire, weapon, effect, now, inc: isVisit ? 1 : 0 });
   }
 
   playerRow(id) {

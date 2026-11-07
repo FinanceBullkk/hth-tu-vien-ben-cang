@@ -6,7 +6,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { BELL, SPAWN } from '../../shared/layout.js';
-import { EMOJIS } from '../../shared/protocol.js';
+import { AVATAR, EMOJIS } from '../../shared/protocol.js';
 import { Activities } from './activities/index.js';
 import { AudioEngine } from './audio/audio.js';
 import { ProximityVoice } from './audio/voice.js';
@@ -74,15 +74,19 @@ function main() {
     composer.addPass(bloomPass);
     composer.addPass(new OutputPass());
   }
+  const savedProfile = store.getJson('profile') ?? {};
   const profile = {
     name: '',
     color: Math.floor(Math.random() * 8),
-    hat: Math.floor(Math.random() * 6),
+    hair: Math.floor(Math.random() * 3),
+    hat: 3 + Math.floor(Math.random() * (AVATAR.hats - 3)),
     attire: 0,
     weapon: 0,
     effect: 0,
-    ...store.getJson('profile'),
+    ...savedProfile,
   };
+  // Profile cũ không có slot tóc: id hat 0-2 là kiểu tóc, di trú như phía server.
+  if (savedProfile.hair === undefined && profile.hat <= 2) profile.hair = profile.hat;
 
   const app = {
     renderer,
@@ -123,15 +127,16 @@ function main() {
   // ---------- Màn chào ----------
   const welcome = new Welcome({
     profile,
-    onPreview: (p) => app.me.avatar.setLook(p.color, p.hat, p.attire, p.weapon, p.effect),
+    onPreview: (p) => app.me.avatar.setLook(p.color, p.hat, p.hair, p.attire, p.weapon, p.effect),
     onEnter: (p) => {
       app.audio.unlock();
       Object.assign(profile, p);
-      store.setJson('profile', { name: p.name, color: p.color, hat: p.hat, attire: p.attire, weapon: p.weapon, effect: p.effect });
+      store.setJson('profile', { name: p.name, color: p.color, hair: p.hair, hat: p.hat, attire: p.attire, weapon: p.weapon, effect: p.effect });
       app.net.connect(() => ({
         playerId: store.get('playerId'),
         name: profile.name,
         color: profile.color,
+        hair: profile.hair,
         hat: profile.hat,
         attire: profile.attire,
         weapon: profile.weapon,

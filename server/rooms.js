@@ -71,6 +71,7 @@ export class Room {
       sid: p.sid,
       name: p.name,
       color: p.color,
+      hair: p.hair,
       hat: p.hat,
       attire: p.attire,
       weapon: p.weapon,
@@ -223,6 +224,9 @@ export class Room {
 
     let color = clampInt(data?.color, AVATAR.colors);
     const hat = clampInt(data?.hat, AVATAR.hats);
+    // Client bản cũ không có slot tóc: id hat 0-2 là kiểu tóc, di trú sang slot tóc
+    // để người chơi cũ giữ nguyên ngoại hình; hair lệch phạm vi thì rớt về tóc ngắn.
+    const hair = data?.hair === undefined ? (hat <= 2 ? hat : 0) : clampInt(data.hair, AVATAR.hairs);
     const attire = clampInt(data?.attire, AVATAR.attires);
     const weapon = clampInt(data?.weapon, AVATAR.weapons);
     const effect = clampInt(data?.effect, AVATAR.effects);
@@ -260,6 +264,7 @@ export class Room {
       player.socket = socket;
       // Nhân vật có thể đổi đồ giữa hai lần vào: cập nhật luôn ngoại hình mới.
       player.color = color;
+      player.hair = hair;
       player.hat = hat;
       player.attire = attire;
       player.weapon = weapon;
@@ -271,6 +276,7 @@ export class Room {
         pid,
         name: this.dedupeName(baseName, pid),
         color,
+        hair,
         hat,
         attire,
         weapon,
@@ -302,7 +308,7 @@ export class Room {
     socket.join(PLAYERS_ROOM);
 
     const date = localDate(now, this.config.timezone);
-    this.db.touchPlayer({ id: pid, name: player.name, color: player.color, hat: player.hat, attire: player.attire, weapon: player.weapon, effect: player.effect, now, isVisit: !isResume });
+    this.db.touchPlayer({ id: pid, name: player.name, color: player.color, hair: player.hair, hat: player.hat, attire: player.attire, weapon: player.weapon, effect: player.effect, now, isVisit: !isResume });
     player.cultivationTier = this.db.cultivation(pid).tier;
     if (!isResume) {
       this.db.bumpStat(date, { visits: 1 });
