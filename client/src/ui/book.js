@@ -22,13 +22,15 @@ function stat(label, value) {
 }
 
 export async function openBook(app) {
-  const body = h('div', {}, h('p', { class: 'muted' }, 'Đang mở Sổ…'));
-  const modal = openModal({ title: 'Sổ an của tôi', content: body, wide: true });
+  const body = h('div', { class: 'bookx-loading' },
+    h('span', { class: 'bookx-seal', 'aria-hidden': 'true' }, '安'),
+    h('p', {}, 'Đang mở sổ…'));
+  const modal = openModal({ title: 'Sổ an của tôi', content: body, wide: true, className: 'bookx' });
   let book;
   try {
     book = await fetchBook();
   } catch {
-    body.replaceChildren(h('p', {}, 'Chưa mở được Sổ, thử lại sau nhé.'));
+    body.replaceChildren(h('p', { class: 'bookx-error' }, 'Chưa mở được Sổ, thử lại sau nhé.'));
     return;
   }
   if (!modal.el.isConnected) return;
@@ -67,10 +69,10 @@ export async function openBook(app) {
     ? h('ul', { class: 'book-list' }, book.fortunes.map((f) => h('li', {}, h('p', {}, f.text), h('p', { class: 'meta' }, `${f.date} · Số B/L ${f.bl}`))))
     : h('p', { class: 'muted' }, 'Chưa rút quẻ nào. Quán trà đang chờ bạn.');
 
-  // Sổ cá: loài chưa bắt chỉ hiện gợi ý; khu mở khoá màu áo quý bằng TEU ở ngay dưới.
+  // Sổ cá: loài chưa bắt chỉ hiện gợi ý; quầy đổi quà màu áo quý bằng TEU ở ngay dưới.
   const caught = new Map((book.fish ?? []).map((f) => [f.id, f]));
   const nextMilestone = FISH_BOOK_MILESTONES.find((m) => m.count > caught.size);
-  const fishList = h('div', {},
+  const fishList = h('div', { class: 'bookx-fish' },
     h('p', { class: 'muted small' }, nextMilestone
       ? `Đã bắt ${caught.size}/${FISH.length} loài. Đủ ${nextMilestone.count} loài được thưởng ${nextMilestone.teu} TEU.`
       : `Đã bắt đủ ${FISH.length} loài. Tay câu cứng nhất tu viện!`),
@@ -81,28 +83,34 @@ export async function openBook(app) {
         h('span', { class: 'fish-book-stars' }, '★'.repeat(fish.rarity)),
         h('small', {}, row ? `×${row.count} · nặng nhất ${row.best} kg` : fishHint(fish)));
     })));
-  const premiumRow = h('div', { class: 'chips' });
+  // Quầy đổi quà: mỗi màu quý một thẻ ấn, bấm thẻ là mở khoá bằng TEU.
   const teuNow = book.teu ?? 0;
+  const shop = h('div', { class: 'bookx-shop' });
   PREMIUM_COLORS.forEach((p, i) => {
     const owned = ((book.unlocked ?? 0) & (1 << i)) !== 0;
-    const chip = h('button', { class: 'chip', type: 'button' },
-      h('span', { style: `display:inline-block;width:11px;height:11px;border-radius:50%;background:${p.hex};margin-right:5px;vertical-align:-1px;` }),
-      `${p.name}`, owned ? ' · đã có' : ` · ${p.price} TEU`);
-    if (owned) {
-      chip.disabled = true;
-    } else {
-      chip.addEventListener('click', async () => {
+    const card = h('button', {
+      class: `bookx-card${owned ? ' owned' : ''}${!owned && teuNow < p.price ? ' poor' : ''}`,
+      type: 'button', disabled: owned,
+    },
+    h('span', { class: 'bookx-swatch', style: `--sw:${p.hex}`, 'aria-hidden': 'true' }, owned ? '✓' : ''),
+    h('span', { class: 'bookx-card-name' }, p.name),
+    h('span', { class: 'bookx-card-price' }, owned ? 'Đã sở hữu' : `${p.price} TEU`));
+    if (!owned) {
+      card.addEventListener('click', async () => {
         const res = await app.net.call('cosmetic:unlock', { color: i });
         if (res?.ok) {
           app.hud.toast(`Đã mở khoá màu ${p.name}! Vào màn vào game để chọn lại áo.`);
-          chip.disabled = true;
-          chip.textContent = `${p.name} · đã có`;
+          card.disabled = true;
+          card.classList.remove('poor');
+          card.classList.add('owned');
+          card.querySelector('.bookx-swatch').textContent = '✓';
+          card.querySelector('.bookx-card-price').textContent = 'Đã sở hữu';
         } else {
           app.hud.toast(res?.error || 'Chưa mở được.');
         }
       });
     }
-    premiumRow.append(chip);
+    shop.append(card);
   });
 
   body.replaceChildren(
@@ -116,20 +124,20 @@ export async function openBook(app) {
       stat('độ chuẩn cao nhất (%)', book.meditation.best),
       stat('lần thỉnh chuông', book.bellCount),
       stat('sự kiện chuông đã cùng', book.bellEvents)),
-    h('h3', {}, 'Công pháp'),
+    h('h3', { 'data-hanzi': '功' }, 'Công pháp'),
     h('p', {}, book.cultivation
       ? `${book.cultivation.name} · ${book.cultivation.points}${book.cultivation.next ? `/${book.cultivation.next}` : ' · viên mãn'} công pháp`
       : 'Khởi khí · 0 công pháp'),
     h('p', { class: 'muted small' }, 'Hoàn thành Nhịp sen để tích công pháp, nâng hình thái aura đã chọn. Bỏ dở không nhận điểm. Chọn Không vẫn tích điểm nhưng không hiện aura.'),
-    h('h3', {}, 'Sổ cá'),
+    h('h3', { 'data-hanzi': '魚' }, 'Sổ cá'),
     fishList,
-    h('h3', {}, 'Quầy đổi quà'),
-    h('p', { class: 'muted small' }, `Dùng TEU mở màu áo quý. Bạn đang có ${teuNow} TEU.`),
-    premiumRow,
+    h('h3', { 'data-hanzi': '賜' }, 'Quầy đổi quà'),
+    h('p', { class: 'muted small bookx-shop-note' }, `Dùng TEU mở màu áo quý. Bạn đang có ${teuNow} TEU.`),
+    shop,
     h('p', { class: 'muted small' }, 'Điểm nhịp điệu chi tiết chỉ mình bạn thấy, không có bảng xếp hạng.'),
-    h('h3', {}, 'Lời ước của tôi'),
+    h('h3', { 'data-hanzi': '願' }, 'Lời ước của tôi'),
     wishList,
-    h('h3', {}, 'Quẻ đã rút'),
+    h('h3', { 'data-hanzi': '籤' }, 'Quẻ đã rút'),
     fortunes,
   );
 }

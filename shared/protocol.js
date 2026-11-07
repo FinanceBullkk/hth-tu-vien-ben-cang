@@ -16,11 +16,24 @@ export const LIMITS = {
 // Nhịp đồng bộ vị trí. Hai bên cùng nhịp để mỗi gói phát đi đều có mẫu mới, tốc độ không dao động.
 export const MOTION = { sendHz: 20, tickMs: 50, stampMaxAgeMs: 1000 };
 
-export const AVATAR = { colors: 10, hairs: 6, hats: 11, attires: 4, weapons: 4, effects: 10 };
+export const AVATAR = { colors: 10, hairs: 6, hats: 11, attires: 8, weapons: 4, effects: 10 };
 
+// Màu áo: 4 màu đầu là màu cơ bản ai cũng có; phần sau là màu quý mở bằng TEU,
+// bitmask theo thứ tự trong PREMIUM_COLORS. Hai màu quý đầu giữ nguyên vị trí
+// để bitmask của người đã mở khoá không bị lệch nghĩa.
 export const SHIRT_COLORS = [
-  '#c0392b', '#e67e22', '#d4a017', '#3f8f5f', '#2d7f8f', '#3b5ea8', '#7d4a9e', '#8a5a3c',
-  '#e8c34a', '#3aa8a0',
+  // Cơ bản
+  '#c0392b', // đỏ
+  '#d4a017', // hoàng
+  '#3f8f5f', // lục
+  '#3b5ea8', // lam
+  // Quý
+  '#e8c34a', // Vàng kim
+  '#3aa8a0', // Lam ngọc
+  '#d9767f', // Hồng đào
+  '#7d4a9e', // Tử vi
+  '#e3e6ea', // Bạch ngân
+  '#23202e', // Huyền hắc
 ];
 
 // Tóc và mũ là hai slot riêng, kết hợp tự do. Id là số thứ tự lưu trong DB:
@@ -35,7 +48,10 @@ export const HAT_NAMES = [
 ];
 
 // Trang phục tiên hiệp, vũ khí và hào quang: chọn ở màn vào game, đồng bộ qua server.
-export const ATTIRE_NAMES = ['Lữ khách', 'Đạo bào vân thủy', 'Bạch y hiệp khách', 'Võ tăng bang thân'];
+export const ATTIRE_NAMES = [
+  'Lữ khách', 'Đạo bào vân thủy', 'Bạch y hiệp khách', 'Võ tăng bang thân',
+  'Hán phục vân kiêm', 'Hàn phục đan thanh', 'Hòa phục hồng diệp', 'Áo dài quốc hương',
+];
 export const WEAPON_NAMES = ['Không', 'Kiếm', 'Phất trần', 'Băng quyền'];
 export const EFFECT_NAMES = ['Không', 'Sen kim', 'Lưu ly', 'Tinh hà', 'Hỏa diễm', 'Đào hoa', 'Bích ngọc', 'Nguyệt bạch', 'Hắc ám', 'Long quyền'];
 
@@ -82,6 +98,10 @@ export const TEU = {
 export const PREMIUM_COLORS = [
   { hex: '#e8c34a', name: 'Vàng kim', price: 25 },
   { hex: '#3aa8a0', name: 'Lam ngọc', price: 25 },
+  { hex: '#d9767f', name: 'Hồng đào', price: 25 },
+  { hex: '#7d4a9e', name: 'Tử vi', price: 35 },
+  { hex: '#e3e6ea', name: 'Bạch ngân', price: 35 },
+  { hex: '#23202e', name: 'Huyền hắc', price: 40 },
 ];
 
 // Nhịp thở: hít 4s, giữ 2s, thở 6s; 5 chu kì khoảng 1 phút.

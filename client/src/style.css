@@ -400,3 +400,124 @@ kbd { font: inherit; }
   .tube.shaking { animation-duration: .5s; }
   .tag-bubble, .modal-card, #actionBtn, .bl-card, .toast { animation: none; }
 }
+
+/* ----- Sổ an: biên ký tiên hiệp — mực, kim line, ấn triện son (tông Where Winds Meet) ----- */
+.modal-card.bookx.wide { width: min(720px, 100%); }
+.bookx .modal-head { position: relative; padding: 18px 22px 12px; border-bottom: 0; }
+.bookx .modal-head h2 { font: 700 27px/1.15 var(--serif); color: #4a1c10; letter-spacing: .05em; }
+.bookx .modal-head h2::after {
+  content: '安之錄';
+  margin-left: 12px;
+  font: 600 12px var(--serif);
+  color: rgba(154, 106, 46, .5);
+  letter-spacing: .34em;
+  vertical-align: 3px;
+}
+/* Nét mực loang dần dưới đầu sổ, đậm bên trái như lệnh bài */
+.bookx .modal-head::after {
+  content: ''; position: absolute; left: 22px; right: 22px; bottom: 0; height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, rgba(224, 164, 88, .95), rgba(224, 164, 88, .25) 62%, rgba(224, 164, 88, 0));
+}
+.bookx .modal-x { color: #9a6a2e; }
+.bookx .modal-body { padding: 12px 22px 22px; }
+/* Đầu mục: hoa thị vàng + triện chữ Hán mờ nghiêng nhẹ ở phải */
+.bookx .modal-body h3 {
+  display: flex; align-items: baseline; gap: 9px;
+  margin: 22px 0 10px; font: 700 18px var(--serif); color: #4a1c10; letter-spacing: .04em;
+}
+.bookx .modal-body h3::before { content: '❖'; color: var(--gold); font-size: 12px; transform: translateY(-1px); }
+.bookx .modal-body h3::after {
+  content: attr(data-hanzi);
+  margin-left: auto;
+  font: 600 14px/1 var(--serif);
+  color: rgba(90, 31, 20, .34);
+  border: 1px solid rgba(143, 106, 56, .4);
+  border-radius: 3px;
+  padding: 3px 6px;
+  transform: rotate(5deg);
+  user-select: none;
+}
+/* Dải biên ký: số liệu nền giấy cũ, dòng kẻ mảnh chia cột */
+.bookx .stats {
+  grid-template-columns: repeat(5, 1fr); gap: 0;
+  margin: 4px 0 0; border: 1px solid rgba(143, 106, 56, .35); border-radius: 8px;
+  background: linear-gradient(180deg, rgba(239, 227, 201, .6), rgba(248, 239, 220, .25));
+  overflow: hidden;
+}
+.bookx .stat { padding: 10px 6px 8px; border-radius: 0; background: none; border-left: 1px solid rgba(143, 106, 56, .22); }
+.bookx .stat:first-child, .bookx .stat:nth-child(6) { border-left: 0; }
+.bookx .stat b { font: 700 22px/1.15 var(--serif); color: #8a5a1e; }
+.bookx .stat span { font-size: 11.5px; color: var(--muted); letter-spacing: .02em; }
+/* Sổ cá: hai cột, loài chưa bắt nhạt như mực pha */
+.bookx .fish-book { display: grid; grid-template-columns: 1fr 1fr; column-gap: 20px; }
+.bookx .fish-book li { position: relative; padding: 7px 0; border-bottom: 1px dashed rgba(143, 106, 56, .3); }
+.bookx .fish-book li:not(.caught) { opacity: .58; }
+.bookx .fish-book li b { font: 600 14.5px var(--serif); color: #4a3016; }
+.bookx .fish-book li:not(.caught) b { color: var(--muted); font-weight: 500; }
+.bookx .fish-book-stars { position: absolute; right: 0; top: 8px; color: #b9862e; font-size: 12px; letter-spacing: 2px; }
+.bookx .fish-book li small { display: block; margin-top: 1px; font-size: 12px; color: var(--muted); }
+/* Quầy đổi quà: thẻ ấn màu — ô son vuông, tên serif, giá TEU */
+.bookx-shop { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.bookx-shop-note { margin-bottom: 10px; }
+.bookx-card {
+  display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 3px 12px;
+  padding: 11px 13px; text-align: left;
+  border: 1px solid rgba(143, 106, 56, .45); border-radius: 9px;
+  background: linear-gradient(180deg, #fffcf3, #f5ebd4);
+  box-shadow: inset 0 0 0 1px rgba(255, 253, 248, .5);
+  transition: border-color .15s, transform .12s, box-shadow .15s;
+}
+.bookx-card:not(:disabled):hover, .bookx-card:not(:disabled):focus-visible {
+  border-color: var(--gold); transform: translateY(-1px);
+  box-shadow: 0 7px 16px rgba(90, 50, 20, .2), inset 0 0 0 1px rgba(255, 253, 248, .5);
+}
+.bookx-card:not(:disabled):active { transform: translateY(0); }
+.bookx-card:disabled { cursor: default; }
+.bookx-swatch {
+  grid-row: 1 / span 2;
+  width: 36px; height: 36px; border-radius: 7px;
+  background: var(--sw, #8a5a3c);
+  box-shadow: inset 0 0 0 2px rgba(255, 253, 248, .7), inset 0 0 0 3.5px rgba(43, 28, 19, .28), 0 2px 6px rgba(43, 28, 19, .32);
+  display: grid; place-items: center;
+  color: #fffdf6; font: 700 17px/1 var(--serif);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .55);
+}
+.bookx-card-name { font: 700 15.5px var(--serif); color: #4a1c10; letter-spacing: .02em; }
+.bookx-card-price { font-size: 12.5px; color: var(--muted); }
+.bookx-card.owned {
+  background: linear-gradient(180deg, #f1f7ec, #e5efe0);
+  border-color: rgba(63, 143, 95, .55);
+  box-shadow: none;
+}
+.bookx-card.owned .bookx-card-name { color: var(--jade-ink); }
+.bookx-card.owned .bookx-card-price { color: var(--jade); font-weight: 600; }
+/* Chưa đủ TEU: thẻ nhạt đi, giá kèm ghi chú nhỏ */
+.bookx-card.poor { opacity: .8; }
+.bookx-card.poor .bookx-card-price::after { content: ' · chưa đủ'; font-style: italic; }
+/* Chờ và lỗi */
+.bookx-loading { display: grid; place-items: center; gap: 12px; padding: 30px 0 22px; color: var(--muted); }
+.bookx-loading p, .bookx-error { margin: 0; font: italic 600 15px var(--serif); letter-spacing: .04em; }
+.bookx-seal {
+  width: 46px; height: 46px; display: grid; place-items: center;
+  border: 2px solid #8f2d1c; border-radius: 4px;
+  background: rgba(168, 67, 42, .92); color: #ffe9d2;
+  font: 700 23px/1 var(--serif);
+  transform: rotate(6deg);
+  box-shadow: inset 0 0 8px rgba(90, 20, 10, .55);
+  animation: bookx-breathe 1.2s ease-in-out infinite alternate;
+}
+@keyframes bookx-breathe { from { opacity: .7; } to { opacity: 1; } }
+.bookx-error { text-align: center; padding: 20px 0; color: #8a3a22; }
+@media (prefers-reduced-motion: reduce) {
+  .bookx-seal { animation: none; }
+  .bookx-card { transition: none; }
+}
+@media (max-width: 560px) {
+  .bookx .stats { grid-template-columns: repeat(2, 1fr); }
+  .bookx .stat { border-left: 0; border-top: 1px solid rgba(143, 106, 56, .22); }
+  .bookx .stat:nth-child(even) { border-left: 1px solid rgba(143, 106, 56, .22); }
+  .bookx .stat:nth-child(-n+2) { border-top: 0; }
+  .bookx .fish-book { grid-template-columns: 1fr; }
+  .bookx-shop { grid-template-columns: repeat(2, 1fr); }
+  .bookx .modal-head h2::after { display: none; }
+}
