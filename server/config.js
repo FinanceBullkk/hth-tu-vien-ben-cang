@@ -37,17 +37,10 @@ if (!process.env.ADMIN_KEY && String(fileConfig.adminKey || '').length < MIN_KEY
   fileConfig.adminKey = crypto.randomBytes(24).toString('base64url');
   keyWasGenerated = true;
 }
-// "auto" nghĩa là tự tạo mã vào cửa ở lần chạy đầu; để trống "" thì tắt mã (dùng khi chỉ chạy trong LAN).
-let codeWasGenerated = false;
-if (fileConfig.joinCode === 'auto') {
-  const alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // Bỏ các ký tự dễ nhầm như O/0, I/1/L.
-  fileConfig.joinCode = Array.from({ length: 6 }, () => alphabet[crypto.randomInt(alphabet.length)]).join('');
-  codeWasGenerated = true;
-}
 // Giữ mốc phát nhạc qua lần khởi động lại, kể cả khi thay image Docker.
 const radioWasStarted = !Number.isSafeInteger(fileConfig.radioStartedAt) || fileConfig.radioStartedAt <= 0;
 if (radioWasStarted) fileConfig.radioStartedAt = Date.now();
-if (!fs.existsSync(CONFIG_PATH) || keyWasGenerated || codeWasGenerated || radioWasStarted) writeAtomic(CONFIG_PATH, fileConfig);
+if (!fs.existsSync(CONFIG_PATH) || keyWasGenerated || radioWasStarted) writeAtomic(CONFIG_PATH, fileConfig);
 
 if (process.env.ADMIN_KEY && process.env.ADMIN_KEY.length < MIN_KEY_LENGTH) {
   console.error(`ADMIN_KEY phải dài ít nhất ${MIN_KEY_LENGTH} ký tự.`);
@@ -66,9 +59,8 @@ export const config = {
 };
 
 export const adminKeyWasGenerated = keyWasGenerated;
-export const joinCodeWasGenerated = codeWasGenerated;
 
-const EDITABLE = ['welcomeMessage', 'bellSchedule', 'fortunes', 'meditationPhrases', 'bannedWords', 'joinCode', 'riddles'];
+const EDITABLE = ['welcomeMessage', 'bellSchedule', 'fortunes', 'meditationPhrases', 'bannedWords', 'riddles'];
 
 /** Lưu các trường nội dung xuống config.json, không ghi các giá trị đến từ biến môi trường. */
 export function saveContent(patch) {

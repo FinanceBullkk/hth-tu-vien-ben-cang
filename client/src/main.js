@@ -76,14 +76,6 @@ function main() {
     ...store.getJson('profile'),
   };
 
-  // Link gửi trong nhóm Zalo có sẵn mã: lấy ra rồi xoá khỏi thanh địa chỉ để khỏi lộ khi chụp màn hình.
-  const linkCode = new URLSearchParams(location.search).get('code');
-  if (linkCode) {
-    store.set('joinCode', linkCode);
-    history.replaceState(null, '', location.pathname);
-  }
-  profile.code = store.get('joinCode') ?? '';
-
   const app = {
     renderer,
     scene,
@@ -127,7 +119,6 @@ function main() {
       app.audio.unlock();
       Object.assign(profile, p);
       store.setJson('profile', { name: p.name, color: p.color, hat: p.hat, attire: p.attire, weapon: p.weapon, effect: p.effect });
-      store.set('joinCode', p.code ?? '');
       app.net.connect(() => ({
         playerId: store.get('playerId'),
         name: profile.name,
@@ -136,14 +127,9 @@ function main() {
         attire: profile.attire,
         weapon: profile.weapon,
         effect: profile.effect,
-        code: profile.code,
       }));
     },
   });
-  fetch('/api/info')
-    .then((res) => res.json())
-    .then((info) => welcome.setNeedCode(Boolean(info.codeRequired)))
-    .catch(() => welcome.setNeedCode(true));
 
   // ---------- Mạng ----------
   const { net, hud, me, remotes } = app;
@@ -151,9 +137,9 @@ function main() {
   let wasLost = false;
   let mySid = 0;
 
-  net.onRefused = (message, res) => {
+  net.onRefused = (message) => {
     hud.pauseMusic();
-    if (!entered) welcome.showError(message, Boolean(res?.needCode));
+    if (!entered) welcome.showError(message);
   };
 
   net.onFatal = (message) => {

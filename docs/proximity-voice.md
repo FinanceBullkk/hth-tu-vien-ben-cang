@@ -18,7 +18,7 @@ Goose Goose Duck style nearby conversation. No meetings or voting mechanics.
 
 Microphone requires HTTPS or `localhost`. LAN `http://192.168.x.x` works for the game but cannot request a mic. Use the HTTPS game URL for voice.
 
-WebRTC carries audio; the existing Socket.IO server relays signaling only. Both participants must have passed the game's join-code admission and opted into voice. Server authorizes nearby pairs using current positions, strips unneeded fields, restricts SDP to audio, bounds messages/rates, and revokes each pair on disconnect or distance. New pairs receive new tokens, so stale signals cannot attach to a later session.
+WebRTC carries audio; the existing Socket.IO server relays signaling only. Both participants must have joined the game and opted into voice. Server authorizes nearby pairs using current positions, strips unneeded fields, restricts SDP to audio, bounds messages/rates, and revokes each pair on disconnect or distance. New pairs receive new tokens, so stale signals cannot attach to a later session.
 
 Default ICE list is empty: no external STUN/TURN provider is contacted. Local host candidates may connect on a shared reachable network. Cross-network voice usually needs STUN and a reachable TURN server for restrictive NAT/firewalls. Cloudflare Tunnel carries game HTTP/WebSocket traffic; it does **not** relay WebRTC audio.
 

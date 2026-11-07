@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import { MATS, SPAWN, clampToWalkable } from '../shared/layout.js';
 import { ACTIVITY, ACTIVITY_BY_NAME, AVATAR, EMOJIS, LIMITS, PLAYER_ID_RE, PREMIUM_COLORS, SHIRT_COLORS } from '../shared/protocol.js';
 import { cleanText } from './filter.js';
-import { WindowCounter, clientIp, codeMatches } from './limits.js';
+import { WindowCounter, clientIp } from './limits.js';
 import { localDate } from './time.js';
 import { Voice } from './voice.js';
 
@@ -17,7 +17,6 @@ const KICK_BLOCK_MS = 60_000;
 const HELLO_TIMEOUT_MS = 20_000; // Kết nối mà không vào phòng thì ngắt, tránh chiếm chỗ.
 const MAX_EVENTS_PER_SEC = 60; // Người chơi thật khoảng 15/giây; vượt thì bỏ gói.
 const DISCONNECT_EVENTS_PER_SEC = 180; // Vượt mức này chắc chắn là dội, ngắt luôn.
-const CODE_WINDOW_MS = 10 * 60_000;
 const SIT_INTERVAL_MS = 1000; // Ngồi xuống phát tin cho cả phòng nên phải giới hạn riêng.
 
 const round2 = (n) => Math.round(n * 100) / 100;
@@ -41,7 +40,6 @@ export class Room {
     this.byPid = new Map();
     this.kicked = new Map(); // pid -> hết hạn chặn
     this.newPlayers = new WindowCounter(60_000);
-    this.codeFailures = new WindowCounter(CODE_WINDOW_MS);
     this.nextSid = 1;
     this.tickCount = 0;
     this.lastDate = this.today();
@@ -206,15 +204,6 @@ export class Room {
     if (socket.data.player) return { ok: false, error: 'Bạn đã ở trong tu viện rồi.' };
 
     const ip = clientIp(socket.handshake, this.config.trustProxy);
-    if (this.config.joinCode) {
-      if (this.codeFailures.peek(ip, now) >= this.config.codeAttemptsPer10Min) {
-        return { ok: false, needCode: true, error: 'Nhập sai nhiều lần quá, đợi 10 phút rồi thử lại nhé.' };
-      }
-      if (!codeMatches(data?.code, this.config.joinCode)) {
-        this.codeFailures.take(ip, this.config.codeAttemptsPer10Min, now);
-        return { ok: false, needCode: true, error: 'Mã vào cửa chưa đúng, xem lại trong nhóm Zalo công ty nhé.' };
-      }
-    }
 
     const baseName = cleanText(data?.name, LIMITS.nameMax);
     if (!baseName) return { ok: false, error: 'Nhập tên hiển thị nhé.' };

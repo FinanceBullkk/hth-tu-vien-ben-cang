@@ -24,7 +24,6 @@ const example = JSON.parse(fs.readFileSync(new URL('../config.example.json', imp
 example.bellSchedule = [];
 example.newPlayersPerMinute = 1000; // Bộ test vào phòng liên tục từ cùng một IP.
 example.maxConnectionsPerIp = 1000;
-example.joinCode = ''; // Các test chung không xét mã; test riêng bên dưới bật mã.
 fs.writeFileSync(cfg, JSON.stringify(example));
 
 /** Chạy một server riêng với cấu hình và IP giả lập như đang đứng sau Funnel. */
@@ -617,66 +616,6 @@ test('dội sự kiện: phần vượt bị bỏ, dội quá mạnh thì bị n
     await closed;
     assert.equal(a.connected, false, 'dội quá mạnh bị ngắt');
     assert.ok((await call(viewer, 'time:sync')).now > 0, 'người khác không bị ảnh hưởng');
-  });
-});
-
-test('mã vào cửa: sai mã không vào được, không nghe lén được, không đọc được lời ước', async () => {
-  await withServer({ joinCode: 'ABC234', codeAttemptsPer10Min: 3 }, async ({ connectAs, base }) => {
-    assert.deepEqual(await (await fetch(`${base}/api/info`)).json(), { codeRequired: true });
-
-    const insider = await connectAs('203.0.113.20');
-    const ok = await call(insider, 'hello', { name: 'Người nhà', code: ' abc 234 ' });
-    assert.equal(ok.ok, true, 'mã không phân biệt hoa thường và khoảng trắng');
-    assert.ok((await call(insider, 'wish:create', { text: 'Bình an', place: 'tree' })).ok);
-
-    // Người lạ: chưa có mã thì không nhận được bất cứ tin phát chung nào.
-    const stranger = await connectAs('198.51.100.20');
-    const heard = [];
-    stranger.onAny((ev) => heard.push(ev));
-    const wrong = await call(stranger, 'hello', { name: 'Người lạ', code: 'SAI' });
-    assert.equal(wrong.ok, false);
-    assert.equal(wrong.needCode, true);
-    assert.equal(wrong.snapshot, undefined, 'không lộ dữ liệu');
-    assert.equal((await call(stranger, 'hello', { name: 'Không mã' })).ok, false);
-    await call(insider, 'chat', { text: 'chuyện nội bộ' });
-    await call(insider, 'wish:create', { text: 'Điều riêng tư', place: 'pond' });
-    await new Promise((r) => setTimeout(r, 300));
-    assert.deepEqual(heard, [], 'kết nối chưa qua cửa không nhận được gì');
-    assert.equal((await call(stranger, 'chat', { text: 'x' })).ok, false);
-
-    // REST: chỉ người đã vào mới đọc được bảng ước, kể cả đoán ID ngẫu nhiên cũng không được.
-    assert.equal((await fetch(`${base}/api/wishes`)).status, 403);
-    assert.equal((await fetch(`${base}/api/wishes`, { headers: { 'x-player-id': 'a'.repeat(32) } })).status, 403);
-    const list = await fetch(`${base}/api/wishes`, { headers: { 'x-player-id': ok.playerId } });
-    assert.equal(list.status, 200);
-    assert.equal((await list.json()).items.length, 2);
-
-    // Dò mã: hết lượt thì mã đúng cũng bị từ chối, IP khác không bị liên luỵ.
-    assert.equal((await call(stranger, 'hello', { name: 'Dò', code: 'SAI2' })).ok, false);
-    const locked = await call(stranger, 'hello', { name: 'Dò', code: 'ABC234' });
-    assert.equal(locked.ok, false, 'đã hết lượt thử');
-    assert.match(locked.error, /10 phút/);
-    const other = await connectAs('203.0.113.21');
-    assert.equal((await call(other, 'hello', { name: 'Người khác', code: 'ABC234' })).ok, true);
-  });
-});
-
-test('admin đổi mã: mã cũ hết hiệu lực ngay, ghi vào config, tắt được mã', async () => {
-  await withServer({ joinCode: 'OLD234' }, async ({ connectAs, base, file }) => {
-    const put = (joinCode) => fetch(`${base}/admin/api/join-code`, {
-      method: 'PUT',
-      headers: { 'x-admin-key': ADMIN, 'content-type': 'application/json' },
-      body: JSON.stringify({ joinCode }),
-    });
-    assert.equal((await fetch(`${base}/admin/api/join-code`, { method: 'PUT' })).status, 403, 'cần khoá admin');
-    assert.equal((await put('có dấu!')).status, 400);
-    assert.equal((await put('new-234')).status, 200);
-    assert.equal(JSON.parse(fs.readFileSync(file, 'utf8')).joinCode, 'NEW-234');
-    const s = await connectAs('203.0.113.30');
-    assert.equal((await call(s, 'hello', { name: 'Cũ', code: 'OLD234' })).ok, false);
-    assert.equal((await call(s, 'hello', { name: 'Mới', code: 'NEW-234' })).ok, true);
-    assert.equal((await put('')).status, 200);
-    assert.deepEqual(await (await fetch(`${base}/api/info`)).json(), { codeRequired: false });
   });
 });
 

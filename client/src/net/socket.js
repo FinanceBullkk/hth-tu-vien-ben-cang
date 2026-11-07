@@ -58,8 +58,8 @@ export class Net {
         this.socket.disconnect();
         this.socket.connect();
       } else if (this.entered) {
-        // Đang chơi mà bị từ chối khi kết nối lại, ví dụ admin vừa đổi mã vào cửa.
-        this.#fatal(res?.needCode ? 'Mã vào cửa vừa được đổi. Tải lại trang và nhập mã mới nhé.' : res?.error || 'Chưa vào lại được, tải lại trang nhé.');
+        // Đang chơi mà bị từ chối khi kết nối lại, ví dụ bị mời ra khỏi tu viện.
+        this.#fatal(res?.error || 'Chưa vào lại được, tải lại trang nhé.');
       } else {
         this.onRefused?.(res?.error || 'Chưa vào được, thử lại nhé.', res);
       }

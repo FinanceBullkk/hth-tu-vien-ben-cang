@@ -6,7 +6,7 @@ import { createServer } from 'node:http';
 import express from 'express';
 import { Server } from 'socket.io';
 import { PLAYER_ID_RE } from '../shared/protocol.js';
-import { ROOT, adminKeyWasGenerated, config, joinCodeWasGenerated, saveContent } from './config.js';
+import { ROOT, adminKeyWasGenerated, config, saveContent } from './config.js';
 import { createAdminRouter } from './admin.js';
 import { Bell } from './bell.js';
 import { Db } from './db.js';
@@ -105,13 +105,10 @@ app.get('/api/me', (req, res) => {
   res.json(book);
 });
 
-// Cho biết màn chào có cần ô nhập mã không. Không tiết lộ gì khác.
-app.get('/api/info', (_req, res) => res.json({ codeRequired: Boolean(config.joinCode) }));
-
+// Bảng ước có tên thật: chỉ người đã từng vào được game mới đọc được.
 app.get('/api/wishes', (req, res) => {
-  // Bảng ước có tên thật: chỉ người đã từng vào được game mới đọc được.
   const viewer = pidOf(req);
-  if (config.joinCode && !(viewer && db.hasPlayer(viewer))) {
+  if (!(viewer && db.hasPlayer(viewer))) {
     res.status(403).json({ error: 'Vào tu viện trước đã nhé.' });
     return;
   }
@@ -125,7 +122,7 @@ app.get('/api/wishes', (req, res) => {
 // Bảng tuần: từ thứ Hai của tuần hiện tại theo múi giờ game.
 app.get('/api/weekly', (req, res) => {
   const viewer = pidOf(req);
-  if (config.joinCode && !(viewer && db.hasPlayer(viewer))) {
+  if (!(viewer && db.hasPlayer(viewer))) {
     res.status(403).json({ error: 'Vào tu viện trước đã nhé.' });
     return;
   }
@@ -166,7 +163,6 @@ httpServer.listen(config.port, () => {
   } else {
     console.log('  Trang admin:  /admin?key=<adminKey trong config.json>');
   }
-  if (joinCodeWasGenerated) console.log(`  Mã vào cửa:   ${config.joinCode} (đổi được trên trang admin)`);
   console.log('');
 });
 
