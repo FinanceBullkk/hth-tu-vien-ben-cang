@@ -57,6 +57,34 @@ these flags again.
 `hth:latest` may not be the running image. Check the actual image with
 `docker ps --filter name=hth` before recreating or rolling back.
 
+## Latest release: 2026-11-07 separate hair slot and xianxia hair, hats
+
+Deployed as `hth:nontoc-261107-1702` (also `hth:latest`) at about 17:10 (UTC+7) on `pc-chinh`, built
+from a clean export of commit `7558252` (main, PR #14). Splits the avatar look into two free
+slots — hair and hat — adding three xianxia hairstyles (Búi trâm ngọc, Song loạn, Bạch phát) and
+four hats (Không đội, Đạo quan, Kim quan, Nón lá màn sa). Legacy mixed ids 0–2 of the old hat slot
+keep their meaning and are migrated to the hair slot server-side when a client omits `hair`; the
+DB gains a `hair` column via migration, no other schema change. Existing ids 3–6 keep theirs —
+Đầu trụi băng mắt now ignores the hair slot since it carries its own hair design.
+
+Test gate: 106/106 in a `node:24` container on the clean export, plus the same suite green in the
+dev worktree and a passing client build. Candidate on a copy of the real data volume: health,
+bundle hash (`index-DNSZSzp1.js`), DB `quick_check` (24 players, 13 wishes, 34 fish) and a browser
+run (welcome chip rows, avatar hair/hat state checks, entering the game) passed; pixel screenshots
+were not captured because the capture surface timed out on the heavy canvas. Cutover kept the same
+volume, `hth-net`, port `127.0.0.1:3000→3000`, `TRUST_PROXY=1` and all runtime flags. Post-cutover:
+local and public health passed, public bundle hash matched, Socket.IO WebSocket handshake OK,
+`quick_check` ok with the same counts; `CapDrop=ALL` and `NoNewPrivs=1` confirmed.
+
+Rollback container `hth-pre-nontoc-261107-1702` is stopped and preserved with `restart=no`
+(image `hth:tempest-261107-1638`). Private cutover backup is inside the data volume at
+`backups/cutover-nontoc-261107-1702/`. Candidate container and its volume were removed.
+
+Note: while this cutover happened, another session was preparing an aura release (candidates
+`hth:aura-redesign-261107-1705` and `hth:aura-public-261107-1715` were running). Production base
+is main `7558252`; the next release must build from main at or after this commit — or from merged
+sources containing it — so the hair/hat feature is not silently rolled back.
+
 After moving or restarting Docker, check the site. If the containers stayed stopped,
 start them with their existing images and data:
 
@@ -73,7 +101,7 @@ docker stop hth-tunnel-fixed
 
 Start it again with `docker start hth-tunnel-fixed`. Domain remains unchanged.
 
-## Latest release: 2026-11-07 camera free look, campus activities and auras
+## Previous release: 2026-11-07 camera free look, campus activities and auras
 
 Deployed as `hth:tempest-261107-1638` (also `hth:latest`) at about 16:45
 (UTC+7) on `pc-chinh`, built from a clean export of commit `417b54e` (main,
