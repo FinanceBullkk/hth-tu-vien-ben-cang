@@ -54,10 +54,10 @@ export function createAdminRouter({ config, saveContent, db, room, wishes, bell,
       res.status(403).type('text/plain; charset=utf-8').send('Link admin không đúng.');
       return;
     }
-    res.sendFile(path.join(UI_DIR, 'admin.html'));
+    res.sendFile('admin.html', { root: UI_DIR });
   });
-  router.get('/admin/admin.js', (_req, res) => res.sendFile(path.join(UI_DIR, 'admin-client.js')));
-  router.get('/admin/admin.css', (_req, res) => res.sendFile(path.join(UI_DIR, 'admin.css')));
+  router.get('/admin/admin.js', (_req, res) => res.sendFile('admin-client.js', { root: UI_DIR }));
+  router.get('/admin/admin.css', (_req, res) => res.sendFile('admin.css', { root: UI_DIR }));
 
   const api = express.Router();
   api.use((req, res, next) => {

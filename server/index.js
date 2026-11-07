@@ -138,7 +138,7 @@ const distDir = path.join(ROOT, 'dist');
 if (fs.existsSync(path.join(distDir, 'index.html'))) {
   app.use('/assets', express.static(path.join(distDir, 'assets'), { immutable: true, maxAge: '1y' }));
   app.use(express.static(distDir, { maxAge: 0 }));
-  app.get(/^\/(?!api|admin|socket\.io).*/, (_req, res) => res.sendFile(path.join(distDir, 'index.html')));
+  app.get(/^\/(?!api|admin|socket\.io).*/, (_req, res) => res.sendFile('index.html', { root: distDir }));
 } else {
   app.get('/', (_req, res) => {
     res.type('text/plain; charset=utf-8').send('Chưa build client. Chạy: npm run build');

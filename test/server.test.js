@@ -15,7 +15,7 @@ import {
   ABBOT, BELL, BOUNDS, BOXES, CIRCLES, CONTAINERS, MATS, PLAYER_RADIUS, POND, SPAWN, TEA, TREE, clampToWalkable, inBox, resolveCollision,
 } from '../shared/layout.js';
 
-const PORT = 3911;
+const PORT = Number(process.env.HTH_TEST_PORT ?? 3911);
 const URL_BASE = `http://127.0.0.1:${PORT}`;
 const ADMIN = 'k'.repeat(32);
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hth-test-'));
@@ -410,6 +410,8 @@ test('sự kiện chuông: đếm ngược, chạm trong sân, kết quả đế
 test('admin: sai khoá bị chặn, từ lọc có hiệu lực ngay, kích được người chơi, chống XSS ở dữ liệu thô', async () => {
   assert.equal((await fetch(`${URL_BASE}/admin?key=sai`)).status, 403);
   assert.equal((await fetch(`${URL_BASE}/admin?key=${ADMIN}`)).status, 200);
+  assert.equal((await fetch(`${URL_BASE}/admin/admin.js`)).status, 200);
+  assert.equal((await fetch(`${URL_BASE}/admin/admin.css`)).status, 200);
   assert.equal((await fetch(`${URL_BASE}/admin/api/state`)).status, 403);
 
   const a = await join('Ngoan');
