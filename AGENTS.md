@@ -76,10 +76,19 @@ Trước khi commit:
 
 ## Triển khai
 
-- Bản public chạy trên chính máy này qua Docker và Cloudflare Tunnel; `docs/deployment.md` là nguồn đúng về tên container, volume và các cờ khi tạo lại container.
+- Bản public chạy bằng Docker và Cloudflare Tunnel trên máy production `pc-chinh`, không phải máy dev. `docs/deployment.md` là nguồn đúng về tên container, volume và các cờ.
 - Không build, restart hay deploy container khi chưa được yêu cầu rõ.
-- Bản đang chạy có thể khác working tree: các lần release trước cố ý loại phần đang làm dở. Muốn biết bản đang chạy có gì thì xem release mới nhất trong `docs/deployment.md`.
-- Sau khi release, ghi bản mới vào `docs/deployment.md`.
+- **Deploy chỉ bằng một lệnh**, không tự làm tay qua SSH:
+
+  ```bash
+  gh workflow run deploy -f ref=main                          # deploy đầy đủ
+  gh workflow run deploy -f ref=<nhánh> -f candidate_only=true  # thử, không đụng production
+  gh run watch                                                # theo dõi, lỗi thì tự rollback
+  ```
+
+  Workflow `.github/workflows/deploy.yml` chạy `scripts/deploy.mjs` trên runner ở `pc-chinh`, mỗi lúc một lần. Mặc định deploy `main`; deploy nhánh khác thì phải được yêu cầu rõ.
+- Bản đang chạy là bản của lần chạy workflow `Deploy` thành công gần nhất (xem tab Actions hoặc `gh run list -w deploy`).
+- Sau khi release, ghi bản mới vào `docs/deployment.md` (tóm tắt có sẵn trong trang kết quả của lần chạy).
 
 ## Nhạc nền
 
