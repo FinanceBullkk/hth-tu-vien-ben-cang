@@ -48,7 +48,9 @@ export function terrainHeight(x, z) {
     if (x > landEnd) y = QUAY_Y - 18 * smooth(landEnd, landEnd + 16, x);
     y += smooth(460, 700, x) * (70 + n * 70);
   }
-  return y;
+  // Cut the approach below the stair treads; feather into the surrounding slope.
+  const approach = smooth(6.5, 4.8, Math.abs(x)) * smooth(41, 41.5, z) * (1 - smooth(53, 58, z));
+  return y + (Math.min(y, -0.55 - (z - 41) * 0.48 / 1.02) - y) * approach;
 }
 
 function gridLines(min, max, innerMin, innerMax, innerStep, outerStep) {
@@ -61,14 +63,14 @@ function gridLines(min, max, innerMin, innerMax, innerStep, outerStep) {
 
 export function createTerrain(lowQuality) {
   const q = lowQuality ? 1.6 : 1;
-  const xs = gridLines(-420, 980, -90, 130, 6 * q, 28 * q);
-  const zs = gridLines(-620, 620, -100, 110, 6 * q, 28 * q);
+  const xs = [...new Set([...gridLines(-420, 980, -90, 130, 6 * q, 28 * q), -6.5, -4.8, 0, 4.8, 6.5])].sort((a, b) => a - b);
+  const zs = [...new Set([...gridLines(-620, 620, -100, 110, 6 * q, 28 * q), 41, 41.5, 53, 58])].sort((a, b) => a - b);
   const pos = [];
   const col = [];
-  const grass = new THREE.Color('#5d6f3a');
-  const dark = new THREE.Color('#3f5a35');
-  const dirt = new THREE.Color('#7a6442');
-  const far = new THREE.Color('#4d5a6e');
+  const grass = new THREE.Color('#a0b780');
+  const dark = new THREE.Color('#7e9c6c');
+  const dirt = new THREE.Color('#b6a17b');
+  const far = new THREE.Color('#8ca9a6');
   const tmp = new THREE.Color();
   const H = (x, z) => terrainHeight(x, z);
   const pushTri = (a, b, c) => {
@@ -122,7 +124,7 @@ export function createForest(lowQuality) {
     geo.deleteAttribute('uv');
     return geo;
   };
-  const geo = mergeGeometries([paint(trunk, '#4a3020'), paint(cone1, '#3c5f38'), paint(cone2, '#4c7040')]);
+  const geo = mergeGeometries([paint(trunk, '#846244'), paint(cone1, '#68865c'), paint(cone2, '#87a373')]);
   const N = lowQuality ? 130 : 280;
   const mesh = new THREE.InstancedMesh(geo, flatMaterial(), N);
   const rand = rng(1234);

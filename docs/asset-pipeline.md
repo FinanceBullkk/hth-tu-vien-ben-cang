@@ -38,7 +38,9 @@ Kiểm tra GLB (COLOR_0, tên node, material): `node tools/blender/inspect_glb.j
    sang Blender (Z-up) và exporter glTF chuyển ngược lại — GLB ra đúng toạ độ game, code
    chỉ cần `position.set(x, 0, z)`.
 2. **Vertex colors, không texture.** Màu tô theo góc (CORNER) từ hex trong `palette.py` đã
-   decode sang linear — khớp cách `THREE.Color` đọc hex phía client. Không thêm texture;
+   decode sang linear, lưu bằng `FLOAT_COLOR` — khớp cách `THREE.Color` đọc hex phía client.
+   Không dùng lớp byte với đầu vào linear vì Blender sẽ decode sRGB thêm lần nữa.
+   Kiểm tra màu mái đã xuất: `node --test test/campus-visuals.test.js`. Không thêm texture;
    chữ tiếng Việt vẫn dùng `textTexture()` canvas bên client.
 3. **Node đặt tên để code điều khiển.** `flame` (lửa đèn đá) và `glow` (ô vách tháp) → code
    thay bằng MeshBasicMaterial và nhấp sáng theo `night`; `cloth` (lá băng) → code lắc nhẹ;

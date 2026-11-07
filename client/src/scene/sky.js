@@ -1,4 +1,4 @@
-// Trời và chu kì ngày: hoàng hôn sang đêm rồi về lại, tính từ giờ server nên mọi máy giống nhau.
+// Trời và chu kì ngày: nắng dịu sang đêm rồi về lại, đồng bộ theo giờ server.
 import * as THREE from 'three';
 import { rng } from './builders.js';
 
@@ -153,7 +153,7 @@ export class DayNight {
     this.starMat.opacity = smooth(0.45, 0.95, n);
     this.moonMat.opacity = smooth(0.3, 0.8, n);
     this.moonHaloMat.opacity = smooth(0.18, 0.3, n);
-    // Đêm phủ sương dày hơn: cảnh gần chìm nhẹ vào mực, đúng chất tranh cuộn.
+    // Sương đêm tách lớp núi xa, giữ sân gần rõ dưới ánh trăng.
     this.fog.near = 140 - 30 * n;
     this.fog.far = 780 - 160 * n;
   }

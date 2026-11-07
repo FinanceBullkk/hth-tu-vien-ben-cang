@@ -36,7 +36,8 @@ class Batch:
 
     def __init__(self, seed=7, jitter=0.04):
         self.bm = bmesh.new()
-        self.cl = self.bm.loops.layers.color.new('Col')
+        # P.linear already decodes sRGB; byte layers would decode it a second time.
+        self.cl = self.bm.loops.layers.float_color.new('Col')
         self.rand = random.Random(seed)
         self.jitter = jitter
 
