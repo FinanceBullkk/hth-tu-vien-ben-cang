@@ -2,19 +2,33 @@
 
 ## Current target
 
-Cloudflare named Tunnel on this Windows host. Public URL:
-`https://game.hthlogistics.top/`. Porkbun manages registration; Cloudflare
-manages DNS and the Tunnel. `hth-tunnel-fixed` connects through Docker network
-`hth-net` with `--restart unless-stopped`. Its token is stored in Docker volume
-`hth-tunnel-credentials`, mounted read-only. Keep this volume private and back
-it up securely; never commit the token. A second owner-restricted copy exists
-at `%LOCALAPPDATA%\HTH-TuVien\tunnel\token` on this PC.
+Cloudflare named Tunnel on the production host `pc-chinh` (Windows, Tailscale
+hostname `anhhao.tail028c49.ts.net`, SSH alias `pc-chinh` from the dev machine
+`MSI`). Public URL: `https://game.hthlogistics.top/`. Porkbun manages
+registration; Cloudflare manages DNS and the Tunnel. `hth-tunnel-fixed`
+connects through Docker network `hth-net` with `--restart unless-stopped`. Its
+token is stored in Docker volume `hth-tunnel-credentials`, mounted read-only.
+Keep this volume private and back it up securely; never commit the token.
 
-Game container: `hth-tu-vien-ben-cang` on Docker network `hth-net`, with
-`TRUST_PROXY=1` and `--restart unless-stopped`. Only `127.0.0.1:3000` is published on the host. Persistent DB,
-admin key, and shared radio clock are in Docker volume
-`hth-tu-vien-ben-cang-data`. The tunnel forwards to
-`http://hth-tu-vien-ben-cang:3000`.
+Game container: `hth-tu-vien-ben-cang` on Docker network `hth-net` on
+`pc-chinh`, with `TRUST_PROXY=1` and `--restart unless-stopped`. Only
+`127.0.0.1:3000` is published on the host. Persistent DB, admin key, and
+shared radio clock are in Docker volume `hth-tu-vien-ben-cang-data`. The
+tunnel forwards to `http://hth-tu-vien-ben-cang:3000`.
+
+Note: an unused stale copy of the stack (container `hth`, tunnel, volume
+`hth-data`) sits on machine `hao` (`hao.tail028c49.ts.net`) and serves nothing
+public. It is not production; decide to keep or remove it there.
+
+## Releasing from the dev machine
+
+Builds must come from a clean export, never the shared working checkout:
+`git archive --format=tar.gz <commit>`, copy to `pc-chinh`, extract, run
+`npm test` in a `node:24` container, run a candidate container on a copy of
+the data volume, then cutover with the runtime flags under Operate. SSH into
+`pc-chinh` lands in cmd.exe: keep remote commands simple, do not pipe into
+`tail`/`grep` remotely (run pipes on the dev side), and use SSH
+`ServerAliveInterval` for long builds.
 
 ## Operate (PowerShell)
 
@@ -57,7 +71,31 @@ docker stop hth-tunnel-fixed
 
 Start it again with `docker start hth-tunnel-fixed`. Domain remains unchanged.
 
-## Latest release: 2026-11-07 campus layout and auras
+## Latest release: 2026-11-07 camera free look, campus activities and auras
+
+Deployed as `hth:tempest-261107-1638` (also `hth:latest`) at about 16:45
+(UTC+7) on `pc-chinh`, built from a clean export of commit `417b54e` (main,
+PRs #1–#9). Brings the WWM-style camera (right-click toggle free look without
+pointer lock, pitch down to −1.3 rad to look at the sky, zoom to 16 m,
+camera-facing strafe), removes the join code gate, and includes the campus
+activities, proximity voice, auras and attire work. No DB schema change.
+
+The previous running image (`hth:trangphuc-261107-1600`) had no deploy record;
+token probes showed its client predated PRs #1–#3, so this release caught
+production up with main. Test gate: 91/91 in a `node:24` container on
+`pc-chinh`. Candidate on a copy of the real data volume: health, bundle hash
+(`index-DB5CUnNC.js`) and DB `quick_check` passed. Cutover kept the same
+volume, `hth-net`, port `127.0.0.1:3000→3000`, `TRUST_PROXY=1` and all runtime
+flags. Post-cutover: public health and bundle hash passed, Socket.IO handshake
+OK, `quick_check` ok with 24 players, 13 wishes, 34 fish retained; `CapEff=0`
+and `NoNewPrivs=1` confirmed.
+
+Rollback container `hth-pre-tempest-261107-1638` is stopped and preserved with
+`restart=no`. Private cutover backup is inside the data volume at
+`backups/cutover-tempest-261107-1638/`. Candidate container and test volume
+were removed.
+
+## Previous release: 2026-11-07 campus layout and auras
 
 Deployed as `hth:campus-261107-1155` (also `hth:latest`) at 12:00 (UTC+7), built from a clean export
 of commit `5ee7e0d`. Campus areas are rearranged and five auras added. No `server/` change and no DB
