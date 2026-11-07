@@ -62,9 +62,7 @@ Không bao giờ tự ý: force push, push thẳng vào `main`, bỏ qua hook b�
 Nhiều phiên (người và AI) làm song song trên cùng máy. Mỗi phiên làm trong worktree riêng thì không ai ghi đè hay làm bẩn file của người khác.
 
 1. Bắt đầu: `git fetch origin`, rồi `git worktree add .claude/worktrees/<tên-việc> -b <nhánh> origin/main`, rồi làm mọi thứ trong thư mục đó.
-2. `node_modules`: tạo junction tới bản của checkout chính thay vì cài lại (`New-Item -ItemType Junction -Path <worktree>
-ode_modules -Target D:\dichua
-ode_modules` trên Windows, `ln -s` trên Linux).
+2. `node_modules`: tạo junction tới bản của checkout chính thay vì cài lại (`New-Item -ItemType Junction -Path <worktree>/node_modules -Target D:/dichua/node_modules` trên Windows, `ln -s` trên Linux).
 3. Trước khi mở PR và trước khi merge: merge `origin/main` mới nhất vào nhánh, chạy lại test. Trong lúc mình làm, `main` có thể đã có PR khác.
 4. Xong việc (PR đã merge): **gỡ junction `node_modules` trước**, rồi `git worktree remove .claude/worktrees/<tên-việc>` và xoá nhánh. Nếu chưa gỡ junction, lệnh xoá worktree có thể xoá luôn `node_modules` thật của checkout chính.
 5. Không động vào worktree, nhánh hay stash của phiên khác. Thay vì `git stash` trần, dùng commit tạm trên nhánh của mình.
