@@ -10,8 +10,11 @@ export const LIMITS = {
   wishesPerDay: 3,
   bellCooldownMs: 30_000,
   wishesShownPerPlace: 60,
-  moveMaxPerSec: 20,
+  moveMaxPerSec: 30,
 };
+
+// Nhịp đồng bộ vị trí. Hai bên cùng nhịp để mỗi gói phát đi đều có mẫu mới, tốc độ không dao động.
+export const MOTION = { sendHz: 20, tickMs: 50, stampMaxAgeMs: 1000 };
 
 export const AVATAR = { colors: 10, hats: 6, attires: 3, weapons: 3, effects: 9 };
 

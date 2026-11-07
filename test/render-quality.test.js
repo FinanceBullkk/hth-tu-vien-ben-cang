@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { AdaptiveQuality, renderPixelRatio } from '../client/src/scene/render-quality.js';
+import { AdaptiveQuality, ShadowPacer, renderPixelRatio } from '../client/src/scene/render-quality.js';
 
 test('render resolution stays within pixel budget on desktop, HiDPI and resize', () => {
   for (const [width, height, dpr] of [[1280, 720, 1], [1920, 1080, 2], [3840, 2160, 2]]) {
@@ -43,4 +43,35 @@ test('persistent stalls still lower quality instead of resetting measurement for
   const quality = new AdaptiveQuality((level) => changes.push(level));
   for (let i = 0; i < 40; i++) quality.update(0.5);
   assert.deepEqual(changes, [1, 0]);
+});
+
+/** Số lần vẽ bóng trong 1 giây ở một tốc độ khung cho trước. */
+function shadowUpdates(fps, busy) {
+  const pacer = new ShadowPacer();
+  let updates = 0;
+  let maxGap = 0;
+  let gap = 0;
+  for (let i = 0; i < fps * 10; i++) {
+    gap++;
+    if (pacer.update(1 / fps, busy)) {
+      updates++;
+      maxGap = Math.max(maxGap, gap);
+      gap = 0;
+    }
+  }
+  return { perSec: updates / 10, shareOfFrames: updates / (fps * 10), maxGap };
+}
+
+test('shadows follow walkers at 20 Hz on a healthy machine and rest when nobody moves', () => {
+  const walking = shadowUpdates(60, true);
+  assert.ok(walking.perSec >= 19 && walking.perSec <= 20.1, `walking: ${walking.perSec}/s`);
+  const idle = shadowUpdates(60, false);
+  assert.ok(idle.perSec >= 4.5 && idle.perSec <= 5.1, `idle: ${idle.perSec}/s`);
+});
+
+test('a slow machine never spends more than one frame in three on shadows', () => {
+  for (const fps of [144, 60, 37, 25, 15]) {
+    const { shareOfFrames } = shadowUpdates(fps, true);
+    assert.ok(shareOfFrames <= 1 / 3 + 0.01, `${fps} FPS: ${shareOfFrames}`);
+  }
 });

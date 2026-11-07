@@ -1,9 +1,10 @@
-// Người chơi trên máy này: đi lại ngay lập tức, va chạm, gửi vị trí lên server 12 lần/giây.
+// Người chơi trên máy này: đi lại ngay lập tức, va chạm, gửi vị trí lên server 20 lần/giây.
 import { PLAYER_RADIUS, SPAWN, floorHeight, resolveCollision } from '../../../shared/layout.js';
+import { MOTION } from '../../../shared/protocol.js';
 import { Avatar } from './avatar.js';
 
 const SPEED = 4.3;
-const SEND_INTERVAL = 1 / 12;
+const SEND_INTERVAL = 1 / MOTION.sendHz;
 
 export class LocalPlayer {
   constructor(scene, profile, lowQuality = false) {
@@ -16,6 +17,7 @@ export class LocalPlayer {
     this.locked = true;
     this.sendTimer = 0;
     this.lastSent = '';
+    this.lastSentAnim = 0;
     this.avatar = new Avatar({
       name: profile.name || '',
       color: profile.color,
@@ -82,11 +84,15 @@ export class LocalPlayer {
 
     this.sendTimer += dt;
     if (net.ready && this.sendTimer >= SEND_INTERVAL) {
-      this.sendTimer = 0;
-      const key = `${this.x.toFixed(2)}|${this.z.toFixed(2)}|${this.rot.toFixed(2)}|${moving ? 1 : 0}`;
+      this.sendTimer %= SEND_INTERVAL; // Giữ phần dư để nhịp gửi không trôi theo tốc độ khung hình.
+      const anim = moving ? 1 : 0;
+      const key = `${this.x.toFixed(2)}|${this.z.toFixed(2)}|${this.rot.toFixed(2)}|${anim}`;
       if (key !== this.lastSent) {
         this.lastSent = key;
-        net.socket.volatile.emit('move', [this.x, this.z, this.rot, moving ? 1 : 0]);
+        // Gói đổi đi/đứng không được rơi, nếu không người khác thấy mình đi tại chỗ tới gói đủ kế tiếp.
+        const sender = anim !== this.lastSentAnim ? net.socket : net.socket.volatile;
+        this.lastSentAnim = anim;
+        sender.emit('move', [this.x, this.z, this.rot, anim, Math.round(net.now())]);
       }
     }
   }

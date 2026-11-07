@@ -191,7 +191,7 @@ Lệnh này giả lập người chơi và in CPU server cùng độ trễ chat.
 shared/          Dùng chung client + server: bố cục sân, va chạm, hằng số giao thức, luật nhịp, câu cá, đầu hồ, voice
 server/
   index.js       Express + Socket.IO, phục vụ client đã build
-  rooms.js       Phòng chung: người online, gói vị trí 10 lần/giây, chat, kết nối lại, định tuyến sự kiện
+  rooms.js       Phòng chung: người online, gói vị trí 20 lần/giây, chat, kết nối lại, định tuyến sự kiện
   wishes.js      Lời ước và quẻ vận đơn
   bell.js        Chuông cá nhân, lịch và sự kiện chuông
   fishing.js     Câu cá: định giờ cắn, roll loài, tự mô phỏng pha giằng co

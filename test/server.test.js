@@ -203,6 +203,81 @@ test('hai người vào phòng thấy nhau, trùng tên tự thêm số', async 
   b.s.disconnect();
 });
 
+/** Đợi gói state kế tiếp có hàng của sid, thoả điều kiện. */
+function nextRow(socket, sid, match = () => true) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      socket.off('state', handler);
+      reject(new Error('không thấy gói state mong đợi'));
+    }, 3000);
+    function handler(m) {
+      const row = m.p.find((r) => r[0] === sid);
+      if (row && match(row)) {
+        clearTimeout(timer);
+        socket.off('state', handler);
+        resolve({ row, t: m.t });
+      }
+    }
+    socket.on('state', handler);
+  });
+}
+
+test('vị trí phát 20 lần/giây và kèm tuổi mẫu theo mốc client, mốc giả bị kẹp', async () => {
+  const a = await join('Tuoi');
+  const b = await join('Xem');
+  const sid = a.res.sid;
+  await new Promise((r) => setTimeout(r, 400)); // Mốc không được lùi quá lúc vào phòng.
+
+  // Mốc hợp lệ cách đây 200 ms: tuổi phản ánh đúng lúc lấy mẫu, không phải lúc tick.
+  a.s.emit('move', [1, 1, 0, 1, Date.now() - 200]);
+  let { row } = await nextRow(b.s, sid, (r) => r[1] === 1);
+  assert.ok(row[6] >= 200 && row[6] < 800, `tuổi ${row[6]}`);
+
+  // Mốc ở tương lai bị kẹp về hiện tại.
+  a.s.emit('move', [2, 1, 0, 1, Date.now() + 60_000]);
+  ({ row } = await nextRow(b.s, sid, (r) => r[1] === 2));
+  assert.ok(row[6] >= 0 && row[6] < 500, `tuổi ${row[6]}`);
+
+  // Mốc rất cũ không được làm thời gian lùi: vẫn giữ mốc đã có.
+  a.s.emit('move', [3, 1, 0, 1, 1]);
+  ({ row } = await nextRow(b.s, sid, (r) => r[1] === 3));
+  assert.ok(row[6] >= 0 && row[6] < 1000, `tuổi ${row[6]}`);
+
+  // Mốc rác và client cũ không gửi mốc: vẫn đi được, lấy giờ server.
+  for (const [i, stamp] of [['abc'], [null], [{}], [Number.NaN], [Number.POSITIVE_INFINITY]].entries()) {
+    const x = 4 + i;
+    a.s.emit('move', [x, 1, 0, 1, stamp[0]]);
+    ({ row } = await nextRow(b.s, sid, (r) => r[1] === x));
+    assert.ok(Number.isFinite(row[6]) && row[6] >= 0 && row[6] < 1000, `tuổi ${row[6]}`);
+  }
+  a.s.emit('move', [10, 1, 0, 0]);
+  ({ row } = await nextRow(b.s, sid, (r) => r[1] === 10));
+  assert.ok(row[6] >= 0 && row[6] < 500, `tuổi ${row[6]}`);
+
+  // Đi liên tục ở nhịp client thật: phần lớn gói phát đi đều có mẫu mới, không còn nhịp 10 Hz cũ.
+  let seen = 0;
+  const count = (m) => { if (m.p.some((r) => r[0] === sid)) seen++; };
+  b.s.on('state', count);
+  const t0 = Date.now();
+  let x = 11;
+  const sender = setInterval(() => {
+    x += 0.05;
+    a.s.emit('move', [x, 1, 0, 1, Date.now()]);
+  }, 50);
+  await new Promise((r) => setTimeout(r, 2000));
+  clearInterval(sender);
+  b.s.off('state', count);
+  const rate = seen / ((Date.now() - t0) / 1000);
+  assert.ok(rate >= 14 && rate <= 21, `nhận ${rate.toFixed(1)} gói/giây`);
+
+  // Ngắt khi đang đi: server vẫn phục vụ người còn lại, gói state của họ vẫn tới.
+  a.s.emit('move', [x, 1, 0, 1, Date.now()]);
+  a.s.disconnect();
+  b.s.emit('move', [2, 2, 0, 0, Date.now()]);
+  assert.ok((await nextRow(b.s, b.res.sid, (r) => r[1] === 2)).row);
+  b.s.disconnect();
+});
+
 test('chat: phát cho mọi người, chặn từ thô, giới hạn 2 giây, cắt 80 ký tự', async () => {
   const a = await join('Minh');
   const b = await join('Hoa');
