@@ -2,8 +2,8 @@
 import * as THREE from 'three';
 import { CIRCLES, ROOF_ZONES, cameraSegmentT, inBox } from '../../../shared/layout.js';
 
-// Cho nhìn thấp gần ngang mặt đất và từ trên cao xuống sâu, kiểu Trove/Where Winds Meet.
-const MIN_PITCH = -0.1;
+// Cho ngước lên bầu trời (âm: camera hạ dưới vai) và nhìn từ trên cao xuống sâu, kiểu Trove/WWM.
+const MIN_PITCH = -1.3;
 const MAX_PITCH = 1.25;
 
 export class FollowCamera {
@@ -118,7 +118,9 @@ export class FollowCamera {
       this.camera.position.x += Math.sin(this.time * 47) * this.shakeAmt;
       this.camera.position.y += Math.sin(this.time * 61) * this.shakeAmt * 0.7;
     }
-    this.camera.lookAt(this.look);
+    // Nhìn theo đúng hướng yaw/pitch thay vì lookAt đầu nhân vật: khi camera bị kẹp gần đất
+    // hay dưới mái, góc máy vẫn giữ độ ngước/chúi đã kéo, không bị san phẳng.
+    this.camera.lookAt(this.pos.x - dirX, this.pos.y - dirY, this.pos.z - dirZ);
     this.camera.getWorldDirection(this.forward);
   }
 }
