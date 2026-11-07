@@ -21,6 +21,7 @@ export class LocalPlayer {
     this.avatar = new Avatar({
       name: profile.name || '',
       color: profile.color,
+      hair: profile.hair ?? (profile.hat <= 2 ? profile.hat : 0),
       hat: profile.hat,
       attire: profile.attire ?? 0,
       weapon: profile.weapon ?? 0,

@@ -16,14 +16,23 @@ export const LIMITS = {
 // Nhịp đồng bộ vị trí. Hai bên cùng nhịp để mỗi gói phát đi đều có mẫu mới, tốc độ không dao động.
 export const MOTION = { sendHz: 20, tickMs: 50, stampMaxAgeMs: 1000 };
 
-export const AVATAR = { colors: 10, hats: 7, attires: 4, weapons: 4, effects: 10 };
+export const AVATAR = { colors: 10, hairs: 6, hats: 11, attires: 4, weapons: 4, effects: 10 };
 
 export const SHIRT_COLORS = [
   '#c0392b', '#e67e22', '#d4a017', '#3f8f5f', '#2d7f8f', '#3b5ea8', '#7d4a9e', '#8a5a3c',
   '#e8c34a', '#3aa8a0',
 ];
 
-export const HAT_NAMES = ['Tóc ngắn', 'Tóc dài', 'Tóc búi', 'Mũ lưỡi trai', 'Nón lá', 'Mũ bảo hộ', 'Đầu trụi băng mắt'];
+// Tóc và mũ là hai slot riêng, kết hợp tự do. Id là số thứ tự lưu trong DB:
+// chỉ được nối tiếp, không đổi chỗ hay đổi tên option đã có.
+export const HAIR_NAMES = ['Tóc ngắn', 'Tóc dài', 'Tóc búi', 'Búi trâm ngọc', 'Song loạn', 'Bạch phát'];
+// 3 id đầu là id cũ trộn tóc vào mũ: bản mới không cho chọn nữa nhưng server vẫn
+// nhận để kiểu tóc của người chơi cũ không mất nghĩa khi di trú sang slot tóc.
+export const HAT_NAMES = [
+  'Tóc ngắn', 'Tóc dài', 'Tóc búi', // id cũ, chỉ còn để di trú
+  'Mũ lưỡi trai', 'Nón lá', 'Mũ bảo hộ', 'Đầu trụi băng mắt',
+  'Không đội', 'Đạo quan', 'Kim quan', 'Nón lá màn sa',
+];
 
 // Trang phục tiên hiệp, vũ khí và hào quang: chọn ở màn vào game, đồng bộ qua server.
 export const ATTIRE_NAMES = ['Lữ khách', 'Đạo bào vân thủy', 'Bạch y hiệp khách', 'Võ tăng bang thân'];

@@ -1,12 +1,16 @@
-// Màn chào "Lên tu viện": nhập tên, chọn màu áo, tóc/mũ, trang phục, vũ khí và hiệu ứng,
+// Màn chào "Lên tu viện": nhập tên, chọn màu áo, tóc, mũ, trang phục, vũ khí và hiệu ứng,
 // nhân vật xem trước ngay trong cảnh. Hai màu cuối là màu quý mở khoá bằng TEU.
-import { ATTIRE_NAMES, AVATAR, EFFECT_NAMES, HAT_NAMES, LIMITS, PREMIUM_COLORS, SHIRT_COLORS, WEAPON_NAMES } from '../../../shared/protocol.js';
+import { ATTIRE_NAMES, AVATAR, EFFECT_NAMES, HAIR_NAMES, HAT_NAMES, LIMITS, PREMIUM_COLORS, SHIRT_COLORS, WEAPON_NAMES } from '../../../shared/protocol.js';
+
+// Hàng mũ bỏ 3 id đầu (id cũ trộn tóc vào mũ, chỉ còn để di trú người chơi cũ).
+const HAT_CHIP_START = 3;
+const HAT_NONE = 7; // 'Không đội'
 import { LoginMusic } from '../audio/login-music.js';
 import { $, h, store } from './dom.js';
 
 export class Welcome {
   constructor({ profile, onPreview, onEnter }) {
-    this.profile = { name: '', color: 0, hat: 0, ...profile };
+    this.profile = { name: '', color: 0, hair: 0, hat: 0, ...profile };
     this.onPreview = onPreview;
     this.onEnter = onEnter;
     this.root = $('welcome');
@@ -47,8 +51,16 @@ export class Welcome {
     }
     this.colorBtns = [...colors.children];
 
-    const hats = h('div', { class: 'hat-list', role: 'radiogroup', 'aria-label': 'Kiểu tóc hoặc mũ' });
-    for (let i = 0; i < AVATAR.hats; i++) {
+    const hairs = h('div', { class: 'hat-list', role: 'radiogroup', 'aria-label': 'Kiểu tóc' });
+    for (let i = 0; i < AVATAR.hairs; i++) {
+      const b = h('button', { type: 'button', class: 'chip', role: 'radio' }, HAIR_NAMES[i]);
+      b.addEventListener('click', () => this.setHair(i));
+      hairs.append(b);
+    }
+    this.hairBtns = [...hairs.children];
+
+    const hats = h('div', { class: 'hat-list', role: 'radiogroup', 'aria-label': 'Kiểu mũ' });
+    for (let i = HAT_CHIP_START; i < AVATAR.hats; i++) {
       const b = h('button', { type: 'button', class: 'chip', role: 'radio' }, HAT_NAMES[i]);
       b.addEventListener('click', () => this.setHat(i));
       hats.append(b);
@@ -91,12 +103,14 @@ export class Welcome {
         h('details', { class: 'welcome-more' },
           h('summary', {}, 'Đổi trang phục (không bắt buộc)'),
           h('div', { class: 'field' }, h('span', {}, 'Màu áo'), colors),
-          h('div', { class: 'field' }, h('span', {}, 'Tóc và mũ'), hats),
+          h('div', { class: 'field' }, h('span', {}, 'Tóc'), hairs),
+          h('div', { class: 'field' }, h('span', {}, 'Mũ'), hats),
           attireRow,
           weaponRow,
           effectRow)),
     );
     this.setColor(this.profile.color);
+    this.setHair(this.profile.hair ?? 0);
     this.setHat(this.profile.hat);
     this.setAttire(this.profile.attire ?? 0);
     this.setWeapon(this.profile.weapon ?? 0);
@@ -114,11 +128,23 @@ export class Welcome {
     this.onPreview(this.profile);
   }
 
+  setHair(i) {
+    this.profile.hair = i;
+    // Id mũ 0-2 là kiểu tóc cũ: chọn tóc mới thì nhả id cũ để tóc tự do hiện đúng.
+    if ((this.profile.hat ?? 0) <= 2) return this.setHat(HAT_NONE);
+    this.hairBtns.forEach((b, k) => {
+      b.classList.toggle('on', k === i);
+      b.setAttribute('aria-checked', k === i ? 'true' : 'false');
+    });
+    this.onPreview(this.profile);
+  }
+
   setHat(i) {
     this.profile.hat = i;
     this.hatBtns.forEach((b, k) => {
-      b.classList.toggle('on', k === i);
-      b.setAttribute('aria-checked', k === i ? 'true' : 'false');
+      const id = k + HAT_CHIP_START;
+      b.classList.toggle('on', id === i);
+      b.setAttribute('aria-checked', id === i ? 'true' : 'false');
     });
     this.onPreview(this.profile);
   }
