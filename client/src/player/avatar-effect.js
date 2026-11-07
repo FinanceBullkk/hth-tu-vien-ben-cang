@@ -735,36 +735,6 @@ function starfieldTexture() {
   });
 }
 
-// Vách khí kết giới: vệt khí dọc + vệt loang, tile ngang cho ống trụ bao người
-function domeTexture() {
-  return canvasTex('dome', 256, 256, (ctx, w, h) => {
-    let s = 11;
-    const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
-    for (let i = 0; i < 26; i++) {
-      const x = rnd() * w;
-      const g = ctx.createLinearGradient(0, 0, 0, h);
-      g.addColorStop(0, 'rgba(255,255,255,0)');
-      g.addColorStop(0.3, `rgba(255,255,255,${0.12 + rnd() * 0.2})`);
-      g.addColorStop(0.7, `rgba(255,255,255,${0.1 + rnd() * 0.16})`);
-      g.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = g;
-      for (const xx of [x, x - w, x + w]) ctx.fillRect(xx, 0, 3 + rnd() * 10, h); // vẽ 3 lần để tile mép liền
-    }
-    for (let i = 0; i < 8; i++) {
-      const x = rnd() * w, y = rnd() * h, r = 40 + rnd() * 40;
-      const g = ctx.createRadialGradient(x, y, 2, x, y, r);
-      g.addColorStop(0, 'rgba(255,255,255,0.18)');
-      g.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = g;
-      for (const xx of [x, x - w, x + w]) {
-        ctx.beginPath();
-        ctx.arc(xx, y, r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-  });
-}
-
 // Bảng màu theo hiệu ứng: [Sen kim, Lưu ly, Tinh hà, Hỏa diễm, Đào hoa, Bích ngọc, Nguyệt bạch, Hắc ám]
 // — mỗi mục 1-2 tông xen nhau cho phần tử phụ và chính.
 const PALETTES = [
@@ -930,17 +900,6 @@ export function createEffect(effect, lowQuality = false) {
     const mantra = flatMesh(runeRingTexture('rune-chan', '禪'), colors[0], 1.55, 0.06, 0.8);
     const counterRing = flatMesh(ringTexture(), colors[0], 1.0, 0.035, 0.35);
 
-    // vòm kim quang: ống khí vàng bao toàn thân — cùng cấu trúc vòm với Lưu ly
-    const domeTex = domeTexture();
-    domeTex.wrapS = THREE.RepeatWrapping;
-    domeTex.wrapT = THREE.RepeatWrapping;
-    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
-      map: domeTex, color: colors[0], transparent: true, depthWrite: false,
-      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.12,
-    }), 0.12);
-    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.0, 1.95, 48, 1, true)), domeEntry.mat);
-    dome.position.y = 0.97;
-    group.add(dome);
 
     // trụ sen: 4 cột kim quang dâng chậm quanh đài
     const pillars = [];
@@ -993,9 +952,6 @@ export function createEffect(effect, lowQuality = false) {
       mandala.rotation.z = t * 0.5;
       mantra.rotation.z = -t * 0.32; // chân ngôn chạy ngược
       counterRing.rotation.z = t * 0.45;
-      dome.rotation.y = t * 0.06;
-      domeTex.offset.y = -(t * 0.05) % 1;
-      domeEntry.base = 0.1 + 0.04 * (0.5 + 0.5 * Math.sin(t * 1.2));
       for (const pl of pillars) {
         const yn = (t * 0.18 + pl.tw) % 1; // trụ sen dâng lên rồi tan
         const life = Math.sin(yn * Math.PI);
@@ -1063,17 +1019,6 @@ export function createEffect(effect, lowQuality = false) {
     const mantra = flatMesh(runeRingTexture('rune-shui', '水'), colors[0], 1.45, 0.05, 0.85);
     const counterRing = flatMesh(ringTexture(), colors[0], 0.95, 0.04, 0.3);
 
-    // vòm kết giới: ống khí mỏng bao toàn thân, vệt khí cuộn lên chậm rãi
-    const domeTex = domeTexture();
-    domeTex.wrapS = THREE.RepeatWrapping;
-    domeTex.wrapT = THREE.RepeatWrapping;
-    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
-      map: domeTex, color: colors[0], transparent: true, depthWrite: false,
-      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.15,
-    }), 0.15);
-    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.0, 1.95, 48, 1, true)), domeEntry.mat);
-    dome.position.y = 0.97;
-    group.add(dome);
 
     // gợn nước: vành sáng loang từ chân ra rồi tan, hai vòng lệch pha nhau.
     const ripples = [];
@@ -1171,9 +1116,6 @@ export function createEffect(effect, lowQuality = false) {
       pool.scale.y = pool.scale.x;
       mantra.rotation.z = -t * 0.2;
       counterRing.rotation.z = t * 0.5;
-      dome.rotation.y = t * 0.06;
-      domeTex.offset.y = -(t * 0.06) % 1; // khí trong vòm cuộn lên
-      domeEntry.base = 0.09 + 0.04 * (0.5 + 0.5 * Math.sin(t * 1.1));
       for (const pl of pillars) {
         const yn = (t * 0.22 + pl.tw) % 1; // trụ khí dâng lên rồi tan
         const life = Math.sin(yn * Math.PI);
@@ -1247,17 +1189,6 @@ export function createEffect(effect, lowQuality = false) {
     galaxy2Tilt.add(galaxy2);
     const counterRing = flatMesh(ringTexture(), colors[0], 1.05, 0.035, 0.35);
 
-    // vòm sao: ống khí xanh bao thân
-    const domeTex = domeTexture();
-    domeTex.wrapS = THREE.RepeatWrapping;
-    domeTex.wrapT = THREE.RepeatWrapping;
-    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
-      map: domeTex, color: colors[0], transparent: true, depthWrite: false,
-      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.12,
-    }), 0.12);
-    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.0, 1.95, 48, 1, true)), domeEntry.mat);
-    dome.position.y = 0.97;
-    group.add(dome);
 
     // sao băng vụt: mỗi ~5 giây một vệt sao vụng qua trời trên cao
     const shootEntry = dynMat(() => new THREE.SpriteMaterial({
@@ -1317,9 +1248,6 @@ export function createEffect(effect, lowQuality = false) {
       galaxy.rotation.z = t * 0.1; // ngân hà xoay rất chậm
       galaxy2.rotation.z = -t * 0.14; // vành hai quay ngược
       counterRing.rotation.z = t * 0.4;
-      dome.rotation.y = t * 0.06;
-      domeTex.offset.y = -(t * 0.05) % 1;
-      domeEntry.base = 0.1 + 0.04 * (0.5 + 0.5 * Math.sin(t * 1.1));
       // sao băng vụt qua trong 0.7s mỗi 5 giây
       const shootCyc = (t % 5) / 5;
       if (shootCyc < 0.14) {
@@ -1388,17 +1316,6 @@ export function createEffect(effect, lowQuality = false) {
     const mantra = flatMesh(runeRingTexture('rune-yan', '炎'), colors[0], 1.5, 0.06, 0.8);
     const counterRing = flatMesh(ringTexture(), colors[0], 1.0, 0.035, 0.35);
 
-    // vòm hỏa khí: ống khí cam bao toàn thân — cùng cấu trúc vòm với các hiệu ứng khác
-    const domeTex = domeTexture();
-    domeTex.wrapS = THREE.RepeatWrapping;
-    domeTex.wrapT = THREE.RepeatWrapping;
-    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
-      map: domeTex, color: colors[0], transparent: true, depthWrite: false,
-      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.14,
-    }), 0.14);
-    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.0, 1.95, 48, 1, true)), domeEntry.mat);
-    dome.position.y = 0.97;
-    group.add(dome);
 
     // trụ hỏa: 4 cột lửa dâng nhanh quanh đài
     const pillars = [];
@@ -1446,9 +1363,6 @@ export function createEffect(effect, lowQuality = false) {
       lotus.rotation.z = t * 0.16; // hỏa liên xoay chậm
       mantra.rotation.z = -t * 0.42; // chân ngôn chạy ngược như lửa gió
       counterRing.rotation.z = t * 0.5;
-      dome.rotation.y = t * 0.07;
-      domeTex.offset.y = -(t * 0.08) % 1; // khí lửa cuộn lên nhanh
-      domeEntry.base = 0.11 + 0.05 * (0.5 + 0.5 * Math.sin(t * 1.5));
       for (const pl of pillars) {
         const yn = (t * 0.26 + pl.tw) % 1; // trụ hỏa dâng nhanh hơn sen kim
         const life = Math.sin(yn * Math.PI);
@@ -1507,17 +1421,6 @@ export function createEffect(effect, lowQuality = false) {
     const mantra = flatMesh(runeRingTexture('rune-thao', '桃'), colors[0], 1.5, 0.06, 0.78);
     const counterRing = flatMesh(ringTexture(), colors[0], 0.95, 0.035, 0.32);
 
-    // vòm sương hồng bao thân
-    const domeTex = domeTexture();
-    domeTex.wrapS = THREE.RepeatWrapping;
-    domeTex.wrapT = THREE.RepeatWrapping;
-    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
-      map: domeTex, color: colors[0], transparent: true, depthWrite: false,
-      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.12,
-    }), 0.12);
-    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.0, 1.95, 48, 1, true)), domeEntry.mat);
-    dome.position.y = 0.97;
-    group.add(dome);
 
     // trụ hoa: 4 cột hồng dâng chậm quanh người
     const pillars = [];
@@ -1571,9 +1474,6 @@ export function createEffect(effect, lowQuality = false) {
       mandala.rotation.z = t * 0.35; // trận đào xoay
       mantra.rotation.z = -t * 0.28;
       counterRing.rotation.z = t * 0.42;
-      dome.rotation.y = t * 0.06;
-      domeTex.offset.y = -(t * 0.05) % 1;
-      domeEntry.base = 0.1 + 0.04 * (0.5 + 0.5 * Math.sin(t * 1.1));
       for (const pl of pillars) {
         const yn = (t * 0.16 + pl.tw) % 1; // trụ hoa dâng thong thả
         const life = Math.sin(yn * Math.PI);
@@ -1643,17 +1543,6 @@ export function createEffect(effect, lowQuality = false) {
     const mantra = flatMesh(runeRingTexture('rune-chuc', '竹'), colors[0], 1.45, 0.05, 0.8);
     const counterRing = flatMesh(ringTexture(), colors[0], 0.95, 0.04, 0.3);
 
-    // vòm trúc khí: ống khí lục bao thân
-    const domeTex = domeTexture();
-    domeTex.wrapS = THREE.RepeatWrapping;
-    domeTex.wrapT = THREE.RepeatWrapping;
-    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
-      map: domeTex, color: colors[0], transparent: true, depthWrite: false,
-      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.13,
-    }), 0.13);
-    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.0, 1.95, 48, 1, true)), domeEntry.mat);
-    dome.position.y = 0.97;
-    group.add(dome);
 
     // trúc khí: 4 cột thon cao dâng quanh chân
     const pillars = [];
@@ -1718,9 +1607,6 @@ export function createEffect(effect, lowQuality = false) {
       pool.scale.y = pool.scale.x;
       mantra.rotation.z = t * 0.24;
       counterRing.rotation.z = -t * 0.45;
-      dome.rotation.y = t * 0.06;
-      domeTex.offset.y = -(t * 0.055) % 1; // trúc khí cuộn lên
-      domeEntry.base = 0.1 + 0.04 * (0.5 + 0.5 * Math.sin(t * 1.05));
       for (const pl of pillars) {
         const yn = (t * 0.19 + pl.tw) % 1; // trúc khí mọc lên chậm
         const life = Math.sin(yn * Math.PI);
@@ -1782,21 +1668,10 @@ export function createEffect(effect, lowQuality = false) {
     const mantra = flatMesh(runeRingTexture('rune-nguyet', '月'), colors[0], 1.35, 0.03, 0.55);
     const counterRing = flatMesh(ringTexture(), colors[0], 1.05, 0.035, 0.32);
 
-    // vòm khí bạc: ống mỏng bao thân, dịu hơn các hiệu ứng lửa
-    const domeTex = domeTexture();
-    domeTex.wrapS = THREE.RepeatWrapping;
-    domeTex.wrapT = THREE.RepeatWrapping;
-    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
-      map: domeTex, color: colors[0], transparent: true, depthWrite: false,
-      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.1,
-    }), 0.1);
-    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.0, 1.95, 48, 1, true)), domeEntry.mat);
-    dome.position.y = 0.97;
-    group.add(dome);
 
-    // huyền nguyệt: quầng mềm ôm ngoài lưỡi liềm, treo sau gáy trên cao
-    const halo = sprite(glowTexture(), colors[1] ?? colors[0], 0.72, 0.72, 0, 2.02, -0.52, 0.3);
-    const moon = sprite(moonTexture(), 0xffffff, 0.46, 0.46, 0, 2.02, -0.51, 0.95);
+    // huyền nguyệt: quầng mềm ôm ngoài lưỡi liềm — treo cao và lùi sau để không đè lên đầu nhân vật
+    const halo = sprite(glowTexture(), colors[1] ?? colors[0], 0.6, 0.6, 0, 2.34, -0.88, 0.16);
+    const moon = sprite(moonTexture(), 0xffffff, 0.44, 0.44, 0, 2.32, -0.86, 0.9);
 
     // dải sao bạc nghiêng — chỉ một vành, khác Tinh hà có hai vành bắt chéo
     const bandTilt = new THREE.Group();
@@ -1846,13 +1721,10 @@ export function createEffect(effect, lowQuality = false) {
       mantra.rotation.z = -t * 0.2;
       counterRing.rotation.z = t * 0.35;
       band.rotation.z = t * 0.08; // dải sao trôi rất chậm
-      dome.rotation.y = t * 0.05;
-      domeTex.offset.y = -(t * 0.045) % 1;
-      domeEntry.base = 0.08 + 0.03 * (0.5 + 0.5 * Math.sin(t * 1.0));
       // trăng bồng bềnh và quầng thở nhịp chậm
-      moon.position.y = 2.02 + Math.sin(t * 0.7) * 0.04;
+      moon.position.y = 2.32 + Math.sin(t * 0.7) * 0.04;
       halo.position.y = moon.position.y;
-      halo.scale.setScalar(0.72 * (1 + Math.sin(t * 0.9) * 0.05));
+      halo.scale.setScalar(0.6 * (1 + Math.sin(t * 0.9) * 0.05));
       moon.material.rotation = Math.sin(t * 0.23) * 0.2; // lưỡi liềm lắc lư rất khẽ
       ring1.rotation.z = t * 0.3;
       ring2.rotation.z = -t * 0.7;
@@ -1897,17 +1769,6 @@ export function createEffect(effect, lowQuality = false) {
     const hex = flatMesh(hexTexture(), colors[0], 1.32, 0.05, 0.55); // lục lăng ma trận
     const mantra = flatMesh(runeRingTexture('rune-mo', '魔'), colors[0], 1.52, 0.06, 0.6);
 
-    // vòm kết giới tím sẫm: additive mỏng để khung nhẹ, màu đen do khói + vũng âm khí gánh
-    const domeTex = domeTexture();
-    domeTex.wrapS = THREE.RepeatWrapping;
-    domeTex.wrapT = THREE.RepeatWrapping;
-    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
-      map: domeTex, color: colors[1] ?? colors[0], transparent: true, depthWrite: false,
-      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.12,
-    }), 0.12);
-    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.02, 1.95, 48, 1, true)), domeEntry.mat);
-    dome.position.y = 0.97;
-    group.add(dome);
 
     // hắc viêm: ngọn lửa đen vờn quanh người — thân lửa đen dựng đứng, lõi tím nhỏ rực bên trong;
     // cứ mỗi ngọn thứ 4 là một hắc viêm lớn ôm sát thân cho khỏi thưa
@@ -1963,9 +1824,6 @@ export function createEffect(effect, lowQuality = false) {
       rim.rotation.z = t * 0.25;
       hex.rotation.z = -t * 0.4; // trận lục lăng xoay ngược
       mantra.rotation.z = t * 0.18;
-      dome.rotation.y = -t * 0.05;
-      domeTex.offset.y = -(t * 0.045) % 1; // khí trong vòm cuộn lên chậm
-      domeEntry.base = 0.09 + 0.04 * (0.5 + 0.5 * Math.sin(t * 0.8));
       for (const f of flames) {
         const yn = (t * 0.16 * f.speed + f.tw) % 1; // lửa đen vờn lên rồi tắt
         const life = Math.sin(yn * Math.PI);
