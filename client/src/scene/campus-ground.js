@@ -1,21 +1,27 @@
 import * as THREE from 'three';
-import { BELL, COURT_PATHS, GARDEN, HALL, LAKE, PAGODA, TREE } from '../../../shared/layout.js';
+import { BELL, COURT_PATHS, HALL, LAKE, PAGODA, TREE } from '../../../shared/layout.js';
 import { rng } from './builders.js';
 
-const STONE = '#a89e8f';
-
-function pavingTexture() {
+function groundTexture(stone = false) {
   const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = 256;
+  canvas.width = canvas.height = 512;
   const ctx = canvas.getContext('2d');
-  const rand = rng(5);
-  ctx.fillStyle = '#756c5b';
-  ctx.fillRect(0, 0, 256, 256);
-  for (let row = 0; row < 8; row++) {
-    for (let col = -1; col < 5; col++) {
-      ctx.fillStyle = `hsl(26, 19%, ${47 + rand() * 6}%)`;
-      ctx.fillRect(col * 64 + row % 2 * 32 + 1, row * 32 + 1, 62, 30);
+  const random = rng(stone ? 5 : 23);
+  ctx.fillStyle = stone ? '#b7b5a0' : '#a4b884';
+  ctx.fillRect(0, 0, 512, 512);
+  if (stone) {
+    for (let row = 0; row < 5; row++) {
+      for (let col = -1; col < 4; col++) {
+        ctx.fillStyle = `hsl(43, 23%, ${70 + random() * 9}%)`;
+        ctx.fillRect(col * 170 + row % 2 * 85 + 3, row * 102 + 3, 164, 96);
+      }
     }
+  }
+  for (let i = 0; i < 2400; i++) {
+    ctx.fillStyle = stone ? `rgba(101,119,75,${random() * 0.05})` : `rgba(${i % 2 ? '84,121,69' : '225,211,157'},${random() * 0.07})`;
+    ctx.beginPath();
+    ctx.ellipse(random() * 512, random() * 512, 2 + random() * 24, 2 + random() * 13, random() * 6, 0, Math.PI * 2);
+    ctx.fill();
   }
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
@@ -24,69 +30,70 @@ function pavingTexture() {
   return texture;
 }
 
-function rakedTexture() {
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = 256;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#cfc6b4';
-  ctx.fillRect(0, 0, 256, 256);
-  ctx.strokeStyle = '#b7ad99';
-  ctx.lineWidth = 2;
-  for (let y = 0; y < 256; y += 16) {
-    ctx.beginPath();
-    for (let x = 0; x <= 256; x += 8) {
-      const yy = y + Math.sin(x / 256 * Math.PI * 2) * 5;
-      if (x === 0) ctx.moveTo(x, yy);
-      else ctx.lineTo(x, yy);
-    }
-    ctx.stroke();
-  }
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(4, 2);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
+function surface(group, points, material, y = 0.018) {
+  const shape = new THREE.Shape(points.map(([x, z]) => new THREE.Vector2(x, -z)));
+  const geometry = new THREE.ShapeGeometry(shape);
+  const pos = geometry.attributes.position;
+  const uv = geometry.attributes.uv;
+  for (let i = 0; i < pos.count; i++) uv.setXY(i, pos.getX(i) / 5, pos.getY(i) / 5);
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.rotation.x = -Math.PI / 2;
+  mesh.position.y = y;
+  mesh.receiveShadow = true;
+  group.add(mesh);
+}
+
+function clearing(group, x, z, rx, rz, material, seed) {
+  const random = rng(seed);
+  const points = Array.from({ length: 32 }, (_, i) => {
+    const angle = i / 32 * Math.PI * 2;
+    const edge = 0.95 + random() * 0.1;
+    return [x + Math.cos(angle) * rx * edge, z + Math.sin(angle) * rz * edge];
+  });
+  surface(group, points, material, 0.012);
 }
 
 export function buildCampusGround(group, b) {
-  const plane = (w, d, x, z, y, material) => {
-    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, d), material);
-    mesh.rotation.x = -Math.PI / 2;
-    mesh.position.set(x, y, z);
+  const earth = new THREE.MeshLambertMaterial({ map: groundTexture() });
+  const stone = new THREE.MeshLambertMaterial({ map: groundTexture(true), side: THREE.DoubleSide });
+  const soil = new THREE.MeshLambertMaterial({ color: '#c9bc9c' });
+  surface(group, [[-31, -31], [31, -31], [31, 31], [-31, 31]], earth, 0);
+  // The formal court belongs to the hall; the outer garden has no rectangular plot grid.
+  surface(group, [[-9.7, -12], [9.7, -12], [9.7, 0], [6.5, 3], [-6.5, 3], [-9.7, 0]], stone);
+  clearing(group, BELL.x, BELL.z, 5.5, 5.4, soil, 14);
+  clearing(group, TREE.x, TREE.z, 5.6, 5.1, soil, 12);
+  clearing(group, PAGODA.x, PAGODA.z, 5.4, 5.5, stone, 19);
+  clearing(group, 21, 3, 5.2, 5.8, soil, 17);
+  for (const lobe of LAKE.lobes) clearing(group, lobe.x, lobe.z, lobe.r + 0.9, lobe.r + 0.9, soil, 26);
+
+  // ponytail: paths remain flush; true terrain steps must also change shared floorHeight.
+  for (const path of COURT_PATHS) {
+    const curve = new THREE.CatmullRomCurve3(path.points.map(([x, z]) => new THREE.Vector3(x, 0, z)));
+    const steps = Math.ceil(curve.getLength() * 2);
+    const points = curve.getSpacedPoints(steps);
+    const positions = [], uvs = [], indices = [];
+    let length = 0;
+    for (let i = 0; i <= steps; i++) {
+      if (i) length += points[i].distanceTo(points[i - 1]);
+      const tangent = points[Math.min(i + 1, steps)].clone().sub(points[Math.max(0, i - 1)]).normalize();
+      for (const side of [-1, 1]) {
+        const half = path.width / 2 * (1 + Math.sin(i * 1.7) * 0.035);
+        positions.push(points[i].x - tangent.z * half * side, 0.03, points[i].z + tangent.x * half * side);
+        uvs.push((side + 1) / 2 * path.width / 5, length / 5);
+      }
+      if (i < steps) {
+        const a = i * 2;
+        indices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
+      }
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    geometry.setIndex(indices);
+    geometry.computeVertexNormals();
+    const mesh = new THREE.Mesh(geometry, stone);
     mesh.receiveShadow = true;
     group.add(mesh);
-  };
-  plane(62, 62, 0, 0, 0, new THREE.MeshLambertMaterial({ color: '#788463' }));
-  const paving = pavingTexture();
-  const courts = [
-    { x: 0, z: -6, w: 20, d: 8 },
-    { x: BELL.x, z: BELL.z, w: 10, d: 10 },
-    { x: PAGODA.x, z: PAGODA.z, w: 11, d: 11 },
-    { x: 19.5, z: 3, w: 13, d: 10 },
-  ];
-  for (const court of courts) {
-    const texture = paving.clone();
-    texture.repeat.set(court.w / 4, court.d / 4);
-    plane(court.w, court.d, court.x, court.z, 0.012, new THREE.MeshLambertMaterial({ map: texture }));
-    for (const side of [-1, 1]) {
-      b.box(court.w, 0.02, 0.16, STONE, court.x, 0.022, court.z + side * court.d / 2);
-      b.box(0.16, 0.02, court.d, STONE, court.x + side * court.w / 2, 0.022, court.z);
-    }
   }
-  b.cyl(6.4, 6.4, 0.02, '#b7ab8f', TREE.x, 0.012, TREE.z, { seg: 48, jitter: 0 });
-  b.cyl(5.9, 5.9, 0.02, '#c5b99d', TREE.x, 0.014, TREE.z, { seg: 48, jitter: 0 });
-  for (const lobe of LAKE.lobes) {
-    b.cyl(lobe.r + 1.35, lobe.r + 1.35, 0.02, '#b7ab8f', lobe.x, 0.012, lobe.z, { seg: 48, jitter: 0 });
-  }
-  plane(GARDEN.maxX - GARDEN.minX, GARDEN.maxZ - GARDEN.minZ,
-    (GARDEN.minX + GARDEN.maxX) / 2, (GARDEN.minZ + GARDEN.maxZ) / 2, 0.015,
-    new THREE.MeshLambertMaterial({ map: rakedTexture() }));
-
-  // ponytail: flush paving only; raised terraces need shared collision and floorHeight changes.
-  for (const path of COURT_PATHS) {
-    b.box(path.w, 0.02, path.d, STONE, path.x, 0.025, path.z, { jitter: 0 });
-  }
-  for (let z = -11; z < 30; z += 2) b.box(5.8, 0.008, 0.04, '#897f6e', 0, 0.037, z, { jitter: 0 });
-  for (const x of [-2.9, 2.9]) b.box(0.08, 0.008, 41, '#d0c4aa', x, 0.037, 9.5, { jitter: 0 });
-  b.box(17.6, 0.3, 3.4, '#8d8478', HALL.x, 0.15, HALL.z + HALL.halfD + 1.7);
+  b.box(17.6, 0.3, 3.4, '#d6c8aa', HALL.x, 0.15, HALL.z + HALL.halfD + 1.7);
 }

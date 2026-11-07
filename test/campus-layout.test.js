@@ -1,12 +1,29 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { BELL, BRIDGE, HALL, PAGODA, PLACES, POND, TREE, floorHeight, resolveCollision } from '../shared/layout.js';
+import { CatmullRomCurve3, Vector3 } from 'three';
+import { BELL, BRIDGE, COURT_PATHS, GALLERIES, HALL, PAGODA, PLACES, POND, TREE, floorHeight, resolveCollision } from '../shared/layout.js';
 
 test('main axis stays clear from the gate through the hall entrance', () => {
   for (const x of [-1, 0, 1]) {
     for (let z = 39; z >= HALL.z + HALL.halfD - 1; z -= 0.2) {
       const result = resolveCollision(x, z);
       assert.ok(Math.hypot(result.x - x, result.z - z) < 1e-6, `blocked at ${x}, ${z}`);
+    }
+  }
+});
+
+test('garden paths and covered galleries remain walkable with the new planting', () => {
+  for (const [index, path] of COURT_PATHS.entries()) {
+    const curve = new CatmullRomCurve3(path.points.map(([x, z]) => new Vector3(x, 0, z)));
+    for (const p of curve.getSpacedPoints(300)) {
+      const result = resolveCollision(p.x, p.z);
+      assert.ok(Math.hypot(result.x - p.x, result.z - p.z) < 0.02, `path ${index} blocked at ${p.x.toFixed(2)},${p.z.toFixed(2)}`);
+    }
+  }
+  for (const g of GALLERIES) {
+    for (let z = g.z - g.d / 2 + 0.2; z < g.z + g.d / 2; z += 0.2) {
+      assert.deepEqual(resolveCollision(g.x, z), { x: g.x, z });
+      assert.equal(floorHeight(g.x, z), g.floor);
     }
   }
 });

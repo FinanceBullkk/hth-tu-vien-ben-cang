@@ -1,17 +1,18 @@
 // Khu tu viện: cổng, sân, gác chuông, thiền đường, cây bồ đề, hồ sen, vườn đá, quán trà, đèn lồng.
 import * as THREE from 'three';
 import {
-  BELL, BOUNDS, CONTAINERS, COURT_TREES, GARDEN, GARDEN_ROCKS, HALL, LANTERN_POSTS, MATS, PAGODA, POND, TEA, TEA_TABLES, TREE, TREE_BRANCHES,
+  BELL, BOUNDS, CONTAINERS, COURT_TREES, GARDEN_ROCKS, HALL, LANTERN_POSTS, MATS, POND, TEA, TEA_TABLES, TREE, TREE_BRANCHES,
 } from '../../../shared/layout.js';
 import { Batch, addRoof, flatMaterial, rng, textTexture } from './builders.js';
 import { buildCampusGround } from './campus-ground.js';
+import { buildCampusGalleries } from './campus-galleries.js';
 
-const WOOD = '#6b4226';
-const WOOD_DARK = '#4a2c1a';
-const PILLAR = '#7a2e1d';
-const PLASTER = '#d9c7a6';
-const STONE = '#8d8478';
-const STONE_LIGHT = '#a89e8f';
+const WOOD = '#a17a51';
+const WOOD_DARK = '#79583d';
+const PILLAR = '#a47750';
+const PLASTER = '#eee0bf';
+const STONE = '#b8ac90';
+const STONE_LIGHT = '#d6c8aa';
 
 function sign(lines, w, h, x, y, z, ry, opts) {
   const tex = textTexture(lines, opts);
@@ -24,7 +25,7 @@ function sign(lines, w, h, x, y, z, ry, opts) {
 function buildWalls(b) {
   const wall = (cx, cz, w, d) => {
     b.box(w, 10, d, PLASTER, cx, -3.2, cz, { jitter: 0.02 });
-    b.box(w + 0.3, 0.3, d + 0.3, '#6f3526', cx, 1.95, cz);
+    b.box(w + 0.3, 0.3, d + 0.3, '#73988d', cx, 1.95, cz);
   };
   wall(-30.3, 0, 0.6, 61);
   wall(0, -30.3, 61, 0.6);
@@ -163,7 +164,7 @@ function buildHall(group, b, emissive) {
   }
   b.box(hw * 2 + 0.6, 0.26, 0.3, WOOD_DARK, x, h, z + hd + 1.8);
   // Mái hiên nối vào mái chính
-  b.box(hw * 2 + 0.6, 0.14, 2.4, '#7e3f2d', x, h + 0.25, z + hd + 1.05, { rx: 0.12 });
+  b.box(hw * 2 + 0.6, 0.14, 2.4, '#82a393', x, h + 0.25, z + hd + 1.05, { rx: 0.12 });
 
   // Mái hai tầng
   addRoof(b, hw * 2 + 4, hd * 2 + 5.2, 3.3, x, h + 0.08, z + 0.2);
@@ -211,7 +212,7 @@ function buildBodhi(b) {
     b.add(new THREE.CylinderGeometry(0.14, 0.3, br.len, 6), trunkCol, { x: cx, y: br.y, z: cz, ry: br.a, rx: Math.PI / 2 - 0.12 });
   }
   // Tán lá nhiều khối
-  const leaves = ['#55793a', '#4a6d34', '#658a42', '#7a9148'];
+  const leaves = ['#7da95a', '#67954f', '#92b66b', '#aac879'];
   for (let i = 0; i < 16; i++) {
     const a = rand() * Math.PI * 2;
     const r = i < 5 ? rand() * 2 : 2.2 + rand() * 3.8;
@@ -261,27 +262,13 @@ function buildPond(group, b) {
 }
 
 function buildGarden(b) {
-  const { minX, maxX, minZ, maxZ } = GARDEN;
-  const cz = (minZ + maxZ) / 2;
-  const d = maxZ - minZ;
-  // Chừa hai cửa trên trục đường lên bảo tháp.
-  for (const z of [minZ, maxZ]) {
-    for (const [left, right] of [[minX, PAGODA.x - 1.2], [PAGODA.x + 1.2, maxX]]) {
-      b.box(right - left, 0.14, 0.3, WOOD_DARK, (left + right) / 2, 0.07, z);
-    }
-  }
-  for (const [bx, bz, bw, bd] of [
-    [minX, cz, 0.3, d + 0.3], [maxX, cz, 0.3, d + 0.3],
-  ]) {
-    b.box(bw, 0.14, bd, WOOD_DARK, bx, 0.07, bz);
-  }
   const rand = rng(41);
   for (const r of GARDEN_ROCKS) {
     b.add(new THREE.DodecahedronGeometry(r.r, 0), '#6d6a66', { x: r.x, y: r.r * 0.46, z: r.z, sy: 0.85, ry: rand() * 3, rx: rand() * 0.4, jitter: 0.08 });
     b.add(new THREE.DodecahedronGeometry(r.r * 0.5, 0), '#7b7874', {
       x: r.x + r.r * 0.8, y: r.r * 0.2, z: r.z + r.r * 0.4, ry: rand() * 3,
     });
-    b.cyl(r.r * 1.24, r.r * 1.3, 0.03, '#b7ae9c', r.x, 0.045, r.z, { seg: 18 }); // Vòng cào quanh đá
+    b.cyl(r.r * 1.24, r.r * 1.3, 0.03, '#61704f', r.x, 0.045, r.z, { seg: 18 }); // Rêu quanh chân đá
   }
 }
 
@@ -325,20 +312,20 @@ function buildTea(group, b) {
   }));
 }
 
-function buildContainers(group, b) {
+function buildWishGallery(group, b) {
   const { minX, maxX, minZ, maxZ } = CONTAINERS;
   const h = 2.6;
-  const c = { x: (minX + maxX) / 2, z: (minZ + maxZ) / 2, len: maxZ - minZ, col: '#9a4f33' };
+  const c = { x: (minX + maxX) / 2, z: (minZ + maxZ) / 2, len: maxZ - minZ, col: PLASTER };
   b.box(maxX - minX, h, c.len, c.col, c.x, h / 2, c.z, { jitter: 0.02 });
-  for (let t = -c.len / 2 + 0.3; t < c.len / 2; t += 0.6) {
-    b.box(0.05, h - 0.3, 0.26, c.col, minX - 0.02, h / 2, c.z + t, { jitter: 0.1 });
+  for (const z of [minZ, maxZ]) {
+    b.box(0.2, h + 0.2, 0.22, WOOD_DARK, minX - 0.02, h / 2, z);
   }
   b.box(maxX - minX + 0.06, 0.12, c.len + 0.06, '#5c4030', c.x, h - 0.03, c.z);
   b.box(maxX - minX + 0.06, 0.12, c.len + 0.06, '#5c4030', c.x, 0.06, c.z);
-  // Mái ngói nối bảng ước với kiến trúc tu viện; giữ mặt thẻ hướng vào sân.
+  // Giữ mặt thẻ lời ước cùng tọa độ; thay vỏ container bằng tường vôi và mái hiên.
   addRoof(b, 13.4, 3.8, 1.1, c.x, h + 0.12, c.z, { ry: Math.PI / 2, lift: 0.2 });
   group.add(sign('HTH LOGISTICS', 4.4, 0.42, minX - 0.08, 2.42, c.z, -Math.PI / 2, {
-    w: 1024, h: 96, bg: '#7f4029', fg: '#e8d4b0', border: null, font: 'bold 66px "Segoe UI",Roboto,Arial,sans-serif',
+    w: 1024, h: 96, bg: '#79583d', fg: '#e8d4b0', border: null, font: 'bold 66px "Segoe UI",Roboto,Arial,sans-serif',
   }));
   // Biển tên trên cùng mặt với các thẻ lời ước.
   group.add(sign('Bảng ước', 2.6, 0.42, minX - 0.08, 2.42, c.z + 4.4, -Math.PI / 2, {
@@ -350,7 +337,7 @@ function buildTrees(b) {
   const rand = rng(53);
   for (const t of COURT_TREES) {
     b.cyl(0.14 * t.s, 0.24 * t.s, 2 * t.s, '#553a28', t.x, t.s, t.z, { seg: 6 });
-    const green = ['#5c7c3c', '#6d8c43', '#4d6f3a'];
+    const green = t.blossom ? [t.blossom, '#f2d3bc', '#e6baa7'] : ['#7da95a', '#92b66b', '#67954f'];
     for (let i = 0; i < 4; i++) {
       const a = rand() * 6.28;
       const d = i === 0 ? 0 : 0.8 * t.s;
@@ -397,6 +384,7 @@ export function createMonastery(scene) {
   const emissive = new Batch(12);
 
   buildCampusGround(group, b);
+  buildCampusGalleries(b);
   buildWalls(b);
   buildGate(group, b);
   const bell = buildBellTower(group, b);
@@ -405,7 +393,7 @@ export function createMonastery(scene) {
   const pondWater = buildPond(group, b);
   buildGarden(b);
   buildTea(group, b);
-  buildContainers(group, b);
+  buildWishGallery(group, b);
   buildTrees(b);
   const lanterns = buildLanterns(group, b);
 

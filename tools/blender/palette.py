@@ -2,17 +2,17 @@
 Giá trị lưu dạng sRGB hex; lib.py chuyển sang linear khi tô vertex colors."""
 
 # Gỗ / đá / vôi (monastery.js:8-13)
-WOOD = '#6b4226'
-WOOD_DARK = '#4a2c1a'
-PILLAR = '#7a2e1d'
-PLASTER = '#d9c7a6'
-STONE = '#8d8478'
-STONE_LIGHT = '#a89e8f'
+WOOD = '#a17a51'
+WOOD_DARK = '#79583d'
+PILLAR = '#a47750'
+PLASTER = '#eee0bf'
+STONE = '#b8ac90'
+STONE_LIGHT = '#d6c8aa'
 
 # Ngói mái (builders.js:114 tileColors + addRoof)
-TILE_A = '#8a4632'
-TILE_B = '#6e3324'
-RIDGE = '#5a2a1c'
+TILE_A = '#86ad9d'
+TILE_B = '#73988d'
+RIDGE = '#587e70'
 
 # Vàng đồng / lụa / đèn (avatar-attire.js:50-60, monastery.js:469)
 GOLD = '#bca36b'

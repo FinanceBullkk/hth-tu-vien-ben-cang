@@ -6,10 +6,10 @@ export const LANDING = { minX: -4.2, maxX: 4.2, minZ: 30, maxZ: 40 };
 export const SPAWN = { x: 0, z: 36.5, rot: Math.PI };
 export const PLAYER_RADIUS = 0.4;
 
-export const BELL = { x: -18, z: -1, radius: 3.6, yardRadius: 12 };
+export const BELL = { x: -21, z: -1, radius: 3.6, yardRadius: 12 };
 export const HALL = { x: 0, z: -20, halfW: 8, halfD: 6, doorHalf: 2.2, height: 4.6 };
 // radius: vùng tương tác treo lời ước, nới đúng tới rìa dải lụa trên cành.
-export const TREE = { x: -18, z: 11, radius: 5.4 };
+export const TREE = { x: -10, z: 12, radius: 5.4 };
 // 8 cành tỏa ngang để treo dải lụa: dùng chung cho scene (monastery) và vị trí ribbon (wishes3d)
 // để lời ước bám đúng cành thay vì lơ lửng. Cành nghiêng nhẹ lên về phía ngọn (0.1206/m ngang).
 export const TREE_BRANCHES = Array.from({ length: 8 }, (_, i) => ({
@@ -19,13 +19,13 @@ export const TREE_BRANCHES = Array.from({ length: 8 }, (_, i) => ({
 }));
 export const POND = { x: -19, z: -17, radius: 5.5, actionRadius: 7.6 };
 export const CONTAINERS = { minX: 26.6, maxX: 29.2, minZ: 0, maxZ: 12, actionMargin: 2.4 };
-export const TEA = { x: -18, z: 23, radius: 3.4 };
+export const TEA = { x: -21, z: 23, radius: 3.4 };
 export const GARDEN = { minX: 12, maxX: 25, minZ: -12, maxZ: -6 };
 // Asset võ hiệp dựng bằng Blender (tools/blender/): bảo tháp, cầu vòm, cờ băng, đèn đá, non bộ.
-export const PAGODA = { x: 18, z: -21, radius: 3.9, roofY: 12.5 };
+export const PAGODA = { x: 21, z: -22, radius: 3.9, roofY: 12.5 };
 export const BRIDGE = { x1: POND.x - 5.6, x2: POND.x + 5.6, z: POND.z, halfW: 0.95, peak: 1.15 };
 export const BANNERS = [
-  { x: -5.6, z: 22, ry: 0 }, { x: 5.6, z: 22, ry: Math.PI },
+  { x: -5.6, z: 28, ry: 0 }, { x: 5.6, z: 28, ry: Math.PI },
 ];
 // Quanh hồ sen (né dải cầu), hai bên bậc tháp, mép vườn thiền.
 export const STONE_LANTERNS = [
@@ -87,41 +87,46 @@ export const MATS = Array.from({ length: MAT_COUNT }, (_, i) => {
 });
 
 export const LANTERN_POSTS = [
-  ...[26, 14, 2, -8].flatMap((z) => [{ x: -4.2, z }, { x: 4.2, z }]),
-  { x: -11.5, z: 20 }, { x: -11.5, z: -4 },
-  { x: 11.5, z: 14 }, { x: 24.5, z: 14 },
+  { x: -3, z: 25 }, { x: 6, z: 20 }, { x: 5, z: 9 },
+  { x: -7, z: 3 }, { x: 7, z: -9 },
+  { x: -16, z: 19 }, { x: -18, z: -5 }, { x: 26, z: 14 },
 ];
 
 export const COURT_TREES = [
-  { x: -7.5, z: 26, s: 0.8 }, { x: 7.5, z: 26, s: 0.8 },
-  { x: -7.5, z: 15, s: 0.85 }, { x: 7.5, z: 15, s: 0.85 },
-  { x: -7.5, z: 3, s: 0.85 }, { x: 7.5, z: 3, s: 0.85 },
-  { x: -27, z: 11, s: 1 }, { x: -27, z: -4, s: 0.9 },
-  { x: -13, z: -27, s: 0.8 }, { x: 27, z: -14, s: 0.8 },
+  { x: -9, z: 26, s: 1.2 }, { x: 7.5, z: 27, s: 1.4, blossom: '#e8b9b1' },
+  { x: 8, z: 11, s: 1.15 }, { x: 14, z: -13, s: 1.3 },
+  { x: -27, z: 10, s: 1.3 }, { x: -27, z: -6, s: 1.1 },
+  { x: -12, z: -27, s: 1.5, blossom: '#e8b9b1' }, { x: 27, z: -14, s: 1.3 },
   { x: 26, z: 17.6, s: 0.85 },
 ];
 
 export const GARDEN_ROCKS = [
-  { x: 15, z: -9, r: 1.2 }, { x: 22, z: -9, r: 0.9 },
+  { x: 16, z: -9, r: 1.6 }, { x: 24, z: -12, r: 1.1 },
+  { x: -26, z: 5, r: 1.2 }, { x: 7.8, z: 14, r: 1.1 },
 ];
 
 export const TEA_TABLES = [[0, 0], [-3.4, 2.6], [3.4, 2.6]]
   .map(([dx, dz]) => ({ x: TEA.x + dx, z: TEA.z + dz }));
 
-// Lối chính 6 m, đường dạo 2.4 m; mặt đường cao tối đa 0.04 m như floorHeight.
+// Đường men theo cụm cảnh; tọa độ được kiểm tra với va chạm dùng chung.
 export const COURT_PATHS = [
-  { x: 0, z: 9, w: 6, d: 42 },
-  { x: 0, z: 35, w: 4.6, d: 10 },
-  { x: -10, z: 5.5, w: 2.4, d: 45 },
-  { x: 10, z: 1, w: 2.4, d: 36 },
-  { x: 0, z: 8, w: 49, d: 3 },
-  { x: 0, z: -8, w: 22.4, d: 3 },
-  { x: -14, z: 18, w: 8, d: 2.4 },
-  { x: -14, z: BELL.z, w: 8, d: 2.4 },
-  { x: -11.7, z: BRIDGE.z, w: 3.4, d: 1.4 },
-  { x: 17, z: 16, w: 14, d: 2.4 },
-  { x: 14, z: -14, w: 8, d: 2.4 },
-  { x: PAGODA.x, z: -11.5, w: 2.4, d: 11 },
+  { width: 3.8, points: [[0, 40], [0, 30], [2.5, 23], [3, 16], [1, 8], [0, 2]] },
+  { width: 2.5, points: [[1, 8], [-4, 6], [-12, 5], [-17, 3], [BELL.x, BELL.z + 3.2]] },
+  { width: 2.2, points: [[-4, 6], [-5, 12], [-9, 18], [-16, 18], [TEA.x, TEA.z - 2.4]] },
+  { width: 2.1, points: [[-17, 3], [-16, -5], [-15, -10], [BRIDGE.x2 + 1, BRIDGE.z]] },
+  { width: 2.3, points: [[3, 16], [8, 17], [13, 15.7], [19, 15.7], [24, 14]] },
+  { width: 2.6, points: [[1, 8], [9, 6], [14, 5.5], [19, 6.6], [24.8, 6.4], [25, 3]] },
+  { width: 2.1, points: [[14, 4], [18, -1], [20, -7], [21, -13], [PAGODA.x, PAGODA.z + 5]] },
+];
+
+export const GALLERIES = [-11.6, 11.6].map(x => ({ x, z: -5.5, w: 3.2, d: 14, floor: 0.16, roof: 3.15 }));
+export const GALLERY_POSTS = GALLERIES.flatMap(g => [-1.1, 1.1].flatMap(dx =>
+  [-6, -2, 2, 6].map(dz => ({ x: g.x + dx, z: g.z + dz, r: 0.19 }))));
+export const BAMBOO_CLUMPS = [
+  { x: -27, z: 15, r: 0.8 }, { x: -27, z: 18, r: 0.8 },
+  { x: -7, z: 22, r: 0.7 }, { x: -5, z: 24, r: 0.7 },
+  { x: 16, z: -15, r: 0.8 }, { x: 17, z: -12, r: 0.7 },
+  { x: 26, z: -4, r: 0.8 }, { x: 27, z: -7, r: 0.7 },
 ];
 
 const WALL_T = 0.4;
@@ -147,6 +152,8 @@ export const BOXES = [
 
 /** Vật cản tròn: cột, cây, đá, hồ, bàn... */
 export const CIRCLES = [
+  ...GALLERY_POSTS,
+  ...BAMBOO_CLUMPS,
   // Cổng tam quan
   ...[-4.4, -1.8, 1.8, 4.4].map((x) => ({ x, z: 30, r: 0.3 })),
   // Gác chuông
@@ -182,6 +189,7 @@ export const CIRCLES = [
 
 /** Vùng có mái: camera không được cao hơn mái khi người chơi đứng trong đó. */
 export const ROOF_ZONES = [
+  ...GALLERIES.map(g => ({ minX: g.x - g.w / 2, maxX: g.x + g.w / 2, minZ: g.z - g.d / 2, maxZ: g.z + g.d / 2, y: g.roof - 0.35 })),
   { minX: h.x - h.halfW, maxX: h.x + h.halfW, minZ: h.z - h.halfD, maxZ: h.z + h.halfD, y: 4.2 },
   { minX: BELL.x - 3.2, maxX: BELL.x + 3.2, minZ: BELL.z - 3.2, maxZ: BELL.z + 3.2, y: 4.3 },
   { minX: TEA.x - 5, maxX: TEA.x + 5, minZ: TEA.z - 3.8, maxZ: TEA.z + 4.4, y: 3.7 },
@@ -285,6 +293,9 @@ export function cameraSegmentT(ax, az, bx, bz) {
 /** Độ cao nền chỗ người chơi đứng: thiền đường, hiên, gác chuông, quán trà cao hơn mặt sân;
  *  cầu vòm dâng lên theo độ cong. */
 export function floorHeight(x, z) {
+  for (const g of GALLERIES) {
+    if (Math.abs(x - g.x) < g.w / 2 && Math.abs(z - g.z) < g.d / 2) return g.floor;
+  }
   if (Math.abs(x - HALL.x) < HALL.halfW + 0.8 && z > HALL.z - HALL.halfD && z < HALL.z + HALL.halfD + 3.4) return 0.3;
   if (Math.abs(x - BELL.x) < 3.5 && Math.abs(z - BELL.z) < 3.5) return 0.2;
   if (Math.abs(x - TEA.x) < 5 && z > TEA.z - 3.8 && z < TEA.z + 4.4) return 0.16;

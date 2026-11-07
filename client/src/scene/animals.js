@@ -5,11 +5,11 @@ import { Batch, flatMaterial, rng } from './builders.js';
 
 const CAT_ROUTES = [
   // Mèo sân tây: lượn qua cây bồ đề và quán trà
-  { color: '#d9822b', stripe: '#a85c18', speed: 0.8, pts: [[-10, 6], [-10, 18], [-25, 18], [-25, 6]], rest: 18 },
+  { color: '#d9822b', stripe: '#a85c18', speed: 0.8, pts: [[-15, 8], [-15, 18], [-25, 18], [-25, 9]], rest: 18 },
   // Mèo vườn đá
-  { color: '#3a3a40', stripe: '#232327', speed: 0.7, pts: [[10, -4], [10, -14], [25, -14], [25, -4]], rest: 24 },
+  { color: '#3a3a40', stripe: '#232327', speed: 0.7, pts: [[23, -4], [23, -8], [25, -8], [25, -4]], rest: 24 },
   // Mèo trắng cổng, hay nằm gần lối đi
-  { color: '#e8e2d6', stripe: '#b8ad98', speed: 0.6, pts: [[7, 26], [7, 12], [14, 8.2], [21, 8.4], [22, 15.8], [8.4, 16.4]], rest: 30 },
+  { color: '#e8e2d6', stripe: '#b8ad98', speed: 0.6, pts: [[5, 26], [5, 12], [5, 8], [14, 8.2], [21, 8.4], [22, 15.8], [8.4, 16.4]], rest: 30 },
 ];
 
 function makeCat(colorHex, stripeHex) {

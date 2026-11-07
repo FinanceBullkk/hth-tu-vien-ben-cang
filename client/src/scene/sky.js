@@ -7,10 +7,10 @@ const smooth = (a, b, x) => {
   return t * t * (3 - 2 * t);
 };
 
-// Palette thủy mặc kiểu WWM: hoàng hôn cam-vàng trầm, đêm xanh mực sẫm.
+// Ánh sáng dịu: trời xanh và nắng kem, đêm vẫn đọc được cảnh dưới ánh trăng.
 const PAL = {
-  dusk: { top: '#2c3468', mid: '#a05a72', hor: '#f59a52', fog: '#c98462', sun: '#ffa870', hemiSky: '#f5c098', hemiGnd: '#5f4638' },
-  night: { top: '#04060f', mid: '#0a1026', hor: '#182444', fog: '#0f162c', sun: '#9fb2ff', hemiSky: '#465587', hemiGnd: '#151321' },
+  dusk: { top: '#79bfc8', mid: '#c3dfd0', hor: '#fff0cd', fog: '#d9e5cd', sun: '#fff0cd', hemiSky: '#ecf6dd', hemiGnd: '#a5b88b' },
+  night: { top: '#243c64', mid: '#49688a', hor: '#8fabc0', fog: '#7899aa', sun: '#d6e6ff', hemiSky: '#a7c4dd', hemiGnd: '#718775' },
 };
 const c = (hex) => new THREE.Color(hex);
 
@@ -148,7 +148,7 @@ export class DayNight {
     this.lightDir.copy(this.sunDirVec).lerp(this.moonDirVec, smooth(0.25, 0.75, n)).normalize();
     this.sun.position.copy(this.lightDir).multiplyScalar(110).add(this.sun.target.position);
     this.sun.intensity = 2.3 + (1.15 - 2.3) * n;
-    this.hemi.intensity = 1.5 + (1.3 - 1.5) * n;
+    this.hemi.intensity = 1.6 + (1.45 - 1.6) * n;
 
     this.starMat.opacity = smooth(0.45, 0.95, n);
     this.moonMat.opacity = smooth(0.3, 0.8, n);

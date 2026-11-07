@@ -8,7 +8,7 @@
 // 5 Đào hoa — mưa cánh đào hồng rơi li ti, trận đào, trụ hoa, sương hồng, chân ngôn 桃;
 // 6 Bích ngọc — lá ngọc rơi xoay, trúc khí mọc quanh chân, viên ngọc lục bay vòng vai, chân ngôn 竹;
 // 7 Nguyệt bạch — trăng lưỡi liềm bạc treo sau vai, dải sao bạc nghiêng, bụi trăng rơi, chân ngôn 月;
-// 8 Hắc ám — vũng âm khí đen nuốt sáng, khói đen quấn thân, trận lục lăng tím sẫm, quỷ hỏa tím, chân ngôn 魔.
+// 8 Hắc ám — hắc viêm lửa đen lõi tím vờn quanh người, vũng âm khí nuốt sáng, trận lục lăng, quỷ hỏa, chân ngôn 魔.
 import * as THREE from 'three';
 
 // ---- texture vẽ tay bằng canvas, cache theo tên dùng chung mọi avatar ----
@@ -371,27 +371,6 @@ function hexTexture() {
     }
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.stroke();
-  });
-}
-
-// Cục khói âm: các đốm tròn mềm chồng loang dày — vẽ màu trắng, material tô đen bằng NormalBlending.
-function smokeTexture() {
-  return canvasTex('smoke', 128, 128, (ctx) => {
-    let s = 23;
-    const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
-    for (let i = 0; i < 16; i++) {
-      const x = 24 + rnd() * 80;
-      const y = 24 + rnd() * 80;
-      const r = 16 + rnd() * 32;
-      const g = ctx.createRadialGradient(x, y, 1, x, y, r);
-      g.addColorStop(0, 'rgba(255,255,255,0.72)');
-      g.addColorStop(0.6, 'rgba(255,255,255,0.3)');
-      g.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fill();
-    }
   });
 }
 
@@ -1901,10 +1880,9 @@ export function createEffect(effect, lowQuality = false) {
       updateGlyphs(glyphs, t);
     };
   } else {
-    // HẮC ÁM — vũng âm khí đen nuốt sáng dưới chân, khói đen quấn thân là chủ đạo,
-    // trận lục lăng và quỷ hỏa chỉ còn viền tím sẫm để nổi hình trên nền đêm, chân ngôn 魔.
+    // HẮC ÁM — hắc viêm lửa đen lõi tím vờn quanh người là chủ đạo, vũng âm khí đen nuốt sáng dưới chân,
+    // trận lục lăng tím sẫm, quỷ hỏa chớp tắt, chân ngôn 魔.
     // Phần đen dùng NormalBlending màu gần đen để tối thật sự (blending cộng sáng không ra được màu đen).
-    const smokeCount = lowQuality ? 6 : 12;
     const soulCount = lowQuality ? 2 : 4;
     const sparkCount = lowQuality ? 8 : 14;
     // vũng âm khí: đĩa đen dưới chân, nhấp nhô như hố tối
@@ -1931,16 +1909,32 @@ export function createEffect(effect, lowQuality = false) {
     dome.position.y = 0.97;
     group.add(dome);
 
-    // khói đen bốc lên quanh chân, tan trước ngực — dày và rộng hơn để đen là màu chính
-    const smokes = [];
-    for (let i = 0; i < smokeCount; i++) {
-      const entry = dynMat(() => new THREE.SpriteMaterial({
-        map: smokeTexture(), color: 0x030109, transparent: true, depthWrite: false,
-        opacity: 0, rotation: ((i * 29) % 10) / 10 * 3,
+    // hắc viêm: ngọn lửa đen vờn quanh người — thân lửa đen dựng đứng, lõi tím nhỏ rực bên trong;
+    // cứ mỗi ngọn thứ 4 là một hắc viêm lớn ôm sát thân cho khỏi thưa
+    const flameCount = lowQuality ? 8 : 14;
+    const flames = [];
+    for (let i = 0; i < flameCount; i++) {
+      const big = i % 4 === 0;
+      const body = dynMat(() => new THREE.SpriteMaterial({
+        map: flameTexture(), color: 0x05020c, transparent: true, depthWrite: false,
+        opacity: 0, rotation: ((i * 29) % 10) / 10 * 0.36 - 0.18,
       }), 0);
-      const sp = new THREE.Sprite(entry.mat);
-      group.add(sp);
-      smokes.push({ sp, entry, a0: (i / smokeCount) * 6.283, r: 0.28 + ((i * 37) % 20) / 20 * 0.52, tw: ((i * 29) % 10) / 10, speed: 0.5 + ((i * 61) % 10) / 10 });
+      const core = dynMat(() => new THREE.SpriteMaterial({
+        map: glowTexture(), color: colors[0], transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending, opacity: 0,
+      }), 0);
+      const spBody = new THREE.Sprite(body.mat);
+      const spCore = new THREE.Sprite(core.mat);
+      group.add(spBody);
+      group.add(spCore);
+      flames.push({
+        spBody, spCore, body, core,
+        a0: (i / flameCount) * 6.283 + ((i * 17) % 10) / 10 * 0.4,
+        r: (0.3 + ((i * 37) % 20) / 20 * 0.38) * (big ? 0.55 : 1),
+        tw: ((i * 29) % 10) / 10,
+        speed: 0.7 + ((i * 61) % 10) / 10 * 0.5,
+        size: (0.2 + ((i * 41) % 10) / 10 * 0.12) * (big ? 1.9 : 1),
+      });
     }
 
     // quỷ hỏa tím: chớp tắt thất thường quanh người
@@ -1972,14 +1966,25 @@ export function createEffect(effect, lowQuality = false) {
       dome.rotation.y = -t * 0.05;
       domeTex.offset.y = -(t * 0.045) % 1; // khí trong vòm cuộn lên chậm
       domeEntry.base = 0.09 + 0.04 * (0.5 + 0.5 * Math.sin(t * 0.8));
-      for (const sm of smokes) {
-        const yn = (t * 0.13 * sm.speed + sm.tw) % 1; // khói bốc lên rồi tan
+      for (const f of flames) {
+        const yn = (t * 0.16 * f.speed + f.tw) % 1; // lửa đen vờn lên rồi tắt
         const life = Math.sin(yn * Math.PI);
-        const a = sm.a0 + t * 0.1;
-        sm.sp.position.set(Math.cos(a) * sm.r + Math.sin(t * 0.7 + sm.tw * 8) * 0.05, 0.15 + yn * 1.45, Math.sin(a) * sm.r);
-        sm.sp.scale.setScalar(0.5 + yn * 0.75); // khói loang rộng khi dâng
-        sm.sp.material.rotation = sm.tw * 6.28 + t * 0.06 * sm.speed;
-        sm.entry.base = life * 0.8;
+        const a = f.a0 + t * 0.22;
+        const x = Math.cos(a) * f.r + Math.sin(t * 1.8 + f.tw * 9) * 0.06; // ngọn lửa lượn mềm
+        const z = Math.sin(a) * f.r + Math.cos(t * 1.4 + f.tw * 7) * 0.05;
+        const y = 0.12 + yn * 1.55;
+        f.spBody.position.set(x, y, z);
+        f.spBody.scale.set(
+          f.size * (0.8 + 0.3 * Math.sin(t * 2.6 + f.tw * 11)),
+          f.size * 1.55 * (0.85 + 0.25 * Math.sin(t * 2.2 + f.tw * 5)),
+          1,
+        );
+        f.spBody.material.rotation = f.tw * 1.2 + Math.sin(t * 1.5 + f.tw * 6) * 0.1;
+        f.body.base = life * 0.9;
+        // lõi tím rực bên trong ngọn lửa đen — hồn của hắc viêm
+        f.spCore.position.set(x, y + f.size * 0.18, z);
+        f.spCore.scale.setScalar(f.size * 0.62 * (0.8 + 0.3 * Math.sin(t * 3.2 + f.tw * 13)));
+        f.core.base = life * (0.5 + 0.28 * Math.sin(t * 2.9 + f.tw * 12));
       }
       for (const so of souls) {
         const a = so.a0 + t * 0.16;

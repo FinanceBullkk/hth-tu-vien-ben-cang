@@ -111,7 +111,7 @@ export function curvedRoofGeometry(w, d, h, { seg = 14, curve = 1.75, lift = 0.7
 }
 
 /** Tô sọc ngói: xen kẽ màu theo trục dài của mái. */
-export function tileColors(w, a = '#8a4632', b = '#6e3324') {
+export function tileColors(w, a = '#86ad9d', b = '#73988d') {
   const ca = new THREE.Color(a);
   const cb = new THREE.Color(b);
   return (pos, colors) => {
@@ -131,15 +131,15 @@ export function tileColors(w, a = '#8a4632', b = '#6e3324') {
 /** Đặt một mái cong kèm nóc và hai đầu đao vào batch. */
 export function addRoof(batch, w, d, h, x, y, z, { ry = 0, lift, a, b } = {}) {
   const geo = curvedRoofGeometry(w, d, h, { lift: lift ?? Math.min(w, d) * 0.08 });
-  batch.add(geo, '#8a4632', { x, y, z, ry, colorFn: tileColors(w, a, b) });
+  batch.add(geo, '#86ad9d', { x, y, z, ry, colorFn: tileColors(w, a, b) });
   const ridgeLen = Math.max(w - d, 0.2) + 0.5;
-  batch.box(ridgeLen, 0.22, 0.3, '#5a2a1c', x, y + h + 0.03, z, { ry });
+  batch.box(ridgeLen, 0.22, 0.3, '#587e70', x, y + h + 0.03, z, { ry });
   // Đầu đao hất lên ở hai đầu nóc
   const cos = Math.cos(ry);
   const sin = Math.sin(ry);
   for (const side of [-1, 1]) {
     const ox = (side * ridgeLen) / 2;
-    batch.box(0.7, 0.16, 0.2, '#5a2a1c', x + ox * cos, y + h + 0.16, z - ox * sin, { ry, rz: side * 0.55 });
+    batch.box(0.7, 0.16, 0.2, '#587e70', x + ox * cos, y + h + 0.16, z - ox * sin, { ry, rz: side * 0.55 });
   }
 }
 

@@ -14,10 +14,12 @@
 </style>
 <nav aria-label="Góc nhìn khuôn viên">
   <h1>Tu viện bên cảng</h1>
-  <p>Trục chính thông thoáng. Vườn tĩnh phía bắc, sinh hoạt hai bên sân.</p>
+  <p>Nắng dịu, mái ngọc, sân vườn men theo lối đá. Bố cục tham khảo Qinghe.</p>
   <button data-view="overview">Toàn cảnh</button>
   <button data-view="plan">Mặt bằng</button>
   <button data-view="gate">Từ cổng</button>
+  <button data-view="garden">Vườn trà</button>
+  <label>Ánh sáng <select id="light"><option value="0">Nắng sớm</option><option value="0.65">Ánh trăng</option></select></label>
   <p>Kéo để xoay · Cuộn để phóng to</p>
 </nav>
 <script type="module">
@@ -27,16 +29,21 @@
   import { createWuxiaProps } from '/src/scene/wuxia-props.js';
   import { FishingScene } from '/src/scene/fishing.js';
   import { PitchPotCourt } from '/src/scene/pitch-pot-court.js';
+  import { createTerrain, createForest } from '/src/scene/terrain.js';
+  import { DayNight } from '/src/scene/sky.js';
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#d5dfd6');
-  const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 600);
+  const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 1800);
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.autoUpdate = false;
+  THREE.DefaultLoadingManager.onLoad = () => { renderer.shadowMap.needsUpdate = true; };
   document.body.append(renderer.domElement);
-  scene.add(new THREE.HemisphereLight(0xfff5df, 0x657655, 1.6));
-  const sun = new THREE.DirectionalLight(0xffe5ba, 1.7);
-  sun.position.set(-35, 60, 30);
-  scene.add(sun);
+  const sky = new DayNight(scene);
+  sky.setShadowSize(1024);
+  sky.update(0, 1200000);
+  scene.add(createTerrain(true), createForest(true));
   createMonastery(scene);
   createWuxiaProps(scene);
   new FishingScene(scene);
@@ -46,16 +53,21 @@
   controls.maxDistance = 450;
   controls.minDistance = 4;
   const views = {
-    overview: { pos: [65, 70, 90], target: [0, 0, 0] },
+    overview: { pos: [65, 57, 82], target: [0, 0, 0] },
     plan: { pos: [0, 105, 0.01], target: [0, 0, 0] },
-    gate: { pos: [0, 5, 27], target: [0, 3, -18] },
+    gate: { pos: [0, 2.8, 27], target: [0, 3, -18] },
+    garden: { pos: [-3, 3.2, 23], target: [-18, 2, 10] },
   };
   function view(key) {
     camera.position.fromArray(views[key].pos);
     controls.target.fromArray(views[key].target);
     controls.update();
   }
-  document.querySelectorAll('button').forEach(button => button.onclick = () => view(button.dataset.view));
+  document.querySelectorAll('[data-view]').forEach(button => button.onclick = () => view(button.dataset.view));
+  document.querySelector('#light').onchange = event => {
+    sky.update(Number(event.target.value) * 1200000, 1200000);
+    renderer.shadowMap.needsUpdate = true;
+  };
   function resize() {
     camera.aspect = innerWidth / innerHeight;
     // Preserve horizontal framing on phones without changing the orbit target.
@@ -66,6 +78,7 @@
   addEventListener('resize', resize);
   resize();
   view('overview');
-  renderer.setAnimationLoop(() => renderer.render(scene, camera));
+  renderer.shadowMap.needsUpdate = true;
+  renderer.setAnimationLoop(() => { sky.follow(camera); renderer.render(scene, camera); });
 </script>
 </html>
