@@ -34,6 +34,7 @@ export class Remotes {
     avatar.root.rotation.y = p.rot;
     avatar.setActivity(p.activity ?? 0);
     avatar.setCultivation(p.cultivationTier ?? 0);
+    avatar.setQi(p.qi ?? 0);
     trimShadowCasters(avatar);
     this.scene.add(avatar.root);
     const r = {
@@ -60,7 +61,7 @@ export class Remotes {
     }
     for (const p of players) {
       if (this.map.has(p.sid)) {
-        this.applyRow([p.sid, p.x, p.z, p.rot, p.anim, p.activity], nowMs, nowMs);
+        this.applyRow([p.sid, p.x, p.z, p.rot, p.anim, p.activity, 0, p.qi ?? 0], nowMs, nowMs);
         this.map.get(p.sid).avatar.setCultivation(p.cultivationTier ?? 0);
       }
       else this.add(p, nowMs);
@@ -72,6 +73,7 @@ export class Remotes {
     if (!r) return;
     r.motion.push(t, row[1], row[2], row[3], row[4], arrivedAt);
     r.avatar.setActivity(row[5] ?? 0);
+    r.avatar.setQi(row[7] ?? 0);
   }
 
   remove(sid) {

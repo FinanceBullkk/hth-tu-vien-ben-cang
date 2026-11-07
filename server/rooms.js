@@ -6,6 +6,7 @@ import { cleanText } from './filter.js';
 import { WindowCounter, clientIp } from './limits.js';
 import { localDate } from './time.js';
 import { Voice } from './voice.js';
+import { QI_INTERVAL_MS } from '../shared/cultivation.js';
 
 /** Chỉ socket đã qua bước hello mới ở trong nhóm này và mới nhận tin phát chung. */
 export const PLAYERS_ROOM = 'players';
@@ -59,7 +60,10 @@ export class Room {
 
   stop() {
     clearInterval(this.interval);
-    for (const p of this.players.values()) clearTimeout(p.ghostTimer);
+    for (const p of this.players.values()) {
+      this.meditation.leave(p);
+      clearTimeout(p.ghostTimer);
+    }
   }
 
   onlineCount() {
@@ -77,6 +81,7 @@ export class Room {
       weapon: p.weapon,
       effect: p.effect,
       cultivationTier: p.cultivationTier ?? 0,
+      qi: p.qi ?? 0,
       x: p.x,
       z: p.z,
       rot: p.rot,
@@ -94,7 +99,8 @@ export class Room {
       if (!p.dirty && !full) continue;
       p.dirty = false;
       // Cột cuối: tuổi của vị trí (ms). Client phát lại theo lúc mẫu được lấy, không theo lúc tick.
-      rows.push([p.sid, p.x, p.z, p.rot, p.anim, p.activity, now - p.moveAt]);
+      // Cột 8: chân khí, client vẽ hào quang thiền theo qi.
+      rows.push([p.sid, p.x, p.z, p.rot, p.anim, p.activity, now - p.moveAt, p.qi ?? 0]);
     }
     if (rows.length) this.broadcast.volatile.emit('state', { t: now, p: rows });
 
@@ -108,6 +114,7 @@ export class Room {
     // Quét minigame 2 lần/giây: giờ cá cắn, cá tuột, lượt đầu hồ hết giờ.
     if (this.tickCount % SWEEP_EVERY === 0) {
       this.voice.sync();
+      this.meditation.sweep();
       this.fishing.sweep(this.players);
       this.pitch.sweep(this.players);
     }
@@ -256,6 +263,7 @@ export class Room {
       player.ghostTimer = null;
       const old = player.socket;
       if (old && old.id !== socket.id) {
+        this.onActionStop(player);
         this.voice.leave(player);
         old.data.player = null;
         old.emit('session:replaced');
@@ -310,6 +318,7 @@ export class Room {
     const date = localDate(now, this.config.timezone);
     this.db.touchPlayer({ id: pid, name: player.name, color: player.color, hair: player.hair, hat: player.hat, attire: player.attire, weapon: player.weapon, effect: player.effect, now, isVisit: !isResume });
     player.cultivationTier = this.db.cultivation(pid).tier;
+    player.qi = Math.floor((this.db.playerRow(pid)?.cultivation_ms ?? 0) / QI_INTERVAL_MS);
     if (!isResume) {
       this.db.bumpStat(date, { visits: 1 });
       socket.to(PLAYERS_ROOM).emit('player:join', this.publicPlayer(player));
@@ -413,6 +422,9 @@ export class Room {
     const code = ACTIVITY_BY_NAME[data?.kind];
     if (!code) return { ok: false };
     if (code === ACTIVITY.meditate) {
+      if (p.rod || p.pitch || p.rhythm || (p.activity !== ACTIVITY.none && p.activity !== ACTIVITY.meditate)) {
+        return { ok: false, error: 'Kết thúc hoạt động hiện tại trước khi ngồi thiền nhé.' };
+      }
       const now = Date.now();
       if (now - p.lastSit < SIT_INTERVAL_MS) return { ok: false, error: 'Từ từ thôi, thở một nhịp đã nhé.' };
       const res = this.meditation.sit(p, data?.mat);
@@ -428,6 +440,7 @@ export class Room {
       p.dirty = true;
       return res;
     }
+    if (p.mat != null) return { ok: false, error: 'Đứng dậy trước khi bắt đầu hoạt động khác nhé.' };
     p.activity = code;
     p.dirty = true;
     return { ok: true };

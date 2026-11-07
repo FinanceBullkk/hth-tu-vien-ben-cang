@@ -1,0 +1,32 @@
+.cultivation-panel.ink-panel {
+  --qi-color: #9bcdbb;
+  position: fixed; right: max(18px, env(safe-area-inset-right)); top: 50%; transform: translateY(-50%);
+  width: min(330px, calc(100vw - 28px)); padding: 22px; box-sizing: border-box;
+  color: #f2e7cc; background: linear-gradient(145deg, rgba(23, 43, 37, .95), rgba(15, 25, 24, .94));
+  border: 1px solid rgba(187, 205, 164, .38); border-radius: 4px;
+  box-shadow: 0 16px 50px #0005; pointer-events: auto;
+  max-height: calc(100dvh - 24px); overflow-y: auto;
+}
+.cultivation-panel[hidden] { display: none; }
+.cultivation-eyebrow { font-size: 10px; letter-spacing: .24em; color: var(--qi-color); }
+.cultivation-panel .ink-title { margin: 12px 0; color: #f2e7cc; font-size: 25px; }
+.cultivation-amount { display: block; font-size: 20px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.cultivation-panel progress { display: block; width: 100%; height: 7px; margin-top: 15px; accent-color: var(--qi-color); }
+.cultivation-panel progress::-webkit-progress-bar { background: #ffffff16; border-radius: 8px; }
+.cultivation-panel progress::-webkit-progress-value { background: var(--qi-color); border-radius: 8px; }
+.cultivation-hint, .cultivation-company, .cultivation-help { font-size: 12px; line-height: 1.55; color: #c4d0c4; }
+.cultivation-notice { min-height: 20px; color: #efd49b; font-size: 14px; }
+.cultivation-help { opacity: .8; }
+.cultivation-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.cultivation-actions .btn { min-height: 44px; flex: 1; white-space: nowrap; }
+.cultivation-panel :focus-visible { outline: 2px solid #e6d292; outline-offset: 3px; }
+@media (max-width: 600px) {
+  .cultivation-panel.ink-panel { top: auto; bottom: max(10px, env(safe-area-inset-bottom)); right: 14px; transform: none; padding: 14px 18px; }
+  .cultivation-company, .cultivation-help { margin: 6px 0; }
+  .cultivation-panel .ink-title { margin: 7px 0; font-size: 21px; }
+  .cultivation-actions { margin-top: 8px; }
+}
+@media (max-height: 500px) {
+  .cultivation-panel.ink-panel { top: 8px; bottom: auto; transform: none; padding: 12px 16px; width: 300px; }
+  .cultivation-company, .cultivation-help { display: none; }
+}

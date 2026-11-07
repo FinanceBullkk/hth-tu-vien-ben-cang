@@ -485,6 +485,33 @@ test('thiền: giữ chỗ chiếu, nhịp chung, chat bị chặn khi ngồi', 
   b.s.disconnect();
 });
 
+test('Chân khí: đồng bộ, đổi tab, mất mạng và vào lại không nhận trùng', { timeout: 15000 }, async () => {
+  const a = await join('Tĩnh tu A');
+  const viewer = await join('Tĩnh tu B');
+  a.s.emit('move', [MATS[0].x, MATS[0].z, 0, 0]);
+  const awarded = once(viewer.s, 'cultivation:progress');
+  assert.equal((await call(a.s, 'action:start', { kind: 'meditate', mat: 0, qi: 999999 })).ok, true);
+  const progress = await awarded;
+  assert.deepEqual(progress, { sid: a.res.sid, qi: 1 });
+  const replacement = await join('Tĩnh tu A', a.res.playerId);
+  assert.equal(replacement.res.snapshot.me.qi, 1);
+  assert.equal(replacement.res.snapshot.me.activity, 0);
+  assert.equal(replacement.res.snapshot.mats[0], 0);
+  assert.equal(replacement.res.snapshot.players.some((p) => 'playerId' in p), false);
+  replacement.s.emit('move', [MATS[0].x, MATS[0].z, 0, 0]);
+  assert.equal((await call(replacement.s, 'action:start', { kind: 'meditate', mat: 0 })).ok, true);
+  const released = once(viewer.s, 'meditation:mats');
+  replacement.s.disconnect();
+  assert.equal((await released)[0], 0);
+  const resumed = await join('Tĩnh tu A', a.res.playerId);
+  assert.equal(resumed.res.snapshot.me.qi, 1);
+  assert.equal(resumed.res.snapshot.me.activity, 0);
+  const book = await fetch(`${URL_BASE}/api/me`, { headers: { 'x-player-id': a.res.playerId } }).then((r) => r.json());
+  assert.equal(book.qi, 1);
+  resumed.s.disconnect();
+  viewer.s.disconnect();
+});
+
 test('câu cá qua socket thật: quăng, cắn, giữ kim theo vùng xanh, kéo lên được ghi sổ', { timeout: 40000 }, async () => {
   const a = await join('Người câu');
   const b = await join('Người xem');
