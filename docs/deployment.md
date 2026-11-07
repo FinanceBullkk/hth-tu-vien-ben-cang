@@ -57,10 +57,30 @@ docker stop hth-tunnel-fixed
 
 Start it again with `docker start hth-tunnel-fixed`. Domain remains unchanged.
 
-## Latest release: 2026-11-07 Where Winds Meet music
+## Latest release: 2026-11-07 campus layout and auras
 
-Running image: `hth:wwm-261107-1200`, built 2026-11-07 09:45 (UTC+7). `hth:latest` still
-points to the older `hth:pitch-261107-0910`. Of the three music files in the pitch image, only
+Deployed as `hth:campus-261107-1155` (also `hth:latest`) at 12:00 (UTC+7), built from a clean export
+of commit `5ee7e0d`. Campus areas are rearranged and five auras added. No `server/` change and no DB
+schema change. An uncommitted `avatar-effect.js` edit in the working checkout was excluded on purpose.
+
+Exported commit suite in a `node:24` Linux container: 87/87. Candidate on a copy of real data:
+health and DB quick_check passed. Candidate on an empty volume, browser run: login, entering the
+game, the new campus and the bell activity at its new position, with no console errors. Other
+activities and the new auras were not tried in the browser.
+
+Cutover took about 4 seconds, with the same volume, network, port and all runtime flags under
+Operate. `CapEff=0` and `NoNewPrivs=1` confirmed. Public health, page, bundle hash
+(`index-CmogtFKB.js`), music range request and WebSocket handshake passed. DB quick_check: ok;
+16 players, 5 wishes retained. Tunnel unchanged.
+
+Rollback container `hth-pre-campus-261107-1200` is stopped and preserved with `restart=no`; it runs
+`hth:wwm-261107-1200` with the same flags. Private cutover backup is inside the data volume at
+`backups/cutover-campus-261107-1200/`. Rolling back the DB discards changes made after cutover.
+
+## Previous release: 2026-11-07 Where Winds Meet music
+
+Image: `hth:wwm-261107-1200`, built 2026-11-07 09:45 (UTC+7). `hth:latest` then
+pointed to the older `hth:pitch-261107-0910`. Of the three music files in the pitch image, only
 `where-winds-meet-character-creation.mp3` remains. This section was written afterwards from the
 image and container metadata; the test results and cutover checks of this release were not recorded.
 No `cutover-wwm` backup exists in the data volume. `hth:pitch-261107-0910` is available as a

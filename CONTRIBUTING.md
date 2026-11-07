@@ -43,7 +43,17 @@ Mở `http://localhost:5173`. Lần chạy đầu, server tự tạo `config.jso
 
 3. Trước khi rời máy, push cả phần đang làm dở lên nhánh để máy kia làm tiếp được.
 4. Chạy `npm test` trước khi mở PR.
-5. Mở PR vào `main`, chờ CI xanh rồi squash merge.
+5. Mở PR vào `main`, chờ CI xanh rồi squash merge. CI chỉ chạy khi đã có PR hoặc khi push vào `main`.
+
+## Commit
+
+Viết message theo dạng `<type>: <mô tả ngắn>`, với `type` là `feat`, `fix`, `refactor`, `test`, `docs` hoặc `chore`. Mỗi commit một việc.
+
+```text
+fix: giam ti le do that lac khi cau ca
+```
+
+Làm việc bằng AI: công cụ đọc `AGENTS.md`, gồm cả những việc AI phải được yêu cầu rõ mới làm và checklist trước khi commit. Nếu công cụ không tự đọc file này thì hãy bảo nó đọc.
 
 ## Khi sửa code
 
