@@ -54,6 +54,7 @@ export const FISH = [
 
 const RARITY_WEIGHT = { 1: 58, 2: 32, 3: 10 };
 const WRONG_BAIT_FACTOR = 0.12;
+const JUNK_FACTOR = 0.25; // đồ thất lạc mồi nào cũng vướng nên phải hiếm hơn cá, kẻo người mới toàn kéo lên dép
 // Quăng trúng bóng nào thì loài cắn nghiêng theo cỡ bóng đó; thả vào chỗ trống vẫn có cá, nhưng hiếm khi quý.
 const SHADOW_BIAS = {
   none: { 1: 1.3, 2: 0.6, 3: 0.2 },
@@ -127,7 +128,7 @@ export function fishRoll(castAt, salt = 0, { bait = DEFAULT_BAIT, shadow = null,
   const period = night ? 'night' : 'dusk';
   const rand = lcg((Math.imul(castAt, 2246822519) ^ Math.imul(salt + 1, 3266489917)) >>> 0);
   const weightOf = (f) => (f.time && f.time !== period ? 0 : RARITY_WEIGHT[f.rarity])
-    * (f.bait && f.bait !== bait ? WRONG_BAIT_FACTOR : 1)
+    * (f.bait === null ? JUNK_FACTOR : f.bait !== bait ? WRONG_BAIT_FACTOR : 1)
     * bias[f.rarity];
   const total = FISH.reduce((sum, f) => sum + weightOf(f), 0);
   let pick = rand() * total;

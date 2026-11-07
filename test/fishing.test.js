@@ -354,6 +354,11 @@ test('mồi đúng, bóng to và đúng giờ làm tăng tỉ lệ đúng như h
     assert.ok(fish.bait === null || BAITS.some((b) => b.id === fish.bait), `${fish.id} gắn mồi có thật`);
     assert.ok(fishHint(fish).length > 3);
   }
+  // Đồ thất lạc là món hài thỉnh thoảng gặp, không được lấn át cá ở bất kỳ loại mồi nào.
+  for (const { id } of BAITS) {
+    const junkShare = countOf({ bait: id }, (fish) => fish.bait === null) / 4000;
+    assert.ok(junkShare > 0.03 && junkShare < 0.3, `mồi ${id}: đồ thất lạc chiếm ${junkShare}`);
+  }
   // Mỗi vòng ngày đêm đều có cả hai pha.
   assert.equal(isLakeNight(0, 1000), false);
   assert.equal(isLakeNight(500, 1000), true);

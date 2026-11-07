@@ -41,7 +41,7 @@ Phân tích nguồn: `plans/reports/research-261107-0851-where-winds-meet-fishin
 
 - Hồ: `LAKE` trong `shared/layout.js`, ba vòng tròn ghép lại và nằm luôn trong `CIRCLES`, câu được khi `lakeDistance < shoreWidth`.
 - Bóng cá: `shared/fish-lake-shadows.js` tính thuần từ giờ server, 7 làn, mỗi khung 40s, không tốn băng thông. Phao rơi trong 1,5 m thì giữ bóng đó (`fish:shadow {id, sid}`), người sau không lấy được. Có bóng thì cá cắn sớm hơn và nghiêng về độ hiếm theo cỡ bóng (`SHADOW_BIAS`).
-- Mồi: bột/giun/rau, miễn phí, vô hạn. Mồi sai còn 12% tỉ lệ với loài không mê mồi đó.
+- Mồi: bột/giun/rau, miễn phí, vô hạn. Mồi sai còn 12% tỉ lệ với loài không mê mồi đó; đồ thất lạc mồi nào cũng vướng nhưng chỉ 25% tỉ lệ.
 - Thả: `fish:cast {tx, tz, bait}`, toạ độ chỗ người chơi chạm trên mặt hồ. `castSpot` luôn trả về điểm trên mặt nước; không có toạ độ thì thả ra phía tâm hồ.
 - Giờ: `isLakeNight` theo cùng vòng ngày đêm của bầu trời; `FISH[].time` là `dusk` hoặc `night`.
 - Chờ 3–9s nhân `SHADOW_WAIT`; **lắc cần** (`fish:wiggle`, tối đa 2/s) đẩy giờ cắn sớm, tổng cộng tối đa 2,5s.
