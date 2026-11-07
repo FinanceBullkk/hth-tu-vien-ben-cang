@@ -11,15 +11,24 @@ function lerpAngle(a, b, k) {
 }
 
 export class Remotes {
-  constructor(scene) {
+  constructor(scene, lowQuality = false) {
     this.scene = scene;
+    this.lowQuality = lowQuality;
     this.map = new Map();
     this.leaving = [];
   }
 
   add(p, nowMs) {
     if (this.map.has(p.sid)) return this.map.get(p.sid);
-    const avatar = new Avatar({ name: p.name, color: p.color, hat: p.hat });
+    const avatar = new Avatar({
+      name: p.name,
+      color: p.color,
+      hat: p.hat,
+      attire: p.attire ?? 0,
+      weapon: p.weapon ?? 0,
+      effect: p.effect ?? 0,
+      lowQuality: this.lowQuality,
+    });
     avatar.root.position.set(p.x, floorHeight(p.x, p.z), p.z);
     avatar.root.rotation.y = p.rot;
     avatar.setActivity(p.activity ?? 0);

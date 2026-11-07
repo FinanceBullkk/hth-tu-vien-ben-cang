@@ -9,6 +9,8 @@ import { io } from 'socket.io-client';
 import { WordFilter } from '../server/filter.js';
 import { WindowCounter, clientIp } from '../server/limits.js';
 import { localDate, zonedToTs } from '../server/time.js';
+import { fightGreen } from '../shared/fish.js';
+import { noteTargetAt, rhythmPattern } from '../shared/rhythm.js';
 import {
   ABBOT, BELL, BOUNDS, BOXES, CIRCLES, CONTAINERS, MATS, PLAYER_RADIUS, POND, SPAWN, TEA, TREE, clampToWalkable, inBox, resolveCollision,
 } from '../shared/layout.js';
@@ -156,7 +158,7 @@ test('đi hết sân: từ điểm vào tới được mọi hoạt động, kh�
     for (const b of BOXES) {
       assert.equal(x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ, false, `lọt vào hộp tại ${x},${z}`);
     }
-    assert.ok(z <= BOUNDS.maxZ && x <= BOUNDS.maxX, 'không được ra khỏi ranh giới về phía cảng');
+    assert.ok(z <= BOUNDS.maxZ && x <= BOUNDS.maxX, 'không ai ra được khỏi sân');
   }
   const near = (tx, tz, radius) => reached.some(([x, z]) => Math.hypot(x - tx, z - tz) < radius);
   assert.ok(near(BELL.x, BELL.z, BELL.radius), 'tới được gác chuông');
@@ -182,6 +184,9 @@ test('hai người vào phòng thấy nhau, trùng tên tự thêm số', async 
   assert.equal(seen.playerId, undefined, 'không được lộ playerId cho người khác');
   assert.equal(b.res.snapshot.players.length >= 1, true);
   assert.equal(b.res.snapshot.players[0].playerId, undefined);
+  assert.equal(a.res.snapshot.radio.videoId, undefined);
+  assert.equal(a.res.snapshot.radio.durationSec, 1758);
+  assert.equal(a.res.snapshot.radio.startedAt, b.res.snapshot.radio.startedAt, 'cùng mốc nhạc cho cả phòng');
 
   // Vị trí được phát lại và bị kẹp trong ranh giới.
   a.s.emit('move', [9999, 9999, 0, 1]);
@@ -261,12 +266,14 @@ test('lời ước: tạo, hiện cho người khác, tim, giới hạn 3/ngày,
 
   // Restart server: dữ liệu không mất.
   const pid = a.res.playerId;
+  const radioStartedAt = a.res.snapshot.radio.startedAt;
   a.s.disconnect();
   b.s.disconnect();
   await stopServer(serverProc);
   serverProc = await startServer();
   const again = await join('An', pid);
   assert.equal(again.res.playerId, pid);
+  assert.equal(again.res.snapshot.radio.startedAt, radioStartedAt, 'restart vẫn giữ mốc nhạc');
   const texts = again.res.snapshot.wishes.map((x) => x.text);
   assert.ok(texts.includes('Mong cả nhà bình an'), 'lời ước phải còn sau restart');
   const liked = again.res.snapshot.wishes.find((x) => x.id === created.id);
@@ -289,18 +296,28 @@ test('quẻ vận đơn: một quẻ mỗi ngày, thiếu quyền thì không ch
   a.s.disconnect();
 });
 
-test('chuông cá nhân: cần đứng gần, mọi người nghe, nghỉ 30 giây', async () => {
+test('nhịp chuông: đứng gần mới chơi, chặn kết thúc sớm và huỷ lượt sạch', async () => {
   const a = await join('Chuông');
   const b = await join('Nghe');
-  assert.equal((await call(a.s, 'bell:strike', { quality: 1 })).ok, false, 'đứng ở cổng thì chưa thỉnh được');
+  assert.equal((await call(a.s, 'rhythm:start', { kind: 'bell' })).ok, false, 'đứng ở cổng thì chưa chơi được');
   a.s.emit('move', [0, 4.5, 0, 0]);
   await new Promise((r) => setTimeout(r, 60));
+  const started = await call(a.s, 'rhythm:start', { kind: 'bell' });
+  assert.equal(started.ok, true);
+  assert.equal((await call(a.s, 'rhythm:finish', { id: started.game.id })).saved, false);
+  await new Promise((r) => setTimeout(r, Math.max(0, noteTargetAt(started.game.at, 0, 0) - Date.now())));
+  const strike = { id: started.game.id, round: 0, idx: 0, note: rhythmPattern(started.game.at, 0, 'bell')[0] };
   const heard = once(b.s, 'bell:ring');
-  assert.equal((await call(a.s, 'bell:strike', { quality: 5 })).ok, true);
-  assert.equal((await heard).quality, 1, 'server phải kẹp chất lượng');
-  const again = await call(a.s, 'bell:strike', { quality: 1 });
-  assert.equal(again.ok, false);
-  assert.ok(again.wait > 0);
+  const judged = await call(a.s, 'rhythm:hit', strike);
+  assert.equal(judged.ok, true);
+  assert.notEqual(judged.grade, 'miss', 'chốt ngay nhịp chuẩn phải phát chuông');
+  const ring = await heard;
+  assert.ok(ring.quality > 0);
+  assert.equal(ring.beat, 1);
+  const again = await call(a.s, 'rhythm:hit', strike);
+  assert.equal(again.repeat, true);
+  await call(a.s, 'action:stop');
+  assert.equal((await call(a.s, 'rhythm:hit', strike)).ok, false);
   a.s.disconnect();
   b.s.disconnect();
 });
@@ -322,8 +339,47 @@ test('thiền: giữ chỗ chiếu, nhịp chung, chat bị chặn khi ngồi', 
   assert.equal(r2.epoch, r1.epoch, 'người vào sau phải theo nhịp của người đầu');
   assert.deepEqual((await sync).mates, ['Thiền B']);
   assert.equal((await call(a.s, 'chat', { text: 'ê' })).ok, false);
-  const early = await call(a.s, 'meditation:finish', { score: 100 });
-  assert.equal(early.saved, false, 'ngồi quá ngắn thì không lưu điểm');
+  const game = await call(a.s, 'rhythm:start', { kind: 'meditate' });
+  assert.equal(game.ok, true);
+  const early = await call(a.s, 'rhythm:finish', { id: game.game.id, score: 100 });
+  assert.equal(early.saved, false, 'ngồi chưa đủ năm hơi thở thì không lưu buổi');
+  a.s.disconnect();
+  b.s.disconnect();
+});
+
+test('câu cá qua socket thật: quăng, cắn, giữ kim theo vùng xanh, kéo lên được ghi sổ', { timeout: 40000 }, async () => {
+  const a = await join('Người câu');
+  const b = await join('Người xem');
+  a.s.emit('move', [19, 16.7, 0, 0]);
+  await new Promise((r) => setTimeout(r, 80));
+
+  const bobber = once(b.s, 'fish:bobber');
+  const bitten = once(a.s, 'fish:bite');
+  const cast = await call(a.s, 'fish:cast', { tx: 19, tz: 21, bait: 'bot' });
+  assert.equal(cast.ok, true);
+  assert.equal((await bobber).sid, a.res.sid, 'người khác thấy phao');
+  const bite = await bitten;
+  assert.equal((await call(a.s, 'fish:reel')).ok, false, 'chưa đầy vòng thì chưa kéo được');
+
+  // Như client: đi theo vùng xanh, gửi vị trí kim đều đặn cho tới khi server báo đầy.
+  let pulled;
+  for (let i = 0; i < 300; i++) {
+    const elapsed = Date.now() - bite.startAt;
+    pulled = await call(a.s, 'fish:pull', { x: fightGreen(elapsed + 100, bite.seed, bite.rarity, bite.assist) });
+    if (pulled.ready || pulled.escaped) break;
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  assert.equal(pulled.ready, true, 'bám vùng xanh thì đầy vòng');
+
+  const caught = once(b.s, 'fish:caught');
+  const rodOff = once(b.s, 'fish:rodoff');
+  const res = await call(a.s, 'fish:reel');
+  assert.equal(res.ok, true);
+  assert.equal(res.fish.rarity, bite.rarity);
+  assert.ok(res.teu >= 1);
+  assert.equal((await caught).name, res.fish.name);
+  assert.equal((await rodOff).sid, a.res.sid);
+  assert.equal((await call(a.s, 'fish:pull', { x: 0.5 })).ok, false, 'kéo xong là hết lượt');
   a.s.disconnect();
   b.s.disconnect();
 });
@@ -409,6 +465,41 @@ test('mở tab thứ hai: tab cũ nhường chỗ, không tạo người chơi t
   assert.equal(b.res.sid, a.res.sid);
   assert.equal(b.res.name, 'Hai tab', 'không bị thêm số (2) vì cùng một người');
   b.s.disconnect();
+});
+
+test('voice: admitted near peers only; cleanup on tab replacement, disconnect and kick', async () => {
+  const a = await join('Voice A');
+  const b = await join('Voice B');
+  const stranger = await connect();
+  const enabled = (s) => call(s, 'voice:enable', { enabled: true });
+  assert.equal((await enabled(stranger)).ok, false);
+  assert.equal((await call(stranger, 'voice:signal', { to: a.res.sid })).ok, false);
+  assert.equal((await enabled(a.s)).peers.length, 0);
+  const near = once(a.s, 'voice:peers');
+  const res = await enabled(b.s);
+  const peers = await near;
+  assert.equal(peers[0].sid, b.res.sid);
+  const payload = { to: b.res.sid, token: peers[0].token, description: { type: 'offer', sdp: 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n' } };
+  const signal = once(b.s, 'voice:signal');
+  assert.equal((await call(a.s, 'voice:signal', payload)).ok, true);
+  assert.equal((await signal).from, a.res.sid);
+  assert.equal(res.peers[0].token, peers[0].token);
+  const revoked = once(b.s, 'voice:peers');
+  const replacement = await join('Voice A tab 2', a.res.playerId);
+  assert.deepEqual(await revoked, [], 'replaced session immediately loses voice');
+  assert.equal((await call(replacement.s, 'voice:signal', payload)).ok, false);
+  const again = await enabled(replacement.s);
+  assert.equal(again.peers.length, 1);
+  assert.notEqual(again.peers[0].token, peers[0].token);
+  const disconnected = once(b.s, 'voice:peers');
+  replacement.s.disconnect();
+  assert.deepEqual(await disconnected, []);
+  const c = await join('Voice C');
+  await enabled(c.s);
+  const kicked = once(b.s, 'voice:peers');
+  await admin('/kick', 'POST', { playerId: c.res.playerId });
+  assert.deepEqual(await kicked, []);
+  b.s.disconnect(); stranger.disconnect();
 });
 
 test('đếm theo cửa sổ và lấy IP thật sau proxy', () => {

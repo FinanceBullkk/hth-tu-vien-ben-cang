@@ -28,11 +28,25 @@
     <div id="toasts" aria-live="polite"></div>
 
     <nav id="menu">
+      <button id="playBtn" class="icon-btn" type="button"><span aria-hidden="true">🧭</span><em>Chơi gì?</em></button>
       <button id="bookBtn" class="icon-btn" type="button"><span aria-hidden="true">📖</span><em>Sổ an</em></button>
       <button id="boardBtn" class="icon-btn" type="button"><span aria-hidden="true">🌸</span><em>Bảng ước</em></button>
       <button id="shareBtn" class="icon-btn" type="button"><span aria-hidden="true">📷</span><em>Chia sẻ</em></button>
+      <button id="musicBtn" class="icon-btn" type="button" aria-controls="musicPanel" aria-expanded="false" aria-label="Mở nhạc nền"><span aria-hidden="true">♫</span><em>Nhạc</em></button>
       <button id="muteBtn" class="icon-btn" type="button"></button>
     </nav>
+
+    <aside id="musicPanel" aria-label="Điều khiển nhạc nền" hidden>
+      <div class="music-head"><span>Nhạc chung · Character Creation Song</span><button id="musicClose" type="button" aria-label="Đóng bảng điều khiển nhạc">Đóng</button></div>
+      <div class="music-controls">
+        <button id="musicSound" type="button" aria-pressed="false">Phát nhạc</button>
+        <label for="musicVolume">Âm lượng</label>
+        <input id="musicVolume" type="range" min="0" max="100" value="35" aria-label="Âm lượng nhạc nền">
+        <output id="musicVolumeValue" for="musicVolume">35%</output>
+      </div>
+      <p>Nghe cùng đoạn với mọi người. Nhạc vẫn phát khi đóng bảng này.</p>
+    </aside>
+    <audio id="musicAudio" src="/music/where-winds-meet-character-creation.mp3" preload="metadata" loop hidden></audio>
 
     <div id="banner" role="status" hidden>
       <p id="bannerText"></p>
@@ -58,8 +72,7 @@
     <div id="stick" aria-hidden="true"><div class="stick-knob"></div></div>
   </div>
 
-  <div id="ringLayer" hidden></div>
-  <div id="medLayer" hidden></div>
+  <div id="rhythmLayer"></div>
   <div id="modals"></div>
 </body>
 </html>

@@ -6,7 +6,7 @@ const SPEED = 4.3;
 const SEND_INTERVAL = 1 / 12;
 
 export class LocalPlayer {
-  constructor(scene, profile) {
+  constructor(scene, profile, lowQuality = false) {
     this.scene = scene;
     this.x = SPAWN.x;
     this.z = SPAWN.z;
@@ -16,7 +16,16 @@ export class LocalPlayer {
     this.locked = true;
     this.sendTimer = 0;
     this.lastSent = '';
-    this.avatar = new Avatar({ name: profile.name || '', color: profile.color, hat: profile.hat, isLocal: true });
+    this.avatar = new Avatar({
+      name: profile.name || '',
+      color: profile.color,
+      hat: profile.hat,
+      attire: profile.attire ?? 0,
+      weapon: profile.weapon ?? 0,
+      effect: profile.effect ?? 0,
+      lowQuality,
+      isLocal: true,
+    });
     this.avatar.nameEl.hidden = true;
     this.avatar.root.position.set(this.x, this.y, this.z);
     this.avatar.root.rotation.y = this.rot;

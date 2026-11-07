@@ -1,10 +1,12 @@
 # HTH – Tu viện bên cảng
 
-Game web 3D nhiều người chơi, dùng nội bộ cho nhân viên HTH Logistics: lên tu viện cạnh cảng container để thỉnh chuông, ngồi thiền, viết lời ước, rút quẻ vận đơn và trò chuyện trong giờ nghỉ. Không thắng thua, không xếp hạng, không thu tiền.
+Game web 3D nhiều người chơi, dùng nội bộ cho nhân viên HTH Logistics: lên tu viện cạnh cảng container để thỉnh chuông, ngồi thiền, câu cá, viết lời ước, rút quẻ vận đơn và trò chuyện trong giờ nghỉ. Không thắng thua, không xếp hạng, không thu tiền.
+
+Không biết chơi gì? Bấm nút **Chơi gì?** ở góc trên, chọn một trò là game đưa bạn tới và bắt đầu ngay.
 
 ## Chạy game
 
-Cần Node.js 22 trở lên.
+Cần Node.js 24 trở lên.
 
 ```bash
 npm install
@@ -56,6 +58,42 @@ docker exec hth node -p "require('/app/data/config.json').adminKey"
 
 Cập nhật lên bản mới: chép mã mới lên máy, chạy `docker build -t hth .`, rồi `docker rm -f hth` và chạy lại lệnh `docker run` ở trên.
 
+## Thỉnh chuông và thiền
+
+- Hai minigame nhịp điệu kiểu Audition: nhập chuỗi **phím mũi tên**, rồi bấm **Space** khi vạch trắng tới tâm vùng vàng. Điện thoại có bốn phím chạm và nút **Chốt nhịp**. Có Perfect, Good, Miss và combo; không cần giữ/thả. Phách chấm nhịp tạo tại máy bằng Web Audio.
+- Login và trong game đều dùng bản *Where Winds Meet Character Creation Song*, với âm lượng giảm 50%. Server giữ một mốc phát chung trong game; mỗi máy vào sẽ phát cùng đoạn. Nhạc MP3 được phục vụ từ game. Nút **Nhạc** mở bảng phát/tạm dừng và chỉnh âm lượng; mức âm lượng được lưu trên máy. Nếu trình duyệt chặn phát tự động, bấm **Phát nhạc**. Đóng bảng không dừng nhạc. Phách minigame chạy độc lập.
+- **Nhịp chuông:** tới gần gác chuông, chơi 16 chuỗi trong khoảng 40 giây. Chốt đúng làm chuông ngân; đồng nghiệp chốt cùng nhịp làm âm dày hơn.
+- **Nhịp sen:** chọn chiếu trống, chơi 24 chuỗi trong khoảng một phút. Chốt đúng làm sen bên chiếu mở dần và vòng sáng lan theo nhịp. Người ngồi cùng thấy hiệu ứng của nhau.
+- Mỗi chuỗi dài từ 3 tới 5 phím. Nhạc 96 BPM; Perfect trong 110 ms, Good trong 240 ms quanh nhịp chuẩn. Server chấm theo thời điểm nhận Space, không tin điểm client gửi. Sổ lưu điểm Nhịp sen riêng của bạn, không có bảng xếp hạng. Thoát sớm không lưu kết quả; mất mạng sẽ dừng lượt chơi.
+
+## Đầu hồ
+
+Tới sân cạnh bãi container, bấm **Chơi đầu hồ** rồi chọn đối thủ. Mỗi trận tối đa 2 phút, dẫn 50 điểm hoặc chạm 250 điểm trước là thắng; hết giờ thì so điểm.
+
+- **Mỗi lượt:** đưa tâm vào vòng đang trôi, giữ cho vòng đầy rồi bấm chuột hoặc **Space**. Ném khi chưa đầy hoặc để hết 10 giây ngắm là trượt. Tâm lắc nhẹ như người say, còn đối thủ ném ngay sau bạn.
+- **Hai tâm:** có lượt phải giữ cả tâm chuột lẫn tâm phím (**WASD** hoặc mũi tên) trong hai vòng riêng. Trên điện thoại, ngón đầu lái tâm chính, ngón hai lái tâm phụ, vòng đầy là tự ném.
+- **Combo:** trúng liên tiếp lần lượt được 10, 15, 15, 20, 25, 30, 35, 45, 50 điểm và giữ mức 50 từ đó. Trượt là combo về 0.
+- **Thưởng:** thắng Chú tiểu Mõ, Sư huynh Thẻ, Lão tăng Mười Năm được hạng B, A, S (3, 5, 8 TEU). Thua hoặc hoà được hạng C (1 TEU). Rời sân giữa trận không lưu điểm.
+
+## Câu cá
+
+Bấm nút **Chơi gì?** ở góc trên rồi chọn **Câu cá**, hoặc tự đi tới bờ hồ góc đông nam sân. Không tốn gì, ai đứng bờ nào cũng thấy nhau câu. Bấm **Về bờ**, **Esc** hoặc phím đi để rời hồ.
+
+- **Thả câu:** chạm vào mặt nước chỗ muốn thả. Chạm đâu cũng được, kể cả hơi lệch ra bờ.
+- **Chờ:** cá sẽ tự cắn. Chạm thêm để lắc cần thì cá cắn sớm hơn.
+- **Giữ cá:** cá cắn là vòng cung hiện ra, điện thoại rung nhẹ. Rê chuột hoặc kéo ngón tay để giữ chấm trắng trong vùng xanh. Lệch lâu sẽ có chữ nhắc kéo về bên nào. Đầy vòng là cá tự về tay.
+- **Người mới:** chưa bắt đủ 3 loài thì vùng xanh rộng và tụt rất chậm. Lần đầu chỉ cần làm theo chữ trên màn hình; mồi, bóng cá, lắc cần được giới thiệu dần sau mỗi con.
+- **Mồi:** bột, giun hoặc rau (bấm chữ dưới màn hình hoặc phím **Q**). Mỗi mồi có nhóm cá riêng.
+- **Bóng cá:** bóng đen bơi dưới mặt hồ, mọi máy thấy giống nhau. Bóng càng to càng dễ ra cá hiếm, ai thả trúng trước được. Chỗ nước gợn mạnh thường có bóng lớn.
+- **Thưởng:** thường, quý, hiếm được 1, 2, 4 TEU; ở trong vùng xanh từ 80% thời gian được thêm 1 TEU.
+- **Sổ cá:** trong Sổ an có đủ 15 loài. Loài chưa bắt hiện gợi ý mồi, giờ và cỡ bóng. Đủ 5, 10 và 15 loài được thưởng 5, 10 và 25 TEU.
+
+## Trò chuyện bằng mic
+
+Voice gần kiểu Goose Goose Duck: **Bật voice**, cho phép mic, rồi giữ **V** hoặc nút **Giữ để nói**. Đứng gần nghe rõ, xa dần nhỏ tiếng, từ 18 m thì im. Có **Mic mở**, tắt nghe và chỉnh âm lượng riêng; tối đa 6 kết nối gần mỗi người. Tắt voice hoặc rời tab sẽ nhả mic.
+
+Mic cần HTTPS hoặc localhost. Khác mạng có thể cần TURN; Cloudflare Tunnel không chuyển tiếp tiếng WebRTC. Xem [thiết lập voice](docs/proximity-voice.md).
+
 ## Mã vào cửa
 
 Game có một mã dùng chung cho cả công ty, không phải tài khoản từng người. Trang admin hiển thị sẵn link dạng `https://.../?code=ABC234`: gửi link đó vào nhóm Zalo, bấm vào là tự điền mã.
@@ -103,19 +141,9 @@ Tên và lời nói của thầy trụ trì nằm ở đầu file `client/src/sc
 
 ### Mở game ra internet
 
-Dùng Cloudflare Tunnel, chạy trong container riêng nên không phải cài gì lên máy và không mở cổng nào:
+Game trên máy Windows này mở tại `https://game.hthlogistics.top/` qua Cloudflare Tunnel cố định. Xem [docs/deployment.md](docs/deployment.md) để vận hành.
 
-```bash
-docker run -d --name hth-tunnel --restart unless-stopped --network hth-net --cap-drop ALL --security-opt no-new-privileges --memory 256m --pids-limit 128 cloudflare/cloudflared:latest tunnel --no-autoupdate --url http://hth:3000
-```
-
-Xem link:
-
-```bash
-bash scripts/link.sh
-```
-
-Đây là tunnel thử: link đổi mỗi khi container hoặc máy khởi động lại, và Cloudflare không cam kết dùng lâu dài. Muốn link cố định thì cần tài khoản Cloudflare và một tên miền. Nhớ chạy container game với `-e TRUST_PROXY=1` để giới hạn theo IP hoạt động đúng.
+Tunnel chạy trong container riêng, không mở cổng router. Game dùng `TRUST_PROXY=1` và chỉ xuất cổng local `127.0.0.1:3000`. Token Tunnel nằm ngoài repo trong Docker volume riêng.
 
 Tailscale Funnel cũng chạy được nhưng đo thực tế rất chậm (khứ hồi khoảng 3 giây, kết nối hay rớt), nên không dùng cho game này.
 
@@ -137,8 +165,9 @@ Mất `localStorage` trên một máy thì người chơi đó được coi là 
 
 ## HTTPS
 
-Chạy HTTP trong LAN là đủ. Chỉ hai tính năng cần HTTPS:
+Chạy HTTP trong LAN dùng được các hoạt động cơ bản. Các tính năng cần HTTPS:
 
+- **Trò chuyện bằng mic.** Trình duyệt chỉ cho xin quyền mic trên HTTPS hoặc localhost.
 - **Lắc điện thoại khi rút quẻ.** Không có HTTPS thì dùng chạm giữ.
 - **Nút Chia sẻ trực tiếp sang ứng dụng khác.** Không có HTTPS thì dùng nút tải ảnh về rồi gửi tay.
 
@@ -167,23 +196,29 @@ Lệnh này giả lập người chơi và in CPU server cùng độ trễ chat.
 ### Cấu trúc mã
 
 ```text
-shared/          Dùng chung client + server: bố cục sân, va chạm, hằng số giao thức
+shared/          Dùng chung client + server: bố cục sân, va chạm, hằng số giao thức, luật nhịp, câu cá, đầu hồ, voice
 server/
   index.js       Express + Socket.IO, phục vụ client đã build
-  rooms.js       Phòng chung: người online, gói vị trí 10 lần/giây, chat, kết nối lại
+  rooms.js       Phòng chung: người online, gói vị trí 10 lần/giây, chat, kết nối lại, định tuyến sự kiện
   wishes.js      Lời ước và quẻ vận đơn
   bell.js        Chuông cá nhân, lịch và sự kiện chuông
+  fishing.js     Câu cá: định giờ cắn, roll loài, tự mô phỏng pha giằng co
   meditation.js  Giữ chỗ chiếu, nhịp thở chung
+  rhythm.js      Minigame Nhịp chuông và Nhịp sen
+  riddle.js      Đố thuật ngữ với sư chú giữ cổng
+  pitch.js       Đầu hồ đấu với NPC
+  voice.js       Ghép cặp và chuyển tín hiệu voice theo khoảng cách
   admin.js       API và trang admin (giao diện ở admin-ui/)
   filter.js      Lọc từ có phân biệt dấu
+  limits.js      Giới hạn theo IP, mã vào cửa
   db.js          SQLite
 client/src/
-  scene/         Tu viện, cảng, địa hình, trời, hạt, con vật, lời ước 3D
-  player/        Nhân vật, điều khiển, camera, người chơi trên máy
+  scene/         Tu viện, cảng, địa hình, trời, hạt, con vật, lời ước 3D, sân chơi của từng hoạt động
+  player/        Nhân vật, trang phục, điều khiển, camera, người chơi trên máy
   net/           Socket, đồng bộ đồng hồ, nội suy người khác
   activities/    Mỗi hoạt động một file
-  ui/            HUD, chat, Sổ, Bảng ước, hộp thoại
-  audio/         Toàn bộ âm thanh tạo bằng Web Audio
+  ui/            HUD, chat, Sổ, Bảng ước, hộp thoại, bảng điều khiển minigame
+  audio/         Hiệu ứng Web Audio, trình phát nhạc MP3, voice
   share/         Ảnh chia sẻ và ảnh vận đơn
 ```
 
@@ -192,5 +227,5 @@ client/src/
 - **`playerId` là bí mật.** Nó thay mật khẩu cho Sổ cá nhân nên không bao giờ gửi cho người khác. Dữ liệu realtime dùng `sid` số riêng, REST đọc `playerId` từ header chứ không đặt trên URL.
 - **Server là nguồn sự thật.** Client chỉ gửi ý định. Server kiểm tra giới hạn tần suất, độ dài, từ cấm và kẹp vị trí trong sân.
 - **Đồng hồ.** Client ước lượng giờ server kiểu NTP. Ngày đêm, xe đầu kéo, con mèo, nhịp thở và đếm ngược đều tính từ giờ server nên mọi máy thấy giống nhau mà không tốn băng thông.
-- **Không có request ra ngoài.** Toàn bộ mô hình dựng bằng code, âm thanh tạo bằng Web Audio, font dùng của hệ thống. CSP trên server chặn luôn mọi kết nối ra ngoài.
+- **Tài nguyên cùng nguồn.** Mô hình tĩnh dựng bằng Blender trong `tools/blender/`, export GLB cùng nguồn (`client/public/models/`), font dùng của hệ thống. Voice dùng WebRTC giữa người chơi; chỉ gọi STUN/TURN khi người vận hành cấu hình.
 - **Chat không được lưu ở đâu cả.** Server chỉ phát rồi quên.

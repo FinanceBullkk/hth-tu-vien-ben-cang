@@ -8,3 +8,18 @@ data/
 .env
 .env.*
 .claude/settings.local.json
+
+# Bản build tạm và file tạm của công cụ
+client/dist-verify-tmp/
+.zcode/
+__pycache__/
+
+# Ảnh chụp trong báo cáo, chỉ dùng tại máy
+plans/reports/*.png
+
+# Lời ước xuất từ bản deploy (dữ liệu thật, xem scripts/import-wishes.js)
+wishes-export.json
+
+# Nhạc nặng mà code không dùng
+client/public/music/blissful-retreat.mp3
+client/public/music/where-winds-meet-login.mp3

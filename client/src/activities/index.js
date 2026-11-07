@@ -1,21 +1,27 @@
 // Điều phối hoạt động: phát hiện điểm gần người chơi, bật/tắt hoạt động, khoá di chuyển.
-import { ABBOT, BELL, CONTAINERS, POND, TEA, TREE, dist2d, inBox, isInsideHall } from '../../../shared/layout.js';
-import { BellActivity, BellEvent } from './bell.js';
+import { ABBOT, BELL, CONTAINERS, GATE_MONK, LAKE, PITCH_ZONE, POND, TEA, TREE, dist2d, inBox, isInsideHall, lakeDistance } from '../../../shared/layout.js';
+import { BellEvent } from './bell-event.js';
+import { FishingActivity } from './fishing.js';
 import { FortuneActivity } from './fortune.js';
-import { MeditationActivity } from './meditation.js';
+import { PitchActivity } from './pitch.js';
+import { RiddleActivity } from './riddle.js';
+import { RhythmActivity } from './rhythm.js';
 import { WishActivity } from './wish.js';
 
-const KIND_CODE = { bell: 2, write: 3, shake: 4 };
+const KIND_CODE = { bell: 2, write: 3, shake: 4, fish: 5, pitch: 6 };
 
 export class Activities {
   constructor(app) {
     this.app = app;
     this.current = null;
-    this.bell = new BellActivity(app);
+    this.bell = new RhythmActivity(app, 'bell');
     this.bellEvent = new BellEvent(app);
-    this.meditation = new MeditationActivity(app);
+    this.meditation = new RhythmActivity(app, 'meditate');
     this.wish = new WishActivity(app);
     this.fortune = new FortuneActivity(app);
+    this.fishing = new FishingActivity(app);
+    this.pitch = new PitchActivity(app);
+    this.riddle = new RiddleActivity(app);
     this.zoneKey = '';
   }
 
@@ -67,8 +73,22 @@ export class Activities {
     if (dist2d(x, z, ABBOT.x, ABBOT.z) < ABBOT.actionRadius) {
       return { key: 'abbot', label: 'Xin thầy một lời', run: () => this.app.world.abbot.advise() };
     }
+    if (dist2d(x, z, GATE_MONK.x, GATE_MONK.z) < GATE_MONK.actionRadius) {
+      return { key: 'riddle', label: 'Xin sư chú một câu đố', run: () => this.riddle.start() };
+    }
     if (dist2d(x, z, BELL.x, BELL.z) < BELL.radius) {
-      return { key: 'bell', label: 'Thỉnh chuông', run: () => this.bell.start() };
+      return { key: 'bell', label: 'Chơi nhịp chuông', run: () => this.bell.start() };
+    }
+    if (lakeDistance(x, z) < LAKE.shoreWidth) {
+      return { key: 'fish', label: 'Câu cá', run: () => this.fishing.start() };
+    }
+    // Dải sát tường container ưu tiên dán lời ước trước vòng ném hàng,
+    // để hai hoạt động dùng chung một bức tường không giành chỗ của nhau.
+    if (x > CONTAINERS.minX - 1.9 && z >= CONTAINERS.minZ - 1.2 && z <= CONTAINERS.maxZ + 1.2) {
+      return { key: 'container', label: 'Dán lời ước lên container', run: () => this.wish.start('container') };
+    }
+    if (dist2d(x, z, PITCH_ZONE.x, PITCH_ZONE.z) < PITCH_ZONE.radius) {
+      return { key: 'pitch', label: 'Chơi đầu hồ', run: () => this.pitch.start() };
     }
     if (dist2d(x, z, TREE.x, TREE.z) < TREE.radius) {
       return { key: 'tree', label: 'Treo lời ước lên cây', run: () => this.wish.start('tree') };
@@ -103,9 +123,7 @@ export class Activities {
 
   /** @returns {boolean} true nếu phím đã được hoạt động dùng. */
   onKey(code, isDown) {
-    if (this.bellEvent.ringShown && isDown && this.bellEvent.onKey(code)) return true;
     if (!this.current) return false;
-    if (this.current === this.bell && !isDown) return false;
     return this.current.onKey?.(code, isDown) ?? false;
   }
 }

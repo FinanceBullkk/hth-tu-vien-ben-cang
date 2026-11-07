@@ -94,6 +94,7 @@ export function createAdminRouter({ config, saveContent, db, room, wishes, bell,
       bannedWords: config.bannedWords,
       fortunes: config.fortunes,
       meditationPhrases: config.meditationPhrases,
+      riddles: config.riddles,
       welcomeMessage: config.welcomeMessage,
       joinCode: config.joinCode,
       activeBell: bell.publicEvent(),
@@ -168,6 +169,23 @@ export function createAdminRouter({ config, saveContent, db, room, wishes, bell,
       patch.meditationPhrases = tiers;
     }
     if (body.welcomeMessage !== undefined) patch.welcomeMessage = cleanText(body.welcomeMessage, 300);
+    if (body.riddles !== undefined) {
+      const list = Array.isArray(body.riddles) ? body.riddles.map((r) => {
+        const a = strList(r?.a, 60, 6);
+        if (!a?.length) return null;
+        return {
+          q: cleanText(r.q, 200),
+          a,
+          hint: cleanText(r.hint, 120),
+          tier: [1, 2, 3].includes(r.tier) ? r.tier : 1,
+        };
+      }).filter((r) => r && r.q) : null;
+      if (!list?.length) {
+        res.status(400).json({ error: 'Mỗi câu đố cần câu hỏi và ít nhất một đáp án.' });
+        return;
+      }
+      patch.riddles = list;
+    }
     saveContent(patch);
     res.json({ ok: true });
   });

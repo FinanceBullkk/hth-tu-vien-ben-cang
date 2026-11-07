@@ -49,7 +49,7 @@ Mở `http://localhost:5173`. Lần chạy đầu, server tự tạo `config.jso
 
 - Server là nguồn sự thật: client chỉ gửi ý định, server kiểm tra lại mọi thứ.
 - Không gửi `playerId` cho người chơi khác và không đặt nó trên URL.
-- Không thêm request ra ngoài. Mô hình, âm thanh và font đều nằm trong game.
+- Mô hình và font nằm trong game: model tĩnh dựng bằng Blender (`tools/blender/`) và export GLB cùng nguồn vào `client/public/models/` — luôn kèm bản code dự phòng khi file chưa tải được. Nhạc nền là file MP3 cùng nguồn trong `client/public/music/`, phát bằng thẻ `<audio>`; không nhúng trình phát bên ngoài.
 - Đổi hành vi ở server thì thêm hoặc sửa test trong `test/`.
 
 Xem thêm phần "Dành cho dev" trong `README.md`.

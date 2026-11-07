@@ -1,0 +1,65 @@
+/* HUD đầu hồ: phủ toàn màn hình trên cảnh 3D, cảnh mờ đi khi đang ngắm và rõ lại khi tên bay. */
+.pitch-hud { position: fixed; inset: 0; color: #f6ecd8; outline: none; touch-action: none; user-select: none; -webkit-user-select: none; text-shadow: 0 1px 4px rgba(0, 0, 0, .75); transition: backdrop-filter .35s ease; }
+/* Chỉ viết bản không tiền tố: viết cả hai thì bước minify CSS bỏ mất bản Chrome cần. */
+.pitch-hud.aiming { backdrop-filter: blur(5px) saturate(.85); cursor: none; }
+.pitch-hud[hidden], .pitch-hud [hidden] { display: none !important; }
+#rhythmLayer:has(.pitch-hud:not([hidden])) { background: none; padding: 0; }
+
+.pitch-field { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(100vw, calc(100dvh * 16 / 9)); aspect-ratio: 16 / 9; pointer-events: none; }
+.pitch-target { position: absolute; aspect-ratio: 1; transform: translate(-50%, -50%); border: 2px solid rgba(255, 250, 235, .9); border-radius: 50%; background: rgba(255, 250, 235, .07); box-shadow: 0 0 10px rgba(0, 0, 0, .4); }
+.pitch-target.keys { border-color: #8fc7ef; background: rgba(120, 180, 230, .1); }
+.pitch-target.on { box-shadow: 0 0 16px rgba(255, 233, 180, .55); }
+.pitch-target.keys.on { box-shadow: 0 0 16px rgba(143, 199, 239, .65); }
+.pitch-target.ready { border-color: #ffd46e; border-width: 3px; box-shadow: 0 0 24px rgba(255, 212, 110, .9); }
+.pitch-target-fill { position: absolute; inset: 0; border-radius: 50%; background: rgba(255, 244, 214, .42); transform: scale(0); }
+.pitch-target.keys .pitch-target-fill { background: rgba(160, 208, 244, .42); }
+.pitch-target.ready .pitch-target-fill { background: rgba(255, 212, 110, .55); }
+
+.pitch-cursor { position: absolute; transform: translate(-50%, -50%); pointer-events: none; }
+.pitch-cursor.mouse { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff6e3; background: rgba(40, 30, 22, .65); box-shadow: 0 0 6px rgba(0, 0, 0, .6); }
+.pitch-cursor.mouse::after { content: ''; position: absolute; left: 50%; top: 50%; width: 5px; height: 5px; margin: -2.5px; border-radius: 50%; background: #fff6e3; }
+.pitch-cursor.keys { width: 19px; height: 19px; transform: translate(-50%, -50%) rotate(45deg); border: 2px solid #d7ecfb; background: #3f86bd; box-shadow: 0 0 8px rgba(63, 134, 189, .9); }
+
+.pitch-clock { position: absolute; top: calc(10px + var(--safe-t, 0px)); left: 50%; transform: translateX(-50%); padding: 3px 14px; border-radius: 14px; background: rgba(15, 12, 10, .5); font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; pointer-events: none; }
+.pitch-combo { position: absolute; top: calc(44px + var(--safe-t, 0px)); left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; line-height: 1.05; pointer-events: none; }
+.pitch-combo small { font-size: 12px; opacity: .85; }
+.pitch-combo b { font: 500 32px var(--serif); }
+
+.pitch-goal { position: absolute; left: calc(12px + var(--safe-l, 0px)); top: calc(50px + var(--safe-t, 0px)); width: min(230px, 42vw); padding: 8px 10px; border-left: 2px solid rgba(255, 212, 110, .8); background: linear-gradient(90deg, rgba(15, 12, 10, .55), transparent); font-size: 12.5px; pointer-events: none; }
+.pitch-goal p { margin: 0 0 6px; line-height: 1.3; }
+.pitch-score-row { position: relative; display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; font-size: 12.5px; }
+.pitch-score-row b { font-variant-numeric: tabular-nums; color: #ffe2a6; }
+.pitch-score-row em { position: absolute; right: -44px; top: -2px; font: italic 700 18px var(--serif); color: #ffd46e; opacity: 0; }
+.pitch-score-row em.miss { font-size: 13px; color: #f4a99f; right: -40px; top: 1px; }
+.pitch-score-row em.go { animation: pitchGain 1.5s ease-out both; }
+@keyframes pitchGain { 0% { opacity: 0; transform: translateX(-8px); } 15%, 70% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+
+.pitch-exit { position: absolute; right: calc(12px + var(--safe-r, 0px)); top: calc(10px + var(--safe-t, 0px)); cursor: pointer; }
+.pitch-aim-time { position: absolute; left: 50%; bottom: calc(26px + var(--safe-b, 0px)); transform: translateX(-50%); font-size: 13px; font-variant-numeric: tabular-nums; pointer-events: none; }
+.pitch-hint { position: absolute; left: 50%; bottom: calc(50px + var(--safe-b, 0px)); transform: translateX(-50%); width: min(520px, 70vw); text-align: center; font-size: 14.5px; min-height: 20px; pointer-events: none; }
+.pitch-throw { position: absolute; right: calc(18px + var(--safe-r, 0px)); bottom: calc(22px + var(--safe-b, 0px)); width: 64px; height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px solid rgba(255, 244, 214, .85); border-radius: 12px; background: rgba(30, 22, 16, .7); color: inherit; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+.pitch-throw small { font-size: 10px; font-weight: 400; opacity: .8; }
+
+/* Màn dọc: né nút voice ở góc trái, chừa chỗ cho nút Ném. */
+@media (max-width: 600px) {
+  .pitch-goal { top: calc(58px + var(--safe-t, 0px)); left: 60px; width: min(210px, 52vw); }
+  .pitch-hint { left: 12px; width: calc(100vw - 100px); transform: none; text-align: left; font-size: 13px; }
+  .pitch-aim-time { left: 12px; transform: none; }
+}
+
+.pitch-card { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(400px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow-y: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 9px; color: #f3e6cf; text-shadow: none; }
+.pitch-card .btn:not(.ghost) { background: #a8552a; border-color: #d98c4e; color: #fff6e6; }
+.pitch-card p { margin: 0; font-size: 13.5px; line-height: 1.4; }
+.pitch-opponent { display: flex; flex-direction: column; gap: 1px; padding: 9px 12px; border: 1px solid rgba(243, 230, 207, .3); border-radius: 8px; background: rgba(255, 255, 255, .05); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.pitch-opponent:hover, .pitch-opponent:focus-visible { border-color: #ffd46e; background: rgba(255, 212, 110, .12); }
+.pitch-opponent small { font-size: 12px; opacity: .8; }
+
+.pitch-result-body { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.pitch-outcome { margin: 0; font: 500 38px var(--serif); letter-spacing: .04em; }
+.pitch-outcome.win { color: #ffd46e; }
+.pitch-outcome.lose { color: #d7c6b4; }
+.pitch-versus { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: 100%; }
+.pitch-versus div { display: flex; flex-direction: column; align-items: center; }
+.pitch-versus b { font: 500 28px var(--serif); font-variant-numeric: tabular-nums; }
+.pitch-versus small { font-size: 12px; opacity: .85; }
+.pitch-reward { display: flex; align-items: center; gap: 8px; }

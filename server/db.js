@@ -65,6 +65,49 @@ CREATE TABLE IF NOT EXISTS daily_stats (
   wishes INTEGER NOT NULL DEFAULT 0,
   bells INTEGER NOT NULL DEFAULT 0
 );
+CREATE TABLE IF NOT EXISTS fish_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  player_id TEXT NOT NULL,
+  fish_id TEXT NOT NULL,
+  weight REAL NOT NULL,
+  grade TEXT NOT NULL,
+  local_date TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_fish_log_week ON fish_log(local_date, weight DESC);
+CREATE TABLE IF NOT EXISTS fish_caught (
+  player_id TEXT NOT NULL,
+  fish_id TEXT NOT NULL,
+  count INTEGER NOT NULL DEFAULT 0,
+  best_weight REAL NOT NULL DEFAULT 0,
+  first_caught_at INTEGER NOT NULL,
+  PRIMARY KEY (player_id, fish_id)
+);
+CREATE TABLE IF NOT EXISTS pitch_scores (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  player_id TEXT NOT NULL,
+  score INTEGER NOT NULL,
+  rank TEXT NOT NULL,
+  local_date TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_pitch_week ON pitch_scores(local_date, score DESC);
+CREATE TABLE IF NOT EXISTS teu_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  player_id TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  reason TEXT NOT NULL,
+  local_date TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_teu_week ON teu_log(local_date, player_id);
+CREATE TABLE IF NOT EXISTS riddle_daily (
+  player_id TEXT NOT NULL,
+  local_date TEXT NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  correct INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (player_id, local_date)
+);
 `;
 
 function publicWish(row, playerId) {
@@ -89,15 +132,24 @@ export class Db {
     this.db.pragma('synchronous = NORMAL');
     this.db.pragma('foreign_keys = ON');
     this.db.exec(SCHEMA);
+    this.#migrate();
     this.#prepare();
+  }
+
+  // CREATE TABLE IF NOT EXISTS không thêm cột cho DB cũ: kiểm tra rồi ALTER từng cột cosmetic.
+  #migrate() {
+    const have = new Set(this.db.pragma('table_info(players)').map((c) => c.name));
+    for (const col of ['attire', 'weapon', 'effect', 'teu', 'riddle_correct', 'pitch_best', 'unlocked']) {
+      if (!have.has(col)) this.db.exec(`ALTER TABLE players ADD COLUMN ${col} INTEGER NOT NULL DEFAULT 0`);
+    }
   }
 
   #prepare() {
     const p = (sql) => this.db.prepare(sql);
     this.s = {
-      upsertPlayer: p(`INSERT INTO players (id,name,color,hat,first_seen,last_seen,visits)
-        VALUES (@id,@name,@color,@hat,@now,@now,@inc)
-        ON CONFLICT(id) DO UPDATE SET name=@name,color=@color,hat=@hat,last_seen=@now,visits=visits+@inc`),
+      upsertPlayer: p(`INSERT INTO players (id,name,color,hat,attire,weapon,effect,first_seen,last_seen,visits)
+        VALUES (@id,@name,@color,@hat,@attire,@weapon,@effect,@now,@now,@inc)
+        ON CONFLICT(id) DO UPDATE SET name=@name,color=@color,hat=@hat,attire=@attire,weapon=@weapon,effect=@effect,last_seen=@now,visits=visits+@inc`),
       player: p('SELECT * FROM players WHERE id=?'),
       bumpBell: p('UPDATE players SET bell_count=bell_count+1 WHERE id=?'),
       stat: p(`INSERT INTO daily_stats (local_date,visits,wishes,bells) VALUES (@d,@v,@w,@b)
@@ -134,7 +186,46 @@ export class Db {
       bellEventInsert: p('INSERT INTO bell_events (at,participants,on_beat) VALUES (?,?,?)'),
       bellEventPlayer: p('INSERT OR IGNORE INTO bell_event_players (event_id,player_id) VALUES (?,?)'),
       bellEventsOf: p('SELECT COUNT(*) c FROM bell_event_players WHERE player_id=?'),
+      // TEU: mỗi lần cộng đều ghi log để tính bảng tuần.
+      teuInsert: p('INSERT INTO teu_log (player_id,amount,reason,local_date,created_at) VALUES (@pid,@amount,@reason,@date,@now)'),
+      teuBump: p('UPDATE players SET teu=teu+@amount WHERE id=@pid'),
+      teuWeekTop: p(`SELECT t.player_id, pl.name, SUM(t.amount) teu FROM teu_log t
+        JOIN players pl ON pl.id = t.player_id
+        WHERE t.local_date >= @since GROUP BY t.player_id ORDER BY teu DESC, pl.name LIMIT 10`),
+      // Cá: log từng con + tổng hợp bộ sưu tập.
+      fishLogInsert: p(`INSERT INTO fish_log (player_id,fish_id,weight,grade,local_date,created_at)
+        VALUES (@pid,@fishId,@weight,@grade,@date,@now)`),
+      fishCaughtUpsert: p(`INSERT INTO fish_caught (player_id,fish_id,count,best_weight,first_caught_at)
+        VALUES (@pid,@fishId,1,@weight,@now)
+        ON CONFLICT(player_id,fish_id) DO UPDATE SET count=count+1,
+          best_weight=MAX(best_weight,@weight)`),
+      fishHasCaught: p('SELECT 1 FROM fish_caught WHERE player_id=? AND fish_id=?'),
+      fishCaughtOf: p('SELECT fish_id,count,best_weight,first_caught_at FROM fish_caught WHERE player_id=? ORDER BY first_caught_at'),
+      fishWeekTop: p(`SELECT f.player_id, pl.name, f.fish_id, f.weight, f.local_date FROM fish_log f
+        JOIN players pl ON pl.id = f.player_id
+        WHERE f.local_date >= @since ORDER BY f.weight DESC, f.id ASC LIMIT 10`),
+      // Đầu hồ: điểm theo trận.
+      pitchInsert: p(`INSERT INTO pitch_scores (player_id,score,rank,local_date,created_at)
+        VALUES (@pid,@score,@rank,@date,@now)`),
+      pitchBestBump: p('UPDATE players SET pitch_best=MAX(pitch_best,@score) WHERE id=@pid'),
+      pitchBest: p('SELECT MAX(score) best, COUNT(*) plays FROM pitch_scores WHERE player_id=?'),
+      pitchWeekTop: p(`SELECT s.player_id, pl.name, MAX(s.score) score FROM pitch_scores s
+        JOIN players pl ON pl.id = s.player_id
+        WHERE s.local_date >= @since GROUP BY s.player_id ORDER BY score DESC, pl.name LIMIT 10`),
+      // Đố: đếm lượt trong ngày.
+      riddleDayUpsert: p(`INSERT INTO riddle_daily (player_id,local_date,attempts,correct) VALUES (@pid,@date,@att,@cor)
+        ON CONFLICT(player_id,local_date) DO UPDATE SET attempts=attempts+@att, correct=correct+@cor`),
+      riddleDayGet: p('SELECT attempts, correct FROM riddle_daily WHERE player_id=? AND local_date=?'),
+      riddleCorrectBump: p('UPDATE players SET riddle_correct=riddle_correct+1 WHERE id=?'),
+      // Mở khoá màu áo quý.
+      unlockBump: p('UPDATE players SET unlocked=unlocked|@mask, teu=teu-@price WHERE id=@pid AND teu>=@price'),
     };
+    this.teuTx = this.db.transaction((pid, amount, reason, date, now) => {
+      if (amount > 0) {
+        this.s.teuInsert.run({ pid, amount, reason, date, now });
+        this.s.teuBump.run({ pid, amount });
+      }
+    });
     this.likeTx = this.db.transaction((wishId, playerId) => {
       const res = this.s.likeInsert.run(wishId, playerId);
       if (res.changes) this.s.likeBump.run(wishId);
@@ -147,8 +238,12 @@ export class Db {
     });
   }
 
-  touchPlayer({ id, name, color, hat, now, isVisit }) {
-    this.s.upsertPlayer.run({ id, name, color, hat, now, inc: isVisit ? 1 : 0 });
+  touchPlayer({ id, name, color, hat, attire = 0, weapon = 0, effect = 0, now, isVisit }) {
+    this.s.upsertPlayer.run({ id, name, color, hat, attire, weapon, effect, now, inc: isVisit ? 1 : 0 });
+  }
+
+  playerRow(id) {
+    return this.s.player.get(id);
   }
 
   bumpStat(date, { visits = 0, wishes = 0, bells = 0 }) {
@@ -233,16 +328,75 @@ export class Db {
     return this.bellEventTx(at, players, onBeat);
   }
 
+  addTeu(playerId, amount, reason, date, now = Date.now()) {
+    this.teuTx(playerId, amount, reason, date, now);
+  }
+
+  fishCatch(playerId, fishId, weight, grade, date, now = Date.now()) {
+    this.s.fishLogInsert.run({ pid: playerId, fishId, weight, grade, date, now });
+    this.s.fishCaughtUpsert.run({ pid: playerId, fishId, weight, now });
+  }
+
+  hasCaught(playerId, fishId) {
+    return Boolean(this.s.fishHasCaught.get(playerId, fishId));
+  }
+
+  fishCollection(playerId) {
+    return this.s.fishCaughtOf.all(playerId);
+  }
+
+  addPitchScore(playerId, score, rank, date, now = Date.now()) {
+    this.s.pitchInsert.run({ pid: playerId, score, rank, date, now });
+    this.s.pitchBestBump.run({ pid: playerId, score });
+  }
+
+  pitchBest(playerId) {
+    return this.s.pitchBest.get(playerId) || { best: null, plays: 0 };
+  }
+
+  riddleAttemptsToday(playerId, date) {
+    return this.s.riddleDayGet.get(playerId, date)?.attempts ?? 0;
+  }
+
+  addRiddleAttempt(playerId, date) {
+    this.s.riddleDayUpsert.run({ pid: playerId, date, att: 1, cor: 0 });
+  }
+
+  addRiddleCorrect(playerId, date) {
+    this.s.riddleDayUpsert.run({ pid: playerId, date, att: 0, cor: 1 });
+    this.s.riddleCorrectBump.run(playerId);
+  }
+
+  /** Mở khoá một màu áo quý bằng TEU; trả về true nếu trừ điểm thành công. */
+  unlockPremium(playerId, mask, price) {
+    return this.s.unlockBump.run({ pid: playerId, mask, price }).changes > 0;
+  }
+
+  /** Bảng xếp hạng tuần: tính từ thứ Hai của tuần hiện tại theo múi giờ game. */
+  weekly(weekStart) {
+    return {
+      teu: this.s.teuWeekTop.all({ since: weekStart }),
+      fish: this.s.fishWeekTop.all({ since: weekStart }),
+      pitch: this.s.pitchWeekTop.all({ since: weekStart }),
+    };
+  }
+
   /** Toàn bộ dữ liệu cho "Sổ an của tôi". */
   book(playerId) {
     const player = this.s.player.get(playerId);
     if (!player) return null;
     const med = this.s.medStats.get(playerId);
+    const pitch = this.s.pitchBest.get(playerId) || { best: null, plays: 0 };
     return {
       name: player.name,
       visits: player.visits,
       bellCount: player.bell_count,
       bellEvents: this.s.bellEventsOf.get(playerId).c,
+      teu: player.teu ?? 0,
+      unlocked: player.unlocked ?? 0,
+      riddleCorrect: player.riddle_correct ?? 0,
+      pitch: { best: pitch.best, plays: pitch.plays },
+      fish: this.s.fishCaughtOf.all(playerId).map((f) => ({ id: f.fish_id, count: f.count, best: f.best_weight, firstAt: f.first_caught_at })),
       meditation: { sessions: med.sessions, best: med.best, last: med.last },
       wishes: this.s.wishesOf.all(playerId).map((r) => ({
         id: r.id,

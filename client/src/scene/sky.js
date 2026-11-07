@@ -7,9 +7,10 @@ const smooth = (a, b, x) => {
   return t * t * (3 - 2 * t);
 };
 
+// Palette thủy mặc kiểu WWM: hoàng hôn cam-vàng trầm, đêm xanh mực sẫm.
 const PAL = {
-  dusk: { top: '#34406f', mid: '#b4647a', hor: '#ffa45e', fog: '#d98a64', sun: '#ffb27a', hemiSky: '#ffc9a0', hemiGnd: '#6a4a3a' },
-  night: { top: '#050817', mid: '#0e1636', hor: '#1c2a55', fog: '#141d3c', sun: '#8fa8ff', hemiSky: '#51639f', hemiGnd: '#1c1a2a' },
+  dusk: { top: '#2c3468', mid: '#a05a72', hor: '#f59a52', fog: '#c98462', sun: '#ffa870', hemiSky: '#f5c098', hemiGnd: '#5f4638' },
+  night: { top: '#04060f', mid: '#0a1026', hor: '#182444', fog: '#0f162c', sun: '#9fb2ff', hemiSky: '#465587', hemiGnd: '#151321' },
 };
 const c = (hex) => new THREE.Color(hex);
 
@@ -25,6 +26,12 @@ export class DayNight {
     }
     this.fog = new THREE.Fog(this.dusk.fog.getHex(), 140, 780);
     scene.fog = this.fog;
+    // Halơ trăng: một đĩa mờ lớn phía sau vầng trăng, đậm chất tranh mực.
+    this.moonHaloMat = new THREE.MeshBasicMaterial({ color: 0xbfc8ea, transparent: true, opacity: 0, fog: false, depthWrite: false, blending: THREE.AdditiveBlending });
+    this.moonHalo = new THREE.Mesh(new THREE.CircleGeometry(58, 20), this.moonHaloMat);
+    this.moonHalo.position.set(-420, 620, 518);
+    this.moonHalo.lookAt(0, 0, 0);
+    scene.add(this.moonHalo);
 
     this.uniforms = {
       top: { value: this.dusk.top.clone() },
@@ -145,6 +152,10 @@ export class DayNight {
 
     this.starMat.opacity = smooth(0.45, 0.95, n);
     this.moonMat.opacity = smooth(0.3, 0.8, n);
+    this.moonHaloMat.opacity = smooth(0.18, 0.3, n);
+    // Đêm phủ sương dày hơn: cảnh gần chìm nhẹ vào mực, đúng chất tranh cuộn.
+    this.fog.near = 140 - 30 * n;
+    this.fog.far = 780 - 160 * n;
   }
 
   /** Giữ vòm trời bám theo camera để không bị cắt ở xa. */

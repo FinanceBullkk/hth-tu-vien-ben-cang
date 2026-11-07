@@ -75,6 +75,24 @@
       "Lần sau thử chậm hơn một chút nhé."
     ]
   },
+  "riddles": [
+    { "q": "Vận đơn đường biển viết tắt là gì?", "a": ["B/L", "BL", "bi l"], "hint": "Hai ký tự, có dấu gạch chéo", "tier": 1 },
+    { "q": "Đơn vị đo thể tích hàng trong booking là gì?", "a": ["CBM"], "hint": "Ba chữ cái, 'cubic metre'", "tier": 1 },
+    { "q": "Một container 40 feet bằng mấy TEU?", "a": ["2", "hai"], "hint": "20 feet là 1 TEU", "tier": 1 },
+    { "q": "Phí giữ container tại bãi quá ngày miễn phí gọi là gì?", "a": ["Demurrage", "dem"], "hint": "Hãng tàu thu, tiếng Anh", "tier": 2 },
+    { "q": "Phí giữ hàng tại kho quá hạn gọi là gì?", "a": ["Storage"], "hint": "Tiếng Anh, 7 chữ cái", "tier": 2 },
+    { "q": "Bên nhận hàng trên vận đơn gọi là gì (tiếng Anh)?", "a": ["Consignee"], "hint": "Ngược với shipper", "tier": 2 },
+    { "q": "Nơi tàu cập để xếp dỡ hàng gọi là gì?", "a": ["Cảng", "cang", "berth", "cầu bến"], "hint": "Game này tên là Tu viện bên…", "tier": 1 },
+    { "q": "Có 5 container, mỗi cái 2 TEU. Tổng cộng mấy TEU?", "a": ["10", "mười"], "hint": "Nhẩm nha", "tier": 1 },
+    { "q": "Giấy xác nhận đã đặt chỗ trên tàu gọi là gì?", "a": ["Booking", "đặt chỗ", "dat cho"], "hint": "Việc đầu tiên trước khi gửi hàng", "tier": 1 },
+    { "q": "Hàng lẻ gom chung tại kho chờ đóng container, viết tắt là gì?", "a": ["CFS"], "hint": "Ba chữ cái", "tier": 2 },
+    { "q": "Sáng sớm trên hồ sen có gì lơ lửng mà chỉ có người đến sớm mới thấy?", "a": ["Sương", "sương mù", "suong"], "hint": "Không phải hơi thở của ai cả", "tier": 3 },
+    { "q": "Mã vào cửa tu viện có mấy ký tự?", "a": ["6", "sáu"], "hint": "Đếm lại mã trong nhóm Zalo", "tier": 1 },
+    { "q": "Con gì bơi ở cầu tàu mà lại là đồ thất lạc của cảng?", "a": ["Container", "mô hình container", "mo hinh container", "thất lạc"], "hint": "Ai đó đánh rơi xuống biển", "tier": 2 },
+    { "q": "Tiếng chuông tu viện ngân vào khung giờ chiều nào theo lịch mặc định?", "a": ["17:30", "17h30", "5h30", "1730"], "hint": "Đúng giờ tan làm", "tier": 2 },
+    { "q": "Thứ gì đi khắp thế giới mà vẫn nằm gọn trong một container?", "a": ["Hàng", "lô hàng", "container"], "hint": "Cái cả nhà mình gửi mỗi ngày", "tier": 3 },
+    { "q": "Chim gì hay lượn quanh gác chuông khi có người chơi nhịp giỏi?", "a": ["Phượng hoàng", "phượng", "phuong hoang"], "hint": "Cặp bài trùng với rồng", "tier": 2 }
+  ],
   "bannedWords": [
     "đm", "dm", "đmm", "dmm", "đcm", "dcm", "đkm", "dkm", "đéo", "đếch", "deo me",
     "địt", "djt", "dit me", "dit con", "dit cu", "đụ", "đụ má", "du ma", "đụ mẹ", "du me",

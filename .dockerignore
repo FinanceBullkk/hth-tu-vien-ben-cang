@@ -8,3 +8,10 @@ config.json
 .github
 .env
 .env.*
+.zcode
+plans
+wishes-export.json
+client/dist-verify-tmp
+**/__pycache__
+client/public/music/blissful-retreat.mp3
+client/public/music/where-winds-meet-login.mp3

@@ -1,7 +1,11 @@
-// Nhân vật chibi: màu áo, kiểu tóc/mũ, hoạt ảnh đi, ngồi, thỉnh chuông, vẫy tay, tên nổi trên đầu.
+// Nhân vật chibi: màu áo, kiểu tóc/mũ, trang phục tiên hiệp, vũ khí, hào quang,
+// hoạt ảnh đi, ngồi, thỉnh chuông, vẫy tay, tên nổi trên đầu.
 import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { ACTIVITY, ACTIVITY_LABEL, SHIRT_COLORS } from '../../../shared/protocol.js';
+import { createAttire } from './avatar-attire.js';
+import { createWeapon } from './avatar-weapon.js';
+import { createEffect } from './avatar-effect.js';
 
 const G = {
   body: new THREE.CylinderGeometry(0.17, 0.25, 0.5, 8),
@@ -96,9 +100,13 @@ function buildHat(hat) {
 }
 
 export class Avatar {
-  constructor({ name, color = 0, hat = 0, isLocal = false }) {
+  constructor({ name, color = 0, hat = 0, attire = 0, weapon = 0, effect = 0, lowQuality = false, isLocal = false }) {
     this.isLocal = isLocal;
     this.name = name;
+    this.attireIndex = attire;
+    this.weaponIndex = weapon;
+    this.effectIndex = effect;
+    this.lowQuality = lowQuality;
     this.root = new THREE.Group();
     this.rig = new THREE.Group();
     this.root.add(this.rig);
@@ -122,6 +130,18 @@ export class Avatar {
     this.legL = limb(-0.1, 0.36, M.pants);
     this.legR = limb(0.1, 0.36, M.pants);
     this.rig.add(this.body, this.head, this.armL, this.armR, this.legL, this.legR);
+    this.attire = createAttire(attire, color, this.armL, this.armR);
+    this.rig.add(this.attire.group);
+
+    // Vũ khí gác sau lưng, nghiêng chéo: gốc group đặt tại lưng, gốc model tại cán.
+    this.weaponFx = createWeapon(weapon);
+    this.weaponFx.group.position.set(0, 0.62, -0.21);
+    this.weaponFx.group.rotation.set(0.12, 0, -0.58);
+    this.rig.add(this.weaponFx.group);
+
+    this.aura = createEffect(effect, lowQuality);
+    if (this.aura.points) this.root.add(this.aura.points);
+    this.aura.setWeapon?.(weapon);
 
     this.halo = new THREE.Mesh(G.halo, M.halo);
     this.halo.position.y = 0.03;
@@ -160,11 +180,41 @@ export class Avatar {
     this.nameEl.textContent = name;
   }
 
-  setLook(color, hat) {
+  setLook(color, hat, attire = this.attireIndex, weapon = this.weaponIndex, effect = this.effectIndex) {
     const mat = shirtMat(color);
     this.body.material = mat;
     this.armL.children[0].material = mat;
     this.armR.children[0].material = mat;
+    if (attire !== this.attireIndex) {
+      this.attireIndex = attire;
+      this.rig.remove(this.attire.group);
+      this.attire = createAttire(attire, color, this.armL, this.armR);
+      this.rig.add(this.attire.group);
+    } else {
+      this.attire.setColor(color);
+    }
+    if (weapon !== this.weaponIndex) {
+      this.weaponIndex = weapon;
+      this.weaponFx.discard?.();
+      this.rig.remove(this.weaponFx.group);
+      this.weaponFx = createWeapon(weapon);
+      this.weaponFx.group.position.set(0, 0.62, -0.21);
+      this.weaponFx.group.rotation.set(0.12, 0, -0.58);
+      this.rig.add(this.weaponFx.group);
+      this.aura.setWeapon?.(weapon);
+    }
+    if (effect !== this.effectIndex) {
+      this.effectIndex = effect;
+      if (this.aura.points) {
+        this.root.remove(this.aura.points);
+        this.aura.dispose();
+      }
+      this.aura = createEffect(effect, this.lowQuality);
+      if (this.aura.points) {
+        if (this.fading > 0) this.aura.beginFade();
+        this.root.add(this.aura.points);
+      }
+    }
     this.head.remove(this.hatGroup);
     this.hatGroup = buildHat(hat);
     this.head.add(this.hatGroup);
@@ -200,6 +250,10 @@ export class Avatar {
         o.castShadow = false;
       }
     });
+    if (this.aura.points) {
+      this.aura.beginFade();
+      this.aura.points.castShadow = false;
+    }
   }
 
   update(dt, moving, cameraDist = 0) {
@@ -228,6 +282,15 @@ export class Avatar {
     } else if (this.activity === ACTIVITY.shake) {
       armLx = -1.2 + Math.sin(t * 22) * 0.25;
       armRx = -1.2 + Math.sin(t * 22) * 0.25;
+    } else if (this.activity === ACTIVITY.fish) {
+      // Một tay giơ giữ cần, tay kia chống hông ngóng phao.
+      armRx = -1.4 + Math.sin(t * 1.6) * 0.06;
+      armLx = -0.3;
+      armLz = -0.5;
+    } else if (this.activity === ACTIVITY.pitch) {
+      // Một tay giơ mũi tên ngang vai, tay kia buông, người hơi lắc lư.
+      armRx = -1.75 + Math.sin(t * 1.7) * 0.1;
+      armLx = -0.25;
     }
     if (this.sitAmt > 0.01) {
       armLx = armLx * (1 - this.sitAmt) - 0.55 * this.sitAmt;
@@ -248,6 +311,9 @@ export class Avatar {
     this.legR.rotation.set(-swing * (1 - this.sitAmt) + legSit, 0, 0.45 * this.sitAmt);
     this.rig.position.y = bob - 0.27 * this.sitAmt + breathe * (1 + this.sitAmt * 2);
     this.body.scale.y = 1 + breathe * 2;
+    this.attire.update?.(t, this.walkAmt, this.sitAmt);
+    this.weaponFx.update?.(t, this.walkAmt);
+    this.aura.update?.(t, this.walkAmt);
 
     if (this.halo.visible) {
       const pulse = 1 + Math.sin(t * 1.05) * 0.14;
@@ -265,6 +331,7 @@ export class Avatar {
       this.root.traverse((o) => {
         if (o.isMesh && o !== this.halo && o.material.transparent) o.material.opacity = this.fading;
       });
+      if (this.aura.points) this.aura.points.material.opacity = this.fading * 0.9;
       this.tagEl.style.opacity = String(this.fading);
     }
   }
@@ -277,5 +344,6 @@ export class Avatar {
     this.root.traverse((o) => {
       if (o.isMesh && o !== this.halo && o.material.transparent) o.material.dispose();
     });
+    if (this.aura.points) this.aura.dispose();
   }
 }

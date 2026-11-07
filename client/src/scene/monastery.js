@@ -1,7 +1,7 @@
 // Khu tu viện: cổng, sân, gác chuông, thiền đường, cây bồ đề, hồ sen, vườn đá, quán trà, đèn lồng.
 import * as THREE from 'three';
 import {
-  BELL, BOUNDS, CONTAINERS, COURT_TREES, GARDEN, GARDEN_ROCKS, HALL, LANTERN_POSTS, MATS, POND, TEA, TEA_TABLES, TREE,
+  BELL, BOUNDS, CONTAINERS, COURT_TREES, GARDEN, GARDEN_ROCKS, HALL, LANTERN_POSTS, MATS, POND, TEA, TEA_TABLES, TREE, TREE_BRANCHES,
 } from '../../../shared/layout.js';
 import { Batch, addRoof, flatMaterial, rng, textTexture } from './builders.js';
 
@@ -288,13 +288,11 @@ function buildBodhi(b) {
   b.cyl(0.85, 1.35, 4.8, trunkCol, x, 2.4, z, { seg: 8 });
   b.cyl(1.7, 1.9, 0.5, '#6b5b45', x, 0.15, z, { seg: 10 }); // Bệ đá quanh gốc
   const rand = rng(31);
-  // Cành toả ngang để treo dải lụa
-  for (let i = 0; i < 8; i++) {
-    const a = (i / 8) * Math.PI * 2;
-    const len = 4.2 + rand() * 1.4;
-    const cx = x + Math.sin(a) * len * 0.5;
-    const cz = z + Math.cos(a) * len * 0.5;
-    b.add(new THREE.CylinderGeometry(0.14, 0.3, len, 6), trunkCol, { x: cx, y: 4.9 + rand() * 0.3, z: cz, ry: a, rx: Math.PI / 2 - 0.12 });
+  // Cành toả ngang để treo dải lụa: cùng toạ độ với wishes3d để ribbon bám đúng mặt cành.
+  for (const br of TREE_BRANCHES) {
+    const cx = x + Math.sin(br.a) * br.len * 0.5;
+    const cz = z + Math.cos(br.a) * br.len * 0.5;
+    b.add(new THREE.CylinderGeometry(0.14, 0.3, br.len, 6), trunkCol, { x: cx, y: br.y, z: cz, ry: br.a, rx: Math.PI / 2 - 0.12 });
   }
   // Tán lá nhiều khối
   const leaves = ['#55793a', '#4a6d34', '#658a42', '#7a9148'];
@@ -369,14 +367,8 @@ function buildGarden(b) {
 
 function buildTea(group, b) {
   const { x, z } = TEA;
-  b.box(10, 0.16, 8.2, '#6d4a2c', x, 0.08, z + 0.3, { jitter: 0.02 });
-  for (const [dx, dz] of [[-4.4, -3.2], [4.4, -3.2], [-4.4, 3.8], [4.4, 3.8]]) {
-    b.cyl(0.17, 0.22, 3.2, PILLAR, x + dx, 1.6, z + dz);
-  }
-  for (const dz of [-3.2, 3.8]) b.box(9.2, 0.22, 0.22, WOOD_DARK, x, 3.2, z + dz);
-  for (const dx of [-4.4, 4.4]) b.box(0.22, 0.22, 7.4, WOOD_DARK, x + dx, 3.2, z + 0.3);
-  addRoof(b, 12.2, 9.8, 2.1, x, 3.25, z + 0.3);
-
+  // Khung sàn/cột/mái do Blender dựng (tea-pavilion.glb, đặt bởi wuxia-props.js);
+  // ở đây giữ bàn ghế, ấm trà, ống nhang và biển hiệu.
   for (const t of TEA_TABLES) {
     b.cyl(0.72, 0.72, 0.09, '#8a5a34', t.x, 0.82, t.z, { seg: 10 });
     b.cyl(0.11, 0.2, 0.74, WOOD_DARK, t.x, 0.46, t.z, { seg: 6 });
@@ -430,7 +422,8 @@ function buildContainers(group, b) {
   group.add(sign('HTH LOGISTICS', 4.4, 0.42, minX - 0.08, 2.42, c1.z, -Math.PI / 2, {
     w: 1024, h: 96, bg: '#7f4029', fg: '#e8d4b0', border: null, font: 'bold 66px "Segoe UI",Roboto,Arial,sans-serif',
   }));
-  group.add(sign('Bảng ước', 2.6, 0.42, minX - 0.08, 2.42, c2.z, -Math.PI / 2, {
+  // Biển "Bảng ước" đặt trên cùng container với các thẻ lời ước (c1) thay vì c2.
+  group.add(sign('Bảng ước', 2.6, 0.42, minX - 0.08, 2.42, c1.z + 4.4, -Math.PI / 2, {
     w: 512, h: 84, bg: '#3e5a64', fg: '#f0e4cc', border: null, font: 'bold 56px "Segoe UI",Roboto,Arial,sans-serif',
   }));
 }

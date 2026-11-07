@@ -1,5 +1,5 @@
 // HUD: đếm người, danh sách, nút góc màn hình, nút hành động, thông báo nhỏ, banner sự kiện.
-import { $, h } from './dom.js';
+import { $, h, store } from './dom.js';
 
 export class Hud {
   constructor(app) {
@@ -13,6 +13,11 @@ export class Hud {
     this.toasts = $('toasts');
     this.banner = $('banner');
     this.muteBtn = $('muteBtn');
+    this.musicBtn = $('musicBtn');
+    this.musicPanel = $('musicPanel');
+    this.musicAudio = $('musicAudio');
+    this.musicSound = $('musicSound');
+    this.musicVolume = $('musicVolume');
     this.actionFn = null;
     this.bannerTimer = null;
 
@@ -23,7 +28,63 @@ export class Hud {
       app.audio.setMuted(next);
       this.syncMute();
     });
+    this.musicBtn.addEventListener('click', () => this.toggleMusic());
+    this.musicSound.addEventListener('click', () => this.toggleMusicSound());
+    $('musicClose').addEventListener('click', () => this.toggleMusic());
+    const savedVolume = store.get('musicVolume');
+    const volume = savedVolume === null ? 0.35 : Number(savedVolume);
+    this.musicAudio.volume = (Number.isFinite(volume) && volume >= 0 && volume <= 1 ? volume : 0.35) * 0.5;
+    this.musicVolume.value = String(Math.round(this.musicAudio.volume * 200));
+    $('musicVolumeValue').textContent = `${this.musicVolume.value}%`;
+    this.musicVolume.addEventListener('input', () => {
+      this.musicAudio.volume = Number(this.musicVolume.value) / 200;
+      $('musicVolumeValue').textContent = `${this.musicVolume.value}%`;
+      store.set('musicVolume', String(Number(this.musicVolume.value) / 100));
+    });
+    this.musicAudio.addEventListener('play', () => this.syncMusicButton());
+    this.musicAudio.addEventListener('pause', () => this.syncMusicButton());
+    this.musicAudio.addEventListener('loadedmetadata', () => this.syncMusicTime());
     this.syncMute();
+  }
+
+  startRadio(radio) {
+    if (!Number.isSafeInteger(radio?.durationSec) || radio.durationSec < 1 || !Number.isSafeInteger(radio?.startedAt)) return;
+    this.radio = radio;
+    this.syncMusicTime();
+  }
+
+  toggleMusic() {
+    const open = this.musicPanel.hidden;
+    this.musicPanel.hidden = !open;
+    this.musicBtn.setAttribute('aria-expanded', String(open));
+    this.musicBtn.setAttribute('aria-label', open ? 'Đóng bảng nhạc' : 'Mở bảng nhạc');
+  }
+
+  toggleMusicSound() {
+    if (this.musicAudio.paused) this.playMusic();
+    else this.musicAudio.pause();
+  }
+
+  playMusic() {
+    this.syncMusicTime();
+    this.musicAudio.play().catch(() => this.syncMusicButton());
+  }
+
+  pauseMusic() {
+    this.musicAudio.pause();
+  }
+
+  syncMusicTime() {
+    if (!this.radio || this.musicAudio.readyState < 1) return;
+    const duration = Number.isFinite(this.musicAudio.duration) ? this.musicAudio.duration : this.radio.durationSec;
+    const elapsed = Math.max(0, (this.app.net.now() - this.radio.startedAt) / 1000);
+    this.musicAudio.currentTime = elapsed % duration;
+  }
+
+  syncMusicButton() {
+    const playing = !this.musicAudio.paused;
+    this.musicSound.setAttribute('aria-pressed', String(playing));
+    this.musicSound.textContent = playing ? 'Tạm dừng' : 'Phát nhạc';
   }
 
   show() {
@@ -33,7 +94,7 @@ export class Hud {
   syncMute() {
     const muted = this.app.audio.muted;
     this.muteBtn.textContent = muted ? '🔇' : '🔊';
-    const label = muted ? 'Mở tiếng' : 'Tắt tiếng';
+    const label = muted ? 'Mở tiếng game' : 'Tắt tiếng game';
     this.muteBtn.title = label;
     this.muteBtn.setAttribute('aria-label', label);
   }

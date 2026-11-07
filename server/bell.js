@@ -1,6 +1,6 @@
 // Thỉnh chuông: lượt cá nhân (nghỉ 30 giây) và sự kiện hẹn giờ cả công ty.
 import { BELL, dist2d } from '../shared/layout.js';
-import { BELL_EVENT, LIMITS } from '../shared/protocol.js';
+import { BELL_EVENT } from '../shared/protocol.js';
 import { localDate, partOfDay, zonedToTs } from './time.js';
 
 const DEFAULT_MESSAGE = '{time} cả nhà cùng thỉnh chuông — ra gác chuông nhé';
@@ -27,23 +27,6 @@ export class Bell {
   stop() {
     clearInterval(this.interval);
     this.timers.forEach(clearTimeout);
-  }
-
-  /** Lượt chuông cá nhân. Mọi người đều nghe; client giảm âm lượng theo khoảng cách. */
-  strike(player, data) {
-    const now = Date.now();
-    const wait = player.lastBell + LIMITS.bellCooldownMs - now;
-    if (wait > 0) return { ok: false, wait, error: `Chuông đang nghỉ, đợi thêm ${Math.ceil(wait / 1000)} giây nhé.` };
-    if (dist2d(player.x, player.z, BELL.x, BELL.z) > BELL.radius + 1.5) {
-      return { ok: false, error: 'Lại gần gác chuông hơn chút nhé.' };
-    }
-    const q = Number(data?.quality);
-    const quality = Number.isFinite(q) ? Math.max(0, Math.min(1, q)) : 0;
-    player.lastBell = now;
-    this.db.bumpBell(player.pid);
-    this.db.bumpStat(localDate(now, this.config.timezone), { bells: 1 });
-    this.io.emit('bell:ring', { sid: player.sid, quality });
-    return { ok: true, cooldown: LIMITS.bellCooldownMs };
   }
 
   /** Mỗi giây: tìm lịch sắp đến giờ để mở sự kiện trước 2 phút. */

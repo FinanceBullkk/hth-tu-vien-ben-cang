@@ -1,11 +1,14 @@
-﻿{
+{
   "name": "hth-tu-vien-ben-cang",
   "version": "1.0.0",
   "private": true,
   "description": "HTH – Tu viện bên cảng: game web 3D nhiều người cho nhân viên HTH Logistics",
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
+  },
+  "volta": {
+    "node": "24.14.1"
   },
   "scripts": {
     "dev": "concurrently -n server,client \"node --watch server/index.js\" \"vite --config vite.config.js\"",

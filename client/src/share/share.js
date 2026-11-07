@@ -91,7 +91,7 @@ export function renderShareCard({ sceneCanvas, name, wish, tamAn, fortune }) {
   if (tamAn !== null && tamAn !== undefined) {
     ctx.fillStyle = '#e0a458';
     ctx.font = `600 30px ${FONT}`;
-    ctx.fillText('Tâm an', left, y);
+    ctx.fillText('Nhịp sen', left, y);
     ctx.fillStyle = '#fbf3e0';
     ctx.font = `700 54px ${FONT}`;
     ctx.fillText(String(tamAn), left + 130, y + 6);

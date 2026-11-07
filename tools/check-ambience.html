@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Ambient noise check</title>
+<button id="run">Check ambient mix</button>
+<pre id="result"></pre>
+<script type="module">
+  import { AudioEngine } from '../client/src/audio/audio.js';
+  const rms = (samples) => Math.sqrt(samples.reduce((sum, x) => sum + x * x, 0) / samples.length);
+  const assert = (ok, message) => { if (!ok) throw new Error(message); };
+  document.querySelector('#run').onclick = async () => {
+    const originalContext = window.AudioContext;
+    const engines = [];
+    try {
+      const render = async (gain, bell = false) => {
+        const ctx = new OfflineAudioContext(1, 48000, 48000);
+        ctx.resume = () => Promise.resolve();
+        window.AudioContext = function () { return ctx; };
+        const engine = new AudioEngine({ get: () => null, set() {} });
+        engines.push(engine);
+        engine.unlock();
+        engine.ambience.gain.value = gain;
+        // Same noise in each render removes randomness from the level comparison.
+        const data = engine.noiseBuf.getChannelData(0);
+        let seed = 7;
+        for (let i = 0; i < data.length; i++) {
+          seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+          data[i] = seed / 2147483648 - 1;
+        }
+        engine.updatePosition(30, 0, 0);
+        if (bell) engine.bell();
+        return rms((await ctx.startRendering()).getChannelData(0));
+      };
+      const previous = await render(1);
+      const quiet = await render(0.1);
+      const bell = await render(0, true);
+      assert(quiet < previous * 0.15, 'Continuous noise must drop at least 85%');
+      assert(quiet > 0, 'Ambience remains audible');
+      assert(bell > quiet * 2, 'Bell remains audible independently of ambience');
+      document.querySelector('#result').textContent = `PASS: ambience RMS ${(quiet / previous).toFixed(3)} of previous; bell independent`;
+    } catch (error) {
+      document.querySelector('#result').textContent = `FAIL: ${error.message}`;
+    } finally {
+      window.AudioContext = originalContext;
+      for (const engine of engines) Object.values(engine.timers).forEach(clearTimeout);
+    }
+  };
+</script>
+</html>
