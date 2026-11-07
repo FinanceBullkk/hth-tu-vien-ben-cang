@@ -41,7 +41,7 @@ once. The job runs `scripts/deploy.mjs` on the self-hosted runner and:
 3. Builds `hth:<YYMMDD-HHMM>-<sha7>` (labels `hth.deploy=workflow`,
    `hth.commit`).
 4. Copies the data volume (minus `backups/`) into a throwaway volume, runs a
-   candidate on `127.0.0.1:3100`, and checks health, page, bundle, Socket.IO
+   candidate on a localhost port Docker picks, and checks health, page, bundle, Socket.IO
    handshake and DB `quick_check`. The candidate is always removed.
 5. Unless `candidate_only`: backs up the DB (SQLite backup API) and config to
    `backups/cutover-<tag>/` inside the data volume, stops production, renames it
