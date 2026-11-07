@@ -44,7 +44,10 @@ if (fileConfig.joinCode === 'auto') {
   fileConfig.joinCode = Array.from({ length: 6 }, () => alphabet[crypto.randomInt(alphabet.length)]).join('');
   codeWasGenerated = true;
 }
-if (!fs.existsSync(CONFIG_PATH) || keyWasGenerated || codeWasGenerated) writeAtomic(CONFIG_PATH, fileConfig);
+// Giữ mốc phát nhạc qua lần khởi động lại, kể cả khi thay image Docker.
+const radioWasStarted = !Number.isSafeInteger(fileConfig.radioStartedAt) || fileConfig.radioStartedAt <= 0;
+if (radioWasStarted) fileConfig.radioStartedAt = Date.now();
+if (!fs.existsSync(CONFIG_PATH) || keyWasGenerated || codeWasGenerated || radioWasStarted) writeAtomic(CONFIG_PATH, fileConfig);
 
 if (process.env.ADMIN_KEY && process.env.ADMIN_KEY.length < MIN_KEY_LENGTH) {
   console.error(`ADMIN_KEY phải dài ít nhất ${MIN_KEY_LENGTH} ký tự.`);
@@ -65,7 +68,7 @@ export const config = {
 export const adminKeyWasGenerated = keyWasGenerated;
 export const joinCodeWasGenerated = codeWasGenerated;
 
-const EDITABLE = ['welcomeMessage', 'bellSchedule', 'fortunes', 'meditationPhrases', 'bannedWords', 'joinCode'];
+const EDITABLE = ['welcomeMessage', 'bellSchedule', 'fortunes', 'meditationPhrases', 'bannedWords', 'joinCode', 'riddles'];
 
 /** Lưu các trường nội dung xuống config.json, không ghi các giá trị đến từ biến môi trường. */
 export function saveContent(patch) {

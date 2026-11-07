@@ -1,6 +1,6 @@
 // Hiệu ứng hạt: cánh hoa, đom đóm, khói, quầng đèn, sóng âm chuông. Dùng pool, không cấp phát mỗi khung.
 import * as THREE from 'three';
-import { BELL, HALL, POND, TREE } from '../../../shared/layout.js';
+import { BELL, GARDEN, HALL, POND, TREE } from '../../../shared/layout.js';
 import { glowTexture, rng } from './builders.js';
 
 function makePoints(count, material) {
@@ -52,7 +52,7 @@ export class Particles {
     }));
     this.fireBase = new Float32Array(this.fireMax * 4);
     for (let i = 0; i < this.fireMax; i++) {
-      const anchor = i % 3 === 0 ? POND : i % 3 === 1 ? TREE : { x: 16, z: -18 };
+      const anchor = i % 3 === 0 ? POND : i % 3 === 1 ? TREE : { x: (GARDEN.minX + GARDEN.maxX) / 2, z: (GARDEN.minZ + GARDEN.maxZ) / 2 };
       const a = rand() * 6.28;
       const d = 2 + rand() * 9;
       this.fireBase[i * 4] = anchor.x + Math.sin(a) * d;

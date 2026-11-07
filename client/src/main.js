@@ -1,26 +1,36 @@
 // Điểm vào client: dựng cảnh, màn chào, nối mạng, vòng lặp khung hình.
 import * as THREE from 'three';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { BELL, SPAWN } from '../../shared/layout.js';
 import { EMOJIS } from '../../shared/protocol.js';
 import { Activities } from './activities/index.js';
 import { AudioEngine } from './audio/audio.js';
+import { ProximityVoice } from './audio/voice.js';
 import { Remotes } from './net/remotes.js';
 import { Net } from './net/socket.js';
 import { FollowCamera } from './player/camera.js';
 import { Input } from './player/controls.js';
 import { LocalPlayer } from './player/local.js';
+import { setAuraNight } from './player/avatar-effect.js';
 import { World, createRenderer } from './scene/world.js';
+import { AdaptiveQuality, renderPixelRatio } from './scene/render-quality.js';
 import { openShare } from './share/share.js';
 import { openBoard, openBook } from './ui/book.js';
 import { Chat } from './ui/chat.js';
 import { $, h, store } from './ui/dom.js';
 import { Hud } from './ui/hud.js';
 import { closeTopModal, modalOpen, openModal } from './ui/modal.js';
-import { RingOverlay } from './ui/ringOverlay.js';
+import { nudgePlacesMenu, openPlacesMenu } from './ui/places-menu.js';
 import { showTutorial } from './ui/tutorial.js';
 import { Welcome } from './ui/welcome.js';
 import { WishReader } from './ui/wishReader.js';
+import './ui/voice.css';
+import './ui/pitch.css';
+import './ui/fishing.css';
 
 const isTouch = matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch', isTouch);
@@ -47,7 +57,24 @@ function main() {
   $('app').append(labelRenderer.domElement);
 
   const world = new World(scene, isTouch);
-  const profile = { name: '', color: Math.floor(Math.random() * 8), hat: Math.floor(Math.random() * 6), ...store.getJson('profile') };
+
+  // Bloom hậu kỳ: hào quang và vật phát sáng rực lên thật sự. Mobile (touch) bỏ qua để giữ khung hình mượt.
+  let composer = null;
+  if (!isTouch) {
+    composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.28, 0.5, 0.92));
+    composer.addPass(new OutputPass());
+  }
+  const profile = {
+    name: '',
+    color: Math.floor(Math.random() * 8),
+    hat: Math.floor(Math.random() * 6),
+    attire: 0,
+    weapon: 0,
+    effect: 0,
+    ...store.getJson('profile'),
+  };
 
   // Link gửi trong nhóm Zalo có sẵn mã: lấy ra rồi xoá khỏi thanh địa chỉ để khỏi lộ khi chụp màn hình.
   const linkCode = new URLSearchParams(location.search).get('code');
@@ -71,9 +98,8 @@ function main() {
     net: new Net(),
     input: new Input(canvas, $('stick')),
     follow: new FollowCamera(camera),
-    remotes: new Remotes(scene),
-    me: new LocalPlayer(scene, profile),
-    ring: new RingOverlay(),
+    remotes: new Remotes(scene, isTouch),
+    me: new LocalPlayer(scene, profile, isTouch),
     modalBusy: () => modalOpen(),
     isBusy: () => modalOpen() || Boolean(app.activities.current),
     chatBlocked: () => app.activities.current === app.activities.meditation,
@@ -82,6 +108,7 @@ function main() {
   app.hud = new Hud(app);
   app.chat = new Chat(app);
   app.activities = new Activities(app);
+  app.voice = new ProximityVoice(app);
   app.reader = new WishReader(app);
   window.__hth = app; // Tiện kiểm tra lỗi trong DevTools, không chứa dữ liệu bí mật.
 
@@ -95,17 +122,20 @@ function main() {
   // ---------- Màn chào ----------
   const welcome = new Welcome({
     profile,
-    onPreview: (p) => app.me.avatar.setLook(p.color, p.hat),
+    onPreview: (p) => app.me.avatar.setLook(p.color, p.hat, p.attire, p.weapon, p.effect),
     onEnter: (p) => {
       app.audio.unlock();
       Object.assign(profile, p);
-      store.setJson('profile', { name: p.name, color: p.color, hat: p.hat });
+      store.setJson('profile', { name: p.name, color: p.color, hat: p.hat, attire: p.attire, weapon: p.weapon, effect: p.effect });
       store.set('joinCode', p.code ?? '');
       app.net.connect(() => ({
         playerId: store.get('playerId'),
         name: profile.name,
         color: profile.color,
         hat: profile.hat,
+        attire: profile.attire,
+        weapon: profile.weapon,
+        effect: profile.effect,
         code: profile.code,
       }));
     },
@@ -122,10 +152,14 @@ function main() {
   let mySid = 0;
 
   net.onRefused = (message, res) => {
+    hud.pauseMusic();
     if (!entered) welcome.showError(message, Boolean(res?.needCode));
   };
 
   net.onFatal = (message) => {
+    app.voice.stop();
+    app.voice.ui.panel.hidden = true;
+    hud.pauseMusic();
     app.activities.abort();
     const reload = h('button', { class: 'btn primary', type: 'button' }, 'Tải lại trang');
     reload.addEventListener('click', () => location.reload());
@@ -133,6 +167,7 @@ function main() {
   };
 
   net.onLost = () => {
+    app.voice.stop();
     wasLost = true;
     app.activities.abort();
     hud.toast('Mất kết nối, đang kết nối lại…', { ms: 4000 });
@@ -141,6 +176,8 @@ function main() {
   net.onEnter = (res) => {
     const snap = res.snapshot;
     mySid = res.sid;
+    app.sid = res.sid;
+    app.voice.ui.panel.hidden = false;
     store.set('playerId', res.playerId);
     app.myName = res.name;
     me.avatar.setName(res.name);
@@ -153,6 +190,14 @@ function main() {
     app.mats = snap.mats;
     app.activities.bell.setWait(snap.bellWait);
     app.activities.bellEvent.apply(snap.bellEvent);
+    if (snap.unlocked != null) store.set('unlocked', String(snap.unlocked));
+    world.meditation.apply(snap.meditationScene);
+    // Ai đang buông cần quanh hồ thì mình cũng thấy cần và phao của họ.
+    for (const f of snap.fishers ?? []) {
+      const p = snap.players.find((pl) => pl.sid === f.sid);
+      if (p) world.fishing.setRod(f.sid, { x: p.x, z: p.z, on: true, bx: f.bx, bz: f.bz });
+    }
+    world.fishing.shadows.setTaken(snap.fishShadowsTaken);
     hud.setPresence(snap.online, snap.visitsToday);
 
     if (wasLost) {
@@ -162,7 +207,9 @@ function main() {
     if (!entered) {
       entered = true;
       welcome.hide();
+      hud.playMusic();
       hud.show();
+      hud.startRadio(snap.radio);
       app.follow.intro = false;
       me.avatar.nameEl.hidden = false;
       me.rot = SPAWN.rot;
@@ -172,6 +219,7 @@ function main() {
       app.follow.look.copy(app.follow.target);
       if (snap.welcome) hud.toast(snap.welcome, { ms: 6500 });
       showTutorial(store, isTouch);
+      nudgePlacesMenu();
     }
   };
 
@@ -188,11 +236,18 @@ function main() {
   });
   net.on('player:leave', ({ sid, name }) => {
     remotes.remove(sid);
+    world.fishing.setRod(sid, { on: false });
     hud.toast(`${name} vừa rời tu viện`);
   });
   net.on('presence', ({ online, visitsToday }) => hud.setPresence(online, visitsToday));
 
   const avatarOf = (sid) => (sid === mySid ? me.avatar : remotes.map.get(sid)?.avatar);
+  // Vị trí đứng của một người chơi (mình hoặc người khác), cho hiệu ứng câu cá/đầu hồ.
+  const remotePos = (sid) => {
+    if (sid === mySid) return { x: me.x, z: me.z };
+    const r = remotes.map.get(sid);
+    return r ? { x: r.avatar.root.position.x, z: r.avatar.root.position.z } : null;
+  };
 
   net.on('chat', ({ sid, text }) => avatarOf(sid)?.say(text));
   net.on('emoji', ({ sid, i }) => avatarOf(sid)?.say(EMOJIS[i] ?? '', 2500));
@@ -204,13 +259,15 @@ function main() {
     }
   });
 
-  net.on('bell:ring', ({ sid, quality }) => {
+  net.on('bell:ring', ({ sid, quality, force, intensity = 0, beat = 1 }) => {
     // Xa gác chuông thì nghe nhỏ dần nhưng vẫn nghe được khắp sân.
     const d = Math.hypot(me.x - BELL.x, me.z - BELL.z);
     const volume = Math.max(0.28, 1 - d / 60);
     if (sid === mySid) app.follow.shake(0.012 + quality * 0.02);
-    app.audio.bell({ quality, volume });
+    app.audio.bell({ quality, force, intensity, volume });
     world.ringBell(quality);
+    world.lanternBoost = Math.max(world.lanternBoost, beat / 3 + intensity);
+    if (beat === 3) world.particles.burstPetals(0.3 + intensity * 0.4);
   });
   net.on('bell:event', (payload) => app.activities.bellEvent.apply(payload));
 
@@ -218,14 +275,57 @@ function main() {
     app.mats = mats;
   });
   net.on('meditation:sync', (data) => app.activities.meditation.onSync(data));
+  net.on('meditation:scene', (data) => world.meditation.apply(data));
+  net.on('rhythm:bloom', (data) => world.meditation.bloom(data));
 
+  // ---------- Câu cá ----------
+  net.on('fish:bobber', ({ sid, bx, bz }) => {
+    // Người vừa thả cần: đặt bộ cần + phao tại chỗ họ đứng (của mình thì activity đã đặt).
+    const pos = sid === mySid ? { x: me.x, z: me.z } : remotePos(sid);
+    if (pos) world.fishing.setRod(sid, { x: pos.x, z: pos.z, on: true, bx, bz });
+  });
+  net.on('fish:bite', (bite) => app.activities.fishing.onBite(bite));
+  // Ai dính cá thì phao người đó giật liên tục, cả phòng đều thấy.
+  net.on('fish:struck', ({ sid }) => {
+    world.fishing.strike(sid);
+    avatarOf(sid)?.say('!', 1100);
+  });
+  net.on('fish:shadow', ({ id }) => world.fishing.shadows.markTaken(id));
+  // Hết lượt: phao biến mất. Mình còn đang câu thì giữ cần trên tay để quăng tiếp.
+  net.on('fish:rodoff', ({ sid, idle }) => {
+    const pos = idle ? remotePos(sid) : null;
+    world.fishing.setRod(sid, pos ? { x: pos.x, z: pos.z, on: true } : { on: false });
+  });
+  net.on('fish:escaped', ({ reason }) => app.activities.fishing.escaped(reason));
+  net.on('fish:caught', ({ sid, name, rarity, weight }) => {
+    world.fishing.splashAtBobber(sid);
+    // Khoe ngay trên đầu người bắt; ai đang đứng quanh hồ đều thấy.
+    if (sid !== mySid) avatarOf(sid)?.say(`${name} ${'★'.repeat(rarity)} · ${weight} kg`, 3500);
+    if (sid !== mySid && rarity === 3) app.audio.chime(0.05);
+  });
+
+  // ---------- Đầu hồ ----------
+  net.on('pitch:throw', ({ sid, hit, npcHit }) => {
+    const pos = sid === mySid ? { x: me.x, z: me.z } : remotePos(sid);
+    if (pos) world.pitchCourt.playTurn(pos.x, pos.z, hit, npcHit);
+  });
+  net.on('pitch:turn', (turn) => app.activities.pitch.onTurn(turn));
+
+  let blessToastAt = 0;
   net.on('wish:new', (wish) => {
     const mine = app.mineWishIds.has(wish.id);
-    world.wishes.add({ ...wish, mine, liked: false }, true);
+    // Lời ước của mình bay ra từ chỗ mình đứng; của người khác hiện dần tại chỗ của họ.
+    world.wishes.add({ ...wish, mine, liked: false }, true, mine ? { x: me.x, z: me.z } : null);
   });
   net.on('wish:update', ({ id, likes }) => {
     world.wishes.patch(id, { likes });
     app.reader.onUpdate(id);
+    // Ai đó thả phúc cho lời ước của mình: báo ngay một lần, không spam khi nhiều người cùng thả.
+    if (app.mineWishIds.has(id) && performance.now() - blessToastAt > 6000) {
+      blessToastAt = performance.now();
+      app.hud.toast('💛 Có người vừa thả phúc cho lời ước của bạn');
+      app.audio.chime(0.06);
+    }
   });
   net.on('wish:removed', ({ id }) => {
     world.wishes.remove(id);
@@ -233,6 +333,7 @@ function main() {
   });
 
   // ---------- Nút và phím ----------
+  $('playBtn').addEventListener('click', () => openPlacesMenu(app));
   $('bookBtn').addEventListener('click', () => openBook(app));
   $('boardBtn').addEventListener('click', () => openBoard(app));
   $('shareBtn').addEventListener('click', () => openShare(app));
@@ -240,6 +341,7 @@ function main() {
   app.input.onKeyDown = (e) => {
     if (!entered) return false;
     if (e.repeat && ['Space', 'KeyE', 'Enter'].includes(e.code)) return true;
+    if (e.repeat && app.activities.current?.isRhythm && e.code.startsWith('Arrow')) return true;
     if (e.code === 'Escape') {
       if (closeTopModal()) return true;
       if (app.activities.current) {
@@ -285,6 +387,10 @@ function main() {
       world.abbot.advise();
       return;
     }
+    if (world.monk.atRay(raycaster.ray)) {
+      app.activities.riddle.start();
+      return;
+    }
     const cat = world.animals.catAtRay(raycaster.ray);
     if (cat) {
       app.audio.meow();
@@ -294,7 +400,9 @@ function main() {
       return;
     }
     raycaster.far = 16;
-    const wish = world.wishes.pick(raycaster);
+    // Tia trúng mesh trước; hụt thì chọn theo hình chiếu gần điểm chạm (dải lụa 0.2m khó bấm trên mobile).
+    const wish = world.wishes.pick(raycaster)
+      ?? world.wishes.pickScreen(x, y, camera, window.innerWidth, window.innerHeight);
     raycaster.far = Infinity;
     if (wish) app.reader.pin(wish);
   };
@@ -305,72 +413,28 @@ function main() {
     const h2 = window.innerHeight;
     camera.aspect = w / h2;
     camera.updateProjectionMatrix();
+    renderer.setPixelRatio(renderPixelRatio(w, h2, window.devicePixelRatio, quality.level, isTouch));
     renderer.setSize(w, h2, false);
+    if (composer) {
+      composer.setPixelRatio(renderer.getPixelRatio());
+      composer.setSize(w, h2);
+    }
     labelRenderer.setSize(w, h2);
     frameIntro();
   };
+  const quality = new AdaptiveQuality((level) => {
+    if (level === 1) {
+      world.sky.setShadowSize(1024);
+    } else {
+      renderer.shadowMap.enabled = false;
+    }
+    onResize();
+  });
   window.addEventListener('resize', onResize);
   onResize();
 
   let lastFrame = performance.now();
   let audioTimer = 0;
-  let fpsWindow = 0;
-  let fpsFrames = 0;
-  let lowFpsStreak = 0;
-  let quality = 2;
-
-  const QUALITY_GRACE_S = 10; // Bỏ qua lúc mới tải: biên dịch shader gây khựng, không phải máy yếu.
-  let qualityClock = 0;
-  let stallStreak = 0;
-
-  const adaptQuality = (dt) => {
-    qualityClock += dt;
-    if (qualityClock < QUALITY_GRACE_S) return;
-    // Cửa sổ không được focus thì trình duyệt tự giảm nhịp vẽ: số đo lúc đó không nói gì về máy.
-    if (document.hidden || !document.hasFocus()) {
-      fpsWindow = 0;
-      fpsFrames = 0;
-      stallStreak = 0;
-      return;
-    }
-    // Khựng lẻ tẻ (biên dịch shader, máy bận chốc lát) thì đo lại; khựng liên tục mới là máy yếu.
-    if (dt > 0.4) {
-      stallStreak++;
-      if (stallStreak < 6) {
-        fpsWindow = 0;
-        fpsFrames = 0;
-        return;
-      }
-    } else {
-      stallStreak = 0;
-    }
-    fpsWindow += dt;
-    fpsFrames++;
-    if (fpsWindow < 2.5) return;
-    const fps = fpsFrames / fpsWindow;
-    fpsWindow = 0;
-    fpsFrames = 0;
-    lowFpsStreak = fps < 26 ? lowFpsStreak + 1 : 0;
-    if (lowFpsStreak >= 3 && quality > 0) {
-      lowFpsStreak = 0;
-      quality--;
-      if (quality === 1) {
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1));
-      } else {
-        // Máy yếu: tắt bóng đổ để giữ độ mượt.
-        renderer.shadowMap.enabled = false;
-        scene.traverse((o) => {
-          if (o.material) {
-            const list = Array.isArray(o.material) ? o.material : [o.material];
-            list.forEach((m) => {
-              m.needsUpdate = true;
-            });
-          }
-        });
-      }
-      renderer.setSize(window.innerWidth, window.innerHeight, false);
-    }
-  };
 
   const frame = () => {
     requestAnimationFrame(frame);
@@ -387,10 +451,14 @@ function main() {
     remotes.update(dt, nowMs, camera);
     app.activities.update(dt);
     app.reader.update(dt);
+    world.wishes.setViewer(me.x, me.z, camera);
     world.update(dt, nowMs);
     world.abbot.update(dt, me.x, me.z, camera);
+    world.monk.update(dt, me.x, me.z, camera);
+    world.pitchCourt.update(dt, camera);
     app.follow.update(dt, me.x, me.y, me.z, look);
     world.sky.follow(camera);
+    setAuraNight(world.sky.night); // hào quang rực theo ngày/đêm trên tu viện
 
     audioTimer += dt;
     if (audioTimer > 0.4) {
@@ -398,9 +466,13 @@ function main() {
       app.audio.updatePosition(me.x, me.z, world.sky.night);
     }
 
-    renderer.render(scene, camera);
+    app.voiceClock = (app.voiceClock || 0) + dt;
+    if (app.voiceClock >= 0.1) { app.voiceClock = 0; app.voice.update(); }
+
+    if (composer) composer.render();
+    else renderer.render(scene, camera);
     labelRenderer.render(scene, camera);
-    adaptQuality(rawDt);
+    quality.update(rawDt, !document.hidden && document.hasFocus());
     // Thời gian CPU của một khung, xem trong DevTools bằng __hth.frameMs.
     app.frameMs += (performance.now() - t - app.frameMs) * 0.1;
   };
@@ -419,4 +491,13 @@ function floater(app, position, text, delay = 0) {
   setTimeout(() => el.remove(), 1600 + delay * 1000);
 }
 
-main();
+try {
+  main();
+} catch (err) {
+  // Bảng lỗi khởi động: hiện thẳng lên màn hình để không còn đoán mò màn đen.
+  console.error(err);
+  const pre = document.createElement('pre');
+  pre.style.cssText = 'position:fixed;top:8px;left:8px;z-index:99999;background:#4a1010;color:#ffe9e9;padding:12px 14px;max-width:92vw;white-space:pre-wrap;font:12px/1.5 monospace;border-radius:8px';
+  pre.textContent = 'Lỗi khởi động game:\n' + (err && err.stack || err);
+  document.body.append(pre);
+}

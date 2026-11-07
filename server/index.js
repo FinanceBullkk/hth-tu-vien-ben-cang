@@ -13,8 +13,13 @@ import { Db } from './db.js';
 import { WordFilter } from './filter.js';
 import { clientIp } from './limits.js';
 import { Meditation } from './meditation.js';
+import { RhythmGame } from './rhythm.js';
+import { PitchGame } from './pitch.js';
 import { PLAYERS_ROOM, Room } from './rooms.js';
+import { Riddle } from './riddle.js';
+import { Fishing } from './fishing.js';
 import { Wishes } from './wishes.js';
+import { localWeekStart } from './time.js';
 
 const app = express();
 app.disable('x-powered-by');
@@ -65,14 +70,19 @@ const players = io.to(PLAYERS_ROOM);
 const wishes = new Wishes({ db, io: players, filter, config });
 const meditation = new Meditation({ db, io: players, config });
 const bell = new Bell({ db, io: players, config });
-const room = new Room({ io, db, filter, config, wishes, bell, meditation });
+const rhythm = new RhythmGame({ db, io: players, config });
+const riddle = new Riddle({ db, io: players, config });
+const fishing = new Fishing({ db, io: players, config });
+const pitch = new PitchGame({ db, io: players, config });
+const room = new Room({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch });
 
-// Không gọi dịch vụ ngoài: CSP chặn luôn mọi request ra khỏi server này.
+// Tài nguyên trang cùng nguồn; WebRTC có đường media riêng và ICE do người vận hành cấu hình.
 app.use((_req, res, next) => {
   res.set(
     'Content-Security-Policy',
-    "default-src 'self'; connect-src 'self' ws: wss:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
+    "default-src 'self'; connect-src 'self' ws: wss:; media-src 'self' blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
   );
+  res.set('Permissions-Policy', 'microphone=(self), camera=()');
   res.set('X-Content-Type-Options', 'nosniff');
   next();
 });
@@ -110,6 +120,16 @@ app.get('/api/wishes', (req, res) => {
   const cursor = Number.isInteger(before) && before > 0 ? before : Number.MAX_SAFE_INTEGER;
   const items = db.wishPage(cursor, limit, pidOf(req));
   res.json({ items, next: items.length === limit ? items[items.length - 1].id : null });
+});
+
+// Bảng tuần: từ thứ Hai của tuần hiện tại theo múi giờ game.
+app.get('/api/weekly', (req, res) => {
+  const viewer = pidOf(req);
+  if (config.joinCode && !(viewer && db.hasPlayer(viewer))) {
+    res.status(403).json({ error: 'Vào tu viện trước đã nhé.' });
+    return;
+  }
+  res.json(db.weekly(localWeekStart(Date.now(), config.timezone)));
 });
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));

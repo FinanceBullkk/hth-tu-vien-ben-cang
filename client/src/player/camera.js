@@ -11,6 +11,9 @@ export class FollowCamera {
     this.yaw = 0;
     this.pitch = 0.3;
     this.distance = 7.5;
+    this.meditating = false;
+    this.shot = null; // { pos, look }: góc máy cố định do minigame đặt.
+    this.reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.minDist = 3.2;
     this.maxDist = 13;
     this.currentDist = 7.5;
@@ -27,6 +30,7 @@ export class FollowCamera {
   }
 
   shake(amount) {
+    if (this.reducedMotion) return;
     this.shakeAmt = Math.max(this.shakeAmt, amount);
   }
 
@@ -50,19 +54,35 @@ export class FollowCamera {
       return;
     }
 
-    this.target.set(px, py + 1.2, pz);
+    // Góc máy cố định của minigame (đầu hồ): trôi mượt tới chỗ đặt, lắc nhẹ như người say.
+    if (this.shot) {
+      const sway = this.reducedMotion ? 0 : 1;
+      this._desired.set(this.shot.pos.x, this.shot.pos.y + Math.sin(this.time * 0.9) * 0.03 * sway, this.shot.pos.z + Math.sin(this.time * 0.6) * 0.1 * sway);
+      this.pos.lerp(this._desired, 1 - Math.exp(-dt * 4));
+      this.target.set(this.shot.look.x, this.shot.look.y, this.shot.look.z + Math.sin(this.time * 0.43) * 0.25 * sway);
+      this.look.lerp(this.target, 1 - Math.exp(-dt * 4));
+      this.camera.position.copy(this.pos);
+      this.camera.lookAt(this.look);
+      this.camera.getWorldDirection(this.forward);
+      return;
+    }
+
+    // Nhịp sen đặt nhân vật và hoa lên nửa trên, tránh bảng phím phía dưới.
+    this.target.set(px, py + (this.meditating ? -0.5 : 1.2), pz);
     this.look.lerp(this.target, 1 - Math.exp(-dt * 11));
 
-    const cosP = Math.cos(this.pitch);
+    const pitch = this.meditating ? 0.25 : this.pitch;
+    const distance = this.meditating ? 5.2 : this.distance;
+    const cosP = Math.cos(pitch);
     const dirX = Math.sin(this.yaw) * cosP;
     const dirZ = Math.cos(this.yaw) * cosP;
-    const dirY = Math.sin(this.pitch);
+    const dirY = Math.sin(pitch);
 
     // Rút ngắn khoảng cách nếu có tường chắn giữa người chơi và camera.
-    const far = this.distance + 0.5;
+    const far = distance + 0.5;
     const t = cameraSegmentT(this.target.x, this.target.z, this.target.x + dirX * far, this.target.z + dirZ * far);
     const allowed = Math.max(1.4, t * far - 0.5);
-    const wanted = Math.min(this.distance, allowed);
+    const wanted = Math.min(distance, allowed);
     // Co vào nhanh để khỏi thấy xuyên tường, giãn ra chậm cho êm.
     const rate = wanted < this.currentDist ? 18 : 3.5;
     this.currentDist += (wanted - this.currentDist) * (1 - Math.exp(-dt * rate));

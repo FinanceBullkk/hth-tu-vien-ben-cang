@@ -154,11 +154,23 @@
     const res = await api('/banned-words', 'PUT', { bannedWords: lines($('banned').value) });
     say(`Đã lưu ${res.count} từ lọc, có hiệu lực ngay.`);
   });
+  // Câu đố: mỗi dòng "câu hỏi | đáp án 1; đáp án 2 | gợi ý | bậc".
+  const parseRiddles = (text) => lines(text).map((line) => {
+    const [q, answers, hint, tier] = line.split('|').map((s) => s.trim());
+    return {
+      q,
+      a: (answers || '').split(';').map((s) => s.trim()).filter(Boolean),
+      hint: hint || '',
+      tier: Math.min(3, Math.max(1, Number(tier) || 1)),
+    };
+  }).filter((r) => r.q && r.a.length);
+  const formatRiddles = (list) => (list || []).map((r) => [r.q, (r.a || []).join('; '), r.hint || '', r.tier || 1].join(' | ')).join('\n');
   $('saveContent').onclick = run(async () => {
     await api('/content', 'PUT', {
       welcomeMessage: $('welcome').value,
       fortunes: lines($('fortunes').value),
       meditationPhrases: { high: lines($('medHigh').value), mid: lines($('medMid').value), low: lines($('medLow').value) },
+      riddles: parseRiddles($('riddles').value),
     });
     say('Đã lưu nội dung.');
   });
@@ -192,6 +204,7 @@
       $('medHigh').value = (s.meditationPhrases?.high || []).join('\n');
       $('medMid').value = (s.meditationPhrases?.mid || []).join('\n');
       $('medLow').value = (s.meditationPhrases?.low || []).join('\n');
+      $('riddles').value = formatRiddles(s.riddles);
     }
   }
 

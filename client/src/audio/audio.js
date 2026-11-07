@@ -72,12 +72,16 @@ export class AudioEngine {
     g.gain.value = gainValue;
     src.connect(f);
     f.connect(g);
-    g.connect(this.master);
+    g.connect(this.ambience);
     src.start();
     return { src, f, g };
   }
 
   #startAmbience() {
+    // Keep continuous noise below music without quieting bells or interaction effects.
+    this.ambience = this.ctx.createGain();
+    this.ambience.gain.value = 0.1;
+    this.ambience.connect(this.master);
     this.wind = this.#noiseLoop('bandpass', 420, 0.6, 0.05);
     const lfo = this.ctx.createOscillator();
     lfo.frequency.value = 0.07;
@@ -158,18 +162,116 @@ export class AudioEngine {
    * Chuông đồng. quality 0..1: lệch nhịp thì ngân ngắn, đúng nhịp ngân dài.
    * intensity 0..1 (sự kiện chung): càng nhiều người càng trầm và dài.
    */
-  bell({ quality = 1, intensity = 0, volume = 1 } = {}) {
+  bell({ quality = 1, intensity = 0, force = 1, volume = 1 } = {}) {
     if (!this.ctx) return;
     const t = this.ctx.currentTime + 0.01;
-    const base = 196 - intensity * 78;
+    const base = 196 - intensity * 78 - force * 12;
     const decay = (1.6 + quality * 5) * (1 + intensity * 1.4);
-    const peak = clamp(volume) * (0.14 + quality * 0.1 + intensity * 0.1);
+    const peak = clamp(volume) * (0.14 + quality * 0.1 + intensity * 0.1) * (0.65 + force * 0.35) / Math.sqrt(1 + intensity * 5);
     const partials = [[0.5, 1.1, 1], [1, 1, 0.8], [1.19, 0.5, 0.75], [1.5, 0.3, 0.6], [2, 0.5, 0.5], [2.74, 0.22, 0.35], [3.76, 0.12, 0.22]];
     for (const [ratio, amp, life] of partials) {
       const beat = 1 + (Math.random() - 0.5) * 0.003;
       this.#tone('sine', base * ratio * beat, t, 0.008, peak * amp, decay * life);
     }
     this.#burst('bandpass', 1700, 1, t, 0.003, peak * 0.5, 0.09);
+  }
+
+  rhythmBeat(beat, kind) {
+    if (!this.ctx) return;
+    const strong = beat < 0 || beat % 4 === 3;
+    this.#tone('triangle', strong ? 440 : 660, this.ctx.currentTime, 0.002, strong ? 0.045 : 0.025, 0.085);
+  }
+
+  #pluckBuf(idx) {
+    this.pluckCache = this.pluckCache || new Map();
+    let buf = this.pluckCache.get(idx);
+    if (buf) return buf;
+    // Karplus–Strong: dây gảy cổ cầm — nhiễu đầu dây rồi lọc trung bình trôi dần.
+    const sr = this.ctx.sampleRate;
+    const freqs = [293.66, 329.63, 392, 440, 523.25];
+    const f = freqs[idx % freqs.length];
+    const n = Math.round(sr / f);
+    const len = Math.floor(sr * 1.1);
+    buf = this.ctx.createBuffer(1, len, sr);
+    const d = buf.getChannelData(0);
+    const ring = new Float32Array(n);
+    for (let i = 0; i < n; i++) ring[i] = Math.random() * 2 - 1;
+    let p = 0;
+    for (let i = 0; i < len; i++) {
+      const cur = ring[p];
+      const nxt = ring[(p + 1) % n];
+      const v = 0.996 * 0.5 * (cur + nxt);
+      ring[p] = v;
+      d[i] = cur;
+      p = (p + 1) % n;
+    }
+    // Fade cuối cho êm.
+    for (let i = 0; i < 400; i++) d[len - 1 - i] *= i / 400;
+    this.pluckCache.set(idx, buf);
+    return buf;
+  }
+
+  /** Gảy đàn cổ cầm cho Nhịp sen: idx 0..4 chọn quãng ngũ cung. */
+  pluck(idx, volume = 1) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime + 0.005;
+    const src = this.ctx.createBufferSource();
+    src.buffer = this.#pluckBuf(idx);
+    const f = this.ctx.createBiquadFilter();
+    f.type = 'lowpass';
+    f.frequency.value = 3200;
+    const g = this.ctx.createGain();
+    g.gain.value = 0.16 * clamp(volume);
+    src.connect(f);
+    f.connect(g);
+    g.connect(this.master);
+    src.start(t);
+  }
+
+  /** Còi tàu ngắn xen vào khúc nhạc chuông, gợi cảng bên cạnh. */
+  hornBlip(volume = 0.05) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime + 0.01;
+    const f = this.ctx.createBiquadFilter();
+    f.type = 'lowpass';
+    f.frequency.value = 380;
+    f.connect(this.master);
+    for (const hz of [110, 146.8]) {
+      this.#tone('sawtooth', hz, t, 0.12, volume * 0.09, 0.55, { bus: f });
+    }
+  }
+
+  /** Bao hàng đập vào cửa container. */
+  thunk(volume = 1) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    this.#tone('sine', 120, t, 0.004, 0.22 * clamp(volume), 0.14, { f1: 60 });
+    this.#burst('lowpass', 900, 0.6, t, 0.003, 0.16 * clamp(volume), 0.09);
+  }
+
+  /** Cần câu vung ra. */
+  rodCast() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const f = this.#burst('bandpass', 1200, 1.4, t, 0.16, 0.05, 0.22);
+    f.frequency.linearRampToValueAtTime(2400, t + 0.3);
+  }
+
+  /** Phao rơi xuống nước. */
+  plop() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    this.#tone('sine', 380, t, 0.004, 0.1, 0.13, { f1: 140 });
+    this.#burst('bandpass', 800, 1.2, t, 0.005, 0.06, 0.16);
+  }
+
+  /** Cá giật cần + văng nước. */
+  splash(volume = 1) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const v = clamp(volume);
+    for (let i = 0; i < 3; i++) this.#burst('bandpass', rand(900, 2200), 1.1, t + i * 0.055, 0.01, 0.12 * v, 0.18);
+    this.#tone('sine', 300, t + 0.02, 0.006, 0.1 * v, 0.2, { f1: 90 });
   }
 
   breath(inhale) {

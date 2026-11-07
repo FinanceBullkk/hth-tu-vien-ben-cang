@@ -1,15 +1,15 @@
 // Con vật làm sân sinh động: mèo đi/nằm, chim sẻ bay đàn, cá koi. Vị trí tính từ giờ server.
 import * as THREE from 'three';
-import { POND } from '../../../shared/layout.js';
+import { LAKE, POND } from '../../../shared/layout.js';
 import { Batch, flatMaterial, rng } from './builders.js';
 
 const CAT_ROUTES = [
   // Mèo sân tây: lượn qua cây bồ đề và quán trà
-  { color: '#d9822b', stripe: '#a85c18', speed: 0.8, pts: [[-11, 12], [-11, 18], [-24, 18], [-25, 11], [-24, -1], [-11, -1]], rest: 18 },
+  { color: '#d9822b', stripe: '#a85c18', speed: 0.8, pts: [[-15, 8], [-15, 18], [-25, 18], [-25, 9]], rest: 18 },
   // Mèo vườn đá
-  { color: '#3a3a40', stripe: '#232327', speed: 0.7, pts: [[9, -8], [9, -11], [27, -10], [27, -3], [14, -4]], rest: 24 },
+  { color: '#3a3a40', stripe: '#232327', speed: 0.7, pts: [[23, -4], [23, -8], [25, -8], [25, -4]], rest: 24 },
   // Mèo trắng cổng, hay nằm gần lối đi
-  { color: '#e8e2d6', stripe: '#b8ad98', speed: 0.6, pts: [[7, 22], [7, 12], [14, 10], [21, 11], [21, 21], [13, 22]], rest: 30 },
+  { color: '#e8e2d6', stripe: '#b8ad98', speed: 0.6, pts: [[5, 26], [5, 12], [5, 8], [14, 8.2], [21, 8.4], [22, 15.8], [8.4, 16.4]], rest: 30 },
 ];
 
 function makeCat(colorHex, stripeHex) {
@@ -82,7 +82,8 @@ export class Animals {
     const fishGeo = new THREE.ConeGeometry(0.13, 0.62, 5);
     fishGeo.rotateX(Math.PI / 2);
     fishGeo.scale(1, 0.4, 1);
-    this.koiCount = 9;
+    this.pondKoi = 9; // từ con thứ 10 trở đi bơi ở hồ câu
+    this.koiCount = 13;
     this.koi = new THREE.InstancedMesh(fishGeo, new THREE.MeshBasicMaterial(), this.koiCount);
     const col = new THREE.Color();
     const koiColors = ['#f07a2a', '#f4f0e6', '#e0402a', '#f5b53a'];
@@ -165,7 +166,8 @@ export class Animals {
       const r = 1.3 + (i % 4) * 0.75;
       const a = dir * t * (0.25 + (i % 3) * 0.07) + i * 1.9;
       const wob = Math.sin(t * 2.5 + i) * 0.12;
-      this._p.set(POND.x + Math.sin(a) * r, 0.06, POND.z + Math.cos(a) * r);
+      const home = i < this.pondKoi ? POND : LAKE.lobes[i % LAKE.lobes.length];
+      this._p.set(home.x + Math.sin(a) * r, 0.06, home.z + Math.cos(a) * r);
       this._e.set(0, a + (dir > 0 ? Math.PI / 2 : -Math.PI / 2) + wob, 0);
       this._q.setFromEuler(this._e);
       this._m.compose(this._p, this._q, this._s);

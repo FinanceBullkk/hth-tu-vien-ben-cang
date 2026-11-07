@@ -32,6 +32,15 @@ export function localDate(ts, tz) {
   return `${p.year}-${p.month}-${p.day}`;
 }
 
+/** Thứ Hai của tuần chứa ts (theo ngày địa phương), dạng YYYY-MM-DD — mốc bảng tuần. */
+export function localWeekStart(ts, tz) {
+  const p = parts(ts, tz);
+  const weekday = (new Date(Date.UTC(+p.year, +p.month - 1, +p.day)).getUTCDay() + 6) % 7;
+  const monday = new Date(Date.UTC(+p.year, +p.month - 1, +p.day - weekday));
+  const iso = monday.toISOString().slice(0, 10);
+  return iso;
+}
+
 export function localHour(ts, tz) {
   return Number(parts(ts, tz).hour);
 }

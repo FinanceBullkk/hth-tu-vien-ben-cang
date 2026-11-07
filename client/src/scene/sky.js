@@ -7,9 +7,10 @@ const smooth = (a, b, x) => {
   return t * t * (3 - 2 * t);
 };
 
+// Ánh sáng dịu: trời xanh và nắng kem, đêm vẫn đọc được cảnh dưới ánh trăng.
 const PAL = {
-  dusk: { top: '#34406f', mid: '#b4647a', hor: '#ffa45e', fog: '#d98a64', sun: '#ffb27a', hemiSky: '#ffc9a0', hemiGnd: '#6a4a3a' },
-  night: { top: '#050817', mid: '#0e1636', hor: '#1c2a55', fog: '#141d3c', sun: '#8fa8ff', hemiSky: '#51639f', hemiGnd: '#1c1a2a' },
+  dusk: { top: '#79bfc8', mid: '#c3dfd0', hor: '#fff0cd', fog: '#d9e5cd', sun: '#fff0cd', hemiSky: '#ecf6dd', hemiGnd: '#a5b88b' },
+  night: { top: '#243c64', mid: '#49688a', hor: '#8fabc0', fog: '#7899aa', sun: '#d6e6ff', hemiSky: '#a7c4dd', hemiGnd: '#718775' },
 };
 const c = (hex) => new THREE.Color(hex);
 
@@ -25,6 +26,12 @@ export class DayNight {
     }
     this.fog = new THREE.Fog(this.dusk.fog.getHex(), 140, 780);
     scene.fog = this.fog;
+    // Halơ trăng: một đĩa mờ lớn phía sau vầng trăng, đậm chất tranh mực.
+    this.moonHaloMat = new THREE.MeshBasicMaterial({ color: 0xbfc8ea, transparent: true, opacity: 0, fog: false, depthWrite: false, blending: THREE.AdditiveBlending });
+    this.moonHalo = new THREE.Mesh(new THREE.CircleGeometry(58, 20), this.moonHaloMat);
+    this.moonHalo.position.set(-420, 620, 518);
+    this.moonHalo.lookAt(0, 0, 0);
+    scene.add(this.moonHalo);
 
     this.uniforms = {
       top: { value: this.dusk.top.clone() },
@@ -141,10 +148,14 @@ export class DayNight {
     this.lightDir.copy(this.sunDirVec).lerp(this.moonDirVec, smooth(0.25, 0.75, n)).normalize();
     this.sun.position.copy(this.lightDir).multiplyScalar(110).add(this.sun.target.position);
     this.sun.intensity = 2.3 + (1.15 - 2.3) * n;
-    this.hemi.intensity = 1.5 + (1.3 - 1.5) * n;
+    this.hemi.intensity = 1.6 + (1.45 - 1.6) * n;
 
     this.starMat.opacity = smooth(0.45, 0.95, n);
     this.moonMat.opacity = smooth(0.3, 0.8, n);
+    this.moonHaloMat.opacity = smooth(0.18, 0.3, n);
+    // Đêm phủ sương dày hơn: cảnh gần chìm nhẹ vào mực, đúng chất tranh cuộn.
+    this.fog.near = 140 - 30 * n;
+    this.fog.far = 780 - 160 * n;
   }
 
   /** Giữ vòm trời bám theo camera để không bị cắt ở xa. */

@@ -77,7 +77,8 @@ export class WishActivity {
       if (this.place === 'pond') app.audio.waterDrop();
       else if (this.place === 'tree') app.audio.rustle();
       else app.audio.paper();
-      this.turnToward(this.place);
+      // Quay mặt về đúng chỗ lời ước vừa xuất hiện để nhìn thấy nó hiện ra.
+      this.turnToward(this.place, app.world.wishes.byId.get(res.id)?.world);
       modal.close();
       app.hud.toast(res.remaining > 0 ? `Đã gửi. Hôm nay bạn còn ${res.remaining} lời ước.` : 'Đã gửi. Hôm nay bạn viết đủ 3 lời ước rồi.');
     });
@@ -102,11 +103,11 @@ export class WishActivity {
     textarea.focus();
   }
 
-  turnToward(place) {
+  turnToward(place, slotWorld) {
     const { me } = this.app;
-    const target = place === 'pond' ? POND : place === 'container'
+    const target = slotWorld ?? (place === 'pond' ? POND : place === 'container'
       ? { x: CONTAINERS.minX, z: Math.max(CONTAINERS.minZ, Math.min(CONTAINERS.maxZ, me.z)) }
-      : TREE;
+      : TREE);
     me.rot = Math.atan2(target.x - me.x, target.z - me.z);
   }
 

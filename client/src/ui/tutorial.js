@@ -6,13 +6,13 @@ export function showTutorial(store, isTouch) {
   const steps = isTouch
     ? [
       ['Đi lại', 'Kéo cần ảo góc trái để đi, kéo nửa màn hình bên phải để xoay góc nhìn.'],
-      ['Tới gần', 'Đi tới gác chuông, thiền đường, cây bồ đề, hồ sen, container hoặc quán trà.'],
-      ['Chạm nút', 'Nút hành động to sẽ hiện ra ở góc dưới bên phải. Chạm một lần là làm.'],
+      ['Chơi gì?', 'Chạm nút Chơi gì? ở góc trên, chọn một trò là game đưa bạn tới ngay.'],
+      ['Tự dạo chơi', 'Đi tới gần chỗ nào có nút to hiện ở góc dưới bên phải, chạm một lần là chơi.'],
     ]
     : [
       ['Đi lại', 'Dùng WASD hoặc phím mũi tên để đi. Giữ chuột trái rồi kéo để xoay góc nhìn.'],
-      ['Tới gần', 'Đi tới gác chuông, thiền đường, cây bồ đề, hồ sen, container hoặc quán trà.'],
-      ['Hành động', 'Nút to sẽ hiện ra giữa màn hình. Bấm nút hoặc phím E. Phím T để chat.'],
+      ['Chơi gì?', 'Bấm nút Chơi gì? ở góc trên, chọn một trò là game đưa bạn tới ngay.'],
+      ['Tự dạo chơi', 'Đi tới gần chỗ nào có nút to hiện giữa màn hình, bấm nút hoặc phím E là chơi. Phím T để chat.'],
     ];
   let i = 0;
   const title = h('h3');

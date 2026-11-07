@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="vi">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quy hoạch tu viện</title>
+<style>
+  body { margin: 0; background: #d5dfd6; color: #243f36; font: 16px Georgia, serif; }
+  canvas { display: block; touch-action: none; }
+  nav { position: fixed; top: 16px; left: 16px; right: 16px; padding: 16px; background: #fff9ebed; border: 1px solid #b5b39a; max-width: 320px; }
+  h1 { font-size: 24px; margin: 0 0 8px; }
+  p { margin: 8px 0; line-height: 1.4; }
+  button { background: #294e40; color: #fff9eb; border: 0; padding: 12px; cursor: pointer; font: inherit; }
+  button:focus-visible { outline: 3px solid #a7602d; outline-offset: 3px; }
+</style>
+<nav aria-label="Góc nhìn khuôn viên">
+  <h1>Tu viện bên cảng</h1>
+  <p>Nắng dịu, mái ngọc, sân vườn men theo lối đá. Bố cục tham khảo Qinghe.</p>
+  <button data-view="overview">Toàn cảnh</button>
+  <button data-view="plan">Mặt bằng</button>
+  <button data-view="gate">Từ cổng</button>
+  <button data-view="garden">Vườn trà</button>
+  <label>Ánh sáng <select id="light"><option value="0">Nắng sớm</option><option value="0.65">Ánh trăng</option></select></label>
+  <p>Kéo để xoay · Cuộn để phóng to</p>
+</nav>
+<script type="module">
+  import * as THREE from 'three';
+  import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+  import { createMonastery } from '/src/scene/monastery.js';
+  import { createWuxiaProps } from '/src/scene/wuxia-props.js';
+  import { FishingScene } from '/src/scene/fishing.js';
+  import { PitchPotCourt } from '/src/scene/pitch-pot-court.js';
+  import { createTerrain, createForest } from '/src/scene/terrain.js';
+  import { DayNight } from '/src/scene/sky.js';
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 1800);
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.autoUpdate = false;
+  THREE.DefaultLoadingManager.onLoad = () => { renderer.shadowMap.needsUpdate = true; };
+  document.body.append(renderer.domElement);
+  const sky = new DayNight(scene);
+  sky.setShadowSize(1024);
+  sky.update(0, 1200000);
+  scene.add(createTerrain(true), createForest(true));
+  createMonastery(scene);
+  createWuxiaProps(scene);
+  new FishingScene(scene);
+  new PitchPotCourt(scene);
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.maxPolarAngle = Math.PI / 2 - 0.04;
+  controls.maxDistance = 450;
+  controls.minDistance = 4;
+  const views = {
+    overview: { pos: [65, 57, 82], target: [0, 0, 0] },
+    plan: { pos: [0, 105, 0.01], target: [0, 0, 0] },
+    gate: { pos: [0, 2.8, 27], target: [0, 3, -18] },
+    garden: { pos: [-3, 3.2, 23], target: [-18, 2, 10] },
+  };
+  function view(key) {
+    camera.position.fromArray(views[key].pos);
+    controls.target.fromArray(views[key].target);
+    controls.update();
+  }
+  document.querySelectorAll('[data-view]').forEach(button => button.onclick = () => view(button.dataset.view));
+  document.querySelector('#light').onchange = event => {
+    sky.update(Number(event.target.value) * 1200000, 1200000);
+    renderer.shadowMap.needsUpdate = true;
+  };
+  function resize() {
+    camera.aspect = innerWidth / innerHeight;
+    // Preserve horizontal framing on phones without changing the orbit target.
+    camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(21)) * Math.max(1, 1.3 / camera.aspect)));
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  }
+  addEventListener('resize', resize);
+  resize();
+  view('overview');
+  renderer.shadowMap.needsUpdate = true;
+  renderer.setAnimationLoop(() => { sky.follow(camera); renderer.render(scene, camera); });
+</script>
+</html>

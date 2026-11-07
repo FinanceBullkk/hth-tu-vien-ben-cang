@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Login music check</title>
+<p>Open through Vite: /@fs/D:/hth-tu-vien-ben-cang/tools/check-login-music.html</p>
+<button id="run">Run native audio check</button>
+<section id="root"></section>
+<pre id="result"></pre>
+<script type="module">
+  import { LoginMusic } from '../client/src/audio/login-music.js';
+  const root = document.querySelector('#root');
+  const result = document.querySelector('#result');
+  const assert = (ok, message) => { if (!ok) throw new Error(message); };
+  document.querySelector('#run').onclick = async () => {
+    const music = new LoginMusic(root);
+    root.append(music.button, music.audio);
+    try {
+      await music.audio.play();
+      assert(music.audio.loop && !music.audio.paused, 'Looping playback starts');
+      assert(music.button.getAttribute('aria-pressed') === 'true', 'Button reflects playback');
+      music.button.click();
+      assert(music.audio.paused, 'Pause button stops playback');
+      root.click();
+      assert(music.audio.paused, 'Other interactions preserve explicit pause');
+      music.button.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+      assert(music.audio.paused, 'Keyboard toggle does not trigger autoplay retry');
+      music.button.click();
+      await music.audio.play();
+      assert(!music.audio.paused, 'Button resumes playback');
+      music.stop();
+      root.click();
+      music.play();
+      assert(music.audio.paused, 'Leaving login stops playback and removes unlock handlers');
+      result.textContent = 'PASS: native playback, loop, pause, keyboard, resume, cleanup';
+    } catch (error) {
+      result.textContent = `FAIL: ${error.message}`;
+    } finally {
+      music.stop();
+      root.replaceChildren();
+    }
+  };
+</script>
+</html>

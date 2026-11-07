@@ -115,6 +115,7 @@ export class Abbot {
     this.avatar.nameEl.classList.add('abbot');
     this.avatar.label.position.y = 1.86;
     this.avatar.rig.scale.set(1.2, 1.06, 1.14); // Dáng đậm người.
+    this.avatar.attire.hide();
     this.avatar.hatGroup.rotation.x = -0.2; // Đẩy mép tóc lên cho lộ trán, kính không bị tóc che.
     addRobe(this.avatar);
     addGlasses(this.avatar.head);
