@@ -6,6 +6,7 @@ import { FortuneActivity } from './fortune.js';
 import { PitchActivity } from './pitch.js';
 import { RiddleActivity } from './riddle.js';
 import { RhythmActivity } from './rhythm.js';
+import { MeditationActivity } from './meditation.js';
 import { WishActivity } from './wish.js';
 
 const KIND_CODE = { bell: 2, write: 3, shake: 4, fish: 5, pitch: 6 };
@@ -16,7 +17,8 @@ export class Activities {
     this.current = null;
     this.bell = new RhythmActivity(app, 'bell');
     this.bellEvent = new BellEvent(app);
-    this.meditation = new RhythmActivity(app, 'meditate');
+    this.meditation = new MeditationActivity(app);
+    this.lotus = new RhythmActivity(app, 'meditate');
     this.wish = new WishActivity(app);
     this.fortune = new FortuneActivity(app);
     this.fishing = new FishingActivity(app);

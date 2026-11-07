@@ -1,6 +1,7 @@
 // Giữ chỗ chiếu và phát trạng thái hoa sen của minigame Nhịp sen.
 import { MAT_COUNT, MATS, dist2d } from '../shared/layout.js';
 import { rhythmSummary } from '../shared/rhythm.js';
+import { QI_INTERVAL_MS } from '../shared/cultivation.js';
 
 export class Meditation {
   constructor({ db, io, config }) {
@@ -27,7 +28,7 @@ export class Meditation {
   }
 
   sit(player, matIndex) {
-    const mat = Number(matIndex);
+    const mat = matIndex;
     if (!Number.isInteger(mat) || mat < 0 || mat >= MAT_COUNT) return { ok: false, error: 'Chiếu này không có thật.' };
     if (this.mats[mat]) return { ok: false, error: 'Chiếu này có người ngồi rồi, chọn chiếu khác nhé.' };
     const pos = MATS[mat];
@@ -41,9 +42,34 @@ export class Meditation {
     player.medStart = now;
     player.medStartAt = now;
     player.medMates = new Set();
+    player.qiAt = now;
+    player.qiPendingMs = 0;
+    player.cultivationMs = this.db.playerRow(player.pid)?.cultivation_ms ?? 0;
+    player.qi = Math.floor(player.cultivationMs / QI_INTERVAL_MS);
     this.io.emit('meditation:mats', this.occupancy());
     this.sync();
-    return { ok: true, epoch: this.epoch, startAt: player.medStartAt, now, mat, mates: [...player.medMates] };
+    return { ok: true, epoch: this.epoch, startAt: player.medStartAt, now, mat, qi: player.qi, mates: [...player.medMates] };
+  }
+
+  accrue(player, now = Date.now(), flush = false) {
+    if (player.mat == null) return;
+    const elapsed = Math.max(0, now - player.qiAt);
+    player.qiAt = Math.max(now, player.qiAt);
+    // A suspended server is not online meditation time.
+    if (elapsed <= 15_000) player.qiPendingMs += elapsed;
+    if (!player.qiPendingMs || (!flush && player.qiPendingMs < QI_INTERVAL_MS)) return;
+    player.cultivationMs = this.db.addCultivation(player.pid, player.qiPendingMs);
+    player.qiPendingMs = 0;
+    player.qi = Math.floor(player.cultivationMs / QI_INTERVAL_MS);
+    player.dirty = true;
+    this.io.emit('cultivation:progress', { sid: player.sid, qi: player.qi });
+  }
+
+  sweep() {
+    const now = Date.now();
+    for (const player of this.members()) {
+      if (player.socket) this.accrue(player, now);
+    }
   }
 
   members() {
@@ -64,6 +90,7 @@ export class Meditation {
 
   leave(player) {
     if (player.mat === undefined || player.mat === null) return;
+    this.accrue(player, Date.now(), true);
     this.mats[player.mat] = null;
     player.mat = null;
     this.io.emit('meditation:mats', this.occupancy());
