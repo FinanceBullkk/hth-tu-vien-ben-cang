@@ -93,7 +93,29 @@ these flags again.
 `hth:latest` may not be the running image. Check the actual image with
 `docker ps --filter name=hth` before recreating or rolling back.
 
-## Latest release: 2026-11-07 seated meditation qi and ground aura
+## Latest release: 2026-11-07 meditation anywhere and Lee Sin quick outfit
+
+Deployed as `hth:261107-1953-5cdb367` (also `hth:latest`) at 19:55 (UTC+7) on
+`pc-chinh`, from main `5cdb367` (PR #21) through Deploy run `42374410776`.
+Adds **Thiền tại chỗ** to the contextual action and **Chơi gì?** menu, keeping
+the server's current position while awarding qi. Real mats still support Nhịp sen.
+Adds **Mặc bộ Lee Sin · Long quyền** on welcome to select the existing full outfit.
+No DB schema change; partial meditation time and existing progress are retained.
+
+Local suite and Docker test gate: 119/119; Vite build passed. Local browser checks
+on desktop and mobile passed outfit selection and persistence after reload,
+meditation without travel, qi gain and standing up, with no page errors.
+Candidate on a copy of production: health, page, bundle, Socket.IO and DB
+`quick_check` passed (25 players, 13 wishes, 25 fish). Cutover from
+`hth:261107-1911-65ab644` retained the data volume, network, port and runtime flags.
+Public health, bundle `/assets/index-CzHwhGgN.js`, feature strings and WebSocket
+clock sync passed after cutover. Public gameplay was not repeated with a player.
+
+Rollback: stopped container `hth-rollback-261107-1953-5cdb367` using the previous
+image. Private backup: `backups/cutover-261107-1953-5cdb367/` inside the data volume.
+Deploy run: https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/42374410776
+
+## Previous release: 2026-11-07 seated meditation qi and ground aura
 
 Deployed as `hth:261107-1911-65ab644` (also `hth:latest`) at 19:11 (UTC+7) on `pc-chinh`, built
 from main `65ab644` (PR #19) through the Deploy workflow. Brings the seated-meditation feature
