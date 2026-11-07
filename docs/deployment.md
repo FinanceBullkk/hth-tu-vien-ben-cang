@@ -16,9 +16,11 @@ Game container: `hth-tu-vien-ben-cang` on Docker network `hth-net` on
 shared radio clock are in Docker volume `hth-tu-vien-ben-cang-data`. The
 tunnel forwards to `http://hth-tu-vien-ben-cang:3000`.
 
-Note: an unused stale copy of the stack (container `hth`, tunnel, volume
-`hth-data`) sits on machine `hao` (`hao.tail028c49.ts.net`) and serves nothing
-public. It is not production; decide to keep or remove it there.
+Note: a stale copy of the stack (container `hth`, quick tunnel, volume
+`hth-data`) used to sit on machine `hao` (`hao.tail028c49.ts.net`). It served
+nothing public and was fully removed on 2026-11-07 (containers, volume, images
+`hth:1`–`hth:4` and `cloudflared`; its DB snapshot held 15 players / 4 wishes,
+superseded by production). Production is only on `pc-chinh`.
 
 ## Releasing from the dev machine
 
