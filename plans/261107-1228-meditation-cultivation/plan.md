@@ -14,4 +14,4 @@ Review trước triển khai: một số tích lũy duy nhất; tầng suy ra t�
 - `npm test`: 96/96 đạt. `npm run build`: đạt.
 - Kiểm tra trình duyệt desktop và 390x844: nhận khí, vào lại, đứng dậy, Sổ an, chuyển Nhịp sen; không có lỗi console. Trang thử đủ năm tầng đã được xoá.
 - Sửa đường dẫn sendFile của admin để chạy trong worktree nằm dưới thư mục `.codex`; test admin đạt.
-- Commit/push/deploy theo yêu cầu; kết quả phát hành ghi trong `docs/deployment.md`. Không còn câu hỏi mở.
+- Đã commit/push `20cefcc`, `67c898e`; deploy riêng theo yêu cầu tại `http://localhost:3992/`, container `hth-meditation-preview`, dữ liệu thử riêng. Không thay bản public. Chi tiết trong `docs/deployment.md`. Không còn câu hỏi mở.

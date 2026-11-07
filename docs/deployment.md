@@ -57,6 +57,25 @@ docker stop hth-tunnel-fixed
 
 Start it again with `docker start hth-tunnel-fixed`. Domain remains unchanged.
 
+## Separate meditation preview: 2026-11-07
+
+User requested an isolated deployment, separate from campus-healing and the public game.
+Open `http://localhost:3992/` on this PC. No public hostname or Tunnel route was added.
+
+- Branch: `feat/meditation-cultivation`; code commits `20cefcc` and `67c898e`.
+- Image: `hth:meditation-261107-1318`; container: `hth-meditation-preview`.
+- Dedicated synthetic-data volume: `hth-meditation-candidate-1318`. Never mount the public data volume here.
+- Localhost binding `127.0.0.1:3992:3000`, Docker `bridge` network, `unless-stopped` restart policy;
+  memory, swap, PID, capability and no-new-privileges limits match Operate above.
+- No join code for this local preview. Its synthetic configuration is independent of production.
+- Validation: 96/96 local tests; Docker build passed; candidate socket test awarded and saved qi;
+  final preview health, page, exact JS bundle hash and WebSocket handshake passed.
+- Original `hth-meditation-candidate-1318` container is stopped. Do not run it alongside the preview:
+  both use the same test volume and port. The preview uses the normal server entrypoint and preserves configuration on restart.
+
+Stop/start only this preview with `docker stop hth-meditation-preview` and
+`docker start hth-meditation-preview`. This deployment did not replace the public game.
+
 ## Latest release: 2026-11-07 campus layout and auras
 
 Deployed as `hth:campus-261107-1155` (also `hth:latest`) at 12:00 (UTC+7), built from a clean export
