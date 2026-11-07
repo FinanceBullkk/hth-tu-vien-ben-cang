@@ -1,4 +1,4 @@
-// Nhận thao tác: WASD/mũi tên, kéo chuột xoay, lăn zoom; điện thoại có cần ảo và kéo nửa phải.
+// Nhận thao tác: WASD/mũi tên, kéo chuột phải/trái xoay, lăn zoom; điện thoại có cần ảo và kéo nửa phải.
 
 const MOVE_KEYS = {
   KeyW: [0, 1], ArrowUp: [0, 1], KeyS: [0, -1], ArrowDown: [0, -1],
@@ -6,6 +6,8 @@ const MOVE_KEYS = {
 };
 const TAP_MOVE_PX = 8;
 const TAP_MS = 350;
+// Chuột phải (kiểu Trove/Where Winds Meet) và chuột trái đều xoay được camera.
+const ROTATE_BUTTONS = new Set([0, 2]);
 
 export class Input {
   constructor(canvas, stick) {
@@ -22,6 +24,8 @@ export class Input {
     this.camId = null;
     this.camLast = { x: 0, y: 0 };
     this.downAt = { x: 0, y: 0, t: 0, moved: false };
+    this.camButton = 0;
+    this.rotating = false; // Đang giữ nút xoay camera (để nhân vật hướng theo ống kính).
     this.onTap = null;
     this.onKeyDown = null;
     this.onKeyUp = null;
@@ -33,6 +37,8 @@ export class Input {
       this.keys.clear();
       this.#stickEnd();
       this.camId = null;
+      this.rotating = false;
+      this.canvas.classList.remove('cam-dragging');
     });
 
     canvas.addEventListener('pointerdown', (e) => this.#down(e));
@@ -77,12 +83,15 @@ export class Input {
       this.#stickUpdate(e);
       return;
     }
-    if (e.button !== 0 && !isTouch) return;
+    if (e.button !== 0 && !isTouch && !ROTATE_BUTTONS.has(e.button)) return;
     if (this.camId === null) {
       this.camId = e.pointerId;
+      this.camButton = isTouch ? 0 : e.button;
+      this.rotating = true;
       this.camLast.x = e.clientX;
       this.camLast.y = e.clientY;
       this.downAt = { x: e.clientX, y: e.clientY, t: performance.now(), moved: false };
+      this.canvas.classList.add('cam-dragging');
     }
   }
 
@@ -111,7 +120,10 @@ export class Input {
     }
     if (e.pointerId !== this.camId) return;
     this.camId = null;
-    const isTap = !this.downAt.moved && performance.now() - this.downAt.t < TAP_MS;
+    this.rotating = false;
+    this.canvas.classList.remove('cam-dragging');
+    // Chỉ bấm chuột trái/thẻ mới tính là chạm để tương tác; chuột phải thuần xoay góc nhìn.
+    const isTap = this.camButton === 0 && !this.downAt.moved && performance.now() - this.downAt.t < TAP_MS;
     if (isTap && e.type === 'pointerup') this.onTap?.(e.clientX, e.clientY);
   }
 

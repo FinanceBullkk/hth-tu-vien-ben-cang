@@ -33,7 +33,8 @@ input, textarea { font: inherit; }
 kbd { font: inherit; }
 
 #app, #scene, #labels { position: fixed; inset: 0; }
-#scene { width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
+#scene { width: 100%; height: 100%; display: block; touch-action: none; outline: none; cursor: grab; }
+#scene.cam-dragging { cursor: grabbing; }
 #labels { pointer-events: none; z-index: 1; overflow: hidden; }
 
 /* Vignette thủy mặc phủ lên cảnh, dưới lớp UI: đậm dần theo mép, thêm vân giấy rất nhẹ. */
