@@ -6,6 +6,7 @@ import { ACTIVITY, ACTIVITY_LABEL, SHIRT_COLORS } from '../../../shared/protocol
 import { createAttire } from './avatar-attire.js';
 import { createWeapon } from './avatar-weapon.js';
 import { createEffect } from './avatar-effect.js';
+import { createCultivation } from './avatar-cultivation.js';
 
 const G = {
   body: new THREE.CylinderGeometry(0.17, 0.25, 0.5, 8),
@@ -142,6 +143,9 @@ export class Avatar {
     this.aura = createEffect(effect, lowQuality);
     if (this.aura.points) this.root.add(this.aura.points);
     this.aura.setWeapon?.(weapon);
+    this.cultivationTier = 0;
+    this.cultivation = createCultivation(effect, 0, lowQuality);
+    this.root.add(this.cultivation.points);
 
     this.halo = new THREE.Mesh(G.halo, M.halo);
     this.halo.position.y = 0.03;
@@ -210,6 +214,7 @@ export class Avatar {
         this.aura.dispose();
       }
       this.aura = createEffect(effect, this.lowQuality);
+      this.setCultivation(this.cultivationTier);
       if (this.aura.points) {
         if (this.fading > 0) this.aura.beginFade();
         this.root.add(this.aura.points);
@@ -218,6 +223,14 @@ export class Avatar {
     this.head.remove(this.hatGroup);
     this.hatGroup = buildHat(hat);
     this.head.add(this.hatGroup);
+  }
+
+  setCultivation(tier) {
+    this.cultivationTier = Number.isInteger(tier) ? Math.max(0, Math.min(3, tier)) : 0;
+    this.root.remove(this.cultivation.points);
+    this.cultivation.dispose();
+    this.cultivation = createCultivation(this.effectIndex, this.cultivationTier, this.lowQuality);
+    this.root.add(this.cultivation.points);
   }
 
   setActivity(code) {
@@ -314,6 +327,7 @@ export class Avatar {
     this.attire.update?.(t, this.walkAmt, this.sitAmt);
     this.weaponFx.update?.(t, this.walkAmt);
     this.aura.update?.(t, this.walkAmt);
+    this.cultivation.update(t, sit, this.fading > 0 ? Math.max(0, this.fading - dt / 0.9) : 1);
 
     if (this.halo.visible) {
       const pulse = 1 + Math.sin(t * 1.05) * 0.14;
@@ -338,6 +352,7 @@ export class Avatar {
 
   /** Dọn khi người chơi đã rời hẳn; hình học dùng chung nên chỉ huỷ vật liệu đã nhân bản. */
   dispose(scene) {
+    this.cultivation.dispose();
     scene.remove(this.root);
     this.tagEl.remove();
     this.label.removeFromParent();
