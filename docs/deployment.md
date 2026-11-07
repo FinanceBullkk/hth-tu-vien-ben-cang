@@ -93,7 +93,38 @@ these flags again.
 `hth:latest` may not be the running image. Check the actual image with
 `docker ps --filter name=hth` before recreating or rolling back.
 
-## Latest release: 2026-11-07 separate hair slot and xianxia hair, hats
+## Latest release: 2026-11-07 seated meditation qi and ground aura
+
+Deployed as `hth:261107-1911-65ab644` (also `hth:latest`) at 19:11 (UTC+7) on `pc-chinh`, built
+from main `65ab644` (PR #19) through the Deploy workflow. Brings the seated-meditation feature
+(tĩnh tu tích Chân khí, 1 qi per 6 s of server-measured sitting time, stored in the new
+`cultivation_ms` column, ground aura `cultivation-aura.js` growing with qi tiers) that had only
+run on the separate `localhost:3992` preview (`feat/meditation-cultivation` `20cefcc`) and was
+never part of any public release. Cherry-picked onto current main; conflicts resolved to keep
+both cultivation systems: the existing Nhịp sen points tiers (`avatar-cultivation.js`) and the
+new qi tiers (`QI_TIERS`, renamed from the branch's `CULTIVATION_TIERS`). State rows grew from
+7 to 8 columns (column 7 stays position age, column 8 is qi).
+
+Test gate in the Docker build: 116/116 (106 previous + 10 new qi tests), including real-socket
+qi awarding, tab-switch and reconnect dedupe. Local worktree suite also 116/116 with a passing
+Vite build (`index-ByspXpni.js`). Candidate on a copy of the real volume: health, bundle,
+DB `quick_check` ok (24 players, 13 wishes, 25 fish). Cutover
+`hth:261107-1837-e3cd0b3` → `hth:261107-1911-65ab644` with the same volume, network, port and
+runtime flags. Post-cutover public checks: health ok, page serves `index-ByspXpni.js`,
+Socket.IO handshake ok, and the served bundle contains the meditation strings. Entry code
+state unchanged from before.
+
+Rollback container `hth-rollback-261107-1911-65ab644` is stopped with `restart=no`
+(image `hth:261107-1837-e3cd0b3`). Cutover backup is inside the data volume under
+`backups/cutover-261107-1911-65ab644/`. The separate meditation preview
+(`hth-meditation-preview`, `127.0.0.1:3992`, image `hth:meditation-261107-1524`, synthetic
+volume) is untouched and now redundant; remove it separately when no longer wanted.
+
+Note: the two intermediate releases `hth:melody-261107-1748` and `hth:261107-1837-e3cd0b3`
+(after the nontoc section below) were deployed by other sessions without recorded release notes;
+their rollback container and images remain as listed by `docker ps -a --filter name=hth`.
+
+## Previous release: 2026-11-07 separate hair slot and xianxia hair, hats
 
 Deployed as `hth:nontoc-261107-1702` (also `hth:latest`) at about 17:10 (UTC+7) on `pc-chinh`, built
 from a clean export of commit `7558252` (main, PR #14). Splits the avatar look into two free
