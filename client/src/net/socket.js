@@ -1,11 +1,14 @@
 // Kết nối Socket.IO: đồng bộ đồng hồ với server, vào phòng, tự kết nối lại.
 import { io } from 'socket.io-client';
+import { slewOffset } from './remote-motion.js';
 
 export class Net {
   constructor() {
     this.socket = io({ autoConnect: false, transports: ['websocket', 'polling'], reconnectionDelay: 700, reconnectionDelayMax: 3000 });
     this.ready = false;
     this.offset = 0;
+    this.targetOffset = 0;
+    this.offsetAt = Date.now();
     this.bestRtt = Infinity;
     this.profileFn = null;
     this.onEnter = null;
@@ -30,7 +33,10 @@ export class Net {
 
   /** Giờ server ước lượng (ms). */
   now() {
-    return Date.now() + this.offset;
+    const local = Date.now();
+    if (this.offset !== this.targetOffset) this.offset = slewOffset(this.offset, this.targetOffset, local - this.offsetAt);
+    this.offsetAt = local;
+    return local + this.offset;
   }
 
   #fatal(message) {
@@ -84,7 +90,7 @@ export class Net {
       this.bestRtt = Math.min(this.bestRtt * 1.05, this.bestRtt + 5);
       if (rtt <= this.bestRtt || this.bestRtt === Infinity) {
         this.bestRtt = rtt;
-        this.offset = res.now + rtt / 2 - t1;
+        this.targetOffset = res.now + rtt / 2 - t1;
       }
     }
   }

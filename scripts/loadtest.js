@@ -11,7 +11,7 @@ const BOTS = Number(arg('bots', 20));
 const SECONDS = Number(arg('seconds', 30));
 const URL_BASE = arg('url', 'http://localhost:3000');
 const ADMIN = arg('admin', process.env.ADMIN_KEY || '');
-const MOVE_HZ = 12;
+const MOVE_HZ = 20;
 
 const bots = [];
 const latencies = [];

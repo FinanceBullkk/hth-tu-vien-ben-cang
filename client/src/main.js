@@ -16,6 +16,7 @@ import { FollowCamera } from './player/camera.js';
 import { Input } from './player/controls.js';
 import { LocalPlayer } from './player/local.js';
 import { setAuraNight } from './player/avatar-effect.js';
+import { trimShadowCasters } from './player/avatar-lod.js';
 import { World, createRenderer } from './scene/world.js';
 import { AdaptiveQuality, renderPixelRatio } from './scene/render-quality.js';
 import { openShare } from './share/share.js';
@@ -57,13 +58,20 @@ function main() {
   $('app').append(labelRenderer.domElement);
 
   const world = new World(scene, isTouch);
+  // Cập nhật ma trận một lần mỗi khung ở vòng lặp; để tự động thì cả cảnh và nhãn tên đều tính lại.
+  scene.matrixWorldAutoUpdate = false;
 
   // Bloom hậu kỳ: hào quang và vật phát sáng rực lên thật sự. Mobile (touch) bỏ qua để giữ khung hình mượt.
   let composer = null;
+  let bloomPass = null;
   if (!isTouch) {
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
-    composer.addPass(new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.28, 0.5, 0.92));
+    bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.28, 0.5, 0.92);
+    // Bloom vốn đã mờ nên chạy ở 1/4 số điểm ảnh gần như không khác, mà đây là bước tốn GPU nhất.
+    const setBloomSize = bloomPass.setSize.bind(bloomPass);
+    bloomPass.setSize = (w, h) => setBloomSize(Math.ceil(w / 2), Math.ceil(h / 2));
+    composer.addPass(bloomPass);
     composer.addPass(new OutputPass());
   }
   const profile = {
@@ -97,6 +105,7 @@ function main() {
     chatBlocked: () => app.activities.current === app.activities.meditation,
   };
   app.remotes._p = new THREE.Vector3();
+  app.bloom = bloomPass;
   app.hud = new Hud(app);
   app.chat = new Chat(app);
   app.activities = new Activities(app);
@@ -199,6 +208,7 @@ function main() {
       hud.startRadio(snap.radio);
       app.follow.intro = false;
       me.avatar.nameEl.hidden = false;
+      trimShadowCasters(me.avatar); // Ngoại hình đã chốt ở màn chào.
       me.rot = SPAWN.rot;
       me.locked = false;
       app.input.enabled = true;
@@ -211,8 +221,9 @@ function main() {
   };
 
   net.on('state', ({ t, p }) => {
+    const arrivedAt = net.now();
     for (const row of p) {
-      if (row[0] !== mySid) remotes.applyRow(row, t);
+      if (row[0] !== mySid) remotes.applyRow(row, t - (row[6] ?? 0), arrivedAt);
     }
   });
 
@@ -412,12 +423,15 @@ function main() {
   };
   const quality = new AdaptiveQuality((level) => {
     if (level === 1) {
+      // Tắt bloom và thu bóng đều không phải biên dịch lại shader, nên hạ bậc không gây khựng.
+      if (bloomPass) bloomPass.enabled = false;
       world.sky.setShadowSize(1024);
     } else {
       renderer.shadowMap.enabled = false;
     }
     onResize();
   });
+  app.quality = quality;
   window.addEventListener('resize', onResize);
   onResize();
 
@@ -452,6 +466,8 @@ function main() {
     app.follow.update(dt, me.x, me.y, me.z, look);
     world.sky.follow(camera);
     setAuraNight(world.sky.night); // hào quang rực theo ngày/đêm trên tu viện
+    world.shadowBusy = me.moving || remotes.walking;
+    scene.updateMatrixWorld();
 
     audioTimer += dt;
     if (audioTimer > 0.4) {

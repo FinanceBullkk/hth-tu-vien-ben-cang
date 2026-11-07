@@ -14,7 +14,7 @@ import { createForest, createTerrain } from './terrain.js';
 import { Wishes3D } from './wishes3d.js';
 import { MeditationGarden } from './meditation-garden.js';
 import { createWuxiaProps } from './wuxia-props.js';
-import { renderPixelRatio } from './render-quality.js';
+import { ShadowPacer, renderPixelRatio } from './render-quality.js';
 
 export class World {
   constructor(scene, lowQuality) {
@@ -23,7 +23,8 @@ export class World {
     this.sky.setShadowSize(lowQuality ? 1024 : 2048);
     // Shadows need less frequent updates than camera/player movement.
     this.sky.sun.shadow.autoUpdate = false;
-    this.shadowClock = 0;
+    this.shadowPacer = new ShadowPacer();
+    this.shadowBusy = false; // main.js bật khi có người đang đi lại.
     scene.add(createTerrain(lowQuality));
     scene.add(createForest(lowQuality));
     this.monastery = createMonastery(scene);
@@ -68,11 +69,7 @@ export class World {
 
   update(dt, nowMs) {
     this.time += dt;
-    this.shadowClock += dt;
-    if (this.shadowClock >= 1 / 30) {
-      this.sky.sun.shadow.needsUpdate = true;
-      this.shadowClock %= 1 / 30;
-    }
+    if (this.shadowPacer.update(dt, this.shadowBusy || this.bellSwing > 0.002)) this.sky.sun.shadow.needsUpdate = true;
     this.sky.update(nowMs, this.dayCycleMs);
     const night = this.sky.night;
     this.port.update(nowMs, night);
@@ -104,7 +101,7 @@ export class World {
 export function createRenderer(canvas, lowQuality) {
   const renderer = new THREE.WebGLRenderer({
     canvas,
-    antialias: !lowQuality,
+    antialias: false, // Máy bàn vẽ qua composer nên MSAA trên canvas không làm mịn được gì; mobile thì tiết kiệm.
     powerPreference: 'high-performance',
   });
   renderer.setPixelRatio(renderPixelRatio(window.innerWidth, window.innerHeight, window.devicePixelRatio, 2, lowQuality));

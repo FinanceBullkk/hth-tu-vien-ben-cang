@@ -1,9 +1,8 @@
-// Nhân vật của người khác: nhận gói vị trí và nội suy lùi 120 ms cho chuyển động mượt.
+// Nhân vật của người khác: nhận gói vị trí rồi phát lại mượt, xem remote-motion.js.
 import { floorHeight } from '../../../shared/layout.js';
 import { Avatar } from '../player/avatar.js';
-
-const INTERP_DELAY = 120;
-const GAP_MS = 400;
+import { trimShadowCasters, updateAvatarLod } from '../player/avatar-lod.js';
+import { RemoteMotion } from './remote-motion.js';
 
 function lerpAngle(a, b, k) {
   const d = Math.atan2(Math.sin(b - a), Math.cos(b - a));
@@ -16,6 +15,7 @@ export class Remotes {
     this.lowQuality = lowQuality;
     this.map = new Map();
     this.leaving = [];
+    this.walking = false;
   }
 
   add(p, nowMs) {
@@ -33,6 +33,7 @@ export class Remotes {
     avatar.root.rotation.y = p.rot;
     avatar.setActivity(p.activity ?? 0);
     avatar.setCultivation(p.cultivationTier ?? 0);
+    trimShadowCasters(avatar);
     this.scene.add(avatar.root);
     const r = {
       sid: p.sid,
@@ -43,7 +44,8 @@ export class Remotes {
       z: p.z,
       rot: p.rot,
       anim: p.anim ?? 0,
-      buf: [{ t: nowMs, x: p.x, z: p.z, rot: p.rot, anim: p.anim ?? 0 }],
+      far: false,
+      motion: new RemoteMotion(p.x, p.z, p.rot, p.anim ?? 0, nowMs),
     };
     this.map.set(p.sid, r);
     return r;
@@ -57,23 +59,17 @@ export class Remotes {
     }
     for (const p of players) {
       if (this.map.has(p.sid)) {
-        this.applyRow([p.sid, p.x, p.z, p.rot, p.anim, p.activity], nowMs);
+        this.applyRow([p.sid, p.x, p.z, p.rot, p.anim, p.activity], nowMs, nowMs);
         this.map.get(p.sid).avatar.setCultivation(p.cultivationTier ?? 0);
       }
       else this.add(p, nowMs);
     }
   }
 
-  applyRow(row, t) {
+  applyRow(row, t, arrivedAt) {
     const r = this.map.get(row[0]);
     if (!r) return;
-    const last = r.buf[r.buf.length - 1];
-    // Vừa đứng yên lâu rồi mới đi: chèn mốc giả để khỏi trượt dài từ mẫu cũ.
-    if (last && t - last.t > GAP_MS) {
-      r.buf.push({ t: t - 100, x: last.x, z: last.z, rot: last.rot, anim: 0 });
-    }
-    r.buf.push({ t, x: row[1], z: row[2], rot: row[3], anim: row[4] });
-    if (r.buf.length > 24) r.buf.splice(0, r.buf.length - 24);
+    r.motion.push(t, row[1], row[2], row[3], row[4], arrivedAt);
     r.avatar.setActivity(row[5] ?? 0);
   }
 
@@ -87,29 +83,21 @@ export class Remotes {
   }
 
   update(dt, serverNow, camera) {
-    const renderT = serverNow - INTERP_DELAY;
+    this.walking = false;
     for (const r of this.map.values()) {
-      const buf = r.buf;
-      while (buf.length >= 2 && buf[1].t <= renderT) buf.shift();
-      const a = buf[0];
-      const b = buf[1];
-      if (b && b.t > a.t && renderT >= a.t) {
-        const k = Math.min(1, (renderT - a.t) / (b.t - a.t));
-        r.x = a.x + (b.x - a.x) * k;
-        r.z = a.z + (b.z - a.z) * k;
-        r.rot = lerpAngle(a.rot, b.rot, k);
-        r.anim = b.anim;
-      } else if (a) {
-        r.x = a.x;
-        r.z = a.z;
-        r.rot = a.rot;
-        r.anim = a.anim;
-      }
+      const m = r.motion;
+      m.update(dt, serverNow);
+      r.x = m.x;
+      r.z = m.z;
+      r.rot = m.rot;
+      r.anim = m.anim;
+      if (r.anim === 1) this.walking = true;
       const floorY = floorHeight(r.x, r.z);
       r.y += (floorY - r.y) * Math.min(1, dt * 10);
       r.avatar.root.position.set(r.x, r.y, r.z);
       r.avatar.root.rotation.y = lerpAngle(r.avatar.root.rotation.y, r.rot, Math.min(1, dt * 16));
       const d = camera.position.distanceTo(r.avatar.root.position);
+      r.far = updateAvatarLod(r.avatar, d, r.far);
       r.avatar.update(dt, r.anim === 1, d);
     }
     for (let i = this.leaving.length - 1; i >= 0; i--) {
