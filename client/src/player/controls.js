@@ -9,7 +9,7 @@ const TAP_MOVE_PX = 8;
 const TAP_MS = 350;
 const MOUSE_SENS = 0.0045;
 const SENS_PITCH = 0.7; // Trục dọc nhuộm nhẹ cho đỡ hoa mắt.
-const FREELOOK_MAX_STEP = 80; // Delta xa hơn vậy chắc là vọt lóc của trình duyệt, không phải tay người dùng.
+const MAX_STEP = 120; // Delta xa hơn vậy chắc là nhiễu của trình duyệt/bàn phím số, không phải tay người dùng.
 
 export class Input {
   constructor(canvas, stick) {
@@ -27,9 +27,8 @@ export class Input {
     this.camLast = { x: 0, y: 0 };
     this.downAt = { x: 0, y: 0, t: 0, moved: false };
     this.camButton = 0;
-    this.rotating = false; // Đang giữ nút xoay camera (để nhân vật hướng theo ống kính).
-    this.freeLook = false; // Chế độ xoay tự do: di chuột là xoay camera, không cần giữ phím.
-    this.skipMove = 0; // Số event move bỏ qua ngay sau khi khóa con trỏ.
+    this.rotating = false; // Camera đang ở chế độ quay theo ống kính (nhân vật hướng theo camera khi đi).
+    this.freeLook = false; // Xoay tự do kiểu Where Winds Meet: di chuột trên khung cảnh là xoay, không cần giữ phím.
     this.onTap = null;
     this.onKeyDown = null;
     this.onKeyUp = null;
@@ -44,15 +43,6 @@ export class Input {
       this.rotating = false;
       this.canvas.classList.remove('cam-dragging');
       this.endFreeLook();
-    });
-    // Con trỏ thoát khóa (Esc, mở tab mới...) thì tắt xoay tự do cho khớp trạng thái.
-    document.addEventListener('pointerlockchange', () => {
-      this.freeLook = document.pointerLockElement === this.canvas;
-      this.rotating = this.freeLook;
-      // Vừa khóa con trỏ, Chrome hay báo một delta ảo rất lớn làm camera tự quay vòng:
-      // bỏ qua vài event đầu và kẹp biên mỗi event ở nhánh freeLook.
-      this.skipMove = this.freeLook ? 2 : 0;
-      if (!this.freeLook) this.canvas.classList.remove('cam-dragging');
     });
 
     canvas.addEventListener('pointerdown', (e) => this.#down(e));
@@ -92,16 +82,12 @@ export class Input {
     if (!this.enabled) return;
     const isTouch = e.pointerType === 'touch';
     // Chuột phải: bấm một lần bật/tắt xoay tự do, không cần giữ kéo (kiểu Where Winds Meet).
+    // Cố ý không dùng Pointer Lock: khóa con trỏ bắt toàn bộ chuột, tay rời game vẫn quay camera.
     if (!isTouch && e.button === 2) {
-      if (this.freeLook) {
-        this.endFreeLook();
-      } else {
-        const p = this.canvas.requestPointerLock?.();
-        p?.catch?.(() => {});
-      }
+      this.freeLook = !this.freeLook;
+      this.rotating = this.freeLook;
       return;
     }
-    if (this.freeLook && !isTouch) return; // Đang xoay tự do: chuột đã lo phần xoay, không kéo và không bấm chọn.
     const leftZone = isTouch && e.clientX < window.innerWidth * 0.45 && e.clientY > window.innerHeight * 0.45;
     if (leftZone && this.stickId === null) {
       this.stickId = e.pointerId;
@@ -116,7 +102,7 @@ export class Input {
       this.camLast.x = e.clientX;
       this.camLast.y = e.clientY;
       this.downAt = { x: e.clientX, y: e.clientY, t: performance.now(), moved: false };
-      this.canvas.classList.add('cam-dragging');
+      if (!this.freeLook) this.canvas.classList.add('cam-dragging');
     }
   }
 
@@ -126,13 +112,18 @@ export class Input {
       return;
     }
     if (this.freeLook && e.pointerType === 'mouse') {
-      // Con trỏ bị khóa: chỉ còn movementX/Y, camera xoay theo chuột lúc nào cũng được.
-      if (this.skipMove > 0) {
-        this.skipMove--;
-        return;
+      // Xoay theo con trỏ đang hiện, chỉ khi lướt trên khung cảnh: đưa lên nút bấm hay bảng UI
+      // thì target là UI, camera đứng yên để bấm thoải mái.
+      if (e.target !== this.canvas) return;
+      if (e.pointerId === this.camId && Math.hypot(e.clientX - this.downAt.x, e.clientY - this.downAt.y) > TAP_MOVE_PX) {
+        this.downAt.moved = true;
       }
-      const mx = Math.max(-FREELOOK_MAX_STEP, Math.min(FREELOOK_MAX_STEP, e.movementX));
-      const my = Math.max(-FREELOOK_MAX_STEP, Math.min(FREELOOK_MAX_STEP, e.movementY));
+      const rawX = typeof e.movementX === 'number' ? e.movementX : e.clientX - this.camLast.x;
+      const rawY = typeof e.movementY === 'number' ? e.movementY : e.clientY - this.camLast.y;
+      this.camLast.x = e.clientX;
+      this.camLast.y = e.clientY;
+      const mx = Math.max(-MAX_STEP, Math.min(MAX_STEP, rawX));
+      const my = Math.max(-MAX_STEP, Math.min(MAX_STEP, rawY));
       this.yawDelta -= mx * MOUSE_SENS;
       this.pitchDelta += my * MOUSE_SENS * SENS_PITCH;
       return;
@@ -157,7 +148,7 @@ export class Input {
     }
     if (e.pointerId !== this.camId) return;
     this.camId = null;
-    this.rotating = false;
+    this.rotating = this.freeLook;
     this.canvas.classList.remove('cam-dragging');
     // Chỉ bấm chuột trái/thẻ mới tính là chạm để tương tác; chuột phải thuần xoay góc nhìn.
     const isTap = this.camButton === 0 && !this.downAt.moved && performance.now() - this.downAt.t < TAP_MS;
@@ -220,8 +211,9 @@ export class Input {
     return r;
   }
 
-  /** Thoát xoay tự do khi mở hộp thoại, đang gõ chữ hay rời tab. */
+  /** Tắt xoay tự do khi mở hộp thoại, đang gõ chữ hay rời tab. */
   endFreeLook() {
-    if (this.freeLook && document.pointerLockElement === this.canvas) document.exitPointerLock();
+    this.freeLook = false;
+    this.rotating = false;
   }
 }
