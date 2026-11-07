@@ -32,6 +32,7 @@ export class Remotes {
     avatar.root.position.set(p.x, floorHeight(p.x, p.z), p.z);
     avatar.root.rotation.y = p.rot;
     avatar.setActivity(p.activity ?? 0);
+    avatar.setQi(p.qi ?? 0);
     this.scene.add(avatar.root);
     const r = {
       sid: p.sid,
@@ -55,7 +56,7 @@ export class Remotes {
       if (!ids.has(sid)) this.remove(sid);
     }
     for (const p of players) {
-      if (this.map.has(p.sid)) this.applyRow([p.sid, p.x, p.z, p.rot, p.anim, p.activity], nowMs);
+      if (this.map.has(p.sid)) this.applyRow([p.sid, p.x, p.z, p.rot, p.anim, p.activity, p.qi], nowMs);
       else this.add(p, nowMs);
     }
   }
@@ -71,6 +72,7 @@ export class Remotes {
     r.buf.push({ t, x: row[1], z: row[2], rot: row[3], anim: row[4] });
     if (r.buf.length > 24) r.buf.splice(0, r.buf.length - 24);
     r.avatar.setActivity(row[5] ?? 0);
+    r.avatar.setQi(row[6] ?? 0);
   }
 
   remove(sid) {

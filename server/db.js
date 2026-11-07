@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import Database from 'better-sqlite3';
+import { QI_INTERVAL_MS } from '../shared/cultivation.js';
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS players (
@@ -139,7 +140,7 @@ export class Db {
   // CREATE TABLE IF NOT EXISTS không thêm cột cho DB cũ: kiểm tra rồi ALTER từng cột cosmetic.
   #migrate() {
     const have = new Set(this.db.pragma('table_info(players)').map((c) => c.name));
-    for (const col of ['attire', 'weapon', 'effect', 'teu', 'riddle_correct', 'pitch_best', 'unlocked']) {
+    for (const col of ['attire', 'weapon', 'effect', 'teu', 'riddle_correct', 'pitch_best', 'unlocked', 'cultivation_ms']) {
       if (!have.has(col)) this.db.exec(`ALTER TABLE players ADD COLUMN ${col} INTEGER NOT NULL DEFAULT 0`);
     }
   }
@@ -151,6 +152,7 @@ export class Db {
         VALUES (@id,@name,@color,@hat,@attire,@weapon,@effect,@now,@now,@inc)
         ON CONFLICT(id) DO UPDATE SET name=@name,color=@color,hat=@hat,attire=@attire,weapon=@weapon,effect=@effect,last_seen=@now,visits=visits+@inc`),
       player: p('SELECT * FROM players WHERE id=?'),
+      cultivate: p('UPDATE players SET cultivation_ms=cultivation_ms+? WHERE id=? RETURNING cultivation_ms'),
       bumpBell: p('UPDATE players SET bell_count=bell_count+1 WHERE id=?'),
       stat: p(`INSERT INTO daily_stats (local_date,visits,wishes,bells) VALUES (@d,@v,@w,@b)
         ON CONFLICT(local_date) DO UPDATE SET visits=visits+@v,wishes=wishes+@w,bells=bells+@b`),
@@ -320,6 +322,13 @@ export class Db {
     this.s.medInsert.run(playerId, score, now);
   }
 
+  addCultivation(playerId, ms) {
+    if (!Number.isSafeInteger(ms) || ms < 0) throw new RangeError('Invalid cultivation interval');
+    const row = this.s.cultivate.get(ms, playerId);
+    if (!row) throw new Error('Cultivation player missing');
+    return row.cultivation_ms;
+  }
+
   bumpBell(playerId) {
     this.s.bumpBell.run(playerId);
   }
@@ -393,6 +402,7 @@ export class Db {
       bellCount: player.bell_count,
       bellEvents: this.s.bellEventsOf.get(playerId).c,
       teu: player.teu ?? 0,
+      qi: Math.floor((player.cultivation_ms ?? 0) / QI_INTERVAL_MS),
       unlocked: player.unlocked ?? 0,
       riddleCorrect: player.riddle_correct ?? 0,
       pitch: { best: pitch.best, plays: pitch.plays },

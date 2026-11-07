@@ -31,6 +31,7 @@ import { WishReader } from './ui/wishReader.js';
 import './ui/voice.css';
 import './ui/pitch.css';
 import './ui/fishing.css';
+import './ui/cultivation.css';
 
 const isTouch = matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch', isTouch);
@@ -102,7 +103,7 @@ function main() {
     me: new LocalPlayer(scene, profile, isTouch),
     modalBusy: () => modalOpen(),
     isBusy: () => modalOpen() || Boolean(app.activities.current),
-    chatBlocked: () => app.activities.current === app.activities.meditation,
+    chatBlocked: () => app.activities.current?.kind === 'meditate',
   };
   app.remotes._p = new THREE.Vector3();
   app.hud = new Hud(app);
@@ -181,6 +182,7 @@ function main() {
     store.set('playerId', res.playerId);
     app.myName = res.name;
     me.avatar.setName(res.name);
+    me.avatar.setQi(snap.me.qi ?? 0);
     const nowMs = net.now();
     remotes.sync(snap.players, nowMs);
     world.dayCycleMs = snap.dayCycleMs;
@@ -226,6 +228,7 @@ function main() {
   net.on('state', ({ t, p }) => {
     for (const row of p) {
       if (row[0] !== mySid) remotes.applyRow(row, t);
+      else me.avatar.setQi(row[6] ?? 0);
     }
   });
 
@@ -274,7 +277,11 @@ function main() {
   net.on('meditation:mats', (mats) => {
     app.mats = mats;
   });
-  net.on('meditation:sync', (data) => app.activities.meditation.onSync(data));
+  net.on('meditation:sync', (data) => {
+    app.activities.meditation.onSync(data);
+    app.activities.lotus.onSync(data);
+  });
+  net.on('cultivation:progress', ({ sid, qi }) => avatarOf(sid)?.setQi(qi));
   net.on('meditation:scene', (data) => world.meditation.apply(data));
   net.on('rhythm:bloom', (data) => world.meditation.bloom(data));
 

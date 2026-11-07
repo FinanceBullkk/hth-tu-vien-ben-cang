@@ -69,7 +69,7 @@ export const PITCH_ZONE = {
 export const PLACES = [
   { key: 'fish', icon: '🎣', name: 'Câu cá', desc: 'Thả câu ở hồ, gom đủ các loài cá', x: 19, z: 16.7 },
   { key: 'bell', icon: '🔔', name: 'Thỉnh chuông', desc: 'Bấm theo nhịp để chuông ngân', x: BELL.x, z: BELL.z + 3.2 },
-  { key: 'mat', icon: '🪷', name: 'Ngồi thiền', desc: 'Bấm theo nhịp cho sen nở', x: 0, z: -15.6 },
+  { key: 'mat', icon: '🪷', name: 'Ngồi thiền', desc: 'Tích Chân khí, lên tầng và mở hào quang', x: 0, z: -15.6 },
   { key: 'pitch', icon: '🏺', name: 'Đầu hồ', desc: 'Ném tên vào bình, đấu với sư trong chùa', x: 23.4, z: 3 },
   { key: 'riddle', icon: '📜', name: 'Câu đố của sư chú', desc: 'Đoán vui về nghề logistics', x: 3.2, z: 26.6 },
   { key: 'tea', icon: '🍵', name: 'Rút quẻ vận đơn', desc: 'Lắc ống quẻ xin lời chúc hôm nay', x: TEA.x, z: TEA.z - 2.4 },

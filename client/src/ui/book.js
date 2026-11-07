@@ -1,5 +1,6 @@
 // "Sổ an của tôi" và "Bảng ước của cả nhà" + Bảng tuần (TEU, cá, đầu hồ).
 import { FISH, FISH_BOOK_MILESTONES, fishHint } from '../../../shared/fish.js';
+import { cultivation } from '../../../shared/cultivation.js';
 import { PLACE_LABELS, PREMIUM_COLORS } from '../../../shared/protocol.js';
 import { h, store, timeAgo } from './dom.js';
 import { openModal } from './modal.js';
@@ -109,6 +110,7 @@ export async function openBook(app) {
     h('div', { class: 'stats' },
       stat('lần lên tu viện', book.visits),
       stat('TEU đang có', teuNow),
+      stat('Chân khí', book.qi ?? 0),
       stat('câu đố đã giải', book.riddleCorrect),
       stat('loài cá đã bắt', book.fish?.length ?? 0),
       stat('điểm đầu hồ cao nhất', book.pitch?.best),
@@ -116,6 +118,8 @@ export async function openBook(app) {
       stat('độ chuẩn cao nhất (%)', book.meditation.best),
       stat('lần thỉnh chuông', book.bellCount),
       stat('sự kiện chuông đã cùng', book.bellEvents)),
+    h('h3', {}, `Công pháp · Tầng ${cultivation(book.qi).level} · ${cultivation(book.qi).name}`),
+    h('p', { class: 'muted small' }, 'Ngồi thiền để tích Chân khí. Khí càng nhiều, aura càng lớn; lên tầng mở thêm hiệu ứng.'),
     h('h3', {}, 'Sổ cá'),
     fishList,
     h('h3', {}, 'Quầy đổi quà'),

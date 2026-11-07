@@ -25,7 +25,7 @@ export class RhythmActivity {
     return best;
   }
 
-  async start(mat) {
+  async start(mat, existingSeat = null) {
     const { app, kind, panel } = this;
     if (!app.activities.enter(this, kind === 'bell' ? 'bell' : null)) return;
     const generation = ++this.generation;
@@ -36,7 +36,7 @@ export class RhythmActivity {
     panel.status.textContent = '';
     panel.stats({ score: 0, combo: 0, maxCombo: 0 });
     if (kind === 'meditate') {
-      const seated = await app.net.call('action:start', { kind, mat });
+      const seated = existingSeat ?? await app.net.call('action:start', { kind, mat });
       if (generation !== this.generation) return;
       if (!seated?.ok) { app.hud.toast(seated?.error || 'Chưa ngồi được.'); app.activities.exit(); return; }
       const m = MATS[mat];
