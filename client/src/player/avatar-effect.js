@@ -1919,14 +1919,14 @@ export function createEffect(effect, lowQuality = false) {
     const hex = flatMesh(hexTexture(), colors[0], 1.32, 0.05, 0.55); // lục lăng ma trận
     const mantra = flatMesh(runeRingTexture('rune-mo', '魔'), colors[0], 1.52, 0.06, 0.6);
 
-    // vòm khói đen: NormalBlending màu gần đen — tối thật chứ không phải glow
+    // vòm kết giới tím sẫm: additive mỏng để khung nhẹ, màu đen do khói + vũng âm khí gánh
     const domeTex = domeTexture();
     domeTex.wrapS = THREE.RepeatWrapping;
     domeTex.wrapT = THREE.RepeatWrapping;
     const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
-      map: domeTex, color: 0x010105, transparent: true, depthWrite: false,
-      side: THREE.DoubleSide, opacity: 0.34,
-    }), 0.34);
+      map: domeTex, color: colors[1] ?? colors[0], transparent: true, depthWrite: false,
+      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.12,
+    }), 0.12);
     const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.02, 1.95, 48, 1, true)), domeEntry.mat);
     dome.position.y = 0.97;
     group.add(dome);
@@ -1970,8 +1970,8 @@ export function createEffect(effect, lowQuality = false) {
       hex.rotation.z = -t * 0.4; // trận lục lăng xoay ngược
       mantra.rotation.z = t * 0.18;
       dome.rotation.y = -t * 0.05;
-      domeTex.offset.y = -(t * 0.045) % 1; // khói trong vòm cuộn lên chậm
-      domeEntry.base = 0.3 + 0.1 * (0.5 + 0.5 * Math.sin(t * 0.8));
+      domeTex.offset.y = -(t * 0.045) % 1; // khí trong vòm cuộn lên chậm
+      domeEntry.base = 0.09 + 0.04 * (0.5 + 0.5 * Math.sin(t * 0.8));
       for (const sm of smokes) {
         const yn = (t * 0.13 * sm.speed + sm.tw) % 1; // khói bốc lên rồi tan
         const life = Math.sin(yn * Math.PI);
