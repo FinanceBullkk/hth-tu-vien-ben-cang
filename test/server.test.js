@@ -512,6 +512,32 @@ test('Chân khí: đồng bộ, đổi tab, mất mạng và vào lại không n
   viewer.s.disconnect();
 });
 
+test('thiền tại chỗ qua socket: giữ vị trí, tăng khí, mất mạng dừng và vào lại giữ khí', { timeout: 15000 }, async () => {
+  const a = await join('Thiền tại chỗ');
+  const viewer = await join('Xem tĩnh tu');
+  const { x, z, rot } = a.res.snapshot.me;
+  const awarded = until(viewer.s, 'cultivation:progress', (p) => p.sid === a.res.sid, 9000);
+  const seated = await call(a.s, 'action:start', { kind: 'meditate', qi: 999999, x: 999, z: 999 });
+  assert.equal(seated.ok, true);
+  assert.equal(seated.mat, -1);
+  assert.deepEqual([seated.x, seated.z, seated.rot], [x, z, rot]);
+  assert.equal((await call(a.s, 'rhythm:start', { kind: 'meditate' })).ok, false);
+  assert.equal((await call(a.s, 'action:start', { kind: 'fish' })).ok, false);
+  await call(a.s, 'move', [20, 20, 1, 1]);
+  const observer = await join('Xem vị trí');
+  const still = observer.res.snapshot.players.find((p) => p.sid === a.res.sid);
+  assert.deepEqual([still.x, still.z, still.rot, still.activity], [x, z, rot, 1]);
+  assert.equal((await awarded).qi, 1);
+  a.s.disconnect();
+  const resumed = await join('Thiền tại chỗ', a.res.playerId);
+  assert.equal(resumed.res.snapshot.me.qi, 1);
+  assert.equal(resumed.res.snapshot.me.activity, 0);
+  assert.equal(resumed.res.snapshot.mats.some((sid) => sid === a.res.sid), false);
+  resumed.s.disconnect();
+  observer.s.disconnect();
+  viewer.s.disconnect();
+});
+
 test('câu cá qua socket thật: quăng, cắn, giữ kim theo vùng xanh, kéo lên được ghi sổ', { timeout: 40000 }, async () => {
   const a = await join('Người câu');
   const b = await join('Người xem');

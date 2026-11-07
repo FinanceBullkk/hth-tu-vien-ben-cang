@@ -12,7 +12,7 @@ export class RhythmGame {
   }
 
   allowed(player, kind) {
-    return kind === 'meditate' ? player.mat != null : kind === 'bell' && player.mat == null && dist2d(player.x, player.z, BELL.x, BELL.z) <= BELL.radius + 1.5;
+    return kind === 'meditate' ? player.mat != null && player.mat >= 0 : kind === 'bell' && player.mat == null && dist2d(player.x, player.z, BELL.x, BELL.z) <= BELL.radius + 1.5;
   }
 
   start(player, data) {

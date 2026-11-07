@@ -99,6 +99,13 @@ export class Welcome {
         h('label', { class: 'field', for: 'nameInput' }, 'Tên của bạn', this.nameInput),
         this.errorEl,
         this.enterBtn,
+        h('button', { class: 'btn ghost', type: 'button', onClick: () => {
+          this.setColor(0);
+          this.setHat(6);
+          this.setAttire(3);
+          this.setWeapon(3);
+          this.setEffect(9);
+        } }, 'Mặc bộ Lee Sin · Long quyền'),
         // Nhập tên là vào được ngay; thay đồ là phần thêm, không bắt người mới phải cuộn qua mới thấy nút Vào.
         h('details', { class: 'welcome-more' },
           h('summary', {}, 'Đổi trang phục (không bắt buộc)'),

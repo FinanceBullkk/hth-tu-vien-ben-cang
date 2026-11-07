@@ -9,6 +9,7 @@ export class Meditation {
     this.io = io;
     this.config = config;
     this.mats = new Array(MAT_COUNT).fill(null);
+    this.sitters = new Set();
     this.epoch = 0;
   }
 
@@ -28,16 +29,20 @@ export class Meditation {
   }
 
   sit(player, matIndex) {
-    const mat = matIndex;
-    if (!Number.isInteger(mat) || mat < 0 || mat >= MAT_COUNT) return { ok: false, error: 'Chiếu này không có thật.' };
-    if (this.mats[mat]) return { ok: false, error: 'Chiếu này có người ngồi rồi, chọn chiếu khác nhé.' };
-    const pos = MATS[mat];
-    if (dist2d(player.x, player.z, pos.x, pos.z) > 4) return { ok: false, error: 'Lại gần chiếu hơn chút nhé.' };
+    // Không gửi mat là thiền tại chỗ; -1 chỉ là dấu nội bộ, client không được gửi id này.
+    const mat = matIndex === undefined ? -1 : matIndex;
+    if (matIndex !== undefined) {
+      if (!Number.isInteger(mat) || mat < 0 || mat >= MAT_COUNT) return { ok: false, error: 'Chiếu này không có thật.' };
+      if (this.mats[mat]) return { ok: false, error: 'Chiếu này có người ngồi rồi, chọn chiếu khác nhé.' };
+      const pos = MATS[mat];
+      if (dist2d(player.x, player.z, pos.x, pos.z) > 4) return { ok: false, error: 'Lại gần chiếu hơn chút nhé.' };
+    }
     this.leave(player);
     const now = Date.now();
     // Ánh sáng dùng nhịp chung; mỗi người bắt đầu phút nghỉ của mình ngay khi ngồi.
     if (!this.members().length) this.epoch = now + 1500;
-    this.mats[mat] = player;
+    if (mat >= 0) this.mats[mat] = player;
+    this.sitters.add(player);
     player.mat = mat;
     player.medStart = now;
     player.medStartAt = now;
@@ -73,7 +78,7 @@ export class Meditation {
   }
 
   members() {
-    return this.mats.filter(Boolean);
+    return [...this.sitters];
   }
 
   /** Báo cho những người đang ngồi biết ai đang thiền cùng. */
@@ -91,7 +96,8 @@ export class Meditation {
   leave(player) {
     if (player.mat === undefined || player.mat === null) return;
     this.accrue(player, Date.now(), true);
-    this.mats[player.mat] = null;
+    if (player.mat >= 0) this.mats[player.mat] = null;
+    this.sitters.delete(player);
     player.mat = null;
     this.io.emit('meditation:mats', this.occupancy());
     this.sync();
