@@ -160,7 +160,7 @@ export class Room {
     socket.on('disconnect', () => clearTimeout(helloTimer));
 
     const on = (event, handler) => {
-      socket.on(event, (...args) => {
+      socket.on(event, async (...args) => {
         const ack = typeof args[args.length - 1] === 'function' ? args.pop() : null;
         try {
           const player = socket.data.player;
@@ -168,7 +168,7 @@ export class Room {
             ack?.({ ok: false, error: 'Chưa vào phòng.' });
             return;
           }
-          const result = handler(player, args[0]);
+          const result = await handler(player, args[0]);
           ack?.(result ?? { ok: true });
         } catch (err) {
           console.error(`Lỗi xử lý ${event}:`, err);

@@ -29,8 +29,41 @@ Optional server environment variables:
 | `VOICE_STUN_URLS` | Comma-separated `stun:` / `stuns:` service URLs |
 | `VOICE_TURN_URLS` | Comma-separated `turn:` / `turns:` URLs, including transport/port where needed |
 | `VOICE_TURN_SECRET` | Shared secret matching coturn `use-auth-secret` / `static-auth-secret`; keep outside source control |
+| `VOICE_CLOUDFLARE_KEY_ID` | Cloudflare Realtime TURN app token ID |
+| `VOICE_CLOUDFLARE_API_TOKEN` | Matching TURN app API token; server only, never sent to clients |
 
 Authenticated voice participants receive HMAC temporary TURN credentials valid for 24 hours, never the shared secret. Toggle voice to renew credentials in sessions exceeding that period. Configure TURN quotas/expiry at the relay. Use your own service or a provider supporting this credential scheme. No infrastructure is provisioned by this change.
+
+When both Cloudflare variables are configured, Cloudflare replaces the custom
+STUN/coturn list. The server requests 24-hour credentials over HTTPS, caches them
+per player for 23 hours, and only then enables voice. Failed requests leave voice
+off; disabling or disconnecting during a request cancels that join. Repeated join
+attempts have a five-second cooldown. The API token stays on the server. Toggle
+voice after 24 hours to renew credentials. Enable Cloudflare Realtime and create
+a TURN app in its dashboard before configuring these variables.
+
+### Production deployment
+
+Create a Docker environment file outside the repository on the production runner,
+readable only by the operator and runner account. Include the two Cloudflare
+variables, or `VOICE_STUN_URLS`, `VOICE_TURN_URLS`, and `VOICE_TURN_SECRET`, as
+`NAME=value` lines. Never paste its
+contents into logs or commit it. The TURN endpoint must be reachable from the
+public internet; a LAN/Tailscale address or Cloudflare Tunnel URL is insufficient
+for ordinary players outside that network.
+
+Set the GitHub Actions repository variable `HTH_VOICE_ENV_FILE` to the absolute
+path of that file. For a manually authorized local deployment, set the same
+environment variable before running `scripts/deploy.mjs`. Both candidate and
+production containers receive the file through Docker `--env-file`; a missing
+file or invalid ICE configuration fails the candidate before production stops.
+Without this variable, deployments still use the default empty ICE list. Keep
+the repository variable configured for subsequent releases too.
+
+After deployment, verify two devices on different networks (for example Wi-Fi
+and mobile data), within 3 m in game, both with voice enabled and **Mic mở**.
+Confirm sound in both directions. A local browser test alone cannot certify TURN
+reachability, relay authentication, or the relay's UDP firewall/port range.
 
 Peer-to-peer transport can reveal network addresses to participating peers. Distance attenuation/cleanup is game behavior, not protection against a modified client retaining an already established media path. Use an SFU with server-side media routing if adversarial isolation or larger voice groups become necessary.
 
@@ -43,6 +76,12 @@ npm run build
 npm test
 node test/voice-browser-check.mjs
 ```
+
+To verify the Cloudflare relay instead of a local direct connection, load the
+private environment file with Node's `--env-file` and set `VOICE_RELAY_ONLY=1`
+before running the browser check. It forces relay candidates in both test
+browsers and asserts the selected ICE paths are relayed before checking audio.
+Never enable relay-only mode for ordinary unit tests or expose API tokens in logs.
 
 Browser check uses an already installed Playwright package, without adding a production dependency. Set `PLAYWRIGHT_MODULE` to its `index.mjs` file URL if not resolvable from the project. It starts an isolated game server with temporary config/DB and two separate Chromium instances, including a mobile viewport. A synthetic audio source crosses real WebRTC connections. Checks include default silence, push-to-talk, received RTP bytes and speech indication, deafen, distance teardown, explicit disable, disconnect, and late permission cancellation. Screenshot is saved under `plans/reports/`.
 

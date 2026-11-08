@@ -31,6 +31,7 @@ jobs:
       GIT_CONFIG_COUNT: '1'
       GIT_CONFIG_KEY_0: core.autocrlf
       GIT_CONFIG_VALUE_0: 'false'
+      HTH_VOICE_ENV_FILE: ${{ vars.HTH_VOICE_ENV_FILE }}
     steps:
       - uses: actions/checkout@v5
         with:

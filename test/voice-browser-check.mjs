@@ -28,7 +28,13 @@ try {
     browsers.push(browser);
     const page = await browser.newPage(mobile ? { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } : { viewport: { width: 1280, height: 800 } });
     page.on('pageerror', (err) => errors.push(err.message));
-    await page.addInitScript(() => {
+    await page.addInitScript((relayOnly) => {
+      if (relayOnly) {
+        const PeerConnection = window.RTCPeerConnection;
+        window.RTCPeerConnection = class extends PeerConnection {
+          constructor(config) { super({ ...config, iceTransportPolicy: 'relay' }); }
+        };
+      }
       // Synthetic source, not a physical microphone. Audio still crosses real WebRTC connections.
       navigator.mediaDevices.getUserMedia = async () => {
         const ctx = new AudioContext();
@@ -40,7 +46,7 @@ try {
         return dest.stream;
       };
       localStorage.setItem('hth.tutorialDone', '1');
-    });
+    }, process.env.VOICE_RELAY_ONLY === '1');
     await page.goto('http://localhost:3938/');
     await page.locator('#nameInput').fill(name);
     await page.locator('#enterBtn').click();
@@ -84,6 +90,16 @@ try {
   }
   for (const page of [a, b]) await page.waitForFunction(() => [...window.__hth.voice.peers.values()].some((p) => p.pc.connectionState === 'connected'), { timeout: 20000 });
   console.log('PASS: two isolated browsers negotiate WebRTC audio, default mic silent');
+  if (process.env.VOICE_RELAY_ONLY === '1') {
+    for (const page of [a, b]) assert.equal(await page.evaluate(async () => {
+      const peer = [...window.__hth.voice.peers.values()][0];
+      const stats = await peer.pc.getStats();
+      const transport = [...stats.values()].find((s) => s.type === 'transport' && s.selectedCandidatePairId);
+      const pair = stats.get(transport?.selectedCandidatePairId);
+      return stats.get(pair?.localCandidateId)?.candidateType;
+    }), 'relay');
+    console.log('PASS: both browsers use actual TURN relay candidates');
+  }
   await a.locator('#scene').click({ position: { x: 900, y: 400 } });
   await a.keyboard.down('v');
   await a.waitForFunction(() => window.__hth.voice.transmitting);
@@ -116,6 +132,7 @@ try {
   const cdp = await b.context().newCDPSession(b);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 }] });
   await b.waitForFunction(() => window.__hth.voice.transmitting);
+  await a.waitForFunction(() => [...window.__hth.voice.peers.values()].some((p) => p.speaking));
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
   assert.equal(await b.evaluate(() => window.__hth.voice.transmitting), false);
   await a.evaluate(() => { window.__hth.me.x = 0; window.__hth.me.z = 5; });
