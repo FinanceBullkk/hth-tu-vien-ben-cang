@@ -1,5 +1,30 @@
 # Deployment
 
+## Current release: 2026-11-09 Trove-style camera, 01:45 UTC+7
+
+Production runs `hth:camera-1109-0145`, built from the preserved
+`D:/hth-aura-release-1109-0130` source with only six camera/control files
+overlaid from commit `b41bd60` on `fix/trove-camera`. The production-only
+aura, cultivation, activities, server and database code remain intact.
+Desktop mouse movement rotates camera without holding left click; supported
+browsers lock pointer after clicking the scene, while browsers without pointer
+lock rotate on hover. Esc releases pointer. Camera can orbit to face the avatar
+while idle and tilt to the sky. Mobile touch controls remain.
+
+Clean-branch tests passed 141/141; clean-branch and release-image builds passed.
+Ephemeral candidate returned health and page 200. Production cutover retained
+the existing volume, network, loopback port, environment, restart, memory, PID
+and hardening flags. Local/public health, public page, bundle and Socket.IO
+polling returned 200; SQLite quick_check: ok. Browser gameplay after cutover
+has not yet been checked.
+
+Rollback container `hth-pre-camera-1109-0145` is stopped with `restart=no`,
+image `hth:aura-1109-0130`. Private online backup is
+`backups/cutover-camera-1109-0145/` in the production volume. Restore image
+only unless DB restore is needed; DB restore loses writes after cutover.
+Release source: `D:/hth-camera-release-1109`.
+
+
 ## Current target
 
 Cloudflare named Tunnel on the production host `pc-chinh` (Windows, Tailscale
