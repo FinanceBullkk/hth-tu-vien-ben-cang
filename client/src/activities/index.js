@@ -8,6 +8,8 @@ import { RiddleActivity } from './riddle.js';
 import { RhythmActivity } from './rhythm.js';
 import { MeditationActivity } from './meditation.js';
 import { WishActivity } from './wish.js';
+import { MELODY_ZONE } from '../../../shared/layout.js';
+import { MelodyActivity } from './melody.js';
 
 const KIND_CODE = { bell: 2, write: 3, shake: 4, fish: 5, pitch: 6 };
 
@@ -23,6 +25,7 @@ export class Activities {
     this.fortune = new FortuneActivity(app);
     this.fishing = new FishingActivity(app);
     this.pitch = new PitchActivity(app);
+    this.melody = new MelodyActivity(app);
     this.riddle = new RiddleActivity(app);
     this.zoneKey = '';
   }
@@ -67,9 +70,14 @@ export class Activities {
 
   /** Điểm hoạt động ở gần người chơi. */
   zoneAt(x, z) {
+    if (dist2d(x, z, MELODY_ZONE.x, MELODY_ZONE.z) < MELODY_ZONE.radius) {
+      return { key: 'melody', label: 'Tấu nhạc bên hồ', run: () => this.melody.start() };
+    }
+    const meditateHere = { key: 'meditate-here', label: 'Ngồi thiền tại chỗ', run: () => this.meditation.start() };
     if (isInsideHall(x, z)) {
       const mat = this.meditation.nearestFreeMat(x, z);
       if (mat >= 0) return { key: `mat${mat}`, label: 'Ngồi thiền', run: () => this.meditation.start(mat) };
+      return meditateHere;
     }
     if (dist2d(x, z, ABBOT.x, ABBOT.z) < ABBOT.actionRadius) {
       return { key: 'abbot', label: 'Xin thầy một lời', run: () => this.app.world.abbot.advise() };
@@ -103,7 +111,7 @@ export class Activities {
     if (dist2d(x, z, TEA.x, TEA.z) < TEA.radius) {
       return { key: 'tea', label: 'Rút quẻ vận đơn', run: () => this.fortune.start() };
     }
-    return { key: 'meditate-anywhere', label: 'Thiền tại chỗ', run: () => this.meditation.start() };
+    return meditateHere;
   }
 
   update(dt) {

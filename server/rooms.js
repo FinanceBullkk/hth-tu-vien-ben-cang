@@ -26,7 +26,7 @@ const SIT_INTERVAL_MS = 1000; // Ngồi xuống phát tin cho cả phòng nên p
 const round2 = (n) => Math.round(n * 100) / 100;
 
 export class Room {
-  constructor({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch }) {
+  constructor({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch, melody }) {
     this.io = io;
     this.broadcast = io.to(PLAYERS_ROOM);
     this.db = db;
@@ -39,6 +39,7 @@ export class Room {
     this.riddle = riddle;
     this.fishing = fishing;
     this.pitch = pitch;
+    this.melody = melody;
     this.players = new Map(); // sid -> player
     this.voice = new Voice(this.players);
     this.byPid = new Map();
@@ -117,6 +118,7 @@ export class Room {
       this.meditation.sweep();
       this.fishing.sweep(this.players);
       this.pitch.sweep(this.players);
+      this.melody?.sweep();
     }
   }
 
@@ -168,6 +170,10 @@ export class Room {
             ack?.({ ok: false, error: 'Chưa vào phòng.' });
             return;
           }
+          if (player?.melody && /^(action:start|rhythm:|fish:|pitch:|riddle:)/.test(event)) {
+            ack?.({ ok: false, error: 'Rời sân đàn trước nhé.' });
+            return;
+          }
           const result = await handler(player, args[0]);
           ack?.(result ?? { ok: true });
         } catch (err) {
@@ -200,6 +206,9 @@ export class Room {
     on('fish:pull', (p, data) => this.fishing.pull(p, data));
     on('fish:reel', (p) => this.fishing.reel(p));
     on('fish:cancel', (p) => this.fishing.cancel(p));
+    on('melody:start', (p) => this.melody.start(p));
+    on('melody:hit', (p, data) => this.melody.hit(p, data));
+    on('melody:finish', (p, data) => this.melody.finish(p, data));
     on('pitch:start', (p, data) => this.pitch.start(p, data));
     on('pitch:aim', (p, data) => this.pitch.aim(p, data));
     on('pitch:throw', (p, data) => this.pitch.throw(p, data));
@@ -354,6 +363,7 @@ export class Room {
   }
 
   onMove(p, data) {
+    if (p.melody) return undefined;
     if (!Array.isArray(data) || data.length < 4) return undefined;
     // Chặn gửi quá dày: quá giới hạn trong cửa sổ 1 giây thì bỏ gói.
     const now = Date.now();
@@ -362,7 +372,7 @@ export class Room {
       p.moveCount = 0;
     }
     if (++p.moveCount > LIMITS.moveMaxPerSec) return undefined;
-    if (p.mat !== null && p.mat !== undefined) return undefined; // Đang ngồi thiền thì đứng yên.
+    if (p.activity === ACTIVITY.meditate) return undefined; // Đang ngồi thiền thì đứng yên.
     if (p.rod) return undefined; // Đã buông cần: rút mồi trước khi đi (client tự gửi fish:cancel).
 
     const [x, z, rot, anim, sampledAt] = data.map(Number);
@@ -387,7 +397,7 @@ export class Room {
 
   onChat(p, data) {
     const now = Date.now();
-    if (p.mat !== null && p.mat !== undefined) return { ok: false, error: 'Đang thiền thì mình giữ yên lặng nhé.' };
+    if (p.rhythm?.kind === 'meditate') return { ok: false, error: 'Đang chơi Nhịp sen thì mình giữ yên lặng nhé.' };
     if (now - p.lastChat < LIMITS.chatIntervalMs) return { ok: false, error: 'Từ từ thôi, đợi 2 giây nhé.' };
     const text = cleanText(data?.text, LIMITS.chatMax);
     if (!text) return { ok: false };
@@ -430,11 +440,11 @@ export class Room {
       const res = this.meditation.sit(p, data?.mat);
       if (!res.ok) return res;
       p.lastSit = now;
-      const pos = MATS[res.mat];
-      if (pos) {
-        p.x = round2(pos.x);
-        p.z = round2(pos.z);
-        p.rot = round2(pos.rot);
+      const mat = MATS[res.mat];
+      if (mat) {
+        p.x = round2(mat.x);
+        p.z = round2(mat.z);
+        p.rot = round2(mat.rot);
       }
       p.anim = 0;
       p.moveAt = now;
@@ -442,7 +452,7 @@ export class Room {
       p.dirty = true;
       return { ...res, x: p.x, z: p.z, rot: p.rot };
     }
-    if (p.mat != null) return { ok: false, error: 'Đứng dậy trước khi bắt đầu hoạt động khác nhé.' };
+    if (p.activity === ACTIVITY.meditate) return { ok: false, error: 'Đứng dậy trước khi bắt đầu hoạt động khác nhé.' };
     p.activity = code;
     p.dirty = true;
     return { ok: true };
@@ -454,6 +464,7 @@ export class Room {
     this.fishing.cancel(p);
     this.riddle.leave(p);
     this.pitch.leave(p);
+    this.melody?.leave(p);
     if (p.activity !== ACTIVITY.none) {
       p.activity = ACTIVITY.none;
       p.dirty = true;
@@ -508,6 +519,7 @@ export class Room {
     this.fishing.cancel(p);
     this.riddle.leave(p);
     this.pitch.leave(p);
+    this.melody?.leave(p);
     this.removePlayer(p);
     return true;
   }

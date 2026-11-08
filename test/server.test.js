@@ -1,3 +1,5 @@
+import { MELODY_ZONE } from '../shared/layout.js';
+import { QI_GAIN_RATE, QI_INTERVAL_MS } from '../shared/cultivation.js';
 // Kiểm thử server thật qua socket: vào phòng, chat, lời ước, lọc từ, chuông, restart giữ dữ liệu.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -460,7 +462,7 @@ test('nhịp chuông: đứng gần mới chơi, chặn kết thúc sớm và hu
   b.s.disconnect();
 });
 
-test('thiền: giữ chỗ chiếu, nhịp chung, chat bị chặn khi ngồi', async () => {
+test('thiền: giữ chỗ chiếu, chat bình thường; chỉ chặn chat trong Nhịp sen', async () => {
   const a = await join('Thiền A');
   const b = await join('Thiền B');
   // Đi vào gần chiếu số 0 ở phía nam vòng tròn.
@@ -476,38 +478,50 @@ test('thiền: giữ chỗ chiếu, nhịp chung, chat bị chặn khi ngồi', 
   assert.equal(r2.ok, true);
   assert.equal(r2.epoch, r1.epoch, 'người vào sau phải theo nhịp của người đầu');
   assert.deepEqual((await sync).mates, ['Thiền B']);
-  assert.equal((await call(a.s, 'chat', { text: 'ê' })).ok, false);
+  assert.equal((await call(a.s, 'chat', { text: 'Chào bạn' })).ok, true);
   const game = await call(a.s, 'rhythm:start', { kind: 'meditate' });
   assert.equal(game.ok, true);
+  assert.equal((await call(a.s, 'chat', { text: 'Đang chơi nhịp' })).ok, false);
   const early = await call(a.s, 'rhythm:finish', { id: game.game.id, score: 100 });
   assert.equal(early.saved, false, 'ngồi chưa đủ năm hơi thở thì không lưu buổi');
   a.s.disconnect();
   b.s.disconnect();
 });
 
-test('Chân khí: đồng bộ, đổi tab, mất mạng và vào lại không nhận trùng', { timeout: 15000 }, async () => {
+test('Chân khí: thiền tự do, đồng bộ, đổi tab, mất mạng và vào lại không nhận trùng', { timeout: 15000 }, async () => {
   const a = await join('Tĩnh tu A');
   const viewer = await join('Tĩnh tu B');
-  a.s.emit('move', [MATS[0].x, MATS[0].z, 0, 0]);
   const awarded = once(viewer.s, 'cultivation:progress');
-  assert.equal((await call(a.s, 'action:start', { kind: 'meditate', mat: 0, qi: 999999 })).ok, true);
+  const seated = await call(a.s, 'action:start', { kind: 'meditate', qi: 999999, x: 999, z: 999 });
+  assert.equal(seated.ok, true);
+  assert.equal(seated.mat, null);
+  assert.equal(seated.x, a.res.snapshot.me.x);
+  assert.equal(seated.z, a.res.snapshot.me.z);
+  a.s.emit('move', [MATS[0].x, MATS[0].z, 0, 0]);
   const progress = await awarded;
-  assert.deepEqual(progress, { sid: a.res.sid, qi: 1 });
+  assert.equal(progress.sid, a.res.sid);
+  assert.ok(progress.qi >= 1 && progress.qi <= Math.floor((Date.now() - seated.now) / 400));
   const replacement = await join('Tĩnh tu A', a.res.playerId);
-  assert.equal(replacement.res.snapshot.me.qi, 1);
+  const savedQi = replacement.res.snapshot.me.qi;
+  assert.ok(savedQi >= progress.qi);
   assert.equal(replacement.res.snapshot.me.activity, 0);
+  assert.equal(replacement.res.snapshot.me.x, seated.x);
+  assert.equal(replacement.res.snapshot.me.z, seated.z);
   assert.equal(replacement.res.snapshot.mats[0], 0);
   assert.equal(replacement.res.snapshot.players.some((p) => 'playerId' in p), false);
+  await new Promise((resolve) => setTimeout(resolve, 1100)); // Sit cooldown, while standing: no qi gain.
+  const standingBook = await fetch(`${URL_BASE}/api/me`, { headers: { 'x-player-id': a.res.playerId } }).then((r) => r.json());
+  assert.equal(standingBook.qi, savedQi);
   replacement.s.emit('move', [MATS[0].x, MATS[0].z, 0, 0]);
   assert.equal((await call(replacement.s, 'action:start', { kind: 'meditate', mat: 0 })).ok, true);
   const released = once(viewer.s, 'meditation:mats');
   replacement.s.disconnect();
   assert.equal((await released)[0], 0);
-  const resumed = await join('Tĩnh tu A', a.res.playerId);
-  assert.equal(resumed.res.snapshot.me.qi, 1);
-  assert.equal(resumed.res.snapshot.me.activity, 0);
   const book = await fetch(`${URL_BASE}/api/me`, { headers: { 'x-player-id': a.res.playerId } }).then((r) => r.json());
-  assert.equal(book.qi, 1);
+  const resumed = await join('Tĩnh tu A', a.res.playerId);
+  assert.equal(resumed.res.snapshot.me.qi, book.qi);
+  assert.equal(resumed.res.snapshot.me.activity, 0);
+  assert.ok(book.qi >= savedQi);
   resumed.s.disconnect();
   viewer.s.disconnect();
 });
@@ -519,7 +533,7 @@ test('thiền tại chỗ qua socket: giữ vị trí, tăng khí, mất mạng 
   const awarded = until(viewer.s, 'cultivation:progress', (p) => p.sid === a.res.sid, 9000);
   const seated = await call(a.s, 'action:start', { kind: 'meditate', qi: 999999, x: 999, z: 999 });
   assert.equal(seated.ok, true);
-  assert.equal(seated.mat, -1);
+  assert.equal(seated.mat, null);
   assert.deepEqual([seated.x, seated.z, seated.rot], [x, z, rot]);
   assert.equal((await call(a.s, 'rhythm:start', { kind: 'meditate' })).ok, false);
   assert.equal((await call(a.s, 'action:start', { kind: 'fish' })).ok, false);
@@ -527,10 +541,13 @@ test('thiền tại chỗ qua socket: giữ vị trí, tăng khí, mất mạng 
   const observer = await join('Xem vị trí');
   const still = observer.res.snapshot.players.find((p) => p.sid === a.res.sid);
   assert.deepEqual([still.x, still.z, still.rot, still.activity], [x, z, rot, 1]);
-  assert.equal((await awarded).qi, 1);
+  const progress = await awarded;
+  // A 500 ms sweep can award multiple qi at the current gain rate.
+  const maxQi = () => Math.floor((Date.now() - seated.now) * QI_GAIN_RATE / QI_INTERVAL_MS);
+  assert.ok(Number.isInteger(progress.qi) && progress.qi >= 1 && progress.qi <= maxQi());
   a.s.disconnect();
   const resumed = await join('Thiền tại chỗ', a.res.playerId);
-  assert.equal(resumed.res.snapshot.me.qi, 1);
+  assert.ok(resumed.res.snapshot.me.qi >= progress.qi && resumed.res.snapshot.me.qi <= maxQi());
   assert.equal(resumed.res.snapshot.me.activity, 0);
   assert.equal(resumed.res.snapshot.mats.some((sid) => sid === a.res.sid), false);
   resumed.s.disconnect();
@@ -869,4 +886,32 @@ test('kết nối lại trong 10 giây giữ nguyên người chơi, không tín
   assert.equal(again.res.name, 'Mạng yếu');
   assert.equal(again.res.snapshot.visitsToday, before);
   again.s.disconnect();
+});
+
+test('Tấu nhạc qua socket: giữ sân, chặn hoạt động khác và huỷ khi rời/mất mạng', async () => {
+  const { s: a } = await join('Dan A');
+  const { s: b } = await join('Dan B');
+  assert.equal((await call(a, 'melody:start')).ok, false);
+  for (const s of [a, b]) await call(s, 'move', [MELODY_ZONE.x, MELODY_ZONE.z, 0, 0]);
+  const start = await call(a, 'melody:start');
+  assert.equal(start.ok, true);
+  assert.equal((await call(b, 'melody:start')).ok, false);
+  assert.equal((await call(b, 'melody:hit', { id: start.game.id, index: 0, lane: 0 })).ok, false);
+  assert.equal((await call(a, 'action:start', { kind: 'fish' })).ok, false);
+  assert.equal((await call(a, 'rhythm:start', { kind: 'bell' })).ok, false);
+  assert.equal((await call(a, 'melody:finish', { id: start.game.id, score: 100 })).ok, false);
+  await call(a, 'action:stop');
+  assert.equal((await call(a, 'melody:finish', { id: start.game.id })).ok, false);
+  assert.equal((await call(b, 'melody:start')).ok, true);
+  b.disconnect();
+  // Wait for server to receive the disconnect before reclaiming the shared seat.
+  let reclaimed;
+  for (let i = 0; i < 10; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    reclaimed = await call(a, 'melody:start');
+    if (reclaimed.ok) break;
+  }
+  assert.equal(reclaimed.ok, true);
+  await call(a, 'action:stop');
+  a.disconnect();
 });

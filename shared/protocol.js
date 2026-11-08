@@ -66,9 +66,10 @@ export const PLACE_LABELS = {
 
 // Mã trạng thái chuyển động và hoạt động (gửi dạng số cho gọn).
 export const ANIM = { idle: 0, walk: 1 };
-export const ACTIVITY = { none: 0, meditate: 1, bell: 2, write: 3, shake: 4, fish: 5, pitch: 6 };
+export const ACTIVITY = { none: 0, meditate: 1, bell: 2, write: 3, shake: 4, fish: 5, pitch: 6, melody: 7 };
 export const ACTIVITY_BY_NAME = { meditate: 1, bell: 2, write: 3, shake: 4, fish: 5, pitch: 6 };
 export const ACTIVITY_LABEL = {
+  7: 'đang tấu nhạc',
   1: 'đang ngồi thiền',
   2: 'đang thỉnh chuông',
   3: 'đang viết',

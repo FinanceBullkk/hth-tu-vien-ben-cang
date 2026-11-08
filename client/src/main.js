@@ -32,6 +32,7 @@ import { WishReader } from './ui/wishReader.js';
 import './ui/voice.css';
 import './ui/pitch.css';
 import './ui/fishing.css';
+import './ui/melody.css';
 import './ui/cultivation.css';
 
 const isTouch = matchMedia('(pointer:coarse)').matches;
@@ -106,8 +107,8 @@ function main() {
     remotes: new Remotes(scene, isTouch),
     me: new LocalPlayer(scene, profile, isTouch),
     modalBusy: () => modalOpen(),
-    isBusy: () => modalOpen() || Boolean(app.activities.current),
-    chatBlocked: () => app.activities.current?.kind === 'meditate',
+    isBusy: () => modalOpen() || Boolean(app.activities.current && app.activities.current !== app.activities.meditation),
+    chatBlocked: () => app.activities.current === app.activities.lotus,
   };
   app.remotes._p = new THREE.Vector3();
   app.bloom = bloomPass;
@@ -256,7 +257,7 @@ function main() {
   };
 
   net.on('chat', ({ sid, text }) => avatarOf(sid)?.say(text));
-  net.on('cultivation:update', ({ sid, tier }) => avatarOf(sid)?.setCultivation(tier, true));
+  net.on('cultivation:update', ({ sid, tier }) => avatarOf(sid)?.setCultivation(tier));
   net.on('emoji', ({ sid, i }) => avatarOf(sid)?.say(EMOJIS[i] ?? '', 2500));
   net.on('wave', ({ from, to, name }) => {
     avatarOf(from)?.wave();
@@ -460,7 +461,7 @@ function main() {
 
     const look = app.input.consumeLook();
     // Đang mở hộp thoại hoặc đang làm hoạt động thì nhân vật đứng yên.
-    me.locked = !entered || app.isBusy();
+    me.locked = !entered || app.isBusy() || Boolean(app.activities.current?.lockMove);
     // Mở hộp thoại hay gõ chat là cần con trỏ: thoát xoay tự do để bấm được UI.
     const ae = document.activeElement;
     if (me.locked || (ae instanceof HTMLElement && (ae.isContentEditable || ['INPUT', 'TEXTAREA'].includes(ae.tagName)))) {

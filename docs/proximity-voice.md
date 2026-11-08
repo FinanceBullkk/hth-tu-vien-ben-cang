@@ -41,6 +41,8 @@ off; disabling or disconnecting during a request cancels that join. Repeated joi
 attempts have a five-second cooldown. The API token stays on the server. Toggle
 voice after 24 hours to renew credentials. Enable Cloudflare Realtime and create
 a TURN app in its dashboard before configuring these variables.
+The provider request has an eight-second deadline; the client waits twelve
+seconds for the voice acknowledgement so a slow credential request can finish.
 
 ### Production deployment
 

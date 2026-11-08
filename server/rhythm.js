@@ -1,7 +1,7 @@
 // Hai minigame dùng chung luật nhịp kiểu WWM: nốt rơi về vạch, server chấm từng nốt theo giờ nhận gói.
 import crypto from 'node:crypto';
 import { BELL, dist2d } from '../shared/layout.js';
-import { LIMITS, TEU } from '../shared/protocol.js';
+import { ACTIVITY, LIMITS, TEU } from '../shared/protocol.js';
 import { RHYTHM, RHYTHM_ROUNDS, noteTargetAt, rhythmGrade, rhythmPattern, rhythmSummary } from '../shared/rhythm.js';
 import { localDate } from './time.js';
 
@@ -12,7 +12,7 @@ export class RhythmGame {
   }
 
   allowed(player, kind) {
-    return kind === 'meditate' ? player.mat != null && player.mat >= 0 : kind === 'bell' && player.mat == null && dist2d(player.x, player.z, BELL.x, BELL.z) <= BELL.radius + 1.5;
+    return kind === 'meditate' ? player.mat != null : kind === 'bell' && player.mat == null && player.activity !== ACTIVITY.meditate && dist2d(player.x, player.z, BELL.x, BELL.z) <= BELL.radius + 1.5;
   }
 
   start(player, data) {

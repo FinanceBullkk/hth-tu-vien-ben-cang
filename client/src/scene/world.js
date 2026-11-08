@@ -16,6 +16,8 @@ import { MeditationGarden } from './meditation-garden.js';
 import { createWuxiaProps } from './wuxia-props.js';
 import { ShadowPacer, renderPixelRatio } from './render-quality.js';
 
+import { createMelodyStage } from './melody-stage.js';
+
 export class World {
   constructor(scene, lowQuality) {
     this.scene = scene;
@@ -41,6 +43,7 @@ export class World {
     this.wuxia = createWuxiaProps(scene);
     this.pitchCourt = new PitchPotCourt(scene);
     this.fishing = new FishingScene(scene);
+    this.melodyStage = createMelodyStage(scene);
     this.bellPull = 0;
 
     this.bellSwing = 0;

@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { createCultivation } from '../client/src/player/avatar-cultivation.js';
 import { createSenKimCultivation } from '../client/src/player/sen-kim-cultivation.js';
 import { breakthroughFrame } from '../client/src/player/cultivation-breakthrough.js';
 import { energyPoint } from '../client/src/player/sen-kim-energy.js';
@@ -8,9 +7,10 @@ import { Vector3 } from 'three';
 
 test('Sen Kim has four distinct server-tier silhouettes with finite geometry and owned resources', () => {
   for (const low of [false, true]) for (let tier = 0; tier < 4; tier++) {
-    const fx = createCultivation(1, tier, low), root = fx.points.getObjectByName('sen-kim-cultivation');
+    // Production uses the newer signature aura; retain checks for this standalone renderer.
+    const fx = createSenKimCultivation(tier, low), root = fx.group;
     assert.equal(root.userData.tier, tier);
-    assert.equal(fx.points.visible, true);
+    assert.equal(root.visible, true);
     assert.equal(root.getObjectByName('sen-kim-lotus').count, [8, 16, 16, 24][tier]);
     assert.equal(Boolean(root.getObjectByName('sen-kim-elixir')), tier >= 2);
     assert.equal(Boolean(root.getObjectByName('sen-kim-dharma')), tier === 3);
@@ -24,7 +24,7 @@ test('Sen Kim has four distinct server-tier silhouettes with finite geometry and
     }
     fx.update(4, false, 0);
     const owned = new Set();
-    fx.points.traverse(o => {
+    root.traverse(o => {
       if (o.geometry) owned.add(o.geometry);
       if (o.material) {
         owned.add(o.material);

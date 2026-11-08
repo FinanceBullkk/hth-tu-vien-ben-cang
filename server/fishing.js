@@ -17,7 +17,7 @@ export class Fishing {
   }
 
   cast(player, data) {
-    if (player.mat != null) return { ok: false, error: 'Đang ngồi thiền thì không câu cá được nhé.' };
+    if (player.mat != null || player.activity === ACTIVITY.meditate) return { ok: false, error: 'Đang ngồi thiền thì không câu cá được nhé.' };
     if (!this.nearSpot(player)) return { ok: false, error: 'Ra bờ hồ góc đông nam sân để câu cá nhé.' };
     if (player.rod) return { ok: true, repeat: true };
     const now = Date.now();

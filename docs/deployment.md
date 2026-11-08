@@ -93,7 +93,24 @@ these flags again.
 `hth:latest` may not be the running image. Check the actual image with
 `docker ps --filter name=hth` before recreating or rolling back.
 
-## Latest release: 2026-11-07 meditation anywhere and Lee Sin quick outfit
+## Production baseline reconciled: 2026-11-08
+
+Before the voice release, the running container was `hth:aura-1108-1345`,
+including the later per-effect startup fix and the full-motion toggle. Its
+public bundle was `index-Cuy2F2KH.js`. The running source, not the older release
+notes below, was used to reconcile main before deploying voice.
+
+The reconciled sources retain Tau nhac and its audio, free meditation with the
+orb HUD and current qi rate, Lee Sin/Long quyen, all signature auras and titles,
+and the full-motion preference. The older standalone Sen Kim renderer remains
+tested but is not wired over the newer production signature aura.
+
+Cloudflare TURN uses the private environment file referenced by repository
+variable `HTH_VOICE_ENV_FILE`. Keep that variable on subsequent deploys. The
+file is outside the checkout, readable by the production runner account only
+and SYSTEM; do not commit or print its contents. See `proximity-voice.md`.
+
+## Previous workflow release: 2026-11-07 meditation anywhere and Lee Sin quick outfit
 
 Deployed as `hth:261107-1953-5cdb367` (also `hth:latest`) at 19:55 (UTC+7) on
 `pc-chinh`, from main `5cdb367` (PR #21) through Deploy run `42374410776`.

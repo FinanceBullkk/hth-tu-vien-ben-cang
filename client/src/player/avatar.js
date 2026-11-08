@@ -5,7 +5,9 @@ import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { ACTIVITY, ACTIVITY_LABEL, SHIRT_COLORS } from '../../../shared/protocol.js';
 import { createAttire } from './avatar-attire.js';
 import { createWeapon } from './avatar-weapon.js';
+import { createInstrument } from './avatar-instrument.js';
 import { createEffect } from './avatar-effect.js';
+import { applyAvatarTitle } from './avatar-title.js';
 import { createCultivation } from './avatar-cultivation.js';
 import { CultivationAura } from './cultivation-aura.js';
 
@@ -278,11 +280,15 @@ export class Avatar {
     this.weaponFx.group.rotation.set(0.12, 0, -0.58);
     this.rig.add(this.weaponFx.group);
 
-    this.aura = createEffect(effect === 1 ? 0 : effect, lowQuality);
-    if (this.aura.points) this.root.add(this.aura.points);
+    this.aura = createEffect(effect, lowQuality);
+    if (this.aura.points) {
+      this.root.add(this.aura.points);
+      // Aura tự quản lý fade qua setOpacity(f): đánh dấu qiOwned để fadeOut không nhân
+      // bản material của nó — nếu bị clone, các lớp shader giữ uniform cũ và không tan.
+      this.aura.points.traverse((o) => { o.userData.qiOwned = true; });
+    }
     this.aura.setWeapon?.(weapon);
     this.cultivationTier = 0;
-    this.cultivationEffect = effect;
     this.cultivation = createCultivation(effect, 0, lowQuality);
     this.root.add(this.cultivation.points);
 
@@ -304,7 +310,10 @@ export class Avatar {
     this.statusEl = document.createElement('div');
     this.statusEl.className = 'tag-status';
     this.statusEl.hidden = true;
-    this.tagEl.append(this.bubbleEl, this.nameEl, this.statusEl);
+    this.titleEl = document.createElement('div');
+    this.titleEl.className = 'tag-title';
+    applyAvatarTitle(this.tagEl, this.titleEl, effect);
+    this.tagEl.append(this.bubbleEl, this.titleEl, this.nameEl, this.statusEl);
     this.label = new CSS2DObject(this.tagEl);
     this.label.position.y = 1.72;
     this.root.add(this.label);
@@ -328,7 +337,7 @@ export class Avatar {
     if (!Number.isSafeInteger(qi) || qi < 0 || qi === this.qi) return;
     this.qi = qi;
     if (!this.cultivationAura) {
-      this.cultivationAura = new CultivationAura(this.lowQuality);
+      this.cultivationAura = new CultivationAura(this.lowQuality, this.effectIndex);
       this.root.add(this.cultivationAura.group);
     }
     this.cultivationAura.setQi(qi);
@@ -360,15 +369,18 @@ export class Avatar {
     }
     if (effect !== this.effectIndex) {
       this.effectIndex = effect;
+      applyAvatarTitle(this.tagEl, this.titleEl, effect);
+      this.cultivationAura?.setEffect(effect);
       if (this.aura.points) {
         this.root.remove(this.aura.points);
         this.aura.dispose();
       }
-      this.aura = createEffect(effect === 1 ? 0 : effect, this.lowQuality);
+      this.aura = createEffect(effect, this.lowQuality);
       this.setCultivation(this.cultivationTier);
       if (this.aura.points) {
         if (this.fading > 0) this.aura.beginFade();
         this.root.add(this.aura.points);
+        this.aura.points.traverse((o) => { o.userData.qiOwned = true; });
       }
     }
     this.head.remove(this.hatGroup);
@@ -378,17 +390,12 @@ export class Avatar {
     this.headMesh.material = hat === 6 ? M.skinTan : M.skin;
   }
 
-  setCultivation(tier, animate = false) {
-    const next = Number.isInteger(tier) ? Math.max(0, Math.min(3, tier)) : 0;
-    if (next === this.cultivationTier && this.cultivationEffect === this.effectIndex) return;
-    const increased = next > this.cultivationTier;
-    this.cultivationTier = next;
-    this.cultivationEffect = this.effectIndex;
+  setCultivation(tier) {
+    this.cultivationTier = Number.isInteger(tier) ? Math.max(0, Math.min(3, tier)) : 0;
     this.root.remove(this.cultivation.points);
     this.cultivation.dispose();
     this.cultivation = createCultivation(this.effectIndex, this.cultivationTier, this.lowQuality);
     this.root.add(this.cultivation.points);
-    if (animate && increased) this.cultivation.startBreakthrough(this.time);
   }
 
   setActivity(code) {
@@ -397,9 +404,15 @@ export class Avatar {
     const label = ACTIVITY_LABEL[code];
     this.statusEl.hidden = !label;
     this.statusEl.textContent = label || '';
+    if (code === ACTIVITY.melody && !this.instrument) {
+      this.instrument = createInstrument();
+      this.rig.add(this.instrument.group);
+    }
+    if (this.instrument) this.instrument.group.visible = code === ACTIVITY.melody;
+    this.weaponFx.group.visible = code !== ACTIVITY.melody;
     this.halo.visible = false;
     if (code === ACTIVITY.meditate && !this.cultivationAura) {
-      this.cultivationAura = new CultivationAura(this.lowQuality);
+      this.cultivationAura = new CultivationAura(this.lowQuality, this.effectIndex);
       this.root.add(this.cultivationAura.group);
     }
   }
@@ -419,10 +432,11 @@ export class Avatar {
   fadeOut() {
     // Aura owns its materials and fading; exclude it from mesh cloning below.
     this.cultivationAura?.group.removeFromParent();
-    this.cultivation.points.removeFromParent();
     this.fading = 1;
     this.root.traverse((o) => {
-      if (o.isMesh && o !== this.halo) {
+      // Aura owns its materials and fading; skip cloning shader materials (qiOwned) —
+      // bản clone giữ uniform cũ khiến các lớp hiệu ứng không tan cùng nhân vật.
+      if (o.isMesh && o !== this.halo && !o.userData.qiOwned) {
         o.material = o.material.clone();
         o.material.transparent = true;
         o.castShadow = false;
@@ -433,13 +447,12 @@ export class Avatar {
       this.aura.points.castShadow = false;
     }
     if (this.cultivationAura) this.root.add(this.cultivationAura.group);
-    this.root.add(this.cultivation.points);
   }
 
   update(dt, moving, cameraDist = 0) {
     this.time += dt;
     const t = this.time;
-    const sit = this.activity === ACTIVITY.meditate;
+    const sit = this.activity === ACTIVITY.meditate || this.activity === ACTIVITY.melody;
 
     this.walkAmt += ((moving ? 1 : 0) - this.walkAmt) * Math.min(1, dt * 10);
     this.sitAmt += ((sit ? 1 : 0) - this.sitAmt) * Math.min(1, dt * 6);
@@ -478,7 +491,12 @@ export class Avatar {
       armLz = -0.15 * this.sitAmt;
       armRz = 0.15 * this.sitAmt;
     }
-    if (this.waveT > 0) {
+    if (this.activity === ACTIVITY.melody) {
+      armLx = -1.5; armLz = -0.15;
+      armRx = -1.05; armRz = 0.3 + Math.sin(t * 3) * 0.2;
+      this.instrument?.update(t);
+    }
+    if (this.waveT > 0 && this.activity !== ACTIVITY.melody) {
       this.waveT -= dt;
       armRx = 0;
       armRz = 2.5 + Math.sin(t * 14) * 0.35;
@@ -495,9 +513,9 @@ export class Avatar {
     this.weaponFx.update?.(t, this.walkAmt);
     this.aura.update?.(t, this.walkAmt);
     if (this.aura.points) this.aura.points.visible = this.sitAmt < 0.1;
-    this.cultivation.update(t, sit, this.fading > 0 ? Math.max(0, this.fading - dt / 0.9) : 1, this.sitAmt);
-    this.rig.position.y += this.cultivation.lift;
-    this.label.position.y = 1.72 + this.cultivation.lift;
+    this.cultivation.update(t, sit, this.fading > 0 ? Math.max(0, this.fading - dt / 0.9) : 1);
+    this.cultivation.points.visible = this.sitAmt < 0.1 && this.effectIndex !== 0;
+    if (this.aura.points) this.aura.points.visible = this.sitAmt < 0.1;
     this.cultivationAura?.update(dt, this.sitAmt, cameraDist, this.fading > 0 ? Math.max(0, this.fading - dt / 0.9) : 1);
 
     if (this.halo.visible) {
@@ -514,7 +532,7 @@ export class Avatar {
     if (this.fading > 0) {
       this.fading = Math.max(0, this.fading - dt / 0.9);
       this.root.traverse((o) => {
-        if (o.isMesh && o !== this.halo && o.material.transparent && !o.material.isShaderMaterial) o.material.opacity = this.fading;
+        if (o.isMesh && o !== this.halo && o.parent !== this.cultivationAura?.group && o.material.transparent && !o.material.isShaderMaterial) o.material.opacity = this.fading;
       });
       if (this.aura.points) this.aura.points.material.opacity = this.fading * 0.9;
       this.tagEl.style.opacity = String(this.fading);
@@ -523,7 +541,6 @@ export class Avatar {
 
   /** Dọn khi người chơi đã rời hẳn; hình học dùng chung nên chỉ huỷ vật liệu đã nhân bản. */
   dispose(scene) {
-    this.cultivation.points.removeFromParent();
     this.cultivation.dispose();
     this.cultivationAura?.dispose();
     scene.remove(this.root);

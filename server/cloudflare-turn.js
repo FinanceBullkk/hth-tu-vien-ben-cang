@@ -11,7 +11,7 @@ export function cloudflareTurn(env = process.env, fetchImpl = fetch) {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ ttl: 86400 }),
-      signal: AbortSignal.timeout(3500),
+      signal: AbortSignal.timeout(8000),
       redirect: 'error',
     });
     if (!response.ok) throw new Error('Cloudflare TURN unavailable.');

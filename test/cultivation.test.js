@@ -1,3 +1,5 @@
+import { cultivationProgress } from '../shared/cultivation.js';
+import { createCultivation, cultivationPoint } from '../client/src/player/avatar-cultivation.js';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import fs from 'node:fs';
@@ -6,10 +8,11 @@ import path from 'node:path';
 import { Db } from '../server/db.js';
 import { Meditation } from '../server/meditation.js';
 import { Room } from '../server/rooms.js';
+import { Fishing } from '../server/fishing.js';
+import { PitchGame } from '../server/pitch.js';
 import { RhythmGame } from '../server/rhythm.js';
-import { MATS } from '../shared/layout.js';
-import { cultivation, cultivationProgress, QI_TIERS, QI_INTERVAL_MS } from '../shared/cultivation.js';
-import { createCultivation, cultivationPoint } from '../client/src/player/avatar-cultivation.js';
+import { BELL, MATS, SPAWN } from '../shared/layout.js';
+import { cultivation, QI_TIERS as CULTIVATION_TIERS, QI_GAIN_RATE, QI_INTERVAL_MS } from '../shared/cultivation.js';
 
 test('cultivation thresholds, invalid inputs and maximum tier', () => {
   for (const [points, tier] of [[0, 0], [299, 0], [300, 1], [999, 1], [1000, 2], [2499, 2], [2500, 3], [99999, 3]]) {
@@ -76,51 +79,8 @@ function fixture(t) {
   return { db, meditation, p, events };
 }
 
-test('thiền tại chỗ giữ vị trí server, tích khí và lưu thời gian lẻ khi đứng dậy', (t) => {
-  const { db, meditation, p } = fixture(t);
-  Object.assign(p, { x: 12, z: 9, rot: 0.5 });
-  const room = new Room({ db, meditation, config: {}, io: { to: () => ({ emit() {} }) } });
-  const seated = room.onActionStart(p, { kind: 'meditate', x: 999, z: 999, qi: 999 });
-  assert.equal(seated.ok, true);
-  assert.equal(seated.mat, -1);
-  assert.deepEqual([seated.x, seated.z, seated.rot], [12, 9, 0.5]);
-  assert.equal(meditation.occupancy().some(Boolean), false);
-  assert.deepEqual(meditation.scene().seats, []);
-  assert.equal(new RhythmGame({}).allowed(p, 'meditate'), false, 'Nhịp sen vẫn cần chiếu');
-  room.onMove(p, [20, 20, 1, 1]);
-  assert.deepEqual([p.x, p.z, p.rot], [12, 9, 0.5]);
-  assert.equal(room.onActionStart(p, { kind: 'fish' }).ok, false);
-  t.mock.timers.tick(6500);
-  meditation.sweep();
-  assert.equal(db.book(p.pid).qi, 1);
-  meditation.leave(p);
-  meditation.leave(p);
-  assert.equal(meditation.members().length, 0);
-  assert.equal(db.playerRow(p.pid).cultivation_ms, 6500);
-  t.mock.timers.tick(60_000);
-  meditation.sweep();
-  assert.equal(db.playerRow(p.pid).cultivation_ms, 6500);
-});
-
-test('chuyển giữa thiền tại chỗ và chiếu giữ khí, không giải phóng chiếu người khác', (t) => {
-  const { db, meditation, p } = fixture(t);
-  meditation.sit(p);
-  t.mock.timers.tick(3500);
-  assert.equal(meditation.sit(p, 0).ok, true);
-  assert.equal(meditation.members().length, 1);
-  t.mock.timers.tick(2500);
-  assert.equal(meditation.sit(p).ok, true);
-  assert.equal(db.book(p.pid).qi, 1);
-  assert.equal(meditation.occupancy()[0], 0);
-  const other = { ...p, pid: 'other', sid: 2, mat: null };
-  assert.equal(meditation.sit(other, 0).ok, true);
-  meditation.leave(p);
-  assert.equal(meditation.occupancy()[0], 2);
-  assert.deepEqual(meditation.members(), [other]);
-});
-
 test('five tier boundaries and bounded, monotonic aura scale', () => {
-  for (const [i, tier] of QI_TIERS.entries()) {
+  for (const [i, tier] of CULTIVATION_TIERS.entries()) {
     assert.equal(cultivation(tier.qi).level, i + 1);
     if (i) assert.equal(cultivation(tier.qi - 1).level, i);
     assert.equal(cultivation(tier.qi).progress, i === 4 ? 1 : 0);
@@ -136,7 +96,7 @@ test('five tier boundaries and bounded, monotonic aura scale', () => {
 test('only server time awards qi, repeated sweep/leave cannot double credit', (t) => {
   const { db, meditation, p, events } = fixture(t);
   assert.equal(meditation.sit(p, 0).qi, 0);
-  t.mock.timers.tick(QI_INTERVAL_MS - 1);
+  t.mock.timers.tick(QI_INTERVAL_MS / QI_GAIN_RATE - 1);
   meditation.sweep();
   assert.equal(db.book(p.pid).qi, 0);
   t.mock.timers.tick(1);
@@ -157,13 +117,13 @@ test('partial time survives standing up and no offline time is added', (t) => {
   meditation.sit(p, 0);
   t.mock.timers.tick(3500);
   meditation.leave(p);
-  assert.equal(db.playerRow(p.pid).cultivation_ms, 3500);
+  assert.equal(db.playerRow(p.pid).cultivation_ms, 3500 * QI_GAIN_RATE);
   t.mock.timers.tick(86_400_000);
   meditation.sit(p, 0);
   t.mock.timers.tick(2500);
   meditation.leave(p);
-  assert.equal(db.book(p.pid).qi, 1);
-  assert.equal(db.playerRow(p.pid).cultivation_ms, 6000);
+  assert.equal(db.book(p.pid).qi, 15);
+  assert.equal(db.playerRow(p.pid).cultivation_ms, 6000 * QI_GAIN_RATE);
 });
 
 test('suspended server and backward wall clock cannot manufacture qi', (t) => {
@@ -175,7 +135,7 @@ test('suspended server and backward wall clock cannot manufacture qi', (t) => {
   const at = Date.now();
   t.mock.timers.setTime(at - 10_000);
   meditation.sweep();
-  t.mock.timers.setTime(at + 6000);
+  t.mock.timers.setTime(at + QI_INTERVAL_MS / QI_GAIN_RATE);
   meditation.sweep();
   assert.equal(db.book(p.pid).qi, 1);
 });
@@ -183,7 +143,7 @@ test('suspended server and backward wall clock cannot manufacture qi', (t) => {
 test('failed database write keeps pending credit for exactly one retry', (t) => {
   const { db, meditation, p } = fixture(t);
   meditation.sit(p, 0);
-  t.mock.timers.tick(6000);
+  t.mock.timers.tick(QI_INTERVAL_MS / QI_GAIN_RATE);
   const write = db.addCultivation.bind(db);
   db.addCultivation = () => { throw Error('disk unavailable'); };
   assert.throws(() => meditation.sweep(), /disk unavailable/);
@@ -233,4 +193,76 @@ test('migration keeps existing player data; qi survives database restart', () =>
     db?.close();
     fs.rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test('free meditation keeps server position, locks movement and accrues without occupying a mat', (t) => {
+  const { db, meditation, p } = fixture(t);
+  Object.assign(p, { x: SPAWN.x, z: SPAWN.z, rot: 0.7, moveWindow: 0, moveCount: 0 });
+  const room = new Room({ db, meditation, filter: { isBad: () => false }, config: {}, io: { to: () => ({ emit() {} }) } });
+  const seated = room.onActionStart(p, { kind: 'meditate', x: 999, z: 999, qi: 999 });
+  assert.equal(seated.ok, true);
+  assert.deepEqual([seated.x, seated.z, seated.rot], [SPAWN.x, SPAWN.z, 0.7]);
+  assert.equal(p.mat, null);
+  assert.equal(meditation.occupancy().every((sid) => sid === 0), true);
+  assert.deepEqual(meditation.scene().seats, []);
+  room.onMove(p, [BELL.x, BELL.z, 2, 1]);
+  assert.deepEqual([p.x, p.z, p.rot], [SPAWN.x, SPAWN.z, 0.7]);
+  assert.equal(room.onChat(p, { text: 'hello' }).ok, true);
+  assert.equal(room.onActionStart(p, { kind: 'fish' }).ok, false);
+  t.mock.timers.tick(6000);
+  assert.equal(room.onActionStart(p, { kind: 'meditate' }).ok, false);
+  meditation.sweep();
+  assert.equal(db.book(p.pid).qi, 15);
+  t.mock.timers.tick(500);
+  room.players.set(p.sid, p);
+  room.stop();
+  assert.equal(db.playerRow(p.pid).cultivation_ms, 6500 * QI_GAIN_RATE);
+  assert.equal(meditation.members().length, 0);
+  t.mock.timers.tick(6000);
+  meditation.sweep();
+  assert.equal(db.playerRow(p.pid).cultivation_ms, 6500 * QI_GAIN_RATE);
+});
+
+test('free meditation blocks fishing, pitch and rhythm; moving between free and mat seats keeps partial qi', (t) => {
+  const { db, meditation, p } = fixture(t);
+  const room = new Room({ db, meditation, config: {}, io: { to: () => ({ emit() {} }) } });
+  assert.equal(room.onActionStart(p, { kind: 'meditate' }).ok, true);
+  assert.equal(new Fishing({}).cast(p, {}).ok, false);
+  assert.equal(new PitchGame({}).start(p, {}).ok, false);
+  const rhythm = new RhythmGame({});
+  assert.equal(rhythm.start(p, { kind: 'meditate' }).ok, false);
+  Object.assign(p, { x: BELL.x, z: BELL.z });
+  assert.equal(rhythm.start(p, { kind: 'bell' }).ok, false);
+  t.mock.timers.tick(3500);
+  meditation.leave(p);
+  Object.assign(p, MATS[0]);
+  assert.equal(meditation.sit(p, 0).ok, true);
+  t.mock.timers.tick(2500);
+  meditation.leave(p);
+  assert.equal(db.book(p.pid).qi, 15);
+  assert.equal(meditation.occupancy()[0], 0);
+  assert.equal(meditation.members().length, 0);
+});
+
+test('new meditation reaches tier five at five minutes; saved qi is not repriced', (t) => {
+  const { db, meditation, p } = fixture(t);
+  meditation.sit(p);
+  for (let elapsed = 500; elapsed < 300_000; elapsed += 500) {
+    t.mock.timers.tick(500);
+    meditation.sweep();
+  }
+  assert.equal(cultivation(p.qi).level, 4);
+  t.mock.timers.tick(500);
+  meditation.sweep();
+  assert.equal(p.qi, 750);
+  assert.equal(cultivation(p.qi).level, 5);
+  meditation.leave(p);
+  db.touchPlayer({ id: 'old', name: 'Old', color: 0, hat: 0, now: Date.now(), isVisit: true });
+  db.addCultivation('old', 9000);
+  p.pid = 'old';
+  assert.equal(meditation.sit(p).qi, 1);
+  t.mock.timers.tick(400);
+  meditation.leave(p);
+  assert.equal(db.playerRow('old').cultivation_ms, 15000);
+  assert.equal(db.book('old').qi, 2);
 });

@@ -5,12 +5,14 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { once } from 'node:events';
+import { MELODY_ZONE } from '../shared/layout.js';
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const baseUrl = process.env.VOICE_TEST_URL || 'http://localhost:3938';
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hth-voice-'));
 const cfg = JSON.parse(fs.readFileSync(new URL('../config.example.json', import.meta.url), 'utf8'));
 Object.assign(cfg, { port: 3938, bellSchedule: [], adminKey: 'v'.repeat(32) });
 fs.writeFileSync(path.join(dir, 'config.json'), JSON.stringify(cfg));
-const proc = spawn(process.execPath, ['server/index.js'], {
+const proc = process.env.VOICE_TEST_URL ? null : spawn(process.execPath, ['server/index.js'], {
   cwd: path.resolve(import.meta.dirname, '..'),
   env: { ...process.env, PORT: '3938', HTH_CONFIG: path.join(dir, 'config.json'), DB_PATH: path.join(dir, 'voice.db') },
   stdio: ['ignore', 'pipe', 'pipe'],
@@ -18,7 +20,7 @@ const proc = spawn(process.execPath, ['server/index.js'], {
 const browsers = [];
 const errors = [];
 try {
-  await Promise.race([
+  if (proc) await Promise.race([
     new Promise((resolve) => proc.stdout.on('data', (d) => { if (String(d).includes('đang chạy')) resolve(); })),
     once(proc, 'exit').then(([code]) => { throw new Error(`Server exited ${code}`); }),
     new Promise((_, reject) => setTimeout(() => reject(new Error('Server startup timeout')), 15000).unref()),
@@ -47,10 +49,19 @@ try {
       };
       localStorage.setItem('hth.tutorialDone', '1');
     }, process.env.VOICE_RELAY_ONLY === '1');
-    await page.goto('http://localhost:3938/');
+    await page.goto(baseUrl);
+    if (!mobile) await page.getByRole('button', { name: 'Mặc bộ Lee Sin · Long quyền', exact: true }).click();
     await page.locator('#nameInput').fill(name);
     await page.locator('#enterBtn').click();
     await page.waitForFunction(() => window.__hth?.net.ready);
+    await page.evaluate(() => {
+      const net = window.__hth.net, call = net.call.bind(net);
+      net.call = async (...args) => {
+        const result = await call(...args);
+        if (args[0] === 'voice:enable' && args[1]?.enabled) window.__voiceJoinResult = { ok: result?.ok, error: result?.error };
+        return result;
+      };
+    });
     await page.locator('#musicPanel').evaluate((el) => { el.hidden = true; });
     await page.locator('.tutorial').evaluateAll((els) => els.forEach((el) => el.remove()));
     return page;
@@ -85,7 +96,8 @@ try {
   for (const page of [a, b]) {
     assert.equal(await page.evaluate(() => window.__hth.voice.active), false);
     await page.getByRole('button', { name: 'Bật voice', exact: true }).click();
-    await page.waitForFunction(() => window.__hth.voice.active);
+    await page.waitForFunction(() => window.__hth.voice.active || !window.__hth.voice.starting);
+    assert.equal(await page.evaluate(() => window.__hth.voice.active), true, JSON.stringify(await page.evaluate(() => window.__voiceJoinResult)));
     assert.equal(await page.evaluate(() => window.__testCapture.stream.getAudioTracks()[0].enabled), false);
   }
   for (const page of [a, b]) await page.waitForFunction(() => [...window.__hth.voice.peers.values()].some((p) => p.pc.connectionState === 'connected'), { timeout: 20000 });
@@ -166,10 +178,32 @@ try {
   assert.match(await b.locator('#toasts').innerText(), /Mic bị chặn/);
   await a.evaluate(() => window.__hth.net.socket.disconnect());
   await a.waitForFunction(() => window.__testCapture.stream.getAudioTracks()[0].readyState === 'ended');
+  await b.evaluate(async () => {
+    const app = window.__hth;
+    for (const effect of [1, 2, 8, 9]) {
+      const avatar = app.me.avatar;
+      avatar.setLook(avatar.color, avatar.hatIndex, avatar.hairIndex, avatar.attireIndex, avatar.weaponIndex, effect);
+      avatar.update(0.1, false, 3);
+    }
+    await app.activities.meditation.start();
+  });
+  await b.waitForFunction(() => window.__hth.activities.meditation.ready && window.__hth.me.avatar.qi > 0);
+  await b.evaluate(async (zone) => {
+    const app = window.__hth;
+    app.activities.exit();
+    app.me.placeAt(zone.x, zone.z, 0);
+    await app.net.call('move', [zone.x, zone.z, 0, 0]);
+    await app.activities.melody.start();
+  }, MELODY_ZONE);
+  await b.waitForFunction(() => window.__hth.activities.melody.state === 'ready');
+  await b.evaluate(() => window.__hth.activities.melody.begin());
+  await b.waitForFunction(() => window.__hth.activities.melody.state === 'playing' && window.__hth.me.avatar.instrument.group.visible);
+  await b.evaluate(() => window.__hth.activities.exit());
+  console.log('PASS: Lee Sin entry, aura effects 1/2/8/9, meditation qi, melody start/audio/instrument/exit preserved');
   assert.deepEqual(errors, []);
   console.log('PASS: open mic/text-input mute, touch cancel, denied/late permission, disconnect cleanup; no browser exceptions');
 } finally {
   await Promise.all(browsers.map((browser) => browser.close()));
-  if (proc.exitCode === null) { const stopped = once(proc, 'exit'); proc.kill(); await stopped; }
+  if (proc && proc.exitCode === null) { const stopped = once(proc, 'exit'); proc.kill(); await stopped; }
   fs.rmSync(dir, { recursive: true, force: true });
 }
