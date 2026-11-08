@@ -62,10 +62,7 @@ export class LocalPlayer {
         resolveCollision(nx, nz, PLAYER_RADIUS, this._out);
         this.x = this._out.x;
         this.z = this._out.z;
-        // Giữ nút xoay camera khi đi: nhân vật hướng theo ống kính, A/D thành bước ngang (kiểu MMO).
-        const target = input.rotating
-          ? Math.atan2(-Math.sin(yaw), -Math.cos(yaw))
-          : Math.atan2(wx, wz);
+        const target = Math.atan2(wx, wz);
         let d = target - this.rot;
         d = Math.atan2(Math.sin(d), Math.cos(d));
         this.rot += d * Math.min(1, dt * 12);

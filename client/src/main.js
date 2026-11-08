@@ -355,6 +355,10 @@ function main() {
     if (e.repeat && ['Space', 'KeyE', 'Enter'].includes(e.code)) return true;
     if (e.repeat && app.activities.current?.isRhythm && e.code.startsWith('Arrow')) return true;
     if (e.code === 'Escape') {
+      if (app.input.pointerLocked) {
+        document.exitPointerLock();
+        return true;
+      }
       if (closeTopModal()) return true;
       if (app.activities.current) {
         app.activities.exit();
@@ -381,6 +385,7 @@ function main() {
   app.input.onKeyUp = (e) => {
     if (entered) app.activities.onKey(e.code, false);
   };
+  app.input.canLock = () => !modalOpen() && !app.activities.current;
 
   // Chạm/bấm vào cảnh: vẫy tay với đồng nghiệp, vuốt mèo, đọc lời ước.
   const raycaster = new THREE.Raycaster();
@@ -460,14 +465,10 @@ function main() {
     const nowMs = net.now();
 
     const look = app.input.consumeLook();
+    if (app.input.pointerLocked && (modalOpen() || app.activities.current)) document.exitPointerLock();
     // Đang mở hộp thoại hoặc đang làm hoạt động thì nhân vật đứng yên.
     me.locked = !entered || app.isBusy() || Boolean(app.activities.current?.lockMove);
-    // Mở hộp thoại hay gõ chat là cần con trỏ: thoát xoay tự do để bấm được UI.
-    const ae = document.activeElement;
-    if (me.locked || (ae instanceof HTMLElement && (ae.isContentEditable || ['INPUT', 'TEXTAREA'].includes(ae.tagName)))) {
-      app.input.endFreeLook();
-    }
-    me.update(dt, app.input, app.follow.yaw, net);
+    me.update(dt, app.input, app.follow.yaw + look.yaw, net);
     remotes.update(dt, nowMs, camera);
     app.activities.update(dt);
     app.reader.update(dt);

@@ -11,6 +11,7 @@ export class FollowCamera {
     this.camera = camera;
     this.yaw = 0;
     this.pitch = 0.3;
+    this.targetPitch = 0.3;
     this.distance = 7.5;
     this.meditating = false;
     this.shot = null; // { pos, look }: góc máy cố định do minigame đặt.
@@ -38,7 +39,8 @@ export class FollowCamera {
   update(dt, px, py, pz, look) {
     this.time += dt;
     this.yaw += look.yaw;
-    this.pitch = Math.max(MIN_PITCH, Math.min(MAX_PITCH, this.pitch + look.pitch));
+    this.targetPitch = Math.max(MIN_PITCH, Math.min(MAX_PITCH, this.targetPitch + look.pitch));
+    this.pitch += (this.targetPitch - this.pitch) * (1 - Math.exp(-dt * 20));
     this.distance = Math.max(this.minDist, Math.min(this.maxDist, this.distance + look.zoom));
 
     if (this.intro) {
@@ -70,7 +72,7 @@ export class FollowCamera {
 
     // Nhịp sen đặt nhân vật và hoa lên nửa trên, tránh bảng phím phía dưới.
     this.target.set(px, py + (this.meditating ? -0.5 : 1.2), pz);
-    this.look.lerp(this.target, 1 - Math.exp(-dt * 11));
+    this.look.lerp(this.target, 1 - Math.exp(-dt * 24));
 
     const pitch = this.meditating ? 0.25 : this.pitch;
     const distance = this.meditating ? 5.2 : this.distance;

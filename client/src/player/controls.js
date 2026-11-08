@@ -1,5 +1,4 @@
-// Nhận thao tác: WASD/mũi tên, chuột phải bật/tắt xoay tự do, kéo chuột trái xoay, lăn zoom;
-// điện thoại có cần ảo và kéo nửa phải.
+// Nhận thao tác: WASD/mũi tên, rê chuột xoay khi khóa trỏ, lăn zoom; điện thoại dùng cần ảo.
 
 const MOVE_KEYS = {
   KeyW: [0, 1], ArrowUp: [0, 1], KeyS: [0, -1], ArrowDown: [0, -1],
@@ -7,9 +6,6 @@ const MOVE_KEYS = {
 };
 const TAP_MOVE_PX = 8;
 const TAP_MS = 350;
-const MOUSE_SENS = 0.0045;
-const SENS_PITCH = 0.7; // Trục dọc nhuộm nhẹ cho đỡ hoa mắt.
-const MAX_STEP = 120; // Delta xa hơn vậy chắc là nhiễu của trình duyệt/bàn phím số, không phải tay người dùng.
 
 export class Input {
   constructor(canvas, stick) {
@@ -26,13 +22,17 @@ export class Input {
     this.camId = null;
     this.camLast = { x: 0, y: 0 };
     this.downAt = { x: 0, y: 0, t: 0, moved: false };
-    this.camButton = 0;
-    this.rotating = false; // Camera đang ở chế độ quay theo ống kính (nhân vật hướng theo camera khi đi).
-    this.freeLook = false; // Xoay tự do kiểu Where Winds Meet: di chuột trên khung cảnh là xoay, không cần giữ phím.
     this.onTap = null;
     this.onKeyDown = null;
     this.onKeyUp = null;
     this.enabled = false;
+    this.pointerLocked = false;
+    this.pointerLockFailed = false;
+    this.lockClick = false;
+    document.addEventListener('pointerlockchange', () => {
+      this.pointerLocked = document.pointerLockElement === canvas;
+      this.camId = null;
+    });
 
     window.addEventListener('keydown', (e) => this.#keyDown(e));
     window.addEventListener('keyup', (e) => this.#keyUp(e));
@@ -40,9 +40,6 @@ export class Input {
       this.keys.clear();
       this.#stickEnd();
       this.camId = null;
-      this.rotating = false;
-      this.canvas.classList.remove('cam-dragging');
-      this.endFreeLook();
     });
 
     canvas.addEventListener('pointerdown', (e) => this.#down(e));
@@ -81,13 +78,16 @@ export class Input {
   #down(e) {
     if (!this.enabled) return;
     const isTouch = e.pointerType === 'touch';
-    // Chuột phải: bấm một lần bật/tắt xoay tự do, không cần giữ kéo (kiểu Where Winds Meet).
-    // Cố ý không dùng Pointer Lock: khóa con trỏ bắt toàn bộ chuột, tay rời game vẫn quay camera.
-    if (!isTouch && e.button === 2) {
-      this.freeLook = !this.freeLook;
-      this.rotating = this.freeLook;
-      return;
+    if (!isTouch && e.button === 0 && !this.pointerLocked && (this.canLock?.() ?? true)) {
+      this.lockClick = true;
+      if (this.canvas.requestPointerLock) {
+        Promise.resolve(this.canvas.requestPointerLock()).catch(() => {
+          this.pointerLockFailed = true;
+          this.lockClick = false;
+        });
+      }
     }
+    if (!isTouch && this.pointerLocked) return;
     const leftZone = isTouch && e.clientX < window.innerWidth * 0.45 && e.clientY > window.innerHeight * 0.45;
     if (leftZone && this.stickId === null) {
       this.stickId = e.pointerId;
@@ -97,35 +97,20 @@ export class Input {
     if (e.button !== 0 && !isTouch) return;
     if (this.camId === null) {
       this.camId = e.pointerId;
-      this.camButton = isTouch ? 0 : e.button;
-      this.rotating = true;
       this.camLast.x = e.clientX;
       this.camLast.y = e.clientY;
       this.downAt = { x: e.clientX, y: e.clientY, t: performance.now(), moved: false };
-      if (!this.freeLook) this.canvas.classList.add('cam-dragging');
     }
   }
 
   #move(e) {
-    if (e.pointerId === this.stickId) {
-      this.#stickUpdate(e);
+    if (e.pointerType === 'mouse' && (this.pointerLocked || ((!this.canvas.requestPointerLock || this.pointerLockFailed) && e.target === this.canvas && this.enabled && (this.canLock?.() ?? true)))) {
+      this.yawDelta -= e.movementX * 0.0028;
+      this.pitchDelta += e.movementY * 0.0028 * 0.7;
       return;
     }
-    if (this.freeLook && e.pointerType === 'mouse') {
-      // Xoay theo con trỏ đang hiện, chỉ khi lướt trên khung cảnh: đưa lên nút bấm hay bảng UI
-      // thì target là UI, camera đứng yên để bấm thoải mái.
-      if (e.target !== this.canvas) return;
-      if (e.pointerId === this.camId && Math.hypot(e.clientX - this.downAt.x, e.clientY - this.downAt.y) > TAP_MOVE_PX) {
-        this.downAt.moved = true;
-      }
-      const rawX = typeof e.movementX === 'number' ? e.movementX : e.clientX - this.camLast.x;
-      const rawY = typeof e.movementY === 'number' ? e.movementY : e.clientY - this.camLast.y;
-      this.camLast.x = e.clientX;
-      this.camLast.y = e.clientY;
-      const mx = Math.max(-MAX_STEP, Math.min(MAX_STEP, rawX));
-      const my = Math.max(-MAX_STEP, Math.min(MAX_STEP, rawY));
-      this.yawDelta -= mx * MOUSE_SENS;
-      this.pitchDelta += my * MOUSE_SENS * SENS_PITCH;
+    if (e.pointerId === this.stickId) {
+      this.#stickUpdate(e);
       return;
     }
     if (e.pointerId !== this.camId) return;
@@ -135,23 +120,26 @@ export class Input {
     this.camLast.y = e.clientY;
     if (Math.hypot(e.clientX - this.downAt.x, e.clientY - this.downAt.y) > TAP_MOVE_PX) this.downAt.moved = true;
     if (this.downAt.moved) {
-      const sens = e.pointerType === 'touch' ? 0.006 : MOUSE_SENS;
+      const sens = e.pointerType === 'touch' ? 0.006 : 0.0045;
       this.yawDelta -= dx * sens;
-      this.pitchDelta += dy * sens * SENS_PITCH;
+      this.pitchDelta += dy * sens * 0.7;
     }
   }
 
   #up(e) {
+    if (this.pointerLocked && e.pointerType === 'mouse') {
+      if (this.lockClick) this.lockClick = false;
+      else if (e.button === 0) this.onTap?.(window.innerWidth / 2, window.innerHeight / 2);
+      return;
+    }
+    this.lockClick = false;
     if (e.pointerId === this.stickId) {
       this.#stickEnd();
       return;
     }
     if (e.pointerId !== this.camId) return;
     this.camId = null;
-    this.rotating = this.freeLook;
-    this.canvas.classList.remove('cam-dragging');
-    // Chỉ bấm chuột trái/thẻ mới tính là chạm để tương tác; chuột phải thuần xoay góc nhìn.
-    const isTap = this.camButton === 0 && !this.downAt.moved && performance.now() - this.downAt.t < TAP_MS;
+    const isTap = !this.downAt.moved && performance.now() - this.downAt.t < TAP_MS;
     if (isTap && e.type === 'pointerup') this.onTap?.(e.clientX, e.clientY);
   }
 
@@ -209,11 +197,5 @@ export class Input {
     this.pitchDelta = 0;
     this.zoomDelta = 0;
     return r;
-  }
-
-  /** Tắt xoay tự do khi mở hộp thoại, đang gõ chữ hay rời tab. */
-  endFreeLook() {
-    this.freeLook = false;
-    this.rotating = false;
   }
 }
