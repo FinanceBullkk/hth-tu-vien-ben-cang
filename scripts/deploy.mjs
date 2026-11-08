@@ -23,6 +23,7 @@ const LABEL = 'hth.deploy=workflow';
 const LIMITS = [
   '--memory', '768m', '--memory-swap', '1536m', '--pids-limit', '256',
   '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '-e', 'TRUST_PROXY=1',
+  ...(process.env.HTH_VOICE_ENV_FILE ? ['--env-file', process.env.HTH_VOICE_ENV_FILE] : []),
 ];
 
 const candidateOnly = process.argv.includes('--candidate-only');
