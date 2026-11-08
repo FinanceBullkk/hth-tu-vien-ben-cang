@@ -93,6 +93,30 @@ these flags again.
 `hth:latest` may not be the running image. Check the actual image with
 `docker ps --filter name=hth` before recreating or rolling back.
 
+## Current release: 2026-11-08 cross-network voice
+
+Deploy run [42465684418](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/42465684418)
+released main `69cf415` as `hth:261108-1605-69cf415` (also `hth:latest`) at
+16:08 UTC+7. Public bundle: `index-BhHaAhqA.js`. Cloudflare TURN environment
+variables are present in the production container; long-lived credentials
+remain server-side.
+
+Docker tests: 141/141 passed. Candidate health, page, bundle, Socket.IO and DB
+quick_check passed (27 players, 18 wishes, 33 fish). Workflow production and
+public checks passed. The public relay-only browser check passed with actual
+TURN candidates on both peers, bidirectional synthetic audio, mic controls,
+distance revocation, disconnect cleanup, and retained aura/meditation/melody.
+Physical microphones and two devices on separate Internet connections were
+not tested. Four public checks produced two complete passes, one TURN
+admission failure, and one peer connection timeout. Five direct credential
+requests from the container passed. The intermittent failures remain
+undiagnosed; the browser check now prints sanitized admission and ICE states
+on failure. These results do not prove reliable connectivity on every network.
+
+Rollback container `hth-rollback-261108-1605-69cf415` preserves
+`hth:aura-1108-1345`, stopped with `restart=no`. Private backup is in the data
+volume at `backups/cutover-261108-1605-69cf415/`.
+
 ## Production baseline reconciled: 2026-11-08
 
 Before the voice release, the running container was `hth:aura-1108-1345`,
