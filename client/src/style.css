@@ -49,8 +49,12 @@ kbd { font: inherit; }
 
 /* Nhãn tên trên đầu */
 .tag { display: flex; flex-direction: column; align-items: center; gap: 3px; transform-origin: center bottom; pointer-events: none; }
-.tag-name { padding: 1px 8px; border-radius: 9px; background: rgba(33, 20, 14, .62); color: #fbeed5; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
-.tag-name.me { background: rgba(168, 67, 42, .82); }
+.tag-name { padding: 2px 13px; border: 1px solid var(--tag-accent, #e9d6ab); border-radius: 2px 9px; background: linear-gradient(110deg, rgba(24, 29, 31, .94), rgba(48, 37, 29, .9)); color: #fff5df; font-size: 13px; font-weight: 600; white-space: nowrap; box-shadow: inset 0 0 0 2px #ffffff0a, 0 2px 4px #0006; }
+.tag-name.me { border-bottom-width: 2px; background: linear-gradient(110deg, #50342bed, #292521ed); }
+.tag-title { position: relative; padding: 3px 27px 5px; color: var(--tag-accent); font: 700 16px/1.4 var(--serif); white-space: nowrap; text-shadow: 0 1px 2px #151315, 1px 0 2px #151315, -1px 0 2px #151315; background: radial-gradient(ellipse, #141920dc 15%, #14192080 55%, transparent 72%); }
+.tag-title::before, .tag-title::after { content: ''; position: absolute; top: 50%; width: 20px; height: 7px; border-block: 1px solid currentColor; opacity: .85; }
+.tag-title::before { left: 0; border-radius: 80% 0; transform: rotate(-22deg); }
+.tag-title::after { right: 0; border-radius: 0 80%; transform: rotate(22deg); }
 .tag-name.abbot { background: rgba(143, 74, 30, .9); color: #ffe9b8; }
 .tag-status { padding: 0 7px; border-radius: 8px; background: rgba(255, 217, 138, .9); color: #4a2a12; font-size: 11px; white-space: nowrap; }
 /* Nhãn nhỏ trên lời ước gần nhất: tác giả + số phúc, chỉ hiện cho 3 vật thể gần người chơi */

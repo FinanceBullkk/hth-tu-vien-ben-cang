@@ -8,6 +8,11 @@ const FADE_MS = 240;
 
 /** Mờ màn hình một nhịp rồi đổi chỗ, để không giật hình và người chơi hiểu mình vừa được đưa đi. */
 function travel(app, place) {
+  if (place.key === 'mat') {
+    if (app.activities.current) app.activities.exit();
+    app.activities.meditation.start();
+    return;
+  }
   const veil = h('div', { class: 'place-veil' });
   document.body.append(veil);
   requestAnimationFrame(() => veil.classList.add('on'));

@@ -26,6 +26,7 @@ export class PitchGame {
   }
 
   start(player, data) {
+    if (player.activity === ACTIVITY.meditate) return { ok: false, error: 'Đứng dậy trước khi chơi đầu hồ nhé.' };
     if (!this.nearSpot(player)) return { ok: false, error: 'Đến sân đầu hồ cạnh bãi container nhé.' };
     const now = Date.now();
     const current = player.pitch;

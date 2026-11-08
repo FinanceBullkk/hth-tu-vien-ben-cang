@@ -1,7 +1,7 @@
-// Giữ chỗ chiếu và phát trạng thái hoa sen của minigame Nhịp sen.
+// Tích khí khi thiền tại chỗ; giữ chiếu và hoa sen riêng cho Nhịp sen.
 import { MAT_COUNT, MATS, dist2d } from '../shared/layout.js';
 import { rhythmSummary } from '../shared/rhythm.js';
-import { QI_INTERVAL_MS } from '../shared/cultivation.js';
+import { QI_GAIN_RATE, QI_INTERVAL_MS } from '../shared/cultivation.js';
 
 export class Meditation {
   constructor({ db, io, config }) {
@@ -29,19 +29,18 @@ export class Meditation {
   }
 
   sit(player, matIndex) {
-    // Không gửi mat là thiền tại chỗ; -1 chỉ là dấu nội bộ, client không được gửi id này.
-    const mat = matIndex === undefined ? -1 : matIndex;
+    const mat = matIndex === undefined ? null : matIndex;
     if (matIndex !== undefined) {
       if (!Number.isInteger(mat) || mat < 0 || mat >= MAT_COUNT) return { ok: false, error: 'Chiếu này không có thật.' };
       if (this.mats[mat]) return { ok: false, error: 'Chiếu này có người ngồi rồi, chọn chiếu khác nhé.' };
       const pos = MATS[mat];
       if (dist2d(player.x, player.z, pos.x, pos.z) > 4) return { ok: false, error: 'Lại gần chiếu hơn chút nhé.' };
     }
-    this.leave(player);
+    if (this.sitters.has(player)) return { ok: false, error: 'Đứng dậy trước khi đổi chỗ thiền nhé.' };
     const now = Date.now();
     // Ánh sáng dùng nhịp chung; mỗi người bắt đầu phút nghỉ của mình ngay khi ngồi.
     if (!this.members().length) this.epoch = now + 1500;
-    if (mat >= 0) this.mats[mat] = player;
+    if (mat != null) this.mats[mat] = player;
     this.sitters.add(player);
     player.mat = mat;
     player.medStart = now;
@@ -57,11 +56,11 @@ export class Meditation {
   }
 
   accrue(player, now = Date.now(), flush = false) {
-    if (player.mat == null) return;
+    if (!this.sitters.has(player)) return;
     const elapsed = Math.max(0, now - player.qiAt);
     player.qiAt = Math.max(now, player.qiAt);
     // A suspended server is not online meditation time.
-    if (elapsed <= 15_000) player.qiPendingMs += elapsed;
+    if (elapsed <= 15_000) player.qiPendingMs += elapsed * QI_GAIN_RATE;
     if (!player.qiPendingMs || (!flush && player.qiPendingMs < QI_INTERVAL_MS)) return;
     player.cultivationMs = this.db.addCultivation(player.pid, player.qiPendingMs);
     player.qiPendingMs = 0;
@@ -94,9 +93,9 @@ export class Meditation {
   }
 
   leave(player) {
-    if (player.mat === undefined || player.mat === null) return;
+    if (!this.sitters.has(player)) return;
     this.accrue(player, Date.now(), true);
-    if (player.mat >= 0) this.mats[player.mat] = null;
+    if (player.mat != null) this.mats[player.mat] = null;
     this.sitters.delete(player);
     player.mat = null;
     this.io.emit('meditation:mats', this.occupancy());

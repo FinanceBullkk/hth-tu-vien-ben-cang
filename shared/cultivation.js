@@ -1,6 +1,6 @@
-// Hai thước tu luyện: công pháp (điểm Nhịp sen) và chân khí (thời gian ngồi thiền).
+// Keep the saved qi unit unchanged; only newly earned time gets the faster rate.
 export const QI_INTERVAL_MS = 6000;
-
+export const QI_GAIN_RATE = 15;
 export const CULTIVATION_TIERS = [
   { name: 'Khởi khí', points: 0 },
   { name: 'Tụ linh', points: 300 },

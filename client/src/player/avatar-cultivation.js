@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { createSenKimCultivation } from './sen-kim-cultivation.js';
 
 const COLORS = [0xffd98a, 0x7ee8e0, 0xcdd8ff, 0xff9a5c, 0xffa8cc, 0x7ee8a0, 0xf6f7ff, 0x9b64da];
 
@@ -65,22 +64,17 @@ export function createCultivation(effect, tier, lowQuality = false) {
   });
   const points = new THREE.Points(geometry, material);
   points.frustumCulled = false;
-  points.visible = enabled && (layers > 0 || effect === 1);
-  const lotus = effect === 1 ? createSenKimCultivation(layers, lowQuality) : null;
-  if (lotus) { points.add(lotus.group); material.uniforms.opacity.value = 0; }
+  points.visible = enabled && layers > 0;
   return {
     points,
-    startBreakthrough(time) { lotus?.startBreakthrough(time); },
-    get lift() { return lotus?.group.userData.lift ?? 0; },
-    update(time, sitting = false, fade = 1, sitAmount = Number(sitting)) {
+    update(time, sitting = false, fade = 1) {
       if (!points.visible) return;
-      if (lotus) { lotus.update(time, sitting, fade, sitAmount); return; }
       for (let i = 0; i < positions.length / 3; i++) {
         positions.set(cultivationPoint(effect, (i % count) / count, Math.floor(i / count), time), i * 3);
       }
       geometry.attributes.position.needsUpdate = true;
       material.uniforms.opacity.value = (sitting ? 0.85 : 0.55) * fade;
     },
-    dispose() { lotus?.dispose(); geometry.dispose(); material.dispose(); },
+    dispose() { geometry.dispose(); material.dispose(); },
   };
 }

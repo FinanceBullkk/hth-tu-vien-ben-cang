@@ -1,68 +1,45 @@
 import * as THREE from 'three';
 import { cultivation } from '../../../shared/cultivation.js';
+import { groundVertex, groundFragment, ribbonVertex, ribbonFragment } from './cultivation-aura-shaders.js';
+import { createManifestation } from './cultivation-manifestation.js';
+
+const PALETTES = [
+  ['#a4d8c7', '#ffe6ac'], ['#f4ca73', '#fff0c8'], ['#69d8d0', '#dbfff5'],
+  ['#a9bfff', '#fff1bb'], ['#ff955b', '#ffe2a2'], ['#ee9cbb', '#ffdfca'],
+  ['#73cfa0', '#e8f4bc'], ['#c6daf5', '#fff4d9'], ['#ae83d0', '#e8bbef'],
+  ['#ff693b', '#ffe6a1'],
+];
 
 const groundGeometry = new THREE.PlaneGeometry(2.8, 2.8);
 groundGeometry.rotateX(-Math.PI / 2);
-const vertexShader = `
-  varying vec2 vUv;
-  void main() {
-    vUv = uv * 2.0 - 1.0;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-const fragmentShader = `
-  varying vec2 vUv;
-  uniform vec3 tint;
-  uniform float time, level, seated, opacity, burst;
-  float ring(float r, float radius, float width) {
-    return 1.0 - smoothstep(width, width + 0.012, abs(r - radius));
-  }
-  void main() {
-    float r = length(vUv);
-    float a = atan(vUv.y, vUv.x);
-    float breath = 0.93 + 0.04 * sin(time * 1.05);
-    float light = ring(r, 0.57 * breath, 0.006) * 0.55;
-    light += exp(-r * r * 10.0) * 0.09;
-    if (seated > 0.01) {
-      float detail = 0.0;
-      if (level >= 3.0) {
-        detail += ring(r, 0.73, 0.004) * (0.35 + 0.35 * pow(abs(sin(a * 6.0 + time * 0.3)), 10.0));
-        detail += ring(r, 0.42, 0.004) * (0.4 + 0.3 * pow(abs(sin(a * 5.0 - time * 0.4)), 8.0));
-        float petal = 0.33 + 0.17 * pow(abs(cos(a * 4.0 + time * 0.025)), 1.5);
-        detail += ring(r, petal, 0.009) * 0.55;
-      }
-      if (level >= 4.0) {
-        float runes = pow(abs(cos(a * 12.0 - time * 0.15)), 18.0);
-        detail += ring(r, 0.84, 0.026) * runes * 0.7;
-        detail += ring(r, 0.9, 0.003) * 0.3;
-      }
-      if (level >= 5.0) {
-        detail += ring(r, 0.64 + 0.05 * cos(a * 8.0), 0.004) * 0.55;
-        float wave = fract(time * 0.12);
-        detail += ring(r, 0.35 + wave * 0.63, 0.007) * (1.0 - wave) * 0.3;
-      }
-      light += detail * seated;
-    }
-    light += ring(r, 0.3 + (1.0 - burst) * 0.65, 0.018) * burst * 0.65;
-    float alpha = min(0.7, light) * opacity;
-    if (alpha < 0.003 || r > 0.98) discard;
-    gl_FragColor = vec4(tint, alpha);
-    #include <tonemapping_fragment>
-    #include <colorspace_fragment>
-  }
-`;
-
+// Immutable silk-strip geometry is shared between avatars.
+const ribbonGeometry = new THREE.PlaneGeometry(1, 1, 72, 1);
+const strip = ribbonGeometry.attributes.position;
+const uv = ribbonGeometry.attributes.uv;
+for (let i = 0; i < strip.count; i++) {
+  const u = uv.getX(i), a = u * Math.PI * 1.6;
+  const radius = 0.72 + Math.sin(a * 1.5) * 0.04;
+  strip.setXYZ(i, Math.cos(a) * radius, 0.12 + Math.sin(u * Math.PI) * 0.22 + (uv.getY(i) - 0.5) * 0.15, Math.sin(a) * radius);
+}
+ribbonGeometry.computeBoundingSphere();
+const dustPixels = new Uint8Array(16 * 16 * 4);
+for (let i = 0; i < 256; i++) {
+  const r = Math.hypot((i % 16 - 7.5) / 7.5, (Math.floor(i / 16) - 7.5) / 7.5);
+  dustPixels.set([255, 255, 255, Math.round(255 * Math.max(0, 1 - r) ** 2)], i * 4);
+}
+const dustTexture = new THREE.DataTexture(dustPixels, 16, 16);
+dustTexture.needsUpdate = true;
 export class CultivationAura {
-  constructor(lowQuality = false) {
+  constructor(lowQuality = false, effect = 0) {
     this.group = new THREE.Group();
     this.motion = matchMedia('(prefers-reduced-motion: reduce)');
     this.count = lowQuality ? 12 : 24;
     this.uniforms = {
-      tint: { value: new THREE.Color() }, time: { value: 0 }, level: { value: 1 },
+      tint: { value: new THREE.Color() }, accent: { value: new THREE.Color() }, theme: { value: 0 }, time: { value: 0 }, level: { value: 1 },
       seated: { value: 0 }, opacity: { value: 0.6 }, burst: { value: 0 },
     };
     this.material = new THREE.ShaderMaterial({
-      uniforms: this.uniforms, vertexShader, fragmentShader,
+      uniforms: this.uniforms, vertexShader: groundVertex, fragmentShader: groundFragment,
       transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
     });
     this.ground = new THREE.Mesh(groundGeometry, this.material);
@@ -71,30 +48,40 @@ export class CultivationAura {
     this.positions = new Float32Array(this.count * 3);
     this.dustGeometry = new THREE.BufferGeometry();
     this.dustGeometry.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
-    this.dustMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.045, transparent: true, opacity: 0.6, depthWrite: false, blending: THREE.AdditiveBlending });
+    this.dustMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.16, map: dustTexture, transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending });
     this.dust = new THREE.Points(this.dustGeometry, this.dustMaterial);
     this.dust.frustumCulled = false;
     this.group.add(this.dust);
-    this.ribbonPositions = new Float32Array(64 * 3);
-    this.ribbonGeometry = new THREE.BufferGeometry();
-    this.ribbonGeometry.setAttribute('position', new THREE.BufferAttribute(this.ribbonPositions, 3));
-    this.ribbonMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending });
-    this.ribbon = new THREE.Line(this.ribbonGeometry, this.ribbonMaterial);
-    this.ribbon.frustumCulled = false;
+    this.ribbonUniforms = { tint: this.uniforms.tint, accent: this.uniforms.accent, time: this.uniforms.time, opacity: { value: 0.5 } };
+    this.ribbonMaterial = new THREE.ShaderMaterial({ uniforms: this.ribbonUniforms, vertexShader: ribbonVertex, fragmentShader: ribbonFragment, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending });
+    this.ribbon = new THREE.Mesh(ribbonGeometry, this.ribbonMaterial);
     this.group.add(this.ribbon);
+    this.secondRibbon = new THREE.Mesh(ribbonGeometry, this.ribbonMaterial);
+    this.group.add(this.secondRibbon);
+    this.lowQuality = lowQuality;
+    this.setEffect(effect);
     this.time = 0;
     this.burst = 0;
     this.setQi(0);
+  }
+
+  setEffect(effect) {
+    this.effect = Number.isInteger(effect) && PALETTES[effect] ? effect : 0;
+    const [tint, accent] = PALETTES[this.effect];
+    this.uniforms.tint.value.set(tint);
+    this.uniforms.accent.value.set(accent);
+    this.uniforms.theme.value = this.effect === 9 ? 2 : this.effect;
+    this.dustMaterial.color.set(accent);
+    this.manifestation?.dispose();
+    this.manifestation = createManifestation(this.effect === 9 ? 2 : this.effect, this.uniforms.tint.value, this.uniforms.accent.value, this.lowQuality);
+    this.group.add(this.manifestation.group);
   }
 
   setQi(qi) {
     const next = cultivation(qi);
     if (this.state && next.level > this.state.level && !this.motion.matches) this.burst = 1;
     this.state = next;
-    this.uniforms.tint.value.set(next.color);
     this.uniforms.level.value = next.level;
-    this.dustMaterial.color.set(next.color);
-    this.ribbonMaterial.color.set(next.color);
   }
 
   update(dt, sit, distance, fading = 1) {
@@ -107,40 +94,46 @@ export class CultivationAura {
     this.burst = Math.max(0, this.burst - dt / 1.8);
     this.uniforms.time.value = t;
     this.uniforms.seated.value = sit;
-    this.uniforms.burst.value = reduced ? 0 : this.burst;
-    this.uniforms.opacity.value = (0.38 + sit * 0.45) * fading;
-    const size = c.scale * (0.52 + sit * 0.48);
-    this.ground.scale.set(size, 1, size);
-    this.dust.visible = c.level >= 2 && sit > 0.1;
-    this.ribbon.visible = c.level >= 4 && sit > 0.1;
+    this.uniforms.burst.value = reduced ? 0 : this.burst * sit;
+    this.uniforms.opacity.value = (0.25 + sit * 0.65) * fading;
+    const size = c.scale * (0.52 + sit * (0.6 + 0.07 * c.level));
+    const groundSize = Math.min(size, 1.15);
+    this.ground.scale.set(groundSize, 1, groundSize);
+    this.manifestation.update(c.level, sit, t, fading);
+    this.dust.visible = sit > 0.1;
+    const count = Math.round(this.count * (0.2 + 0.16 * c.level));
+    this.dustGeometry.setDrawRange(0, count);
+    this.ribbon.visible = sit > 0.1;
+    this.secondRibbon.visible = c.level >= 2 && sit > 0.1 && !this.lowQuality;
     if (this.dust.visible) {
-      for (let i = 0; i < this.count; i++) {
-        const phase = (i / this.count + t * 0.09) % 1;
+      for (let i = 0; i < count; i++) {
+        const phase = (i / count + t * 0.14) % 1;
         const angle = i * 2.4 + t * 0.3;
         const r = (1 - phase) * size * 0.9 + 0.12;
-        this.positions.set([Math.cos(angle) * r, 0.12 + phase * 0.85, Math.sin(angle) * r], i * 3);
+        this.positions[i * 3] = Math.cos(angle) * r;
+        this.positions[i * 3 + 1] = 0.1 + Math.sin(phase * Math.PI * 0.5) * (0.25 + c.level * 0.13);
+        this.positions[i * 3 + 2] = Math.sin(angle) * r;
       }
       this.dustGeometry.attributes.position.needsUpdate = true;
-      this.dustMaterial.opacity = 0.65 * sit * fading;
+      this.dustMaterial.size = 0.07 + c.level * 0.009;
+      this.dustMaterial.opacity = (0.45 + 0.12 * Math.sin(t * 0.8)) * sit * fading;
     }
     if (this.ribbon.visible) {
-      for (let i = 0; i < 64; i++) {
-        const p = i / 63;
-        const a = p * Math.PI * 5 - t * 0.5;
-        const r = (0.28 + 0.16 * Math.sin(p * Math.PI)) * size;
-        this.ribbonPositions.set([Math.cos(a) * r, 0.12 + p * 1.25, Math.sin(a) * r], i * 3);
-      }
-      this.ribbonGeometry.attributes.position.needsUpdate = true;
-      this.ribbonMaterial.opacity = 0.3 * sit * fading;
+      this.ribbon.scale.set(size, 0.55 + c.level * 0.18, size);
+      this.ribbon.rotation.y = -t * 0.24;
+      this.secondRibbon.scale.set(size * 0.92, 0.8 + c.level * 0.16, size * 0.92);
+      this.secondRibbon.rotation.y = t * 0.19 + Math.PI;
+      this.secondRibbon.position.y = 0.11;
+      this.ribbonUniforms.opacity.value = (0.65 + c.level * 0.06) * sit * fading;
     }
   }
 
   dispose() {
+    this.manifestation.dispose();
     this.group.removeFromParent();
     this.material.dispose();
     this.dustGeometry.dispose();
     this.dustMaterial.dispose();
-    this.ribbonGeometry.dispose();
     this.ribbonMaterial.dispose();
   }
 }

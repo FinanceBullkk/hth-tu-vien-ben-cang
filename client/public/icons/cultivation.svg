@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <radialGradient id="glass" cx=".38" cy=".28" r=".75">
+      <stop stop-color="#d6e1e4"/><stop offset=".42" stop-color="#667d82"/><stop offset="1" stop-color="#142c32"/>
+    </radialGradient>
+    <linearGradient id="silver" x1="18" y1="8" x2="75" y2="86" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f4f5e7"/><stop offset=".32" stop-color="#627a7f"/><stop offset=".6" stop-color="#c0d0d0"/><stop offset="1" stop-color="#3e565c"/>
+    </linearGradient>
+    <linearGradient id="lotus" x1="50" y1="63" x2="50" y2="96" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d8bbff"/><stop offset=".5" stop-color="#8d48d0"/><stop offset="1" stop-color="#422178"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="45" r="42" fill="#162e34" stroke="#a2b9b5" stroke-width="1.5"/>
+  <circle cx="50" cy="45" r="38.5" fill="url(#glass)" stroke="url(#silver)" stroke-width="4"/>
+  <path d="M20 42c1-20 17-31 34-30" stroke="#fff" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/>
+  <path d="M28 59c-9-8-6-22 4-27M72 59c9-8 6-22-4-27" stroke="#d5e4e1" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="50" cy="31" r="8" fill="#d2dedb"/>
+  <path d="M43 42c-2 8-6 12-13 17m27-17c2 8 6 12 13 17" stroke="#d2dedb" stroke-width="6" stroke-linecap="round"/>
+  <path d="M43 42c4-3 10-3 14 0l3 20H40l3-20Z" fill="#b4c8c7"/>
+  <path d="M50 62c-18-10-30 0-20 8 8 5 16-1 20-4 4 3 12 9 20 4 10-8-2-18-20-8Z" fill="#d2dedb"/>
+  <path d="M23 66c4 20 15 27 27 27-6-16-14-24-27-27Z" fill="url(#lotus)" stroke="#aa80d5"/>
+  <path d="M77 66c-4 20-15 27-27 27 6-16 14-24 27-27Z" fill="url(#lotus)" stroke="#aa80d5"/>
+  <path d="M50 62c-15 14-15 25 0 32 15-7 15-18 0-32Z" fill="url(#lotus)" stroke="#c7a4ef"/>
+  <path d="M12 75c10 19 24 24 38 19-10-13-22-18-38-19Zm76 0C78 94 64 99 50 94c10-13 22-18 38-19Z" fill="url(#lotus)" stroke="#a97ad2"/>
+</svg>

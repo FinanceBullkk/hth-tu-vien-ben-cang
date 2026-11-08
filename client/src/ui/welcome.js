@@ -79,6 +79,13 @@ export class Welcome {
     const attireRow = chipRow('Trang phục', ATTIRE_NAMES.slice(0, AVATAR.attires), 'Kiểu trang phục', (i) => this.setAttire(i));
     const weaponRow = chipRow('Vũ khí', WEAPON_NAMES.slice(0, AVATAR.weapons), 'Vũ khí mang theo', (i) => this.setWeapon(i));
     const effectRow = chipRow('Hiệu ứng', EFFECT_NAMES.slice(0, AVATAR.effects), 'Hiệu ứng hào quang', (i) => this.setEffect(i));
+    // V9: đè "giảm chuyển động" của hệ điều hành — ai muốn xem aura full tốc tự bật.
+    const fullFxBox = h('input', { type: 'checkbox' });
+    fullFxBox.checked = store.get('fullFx') === '1';
+    fullFxBox.addEventListener('change', () => store.set('fullFx', fullFxBox.checked ? '1' : '0'));
+    const fullFxRow = h('label', { class: 'field', style: 'display:flex;gap:8px;align-items:center;cursor:pointer' },
+      fullFxBox,
+      h('span', {}, 'Hiệu ứng động đầy đủ (bỏ qua giảm chuyển động của Windows)'));
     this.attireBtns = [...attireRow.querySelectorAll('.chip')];
     this.weaponBtns = [...weaponRow.querySelectorAll('.chip')];
     this.effectBtns = [...effectRow.querySelectorAll('.chip')];
@@ -114,7 +121,8 @@ export class Welcome {
           h('div', { class: 'field' }, h('span', {}, 'Mũ'), hats),
           attireRow,
           weaponRow,
-          effectRow)),
+          effectRow,
+          fullFxRow)),
     );
     this.setColor(this.profile.color);
     this.setHair(this.profile.hair ?? 0);
