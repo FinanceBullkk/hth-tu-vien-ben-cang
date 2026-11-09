@@ -104,7 +104,7 @@ export class Input {
   }
 
   #move(e) {
-    if (e.pointerType === 'mouse' && (this.pointerLocked || ((!this.canvas.requestPointerLock || this.pointerLockFailed) && e.target === this.canvas && this.enabled && (this.canLock?.() ?? true)))) {
+    if (e.pointerType === 'mouse' && (this.pointerLocked || (e.target === this.canvas && this.enabled && (this.canLock?.() ?? true)))) {
       this.yawDelta -= e.movementX * 0.0028;
       this.pitchDelta += e.movementY * 0.0028 * 0.7;
       return;
