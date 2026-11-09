@@ -1,5 +1,19 @@
 # Deployment
 
+## Current release: 2026-11-09 chat HUD and mic control, 14:31 UTC+7
+
+Public image `hth:chat-voice-1109` adds lower-left chat history, Enter-to-chat,
+direct mic toggle, and nearby speaker names. Release source:
+`D:/hth-chat-voice-release-1109`, built from the running `hth:zoeyy-1109`
+image source with only chat/voice client files overlaid from commit `56d8843`.
+Clean-branch tests: 141/141; Docker release tests: 138/138; candidate
+WebRTC and chat browser checks passed. Public health, page and Socket.IO
+returned 200, bundle `index-B42r7Iof.js` matched local, SQLite quick_check
+was ok with 45 players retained. Existing runtime flags and data volume kept.
+Rollback: stopped `hth-pre-chat-voice-1109-1431` (`hth:zoeyy-1109`);
+private backup: `backups/cutover-chat-voice-1109-1431/` in production volume.
+
+
 ## Current target
 
 Cloudflare named Tunnel on the production host `pc-chinh` (Windows, Tailscale
