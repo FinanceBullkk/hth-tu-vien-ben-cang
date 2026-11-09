@@ -10,7 +10,7 @@ const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright')
 const baseUrl = process.env.VOICE_TEST_URL || 'http://localhost:3938';
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hth-voice-'));
 const cfg = JSON.parse(fs.readFileSync(new URL('../config.example.json', import.meta.url), 'utf8'));
-Object.assign(cfg, { port: 3938, bellSchedule: [], adminKey: 'v'.repeat(32) });
+Object.assign(cfg, { port: 3938, joinCode: '', bellSchedule: [], adminKey: 'v'.repeat(32) });
 fs.writeFileSync(path.join(dir, 'config.json'), JSON.stringify(cfg));
 const proc = process.env.VOICE_TEST_URL ? null : spawn(process.execPath, ['server/index.js'], {
   cwd: path.resolve(import.meta.dirname, '..'),
@@ -54,6 +54,9 @@ try {
     await page.locator('#nameInput').fill(name);
     await page.locator('#enterBtn').click();
     await page.waitForFunction(() => window.__hth?.net.ready);
+    await page.waitForFunction(() => window.__hth.voice.active);
+    assert.equal(await page.evaluate(() => window.__hth.voice.mode), 'ptt');
+    assert.equal(await page.evaluate(() => window.__testCapture.stream.getAudioTracks()[0].enabled), false);
     await page.evaluate(() => {
       const net = window.__hth.net, call = net.call.bind(net);
       net.call = async (...args) => {
@@ -69,15 +72,21 @@ try {
   const a = await makePage('Voice browser A');
   const b = await makePage('Voice browser B', true);
   const openVoice = async (page) => {
-    if (!(await page.locator('#voicePanel').evaluate((el) => el.open))) await page.getByLabel('Điều khiển mic', { exact: true }).click();
+    await page.evaluate(() => { if (document.pointerLockElement) document.exitPointerLock(); });
+    if (!(await page.locator('.voice-details').evaluate((el) => el.open))) await page.getByLabel('Cài đặt voice', { exact: true }).click();
   };
   for (const page of [a, b]) {
     assert.equal(await page.getByRole('button', { name: 'Bật voice', exact: true }).isVisible(), false);
+    assert.equal(await page.getByRole('button', { name: 'Bật mic', exact: true }).getAttribute('aria-pressed'), 'false');
     await openVoice(page);
-    assert.equal(await page.getByRole('button', { name: 'Bật voice', exact: true }).isVisible(), true);
-    await page.getByLabel('Điều khiển mic', { exact: true }).press('Escape');
-    assert.equal(await page.locator('#voicePanel').evaluate((el) => el.open), false);
+    assert.equal(await page.getByRole('button', { name: 'Tắt voice', exact: true }).isVisible(), true);
+    await page.getByLabel('Cài đặt voice', { exact: true }).press('Escape');
+    assert.equal(await page.locator('.voice-details').evaluate((el) => el.open), false);
     await openVoice(page);
+  }
+  for (const page of [a, b]) {
+    await page.getByRole('button', { name: 'Tắt voice', exact: true }).click();
+    assert.equal(await page.evaluate(() => window.__hth.voice.active), false);
   }
   console.log('PASS: icon-only default, accessible expansion and Escape on desktop/mobile');
   await a.getByRole('button', { name: 'Thử mic', exact: true }).click();
@@ -99,6 +108,13 @@ try {
     await page.waitForFunction(() => window.__hth.voice.active || !window.__hth.voice.starting);
     assert.equal(await page.evaluate(() => window.__hth.voice.active), true, JSON.stringify(await page.evaluate(() => window.__voiceJoinResult)));
     assert.equal(await page.evaluate(() => window.__testCapture.stream.getAudioTracks()[0].enabled), false);
+    await page.getByRole('button', { name: 'Bật mic', exact: true }).click();
+    await page.waitForFunction(() => window.__hth.voice.transmitting);
+    assert.equal(await page.getByRole('button', { name: 'Tắt mic', exact: true }).getAttribute('aria-pressed'), 'true');
+    await page.getByRole('button', { name: 'Tắt mic', exact: true }).click();
+    await page.waitForFunction(() => !window.__hth.voice.transmitting);
+    await page.getByRole('button', { name: 'Bật mic', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Chế độ mic' }).selectOption('ptt');
   }
   for (const page of [a, b]) await page.waitForFunction(() => [...window.__hth.voice.peers.values()].some((p) => p.pc.connectionState === 'connected'), { timeout: 20000 });
   console.log('PASS: two isolated browsers negotiate WebRTC audio, default mic silent');
@@ -116,6 +132,7 @@ try {
   await a.keyboard.down('v');
   await a.waitForFunction(() => window.__hth.voice.transmitting);
   await b.waitForFunction(() => [...window.__hth.voice.peers.values()].some((p) => p.speaking));
+  assert.match(await b.locator('.voice-speakers').innerText(), /Voice browser A/);
   const bytes = await b.evaluate(async () => {
     const stats = await [...window.__hth.voice.peers.values()][0].pc.getStats();
     return [...stats.values()].filter((s) => s.type === 'inbound-rtp' && s.kind === 'audio').reduce((sum, s) => sum + s.bytesReceived, 0);
@@ -151,7 +168,7 @@ try {
   for (const page of [a, b]) await page.waitForFunction(() => window.__hth.voice.peers.size === 0);
   console.log('PASS: deafen, mobile release, server distance revocation');
   fs.mkdirSync(path.join(import.meta.dirname, '../plans/reports'), { recursive: true });
-  await b.getByLabel('Điều khiển mic', { exact: true }).click();
+  await b.getByLabel('Cài đặt voice', { exact: true }).click();
   await b.screenshot({ path: path.join(import.meta.dirname, '../plans/reports/voice-mic-icon-mobile.png') });
   await openVoice(b);
   await b.screenshot({ path: path.join(import.meta.dirname, '../plans/reports/voice-mobile.png') });

@@ -1,4 +1,4 @@
-// Chat bong bóng và emoji nhanh. Không có khung lịch sử: nói chuyện tại chỗ, không thay Zalo.
+// Chat bong bóng và lịch sử ngắn trong RAM của phiên chơi.
 import { EMOJIS, LIMITS } from '../../../shared/protocol.js';
 import { $, h } from './dom.js';
 
@@ -9,6 +9,7 @@ export class Chat {
     this.input = $('chatInput');
     this.input.maxLength = LIMITS.chatMax;
     this.toggleBtn = $('chatBtn');
+    this.messages = $('chatMessages');
     this.emojiBar = $('emojiBar');
     this.open = false;
 
@@ -43,6 +44,7 @@ export class Chat {
     document.body.classList.add('chatting');
     this.form.hidden = false;
     this.input.value = '';
+    if (document.pointerLockElement) document.exitPointerLock();
     this.input.focus();
   }
 
@@ -51,6 +53,14 @@ export class Chat {
     document.body.classList.remove('chatting');
     this.form.hidden = true;
     this.input.blur();
+  }
+
+  receive(name, text) {
+    const at = new Date();
+    const row = h('li', {}, h('time', { dateTime: at.toISOString(), title: at.toLocaleString('vi-VN') }, at.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })), h('span', { class: 'chat-channel' }, '[1. Chung]'), h('strong', {}, `[${name}]`), h('span', { class: 'chat-text' }, text));
+    this.messages.append(row);
+    if (this.messages.childElementCount > 100) this.messages.firstElementChild.remove();
+    this.messages.scrollTop = this.messages.scrollHeight;
   }
 
   async send() {

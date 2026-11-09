@@ -214,6 +214,7 @@ function main() {
       hud.playMusic();
       hud.show();
       hud.startRadio(snap.radio);
+      app.voice.start();
       app.follow.intro = false;
       me.avatar.nameEl.hidden = false;
       trimShadowCasters(me.avatar); // Ngoại hình đã chốt ở màn chào.
@@ -256,7 +257,10 @@ function main() {
     return r ? { x: r.avatar.root.position.x, z: r.avatar.root.position.z } : null;
   };
 
-  net.on('chat', ({ sid, text }) => avatarOf(sid)?.say(text));
+  net.on('chat', ({ sid, text }) => {
+    avatarOf(sid)?.say(text);
+    app.chat.receive(sid === mySid ? app.myName : remotes.map.get(sid)?.name ?? 'Người chơi', text);
+  });
   net.on('cultivation:update', ({ sid, tier }) => avatarOf(sid)?.setCultivation(tier));
   net.on('emoji', ({ sid, i }) => avatarOf(sid)?.say(EMOJIS[i] ?? '', 2500));
   net.on('wave', ({ from, to, name }) => {
@@ -364,11 +368,11 @@ function main() {
     }
     if (app.activities.onKey(e.code, true)) return true;
     if (modalOpen() || app.activities.current) return false;
-    if (e.code === 'KeyE' || e.code === 'Enter') {
+    if (e.code === 'KeyE') {
       hud.runAction();
       return true;
     }
-    if (e.code === 'KeyT') {
+    if (e.code === 'Enter' || e.code === 'KeyT') {
       app.chat.show();
       return true;
     }

@@ -93,7 +93,7 @@ Bấm nút **Chơi gì?** ở góc trên rồi chọn **Câu cá**, hoặc tự 
 
 ## Trò chuyện bằng mic
 
-Voice gần kiểu Goose Goose Duck: **Bật voice**, cho phép mic, rồi giữ **V** hoặc nút **Giữ để nói**. Đứng gần nghe rõ, xa dần nhỏ tiếng, từ 18 m thì im. Có **Mic mở**, tắt nghe và chỉnh âm lượng riêng; tối đa 6 kết nối gần mỗi người. Tắt voice hoặc rời tab sẽ nhả mic.
+Voice gần kiểu Goose Goose Duck: vào game thì kết nối voice và xin quyền mic; mic ban đầu tắt. Bấm nút hình mic để bật nói liên tục, bấm lại để tắt. Người đang nói hiện cạnh nút mic và sáng tên trên nhân vật. Nút **⋯** mở cài đặt để chọn giữ **V** hoặc nút **Giữ để nói**, tắt nghe và chỉnh âm lượng. Đứng gần nghe rõ, xa dần nhỏ tiếng, từ 18 m thì im; tối đa 6 kết nối gần mỗi người. Tắt voice hoặc rời tab sẽ nhả mic.
 
 Mic cần HTTPS hoặc localhost. Khác mạng có thể cần TURN; Cloudflare Tunnel không chuyển tiếp tiếng WebRTC. Xem [thiết lập voice](docs/proximity-voice.md).
 
