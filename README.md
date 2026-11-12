@@ -94,6 +94,15 @@ Tới sân cạnh bãi container, bấm **Chơi đầu hồ** rồi chọn đố
 - **Combo:** trúng liên tiếp lần lượt được 10, 15, 15, 20, 25, 30, 35, 45, 50 điểm và giữ mức 50 từ đó. Trượt là combo về 0.
 - **Thưởng:** thắng A Phi, Lục Vân, Kiếm Tôn Vô Danh được hạng B, A, S (3, 5, 8 TEU). Thua hoặc hoà được hạng C (1 TEU). Rời sân giữa trận không lưu điểm.
 
+## Bầu cua
+
+Bàn bầu cua ở góc chợ sau Sạp Kim Bảo. Bấm **Chơi gì?** rồi chọn **Bầu cua**, hoặc đứng quanh bàn bấm **E**. Cả sân chơi chung một bàn: ai đặt cược đầu tiên thì mở ván, có 20 giây cho mọi người đặt, rồi nhà cái xóc một lần cho cả bàn.
+
+- **Đặt cược:** chọn chip 1, 5 hoặc 10 TEU rồi bấm ô Nai, Bầu, Gà, Cá, Cua, Tôm (hoặc phím **1–6**). Tối đa 30 TEU một mặt và 50 TEU một ván. Còn đang đếm ngược thì **Xoá cược** hoàn lại đủ.
+- **Trả thưởng:** ra `n` viên trùng mặt bạn cược thì nhận lại tiền cược cộng `n` lần tiền cược. Không trùng là mất. Nhà cái lợi khoảng 8%, nên chơi lâu thì TEU có xu hướng hao dần.
+- **Bảng tuần:** chỉ cộng phần lãi ròng của mỗi ván, không cộng tiền cược được hoàn lại.
+- Đi ra xa bàn là tự thôi chơi; cược đã đặt vẫn được chấm và trả vào ví. Chi tiết và giao thức xem `docs/baucua.md`.
+
 ## Câu cá
 
 Bấm nút **Chơi gì?** ở góc trên rồi chọn **Câu cá**, hoặc tự đi tới bờ hồ góc đông nam sân. Không tốn gì, ai đứng bờ nào cũng thấy nhau câu. Bấm **Về bờ**, **Esc** hoặc phím đi để rời hồ.
@@ -218,6 +227,7 @@ server/
   rhythm.js      Minigame Audition chuông
   riddle.js      Đố thuật ngữ với Mặc Vũ
   pitch.js       Đầu hồ đấu với NPC
+  baucua.js      Bầu cua: bàn chung, đặt cược TEU, xóc và trả thưởng
   voice.js       Ghép cặp và chuyển tín hiệu voice theo khoảng cách
   admin.js       API và trang admin (giao diện ở admin-ui/)
   filter.js      Lọc từ có phân biệt dấu

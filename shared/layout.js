@@ -50,6 +50,12 @@ export const SHOP = {
   shelf: { minX: -13.3, maxX: -10.7, minZ: 23.6, maxZ: 24 },
 };
 export const GATE_MONK = { x: 3.2, z: 28.4, rot: 0, radius: 0.35, actionRadius: 2.6 };
+// Bàn bầu cua ở góc chợ sau Sạp Kim Bảo. Bàn là vật cản tròn; ai đứng trong radius quanh bàn thì bấm E để chơi,
+// đứng đâu quanh bàn cũng được. seat là chỗ đứng menu "Chơi gì?" đưa tới (phía đông bàn, sát mép bàn).
+export const BAUCUA_ZONE = {
+  x: -13.2, z: 27.4, radius: 2.6, tableRadius: 0.95,
+  seat: { x: -11.7, z: 27.4, rot: -Math.PI / 2 },
+};
 // Hồ câu góc đông nam sân: ba vòng tròn ghép thành bờ cong tự nhiên, đi vòng quanh được.
 // Cả ba vòng nằm trong CIRCLES nên va chạm dùng chung cơ chế sẵn có. Tâm (x, z) nằm trong vòng giữa.
 export const LAKE = {
@@ -84,6 +90,7 @@ export const PLACES = [
   { key: 'bell', icon: '🔔', name: 'Audition chuông', desc: 'Nhập chuỗi mũi tên, chốt đúng nhịp', x: BELL.x, z: BELL.z + 3.2 },
   { key: 'mat', icon: '🪷', name: 'Ngồi thiền', desc: 'Ngồi yên, thở chậm và tích Chân khí', x: 0, z: -15.6 },
   { key: 'pitch', icon: '🏺', name: 'Đầu hồ', desc: 'Ném tên vào bình, so tài cùng cao thủ', x: 23.4, z: 3 },
+  { key: 'baucua', icon: '🎲', name: 'Bầu cua', desc: 'Đặt TEU, xóc đĩa cùng cả sân', x: BAUCUA_ZONE.seat.x, z: BAUCUA_ZONE.seat.z },
   { key: 'tea', icon: '🍵', name: 'Rút xăm', desc: 'Lắc ống xăm xin lời chúc hôm nay', x: TEA.x, z: TEA.z - 2.4 },
   { key: 'tree', icon: '🌳', name: 'Treo lời ước', desc: 'Viết điều mong muốn lên cây bồ đề', x: TREE.x + 3, z: TREE.z },
 ];
@@ -181,6 +188,7 @@ export const CIRCLES = [
   // Sư chú giữ cổng; chum lớn, đối thủ và hai bình ở sân đầu hồ
   { x: GATE_MONK.x, z: GATE_MONK.z, r: GATE_MONK.radius },
   { x: SHOP.x, z: SHOP.z, r: SHOP.radius },
+  { x: BAUCUA_ZONE.x, z: BAUCUA_ZONE.z, r: BAUCUA_ZONE.tableRadius },
   { x: PITCH_ZONE.jar.x, z: PITCH_ZONE.jar.z, r: PITCH_ZONE.jar.r },
   { x: PITCH_ZONE.opponent.x, z: PITCH_ZONE.opponent.z, r: 0.35 },
   ...PITCH_ZONE.pots.map((p) => ({ x: p.x, z: p.z, r: 0.28 })),

@@ -1,6 +1,7 @@
 // Ghép toàn bộ cảnh và điều phối cập nhật mỗi khung: trời, cảng, hạt, con vật, rồng phượng, chuông.
 import * as THREE from 'three';
 import { Abbot } from './abbot.js';
+import { BauCuaTable } from './baucua-table.js';
 import { ZOEYY } from '../../../shared/layout.js';
 import { Animals } from './animals.js';
 import { Celestial } from './celestial.js';
@@ -41,6 +42,7 @@ export class World {
     this.zoeyy = new Abbot(scene, 'Zoeyy Gay', ZOEYY);
     this.monk = new GateMonk(scene);
     this.shopStall = new ShopStall(scene);
+    this.baucuaTable = new BauCuaTable(scene);
     this.wishes = new Wishes3D(scene);
     // Dải lụa thắt lên cành xong thì cánh hoa rơi nhẹ một nhịp.
     this.wishes.onLand = (amount) => this.particles.burstPetals(amount);
