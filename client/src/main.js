@@ -516,6 +516,8 @@ function main() {
     world.zoeyy.update(dt, me.x, me.z, camera);
     world.monk.update(dt, me.x, me.z, camera);
     world.pitchCourt.update(dt, camera);
+    // Đang khoá chuột thì người chơi tự lái camera; còn lại camera tự vòng về sau lưng khi chạy.
+    app.follow.autoFollow = !app.input.pointerLocked;
     app.follow.update(dt, me.x, me.y, me.z, look);
     world.sky.follow(camera);
     setAuraNight(world.sky.night); // hào quang rực theo ngày/đêm trên tu viện
