@@ -62,7 +62,11 @@ export class Remotes {
     for (const p of players) {
       if (this.map.has(p.sid)) {
         this.applyRow([p.sid, p.x, p.z, p.rot, p.anim, p.activity, 0, p.qi ?? 0], nowMs, nowMs);
-        this.map.get(p.sid).avatar.setCultivation(p.cultivationTier ?? 0);
+        const avatar = this.map.get(p.sid).avatar;
+        avatar.setCultivation(p.cultivationTier ?? 0);
+        // Có thể đã thay đồ trong lúc mình mất mạng.
+        avatar.setLook(p.color, p.hat, p.hair ?? 0, p.attire ?? 0, p.weapon ?? 0, p.effect ?? 0);
+        trimShadowCasters(avatar);
       }
       else this.add(p, nowMs);
     }

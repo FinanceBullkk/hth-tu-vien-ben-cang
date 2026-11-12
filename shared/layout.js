@@ -43,6 +43,12 @@ export const NONBO = [
 export const ABBOT = { x: 5.2, z: -12.4, rot: 0, radius: 0.35, actionRadius: 2.6 };
 export const ZOEYY = { x: -5.2, z: -12.4, rot: 0, radius: 0.35, actionRadius: 2.6 };
 // Sư chú giữ cổng: đứng trong sân cạnh tam quan, đưa câu đố cho người vào.
+// Sạp Kim Bảo: bà chủ đứng sau quầy quay mặt ra lối đi tới quán trà; khách đứng phía nam quầy bấm E mở cửa hàng.
+export const SHOP = {
+  x: -12, z: 23, rot: Math.PI, radius: 0.35, actionRadius: 2.9,
+  counter: { minX: -13.3, maxX: -10.7, minZ: 21.7, maxZ: 22.3 },
+  shelf: { minX: -13.3, maxX: -10.7, minZ: 23.6, maxZ: 24 },
+};
 export const GATE_MONK = { x: 3.2, z: 28.4, rot: 0, radius: 0.35, actionRadius: 2.6 };
 // Hồ câu góc đông nam sân: ba vòng tròn ghép thành bờ cong tự nhiên, đi vòng quanh được.
 // Cả ba vòng nằm trong CIRCLES nên va chạm dùng chung cơ chế sẵn có. Tâm (x, z) nằm trong vòng giữa.
@@ -151,6 +157,9 @@ export const BOXES = [
   { minX: h.x + h.doorHalf, maxX: h.x + h.halfW, minZ: h.z + h.halfD - 0.25, maxZ: h.z + h.halfD + 0.25, cam: true },
   // Giữ một container làm bảng ước, mở lối đi ra bờ hồ phía nam.
   { minX: CONTAINERS.minX, maxX: 30, minZ: CONTAINERS.minZ, maxZ: CONTAINERS.maxZ },
+  // Quầy và kệ hàng của Sạp Kim Bảo.
+  SHOP.counter,
+  SHOP.shelf,
   // Lan can cầu vòm qua hồ sen: giữ người chơi trên dải cầu.
   { minX: BRIDGE.x1, maxX: BRIDGE.x2, minZ: BRIDGE.z - 0.98, maxZ: BRIDGE.z - 0.72, cam: true },
   { minX: BRIDGE.x1, maxX: BRIDGE.x2, minZ: BRIDGE.z + 0.72, maxZ: BRIDGE.z + 0.98, cam: true },
@@ -171,6 +180,7 @@ export const CIRCLES = [
   { x: ZOEYY.x, z: ZOEYY.z, r: ZOEYY.radius },
   // Sư chú giữ cổng; chum lớn, đối thủ và hai bình ở sân đầu hồ
   { x: GATE_MONK.x, z: GATE_MONK.z, r: GATE_MONK.radius },
+  { x: SHOP.x, z: SHOP.z, r: SHOP.radius },
   { x: PITCH_ZONE.jar.x, z: PITCH_ZONE.jar.z, r: PITCH_ZONE.jar.r },
   { x: PITCH_ZONE.opponent.x, z: PITCH_ZONE.opponent.z, r: 0.35 },
   ...PITCH_ZONE.pots.map((p) => ({ x: p.x, z: p.z, r: 0.28 })),

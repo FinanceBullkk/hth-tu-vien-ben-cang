@@ -1,5 +1,6 @@
 // Điều phối hoạt động: phát hiện điểm gần người chơi, bật/tắt hoạt động, khoá di chuyển.
-import { ABBOT, BELL, LAKE, PITCH_ZONE, POND, TEA, TREE, ZOEYY, dist2d, isInsideHall, lakeDistance } from '../../../shared/layout.js';
+import { ABBOT, BELL, LAKE, PITCH_ZONE, POND, SHOP, TEA, TREE, ZOEYY, dist2d, isInsideHall, lakeDistance } from '../../../shared/layout.js';
+import { openShop } from '../ui/shop-panel.js';
 import { BellEvent } from './bell-event.js';
 import { FishingActivity } from './fishing.js';
 import { FortuneActivity } from './fortune.js';
@@ -87,6 +88,9 @@ export class Activities {
     }
     if (dist2d(x, z, ABBOT.x, ABBOT.z) < ABBOT.actionRadius) {
       return { key: 'abbot', label: 'Xin thầy một lời', run: () => this.app.world.abbot.advise() };
+    }
+    if (dist2d(x, z, SHOP.x, SHOP.z) < SHOP.actionRadius) {
+      return { key: 'shop', label: 'Ghé Sạp Kim Bảo', run: () => openShop(this.app, 'shop') };
     }
     if (dist2d(x, z, ZOEYY.x, ZOEYY.z) < ZOEYY.actionRadius) {
       return { key: 'zoeyy', label: 'Hỏi Zoeyy Gay', run: () => this.app.world.zoeyy.advise() };

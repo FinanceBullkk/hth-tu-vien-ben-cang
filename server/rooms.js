@@ -1,7 +1,8 @@
 // Phòng chung duy nhất: người online, gói vị trí 20 lần/giây, chat, emoji, vẫy tay, kết nối lại.
 import crypto from 'node:crypto';
 import { MATS, SPAWN, clampToWalkable } from '../shared/layout.js';
-import { ACTIVITY, ACTIVITY_BY_NAME, AVATAR, EMOJIS, LIMITS, MOTION, PLAYER_ID_RE, PREMIUM_COLORS, SHIRT_COLORS } from '../shared/protocol.js';
+import { ACTIVITY, ACTIVITY_BY_NAME, AVATAR, EMOJIS, LIMITS, MOTION, PLAYER_ID_RE } from '../shared/protocol.js';
+import { LOOK_SLOTS, sanitizeLook } from '../shared/shop.js';
 import { cleanText } from './filter.js';
 import { WindowCounter, clientIp } from './limits.js';
 import { localDate } from './time.js';
@@ -26,7 +27,7 @@ const SIT_INTERVAL_MS = 1000; // Ngồi xuống phát tin cho cả phòng nên p
 const round2 = (n) => Math.round(n * 100) / 100;
 
 export class Room {
-  constructor({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch, melody, pk }) {
+  constructor({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch, melody, pk, shop }) {
     this.io = io;
     this.broadcast = io.to(PLAYERS_ROOM);
     this.db = db;
@@ -41,6 +42,9 @@ export class Room {
     this.pitch = pitch;
     this.melody = melody;
     this.pk = pk;
+    this.shop = shop;
+    // Mỗi lần kiếm được TEU, đẩy số dư mới cho đúng người để ví trên HUD luôn khớp.
+    this.db.onTeu = (pid, teu) => this.byPid.get(pid)?.socket?.emit('wallet', { teu });
     if (this.pk) this.pk.onKnockout = (player) => this.onActionStop(player);
     this.players = new Map(); // sid -> player
     this.pk?.bind(this.players);
@@ -221,7 +225,8 @@ export class Room {
     on('wish:like', (p, data) => this.wishes.like(p, data));
     on('wish:delete', (p, data) => this.wishes.remove(p, data));
     on('fortune:draw', (p) => this.wishes.drawFortune(p));
-    on('cosmetic:unlock', (p, data) => this.onUnlock(p, data));
+    on('shop:buy', (p, data) => this.onBuy(p, data));
+    on('look:set', (p, data) => this.onLook(p, data));
     on('pk:attack', (p, data) => this.pk.attack(p, data));
     on('pk:skill', (p, data) => this.pk.skill(p, data));
 
@@ -245,23 +250,23 @@ export class Room {
     }
     if (!pid) pid = crypto.randomBytes(16).toString('hex');
 
-    let color = clampInt(data?.color, AVATAR.colors);
-    const hat = clampInt(data?.hat, AVATAR.hats);
+    const rawColor = clampInt(data?.color, AVATAR.colors);
+    const rawHat = clampInt(data?.hat, AVATAR.hats);
     // Client bản cũ không có slot tóc: id hat 0-2 là kiểu tóc, di trú sang slot tóc
     // để người chơi cũ giữ nguyên ngoại hình; hair lệch phạm vi thì rớt về tóc ngắn.
-    const hair = data?.hair === undefined ? (hat <= 2 ? hat : 0) : clampInt(data.hair, AVATAR.hairs);
-    const attire = clampInt(data?.attire, AVATAR.attires);
-    const weapon = clampInt(data?.weapon, AVATAR.weapons);
-    const effect = clampInt(data?.effect, AVATAR.effects);
+    const rawHair = data?.hair === undefined ? (rawHat <= 2 ? rawHat : 0) : clampInt(data.hair, AVATAR.hairs);
+    // Món trả phí chưa mua (hoặc mua ở máy khác chưa đồng bộ) rớt về mặc định của slot đó.
+    const owned = this.shop.owned(pid);
+    const { color, hair, hat, attire, weapon, effect } = sanitizeLook({
+      color: rawColor,
+      hair: rawHair,
+      hat: rawHat,
+      attire: clampInt(data?.attire, AVATAR.attires),
+      weapon: clampInt(data?.weapon, AVATAR.weapons),
+      effect: clampInt(data?.effect, AVATAR.effects),
+    }, owned);
     let player = this.byPid.get(pid);
     const isResume = Boolean(player);
-    // Màu áo quý phải mở khoá bằng TEU trước, không thì rớt về màu mặc định.
-    const premiumStart = SHIRT_COLORS.length - PREMIUM_COLORS.length;
-    if (color >= premiumStart) {
-      const unlockedRow = this.db.playerRow(pid);
-      const mask = 1 << (color - premiumStart);
-      if (!((unlockedRow?.unlocked ?? 0) & mask)) color = 0;
-    }
 
     // Người đang kết nối lại luôn được vào; chỉ chặn lượt vào mới khi phòng đầy hoặc bị spam.
     if (!isResume) {
@@ -361,7 +366,8 @@ export class Room {
         bellWait: Math.max(0, player.lastBell + LIMITS.bellCooldownMs - now),
         fishers: this.fishing.snapshot(this.players),
         fishShadowsTaken: this.fishing.takenShadowIds(),
-        unlocked: this.db.playerRow(pid)?.unlocked ?? 0,
+        owned: [...owned],
+        teu: this.db.shop.teu(pid),
         dayCycleMs: (this.config.dayCycleMinutes || 20) * 60_000,
         radio: { durationSec: 1758, startedAt: this.config.radioStartedAt },
         welcome: this.config.welcomeMessage,
@@ -479,16 +485,18 @@ export class Room {
     return { ok: true };
   }
 
-  /** Mở khoá màu áo quý bằng TEU; idempotent, trừ điểm trong SQL nên không âm được. */
-  onUnlock(p, data) {
-    const i = Number(data?.color);
-    if (!Number.isInteger(i) || i < 0 || i >= PREMIUM_COLORS.length) return { ok: false, error: 'Màu không có thật.' };
-    const mask = 1 << i;
-    const row = this.db.playerRow(p.pid);
-    if ((row?.unlocked ?? 0) & mask) return { ok: true, already: true, unlocked: row.unlocked };
-    const price = PREMIUM_COLORS[i].price;
-    if (!this.db.unlockPremium(p.pid, mask, price)) return { ok: false, error: 'Chưa đủ TEU, chơi thêm đã nhé.' };
-    return { ok: true, unlocked: (row?.unlocked ?? 0) | mask };
+  /** Mua món ở cửa hàng; trả về số TEU mới để client cập nhật ví ngay. */
+  onBuy(p, data) {
+    return this.shop.buy(p, data);
+  }
+
+  /** Tủ đồ: thay đồ đang mặc, cả phòng thấy ngay. */
+  onLook(p, data) {
+    const res = this.shop.setLook(p, data);
+    if (res.error) return { ok: false, error: res.error };
+    for (const slot of LOOK_SLOTS) p[slot] = res.look[slot];
+    this.broadcast.emit('player:look', { sid: p.sid, ...res.look });
+    return { ok: true, look: res.look };
   }
 
   onDisconnect(socket) {
