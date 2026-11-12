@@ -2,8 +2,9 @@
 import * as THREE from 'three';
 import { ROOF_ZONES, cameraSegmentT, inBox, isInsideHall } from '../../../shared/layout.js';
 
-const MIN_PITCH = -1.1;
-const MAX_PITCH = 1.15;
+// Cho ngước lên bầu trời (âm: camera hạ dưới vai) và nhìn từ trên cao xuống sâu, kiểu Trove/WWM.
+const MIN_PITCH = -1.3;
+const MAX_PITCH = 1.25;
 
 export class FollowCamera {
   constructor(camera) {
@@ -16,7 +17,7 @@ export class FollowCamera {
     this.shot = null; // { pos, look }: góc máy cố định do minigame đặt.
     this.reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.minDist = 3.2;
-    this.maxDist = 13;
+    this.maxDist = 16;
     this.currentDist = 7.5;
     this.target = new THREE.Vector3(0, 1, 36.5);
     this.look = new THREE.Vector3(0, 1, 36.5);
@@ -76,9 +77,8 @@ export class FollowCamera {
       return;
     }
 
-    // Khi thiền, đặt nhân vật và hoa lên nửa trên khung hình.
-    // Khi ngẩng lên, nâng điểm nhìn vì camera không thể chui xuống dưới mặt đất.
-    this.target.set(px, py + (this.meditating ? -0.5 : 1.2 + Math.max(0, -this.pitch) * 3), pz);
+    // Nhịp sen đặt nhân vật và hoa lên nửa trên, tránh bảng phím phía dưới.
+    this.target.set(px, py + (this.meditating ? -0.5 : 1.2), pz);
     this.look.lerp(this.target, 1 - Math.exp(-dt * 24));
 
     const pitch = this.meditating ? 0.25 : this.pitch;
@@ -115,7 +115,9 @@ export class FollowCamera {
       this.camera.position.x += Math.sin(this.time * 47) * this.shakeAmt;
       this.camera.position.y += Math.sin(this.time * 61) * this.shakeAmt * 0.7;
     }
-    this.camera.lookAt(this.look);
+    // Nhìn theo đúng hướng yaw/pitch thay vì lookAt đầu nhân vật: khi camera bị kẹp gần đất
+    // hay dưới mái, góc máy vẫn giữ độ ngước/chúi đã kéo, không bị san phẳng.
+    this.camera.lookAt(this.pos.x - dirX, this.pos.y - dirY, this.pos.z - dirZ);
     this.camera.getWorldDirection(this.forward);
   }
 }

@@ -29,6 +29,7 @@ export class Input {
     this.onKeyUp = null;
     this.enabled = false;
     this.pointerLocked = false;
+    this.pointerLockFailed = false;
     this.lockClick = false;
     document.addEventListener('pointerlockchange', () => {
       this.pointerLocked = document.pointerLockElement === canvas;
@@ -81,7 +82,12 @@ export class Input {
     const isTouch = e.pointerType === 'touch';
     if (!isTouch && e.button === 0 && !e.altKey && !this.pointerLocked && (this.canLock?.() ?? true)) {
       this.lockClick = true;
-      Promise.resolve(this.canvas.requestPointerLock?.()).catch(() => { this.lockClick = false; });
+      if (this.canvas.requestPointerLock) {
+        Promise.resolve(this.canvas.requestPointerLock()).catch(() => {
+          this.pointerLockFailed = true;
+          this.lockClick = false;
+        });
+      }
     }
     if (!isTouch && this.pointerLocked) return;
     const leftZone = isTouch && e.clientX < window.innerWidth * 0.45 && e.clientY > window.innerHeight * 0.45;
@@ -104,7 +110,9 @@ export class Input {
       this.pointerX = e.clientX;
       this.pointerY = e.clientY;
     }
-    if (e.pointerType === 'mouse' && (this.pointerLocked || (!this.canvas.requestPointerLock && e.target === this.canvas && this.enabled && (this.canLock?.() ?? true)))) {
+    // Khi khóa chuột: rê để xoay. Không khóa được (trình duyệt chặn) thì rê trên cảnh cũng xoay;
+    // còn lại con trỏ tự do để ngắm chiêu PK.
+    if (e.pointerType === 'mouse' && (this.pointerLocked || ((!this.canvas.requestPointerLock || this.pointerLockFailed) && e.target === this.canvas && this.enabled && (this.canLock?.() ?? true)))) {
       this.yawDelta -= e.movementX * 0.0028;
       this.pitchDelta += e.movementY * 0.0028 * 0.7;
       return;

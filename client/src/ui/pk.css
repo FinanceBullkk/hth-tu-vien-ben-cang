@@ -1,6 +1,8 @@
 /* Bốn chiêu tỉ võ tự do trên chuột, bàn phím và cảm ứng. */
 .pk-hud { position: fixed; inset: 0; pointer-events: none; z-index: 45; }
 .pk-hud [hidden] { display: none !important; }
+/* Nút hành động (ví dụ Ngồi thiền tại chỗ) nằm trên thanh bốn chiêu, không bị che. */
+:root:has(.pk-hud:not([hidden]) .pk-skills:not([hidden])) #actionBtn { bottom: calc(104px + var(--safe-b)); }
 
 .pk-skills {
   position: fixed;

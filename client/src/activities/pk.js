@@ -35,8 +35,9 @@ export class PkActivity {
       } else {
         const r = this.app.remotes.map.get(event.sid);
         if (r) {
-          r.x = event.x; r.z = event.z; r.rot = event.rot; r.buf.length = 0;
-          r.buf.push({ t: this.app.net.now(), x: event.x, z: event.z, rot: event.rot, anim: 0 });
+          r.x = event.x; r.z = event.z; r.rot = event.rot;
+          // Dịch chuyển tức thì: tạo lại bộ phát mượt (remote-motion.js) tại điểm hồi sinh.
+          r.motion = new r.motion.constructor(event.x, event.z, event.rot, 0, this.app.net.now());
           r.avatar.root.position.set(event.x, r.y, event.z);
         }
       }

@@ -74,9 +74,10 @@ export const PITCH_ZONE = {
 export const PLACES = [
   { key: 'melody', icon: '♫', name: 'Tấu nhạc', desc: 'Độc tấu đàn nhị · sáu phím theo nhạc', x: 8, z: 21.5 },
   { key: 'fish', icon: '🎣', name: 'Câu cá', desc: 'Thả câu ở hồ, gom đủ các loài cá', x: 19, z: 16.7 },
-  { key: 'bell', icon: '🔔', name: 'Audition chuông', desc: 'Nhập chuỗi mũi tên, chốt đúng nhịp', x: BELL.x, z: BELL.z + 3.2 },
-  { key: 'mat', icon: '🪷', name: 'Ngồi thiền', desc: 'Ngồi yên, thở chậm một lát', x: 0, z: -15.6 },
+  { key: 'bell', icon: '🔔', name: 'Thỉnh chuông', desc: 'Bấm theo nhịp để chuông ngân', x: BELL.x, z: BELL.z + 3.2 },
+  { key: 'mat', icon: '🪷', name: 'Ngồi thiền', desc: 'Ngồi ngay tại chỗ, tích Chân khí và mở hào quang', x: 0, z: -15.6 },
   { key: 'pitch', icon: '🏺', name: 'Đầu hồ', desc: 'Ném tên vào bình, so tài cùng cao thủ', x: 23.4, z: 3 },
+  { key: 'riddle', icon: '📜', name: 'Câu đố của sư chú', desc: 'Đoán vui về nghề logistics', x: 3.2, z: 26.6 },
   { key: 'tea', icon: '🍵', name: 'Rút xăm', desc: 'Lắc ống xăm xin lời chúc hôm nay', x: TEA.x, z: TEA.z - 2.4 },
   { key: 'tree', icon: '🌳', name: 'Treo lời ước', desc: 'Viết điều mong muốn lên cây bồ đề', x: TREE.x + 3, z: TREE.z },
 ];

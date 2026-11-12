@@ -62,14 +62,18 @@ Cập nhật lên bản mới: chép mã mới lên máy, chạy `docker build -
 
 - **Audition chuông:** nhập chuỗi **phím mũi tên**, rồi bấm **Space** khi vạch trắng tới tâm vùng vàng. Điện thoại có bốn phím chạm và nút **Chốt nhịp**. Có Perfect, Good, Miss và combo.
 - Login và trong game đều dùng bản *Where Winds Meet Character Creation Song*, với âm lượng giảm 50%. Server giữ một mốc phát chung trong game; mỗi máy vào sẽ phát cùng đoạn. Nhạc MP3 được phục vụ từ game. Nút **Nhạc** mở bảng phát/tạm dừng và chỉnh âm lượng; mức âm lượng được lưu trên máy. Nếu trình duyệt chặn phát tự động, bấm **Phát nhạc**. Đóng bảng không dừng nhạc. Phách minigame chạy độc lập.
-- Tới gần gác chuông, chơi 16 chuỗi trong khoảng 40 giây. Chốt đúng làm chuông ngân; đồng nghiệp chốt cùng nhịp làm âm dày hơn. Server kiểm tra cả chuỗi và thời điểm nhận Space.
-- **Thiền:** đứng gần chiếu trống, bấm Space để ngồi; E cũng dùng được qua nút tương tác. Ngồi yên và thở chậm. Không game, không điểm, không chuỗi phím.
+- **Nhịp chuông:** tới gần gác chuông, chơi 16 chuỗi trong khoảng 40 giây. Chốt đúng làm chuông ngân; đồng nghiệp chốt cùng nhịp làm âm dày hơn.
+- **Tĩnh tu:** bấm **Space** hoặc nút **Thiền tại chỗ** để ngồi ngay vị trí hiện tại; nút này cũng có trong menu **Chơi gì?**. Chọn **Ngồi thiền** trong menu để tới chiếu trống trong thiền đường. Cứ 6 giây đang ngồi nhận 1 Chân khí; đứng dậy giữ cả khí và thời gian lẻ. Tầng tự tăng tại 0 / 50 / 150 / 350 / 750 khí: Tụ khí, Dẫn khí, Ngưng khí, Hóa khí, Viên mãn. Aura lớn dần có giới hạn; ngồi thiền hiện thêm hạt khí, sen, phù văn và dải khí theo tầng, đứng dậy giữ vòng sáng nhỏ. Mất mạng ngừng tích khí, không cộng offline. Sổ an hiển thị Chân khí và tầng hiện tại.
+- **Nhịp sen:** khi ngồi trên chiếu, từ bảng Tĩnh tu bấm **Chơi Nhịp sen**, chơi 24 chuỗi trong khoảng một phút; vẫn tích Chân khí khi ngồi. Chốt đúng làm sen bên chiếu mở dần và vòng sáng lan theo nhịp. Người ngồi cùng thấy hiệu ứng của nhau.
+- Mỗi chuỗi dài từ 3 tới 5 phím. Nhạc 96 BPM; Perfect trong 110 ms, Good trong 240 ms quanh nhịp chuẩn. Server chấm theo thời điểm nhận Space, không tin điểm client gửi. Sổ lưu điểm Nhịp sen riêng của bạn, không có bảng xếp hạng. Thoát sớm không lưu kết quả; mất mạng sẽ dừng lượt chơi.
 
 ## Tỉ võ tự do
 
-Trên bản đồ, bấm phím 1 hoặc chuột trái để đánh thường; phím 2 gọi kiếm trận AOE tại điểm ngắm (tầm 8,5 m, bán kính 4 m), phím 3 bật hộ thể, phím 4 lướt né. E tương tác với điểm gần người chơi; Space ngồi thiền khi đứng gần chiếu trống. Đánh thường, kiếm trận và lướt theo hướng con trỏ; khi khóa chuột thì theo tâm màn hình. Cả bốn chiêu hồi sau 0,5 giây. Bốn nút dưới màn hình dùng được trên điện thoại. Không cần khiêu chiến hay vào võ đài. Alt + bấm vào người khác để vẫy tay; trên điện thoại chạm người để mở nút vẫy tay.
+Trên bản đồ, bấm phím 1 hoặc chuột trái để đánh thường; phím 2 gọi kiếm trận AOE tại điểm ngắm (tầm 8,5 m, bán kính 4 m), phím 3 bật hộ thể, phím 4 lướt né. E tương tác với điểm gần người chơi; Space ngồi thiền ngay tại chỗ (gần chiếu trống thì ngồi lên chiếu). Đánh thường, kiếm trận và lướt theo hướng con trỏ; khi khóa chuột thì theo tâm màn hình. Cả bốn chiêu hồi sau 0,5 giây. Bốn nút dưới màn hình dùng được trên điện thoại. Không cần khiêu chiến hay vào võ đài. Alt + bấm vào người khác để vẫy tay; trên điện thoại chạm người để mở nút vẫy tay.
 
 Khi bị hạ, nhân vật hồi sinh tại cổng với đầy HP và khiên bảo hộ 30 giây. Trong thời gian đó không nhận sát thương. Chủ động đánh thường hoặc dùng kiếm khí sẽ mất khiên ngay và hiện dấu **Sát khí** trong 60 giây; lướt và hộ thể không phá khiên.
+
+Màn vào game có nút **Mặc bộ Lee Sin · Long quyền** để chọn cùng lúc đầu trụi băng mắt, võ tăng bang thân, băng quyền và hào quang Long quyền. Có thể đổi từng món trong **Đổi trang phục**; lựa chọn được nhớ trên trình duyệt khi bấm **Vào**.
 
 ## Đầu hồ
 
@@ -98,12 +102,6 @@ Bấm nút **Chơi gì?** ở góc trên rồi chọn **Câu cá**, hoặc tự 
 Voice gần kiểu Goose Goose Duck: vào game thì kết nối voice và xin quyền mic; mic ban đầu tắt. Bấm nút hình mic để bật nói liên tục, bấm lại để tắt. Người đang nói hiện cạnh nút mic và sáng tên trên nhân vật. Nút **⋯** mở cài đặt để chọn giữ **V** hoặc nút **Giữ để nói**, tắt nghe và chỉnh âm lượng. Đứng gần nghe rõ, xa dần nhỏ tiếng, từ 18 m thì im; tối đa 6 kết nối gần mỗi người. Tắt voice hoặc rời tab sẽ nhả mic.
 
 Mic cần HTTPS hoặc localhost. Khác mạng có thể cần TURN; Cloudflare Tunnel không chuyển tiếp tiếng WebRTC. Xem [thiết lập voice](docs/proximity-voice.md).
-
-## Mã vào cửa
-
-Game có một mã dùng chung cho cả công ty, không phải tài khoản từng người. Trang admin hiển thị sẵn link dạng `https://.../?code=ABC234`: gửi link đó vào nhóm Zalo, bấm vào là tự điền mã.
-
-Khi nghi lộ mã, vào trang admin đổi mã mới rồi gửi lại link. Người đang chơi vẫn ở lại, ai vào mới hoặc rớt mạng phải dùng mã mới. Nếu cần đẩy hết mọi người ra, khởi động lại server sau khi đổi mã.
 
 ## Đổi nội dung (không cần biết lập trình)
 
@@ -134,8 +132,6 @@ Tên và lời nói của Zoeyy Gay nằm ở đầu file `client/src/scene/abbo
 | `dbPath` | `DB_PATH` | Đường dẫn file dữ liệu, mặc định `data/hth.db` |
 | `timezone` | `TZ_GAME` | Múi giờ tính "hôm nay" và giờ chuông |
 | `dayCycleMinutes` | | Độ dài một vòng hoàng hôn → đêm, mặc định 20 phút |
-| `joinCode` | | Mã vào cửa. `"auto"` thì tự tạo ở lần chạy đầu, `""` thì tắt mã. Đổi được trên trang admin |
-| `codeAttemptsPer10Min` | | Số lần nhập sai mã từ một IP trong 10 phút, mặc định 20 |
 | `maxPlayers` | | Số người online tối đa, mặc định 60 |
 | `maxConnections` | | Số kết nối mạng tối đa, mặc định 200 |
 | `maxConnectionsPerIp` | | Số kết nối từ một IP, mặc định 40. Cả văn phòng thường chung một IP nên đừng đặt quá thấp |
@@ -204,7 +200,7 @@ Lệnh này giả lập người chơi và in CPU server cùng độ trễ chat.
 shared/          Dùng chung client + server: bố cục sân, va chạm, hằng số giao thức, luật nhịp, câu cá, đầu hồ, voice
 server/
   index.js       Express + Socket.IO, phục vụ client đã build
-  rooms.js       Phòng chung: người online, gói vị trí 10 lần/giây, chat, kết nối lại, định tuyến sự kiện
+  rooms.js       Phòng chung: người online, gói vị trí 20 lần/giây, chat, kết nối lại, định tuyến sự kiện
   wishes.js      Lời ước và quẻ vận đơn
   bell.js        Chuông cá nhân, lịch và sự kiện chuông
   fishing.js     Câu cá: định giờ cắn, roll loài, tự mô phỏng pha giằng co
@@ -215,7 +211,7 @@ server/
   voice.js       Ghép cặp và chuyển tín hiệu voice theo khoảng cách
   admin.js       API và trang admin (giao diện ở admin-ui/)
   filter.js      Lọc từ có phân biệt dấu
-  limits.js      Giới hạn theo IP, mã vào cửa
+  limits.js      Giới hạn theo IP
   db.js          SQLite
 client/src/
   scene/         Tu viện, cảng, địa hình, trời, hạt, con vật, lời ước 3D, sân chơi của từng hoạt động

@@ -17,6 +17,7 @@ import { Input } from './player/controls.js';
 import { LocalPlayer } from './player/local.js';
 import { setAuraNight } from './player/avatar-effect.js';
 import './ui/pk.css';
+import { trimShadowCasters } from './player/avatar-lod.js';
 import { World, createRenderer } from './scene/world.js';
 import { AdaptiveQuality, renderPixelRatio } from './scene/render-quality.js';
 import { openShare } from './share/share.js';
@@ -33,6 +34,7 @@ import './ui/voice.css';
 import './ui/pitch.css';
 import './ui/fishing.css';
 import './ui/melody.css';
+import './ui/cultivation.css';
 
 const isTouch = matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch', isTouch);
@@ -59,13 +61,20 @@ function main() {
   $('app').append(labelRenderer.domElement);
 
   const world = new World(scene, isTouch);
+  // Cập nhật ma trận một lần mỗi khung ở vòng lặp; để tự động thì cả cảnh và nhãn tên đều tính lại.
+  scene.matrixWorldAutoUpdate = false;
 
   // Bloom hậu kỳ: hào quang và vật phát sáng rực lên thật sự. Mobile (touch) bỏ qua để giữ khung hình mượt.
   let composer = null;
+  let bloomPass = null;
   if (!isTouch) {
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
-    composer.addPass(new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.28, 0.5, 0.92));
+    bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.28, 0.5, 0.92);
+    // Bloom vốn đã mờ nên chạy ở 1/4 số điểm ảnh gần như không khác, mà đây là bước tốn GPU nhất.
+    const setBloomSize = bloomPass.setSize.bind(bloomPass);
+    bloomPass.setSize = (w, h) => setBloomSize(Math.ceil(w / 2), Math.ceil(h / 2));
+    composer.addPass(bloomPass);
     composer.addPass(new OutputPass());
   }
   const savedProfile = store.getJson('profile') ?? {};
@@ -81,14 +90,6 @@ function main() {
   };
   // Profile cũ không có slot tóc: id hat 0-2 là kiểu tóc, di trú như phía server.
   if (savedProfile.hair === undefined && profile.hat <= 2) profile.hair = profile.hat;
-
-  // Link gửi trong nhóm Zalo có sẵn mã: lấy ra rồi xoá khỏi thanh địa chỉ để khỏi lộ khi chụp màn hình.
-  const linkCode = new URLSearchParams(location.search).get('code');
-  if (linkCode) {
-    store.set('joinCode', linkCode);
-    history.replaceState(null, '', location.pathname);
-  }
-  profile.code = store.get('joinCode') ?? '';
 
   const app = {
     renderer,
@@ -107,10 +108,11 @@ function main() {
     remotes: new Remotes(scene, isTouch),
     me: new LocalPlayer(scene, profile, isTouch),
     modalBusy: () => modalOpen(),
-    isBusy: () => modalOpen() || Boolean(app.activities.current),
-    chatBlocked: () => app.activities.current === app.activities.meditation,
+    isBusy: () => modalOpen() || Boolean(app.activities.current && app.activities.current !== app.activities.meditation),
+    chatBlocked: () => app.activities.current === app.activities.lotus,
   };
   app.remotes._p = new THREE.Vector3();
+  app.bloom = bloomPass;
   app.hud = new Hud(app);
   app.chat = new Chat(app);
   app.activities = new Activities(app);
@@ -133,7 +135,6 @@ function main() {
       app.audio.unlock();
       Object.assign(profile, p);
       store.setJson('profile', { name: p.name, color: p.color, hair: p.hair, hat: p.hat, attire: p.attire, weapon: p.weapon, effect: p.effect });
-      store.set('joinCode', p.code ?? '');
       app.net.connect(() => ({
         playerId: store.get('playerId'),
         name: profile.name,
@@ -143,14 +144,9 @@ function main() {
         attire: profile.attire,
         weapon: profile.weapon,
         effect: profile.effect,
-        code: profile.code,
       }));
     },
   });
-  fetch('/api/info')
-    .then((res) => res.json())
-    .then((info) => welcome.setNeedCode(Boolean(info.codeRequired)))
-    .catch(() => welcome.setNeedCode(true));
 
   // ---------- Mạng ----------
   const { net, hud, me, remotes } = app;
@@ -158,9 +154,9 @@ function main() {
   let wasLost = false;
   let mySid = 0;
 
-  net.onRefused = (message, res) => {
+  net.onRefused = (message) => {
     hud.pauseMusic();
-    if (!entered) welcome.showError(message, Boolean(res?.needCode));
+    if (!entered) welcome.showError(message);
   };
 
   net.onFatal = (message) => {
@@ -188,6 +184,8 @@ function main() {
     store.set('playerId', res.playerId);
     app.myName = res.name;
     me.avatar.setName(res.name);
+    me.avatar.setCultivation(snap.me.cultivationTier ?? 0);
+    me.avatar.setQi(snap.me.qi ?? 0);
     const nowMs = net.now();
     remotes.sync(snap.players, nowMs);
     world.dayCycleMs = snap.dayCycleMs;
@@ -222,6 +220,7 @@ function main() {
       app.voice.start();
       app.follow.intro = false;
       me.avatar.nameEl.hidden = false;
+      trimShadowCasters(me.avatar); // Ngoại hình đã chốt ở màn chào.
       me.rot = SPAWN.rot;
       me.locked = false;
       app.input.enabled = true;
@@ -234,8 +233,10 @@ function main() {
   };
 
   net.on('state', ({ t, p }) => {
+    const arrivedAt = net.now();
     for (const row of p) {
-      if (row[0] !== mySid) remotes.applyRow(row, t);
+      if (row[0] !== mySid) remotes.applyRow(row, t - (row[6] ?? 0), arrivedAt);
+      else me.avatar.setQi(row[7] ?? 0);
     }
   });
 
@@ -264,6 +265,7 @@ function main() {
     avatarOf(sid)?.say(text);
     app.chat.receive(sid === mySid ? app.myName : remotes.map.get(sid)?.name ?? 'Người chơi', text);
   });
+  net.on('cultivation:update', ({ sid, tier }) => avatarOf(sid)?.setCultivation(tier));
   net.on('emoji', ({ sid, i }) => avatarOf(sid)?.say(EMOJIS[i] ?? '', 2500));
   net.on('wave', ({ from, to, name }) => {
     avatarOf(from)?.wave();
@@ -288,7 +290,11 @@ function main() {
   net.on('meditation:mats', (mats) => {
     app.mats = mats;
   });
-  net.on('meditation:sync', (data) => app.activities.meditation.onSync(data));
+  net.on('meditation:sync', (data) => {
+    app.activities.meditation.onSync(data);
+    app.activities.lotus.onSync(data);
+  });
+  net.on('cultivation:progress', ({ sid, qi }) => avatarOf(sid)?.setQi(qi));
   net.on('meditation:scene', (data) => world.meditation.apply(data));
   net.on('rhythm:bloom', (data) => world.meditation.bloom(data));
 
@@ -371,11 +377,11 @@ function main() {
     if (app.activities.onKey(e.code, true)) return true;
     if (modalOpen() || app.activities.current) return false;
     if (e.code === 'Space') {
+      // Space ngồi thiền ngay tại chỗ; đứng cạnh chiếu trống thì ngồi lên chiếu.
       const zone = app.activities.zoneAt(app.me.x, app.me.z);
-      if (zone?.key.startsWith('mat')) {
-        zone.run();
-        return true;
-      }
+      if (zone?.key.startsWith('mat')) zone.run();
+      else app.activities.meditation.start();
+      return true;
     }
     if (e.code === 'KeyE') {
       hud.runAction();
@@ -460,12 +466,15 @@ function main() {
   };
   const quality = new AdaptiveQuality((level) => {
     if (level === 1) {
+      // Tắt bloom và thu bóng đều không phải biên dịch lại shader, nên hạ bậc không gây khựng.
+      if (bloomPass) bloomPass.enabled = false;
       world.sky.setShadowSize(1024);
     } else {
       renderer.shadowMap.enabled = false;
     }
     onResize();
   });
+  app.quality = quality;
   window.addEventListener('resize', onResize);
   onResize();
 
@@ -485,7 +494,7 @@ function main() {
       document.exitPointerLock();
     }
     // Đang mở hộp thoại hoặc đang làm hoạt động thì nhân vật đứng yên.
-    me.locked = !entered || (app.isBusy() && app.activities.current?.lockMove !== false);
+    me.locked = !entered || (app.isBusy() && app.activities.current?.lockMove !== false) || Boolean(app.activities.current?.lockMove);
     me.update(dt, app.input, app.follow.yaw + look.yaw, net);
     remotes.update(dt, nowMs, camera);
     app.activities.update(dt);
@@ -498,6 +507,8 @@ function main() {
     app.follow.update(dt, me.x, me.y, me.z, look);
     world.sky.follow(camera);
     setAuraNight(world.sky.night); // hào quang rực theo ngày/đêm trên tu viện
+    world.shadowBusy = me.moving || remotes.walking;
+    scene.updateMatrixWorld();
 
     audioTimer += dt;
     if (audioTimer > 0.4) {

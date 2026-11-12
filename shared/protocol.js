@@ -10,10 +10,13 @@ export const LIMITS = {
   wishesPerDay: 3,
   bellCooldownMs: 30_000,
   wishesShownPerPlace: 60,
-  moveMaxPerSec: 20,
+  moveMaxPerSec: 30,
 };
 
-export const AVATAR = { colors: 10, hairs: 6, hats: 10, attires: 7, weapons: 3, effects: 12 };
+// Nhịp đồng bộ vị trí. Hai bên cùng nhịp để mỗi gói phát đi đều có mẫu mới, tốc độ không dao động.
+export const MOTION = { sendHz: 20, tickMs: 50, stampMaxAgeMs: 1000 };
+
+export const AVATAR = { colors: 10, hairs: 6, hats: 11, attires: 8, weapons: 4, effects: 13 };
 
 // Màu áo: 4 màu đầu là màu cơ bản ai cũng có; phần sau là màu quý mở bằng TEU,
 // bitmask theo thứ tự trong PREMIUM_COLORS. Hai màu quý đầu giữ nguyên vị trí
@@ -40,18 +43,17 @@ export const HAIR_NAMES = ['Tóc ngắn', 'Tóc dài', 'Tóc búi', 'Búi trâm 
 // nhận để kiểu tóc của người chơi cũ không mất nghĩa khi di trú sang slot tóc.
 export const HAT_NAMES = [
   'Tóc ngắn', 'Tóc dài', 'Tóc búi', // id cũ, chỉ còn để di trú
-  'Mũ lưỡi trai', 'Nón lá', 'Mũ bảo hộ',
+  'Mũ lưỡi trai', 'Nón lá', 'Mũ bảo hộ', 'Đầu trụi băng mắt',
   'Không đội', 'Đạo quan', 'Kim quan', 'Nón lá màn sa',
 ];
 
 // Trang phục tiên hiệp, vũ khí và hào quang: chọn ở màn vào game, đồng bộ qua server.
-// 3 bộ mới từ 4 nước: Hán phục (Trung), hanbok (Hàn), kimono (Nhật), áo dài (Việt).
 export const ATTIRE_NAMES = [
-  'Lữ khách', 'Đạo bào vân thủy', 'Bạch y hiệp khách',
+  'Lữ khách', 'Đạo bào vân thủy', 'Bạch y hiệp khách', 'Võ tăng bang thân',
   'Hán phục vân kiêm', 'Hàn phục đan thanh', 'Hòa phục hồng diệp', 'Áo dài quốc hương',
 ];
-export const WEAPON_NAMES = ['Không', 'Kiếm', 'Phất trần'];
-export const EFFECT_NAMES = ['Không', 'Sen kim', 'Lưu ly', 'Tinh hà', 'Hỏa diễm', 'Đào hoa', 'Bích ngọc', 'Nguyệt bạch', 'Hắc ám', 'Xích diễm', 'Kim long', 'Kiếm vũ'];
+export const WEAPON_NAMES = ['Không', 'Kiếm', 'Phất trần', 'Băng quyền'];
+export const EFFECT_NAMES = ['Không', 'Sen kim', 'Lưu ly', 'Tinh hà', 'Hỏa diễm', 'Đào hoa', 'Bích ngọc', 'Nguyệt bạch', 'Hắc ám', 'Long quyền', 'Xích diễm', 'Kim long', 'Kiếm vũ'];
 
 export const EMOJIS = ['🙏', '🌸', '😊', '❤️', '👋', '🍵'];
 

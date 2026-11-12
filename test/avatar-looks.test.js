@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import {
   AVATAR,
   SHIRT_COLORS,
+  HAIR_NAMES,
   HAT_NAMES,
   ATTIRE_NAMES,
   WEAPON_NAMES,
@@ -13,16 +14,39 @@ import {
 // Server clamp theo AVATAR.* còn UI chip hiển thị theo *_NAMES: lệch số là mất đồ hoặc chip ảo.
 test('số lượng look khớp với danh sách tên hiển thị', () => {
   assert.equal(AVATAR.colors, SHIRT_COLORS.length);
+  assert.equal(AVATAR.hairs, HAIR_NAMES.length);
   assert.equal(AVATAR.hats, HAT_NAMES.length);
   assert.equal(AVATAR.attires, ATTIRE_NAMES.length);
   assert.equal(AVATAR.weapons, WEAPON_NAMES.length);
   assert.equal(AVATAR.effects, EFFECT_NAMES.length);
 });
 
-// 4 bộ mới từ 4 nước, nối tiếp 3 bộ cũ — đổi tên sẽ làm DB của người chơi mất nghĩa.
-test('bộ trang phục mới đủ 4 nước: Trung, Hàn, Nhật, Việt', () => {
+// Tóc và mũ tách slot riêng: 6 id mũ đầu là id cũ trộn tóc, đã lưu trong DB của người chơi —
+// đổi tên hay đổi chỗ sẽ làm kiểu tóc cũ mất nghĩa.
+test('toc và mũ giữ nguyên id cũ, option mới nối tiếp', () => {
   assert.deepEqual(
-    ATTIRE_NAMES.slice(3),
+    HAT_NAMES.slice(0, 6),
+    ['Tóc ngắn', 'Tóc dài', 'Tóc búi', 'Mũ lưỡi trai', 'Nón lá', 'Mũ bảo hộ'],
+  );
+  assert.deepEqual(
+    HAIR_NAMES.slice(0, 3),
+    ['Tóc ngắn', 'Tóc dài', 'Tóc búi'],
+  );
+  assert.deepEqual(
+    HAIR_NAMES.slice(3),
+    ['Búi trâm ngọc', 'Song loạn', 'Bạch phát'],
+  );
+  assert.deepEqual(
+    HAT_NAMES.slice(6),
+    ['Đầu trụi băng mắt', 'Không đội', 'Đạo quan', 'Kim quan', 'Nón lá màn sa'],
+  );
+});
+
+// Võ tăng bang thân (mắt xích main) ở số 3; 4 bộ quốc gia nối tiếp sau — đổi tên sẽ làm DB mất nghĩa.
+test('bộ trang phục quốc gia nối sau Võ tăng, đủ 4 nước: Trung, Hàn, Nhật, Việt', () => {
+  assert.equal(ATTIRE_NAMES[3], 'Võ tăng bang thân');
+  assert.deepEqual(
+    ATTIRE_NAMES.slice(4),
     ['Hán phục vân kiêm', 'Hàn phục đan thanh', 'Hòa phục hồng diệp', 'Áo dài quốc hương'],
   );
 });

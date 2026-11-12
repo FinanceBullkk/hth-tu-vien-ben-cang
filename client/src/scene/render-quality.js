@@ -5,6 +5,32 @@ export function renderPixelRatio(width, height, dpr, level = 2, lowQuality = fal
   return Math.min(dpr || 1, cap, Math.sqrt(pixels / Math.max(1, width * height)));
 }
 
+const SHADOW_BUSY_INTERVAL = 1 / 20;
+const SHADOW_IDLE_INTERVAL = 1 / 5; // Không ai đi lại thì bóng chỉ còn trôi theo mặt trời.
+const SHADOW_MIN_FRAMES = 3;
+
+/**
+ * Lịch vẽ lại bóng đổ. Bóng là khung nặng nhất, nên luôn cách ít nhất 3 khung để nhịp đều.
+ * Khi máy chậm, bóng vì thế cũng thưa đi thay vì chiếm gần như mọi khung làm máy chậm thêm.
+ */
+export class ShadowPacer {
+  constructor() {
+    this.clock = 0;
+    this.frames = 0;
+  }
+
+  /** @returns {boolean} khung này có cần vẽ lại bóng không */
+  update(dt, busy) {
+    this.clock += dt;
+    this.frames++;
+    if (this.frames < SHADOW_MIN_FRAMES) return false;
+    if (this.clock < (busy ? SHADOW_BUSY_INTERVAL : SHADOW_IDLE_INTERVAL)) return false;
+    this.clock = 0;
+    this.frames = 0;
+    return true;
+  }
+}
+
 export class AdaptiveQuality {
   constructor(onChange) {
     this.onChange = onChange;

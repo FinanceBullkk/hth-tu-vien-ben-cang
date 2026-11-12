@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Database from 'better-sqlite3';
 import { pkTitleMask } from '../shared/pk.js';
+import { cultivationProgress, QI_INTERVAL_MS } from '../shared/cultivation.js';
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS players (
@@ -149,7 +150,7 @@ export class Db {
   // CREATE TABLE IF NOT EXISTS không thêm cột cho DB cũ: kiểm tra rồi ALTER từng cột cosmetic.
   #migrate() {
     const have = new Set(this.db.pragma('table_info(players)').map((c) => c.name));
-    for (const col of ['hair', 'attire', 'weapon', 'effect', 'teu', 'riddle_correct', 'pitch_best', 'unlocked', 'cultivation_tier', 'pk_wins', 'pk_losses', 'pk_title_mask', 'pk_title']) {
+    for (const col of ['hair', 'attire', 'weapon', 'effect', 'teu', 'riddle_correct', 'pitch_best', 'unlocked', 'cultivation_ms', 'cultivation_tier', 'pk_wins', 'pk_losses', 'pk_title_mask', 'pk_title']) {
       if (!have.has(col)) this.db.exec(`ALTER TABLE players ADD COLUMN ${col} INTEGER NOT NULL DEFAULT 0`);
     }
   }
@@ -161,6 +162,7 @@ export class Db {
         VALUES (@id,@name,@color,@hair,@hat,@attire,@weapon,@effect,@now,@now,@inc)
         ON CONFLICT(id) DO UPDATE SET name=@name,color=@color,hair=@hair,hat=@hat,attire=@attire,weapon=@weapon,effect=@effect,last_seen=@now,visits=visits+@inc`),
       player: p('SELECT * FROM players WHERE id=?'),
+      cultivate: p('UPDATE players SET cultivation_ms=cultivation_ms+? WHERE id=? RETURNING cultivation_ms'),
       bumpBell: p('UPDATE players SET bell_count=bell_count+1 WHERE id=?'),
       stat: p(`INSERT INTO daily_stats (local_date,visits,wishes,bells) VALUES (@d,@v,@w,@b)
         ON CONFLICT(local_date) DO UPDATE SET visits=visits+@v,wishes=wishes+@w,bells=bells+@b`),
@@ -190,7 +192,7 @@ export class Db {
         VALUES (@playerId,@date,@text,@bl,@now)`),
       fortunesOf: p('SELECT local_date,text,bl_number FROM fortunes WHERE player_id=? ORDER BY local_date DESC LIMIT 100'),
       medInsert: p('INSERT INTO meditations (player_id,score,created_at) VALUES (?,?,?)'),
-      medStats: p(`SELECT COUNT(*) sessions, MAX(score) best,
+      medStats: p(`SELECT COUNT(*) sessions, MAX(score) best, COALESCE(SUM(score), 0) points,
         (SELECT score FROM meditations m2 WHERE m2.player_id=m.player_id ORDER BY id DESC LIMIT 1) last
         FROM meditations m WHERE player_id=?`),
       bellEventInsert: p('INSERT INTO bell_events (at,participants,on_beat) VALUES (?,?,?)'),
@@ -349,6 +351,17 @@ export class Db {
     this.s.medInsert.run(playerId, score, now);
   }
 
+  cultivation(playerId) {
+    return cultivationProgress(this.s.medStats.get(playerId).points);
+  }
+
+  addCultivation(playerId, ms) {
+    if (!Number.isSafeInteger(ms) || ms < 0) throw new RangeError('Invalid cultivation interval');
+    const row = this.s.cultivate.get(ms, playerId);
+    if (!row) throw new Error('Cultivation player missing');
+    return row.cultivation_ms;
+  }
+
   bumpBell(playerId) {
     this.s.bumpBell.run(playerId);
   }
@@ -423,12 +436,14 @@ export class Db {
       bellCount: player.bell_count,
       bellEvents: this.s.bellEventsOf.get(playerId).c,
       teu: player.teu ?? 0,
+      qi: Math.floor((player.cultivation_ms ?? 0) / QI_INTERVAL_MS),
       unlocked: player.unlocked ?? 0,
       riddleCorrect: player.riddle_correct ?? 0,
       pitch: { best: pitch.best, plays: pitch.plays },
       pk: this.pkStats(playerId),
       fish: this.s.fishCaughtOf.all(playerId).map((f) => ({ id: f.fish_id, count: f.count, best: f.best_weight, firstAt: f.first_caught_at })),
       meditation: { sessions: med.sessions, best: med.best, last: med.last },
+      cultivation: cultivationProgress(med.points),
       wishes: this.s.wishesOf.all(playerId).map((r) => ({
         id: r.id,
         text: r.text,

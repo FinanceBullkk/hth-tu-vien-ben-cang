@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { VOICE } from '../shared/voice.js';
+import { cloudflareTurn } from './cloudflare-turn.js';
 
 // Only configured ICE services are contacted. TURN shared secret never reaches clients.
 export function voiceIce(env = process.env, sid = 0, now = Date.now()) {
@@ -20,24 +21,50 @@ export function voiceIce(env = process.env, sid = 0, now = Date.now()) {
 }
 
 export class Voice {
-  constructor(players) {
+  constructor(players, { turn = cloudflareTurn() } = {}) {
     voiceIce(); // Fail early for invalid operator configuration.
+    this.turn = turn;
     this.players = players;
     this.links = new Map();
   }
 
   enable(p, data) {
     if (typeof data?.enabled !== 'boolean') return { ok: false };
+    if (!data.enabled) p.voiceRequest = null;
+    if (data.enabled && this.turn && !p.voice) return this.enableTurn(p);
     if (p.voice !== data.enabled) {
       if (data.enabled && Date.now() - (p.voiceChanged ?? 0) < 500) return { ok: false, error: 'Đợi một nhịp rồi thử lại nhé.' };
       p.voiceChanged = Date.now();
       p.voice = data.enabled;
       this.sync();
     }
-    return { ok: true, iceServers: p.voice ? voiceIce(process.env, p.sid) : [], peers: this.peers(p.sid) };
+    return { ok: true, iceServers: p.voice ? (this.turn ? p.voiceIce : voiceIce(process.env, p.sid)) : [], peers: this.peers(p.sid) };
+  }
+
+  async enableTurn(p) {
+    if (p.voiceRequest || Date.now() - (p.voiceChanged ?? 0) < 5000) return { ok: false, error: 'Đợi vài giây rồi bật lại voice nhé.' };
+    p.voiceChanged = Date.now();
+    const request = p.voiceRequest = Symbol();
+    const socket = p.socket;
+    try {
+      const cached = p.voiceIce && Date.now() < p.voiceIceExpires;
+      const iceServers = cached ? p.voiceIce : await this.turn();
+      // A delayed API response must not re-enable capture after leave/disable/reconnect.
+      if (p.voiceRequest !== request || !socket || p.socket !== socket) return { ok: false };
+      p.voiceIce = iceServers;
+      if (!cached) p.voiceIceExpires = Date.now() + 23 * 60 * 60 * 1000;
+      p.voice = true;
+      this.sync();
+      return { ok: true, iceServers: p.voiceIce, peers: this.peers(p.sid) };
+    } catch {
+      return { ok: false, error: 'Chưa kết nối được dịch vụ voice. Đợi vài giây rồi thử lại.' };
+    } finally {
+      if (p.voiceRequest === request) p.voiceRequest = null;
+    }
   }
 
   leave(p) {
+    p.voiceRequest = null;
     p.voice = false;
     p.voiceChanged = 0;
     this.sync();

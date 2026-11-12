@@ -48,13 +48,24 @@ Làm theo mẫu câu cá (`fishing`):
 
 ## Git
 
-Phải được yêu cầu rõ mới làm: commit, push, mở PR, merge, deploy. Được phép làm việc này một lần không có nghĩa là được làm lại lần sau.
+Chủ dự án cấp quyền thường trực cho bốn việc: **commit, push lên nhánh làm việc, mở PR, merge PR** (squash sau khi CI xanh). Khi một việc đã xong và kiểm chứng (test/build xanh) thì tự làm cả bốn mà không phải hỏi lại mỗi lần. Gặp conflict thì tự xử: merge `main` vào nhánh, giữ đủ ý hai phía, push lại bình thường. Còn **deploy vẫn phải được yêu cầu rõ**.
 
 Không bao giờ tự ý: force push, push thẳng vào `main`, bỏ qua hook bằng `--no-verify`, viết lại lịch sử đã push. GitHub hiện không chặn push vào `main`, nên quy tắc này chỉ dựa vào việc tuân thủ.
 
 - Nhánh: `feat/...`, `fix/...`, `chore/...`, lấy từ `main` mới nhất. Không đặt tiền tố theo tên công cụ. Nhánh `codex/...` đang có chỉ dùng tiếp đến khi merge.
+- **Mỗi việc một nhánh và một worktree riêng**, kể cả việc nhỏ. Không sửa trên `main` hay trên checkout chính `D:\dichua`, vì phiên khác có thể đang làm dở ở đó. Xem mục "Mỗi việc một worktree" bên dưới.
 - Commit message: `<type>: <mô tả ngắn>`, với `type` là `feat`, `fix`, `refactor`, `test`, `docs` hoặc `chore`. Mỗi commit một việc. Không nhắc tới AI hay tên công cụ.
 - PR vào `main`, squash merge sau khi CI xanh. CI chỉ chạy với PR và push vào `main`, không chạy khi push lên nhánh chưa có PR.
+
+### Mỗi việc một worktree
+
+Nhiều phiên (người và AI) làm song song trên cùng máy. Mỗi phiên làm trong worktree riêng thì không ai ghi đè hay làm bẩn file của người khác.
+
+1. Bắt đầu: `git fetch origin`, rồi `git worktree add .claude/worktrees/<tên-việc> -b <nhánh> origin/main`, rồi làm mọi thứ trong thư mục đó.
+2. `node_modules`: tạo junction tới bản của checkout chính thay vì cài lại (`New-Item -ItemType Junction -Path <worktree>/node_modules -Target D:/dichua/node_modules` trên Windows, `ln -s` trên Linux).
+3. Trước khi mở PR và trước khi merge: merge `origin/main` mới nhất vào nhánh, chạy lại test. Trong lúc mình làm, `main` có thể đã có PR khác.
+4. Xong việc (PR đã merge): **gỡ junction `node_modules` trước**, rồi `git worktree remove .claude/worktrees/<tên-việc>` và xoá nhánh. Nếu chưa gỡ junction, lệnh xoá worktree có thể xoá luôn `node_modules` thật của checkout chính.
+5. Không động vào worktree, nhánh hay stash của phiên khác. Thay vì `git stash` trần, dùng commit tạm trên nhánh của mình.
 
 Trước khi commit:
 
@@ -65,10 +76,19 @@ Trước khi commit:
 
 ## Triển khai
 
-- Bản public chạy trên chính máy này qua Docker và Cloudflare Tunnel; `docs/deployment.md` là nguồn đúng về tên container, volume và các cờ khi tạo lại container.
+- Bản public chạy bằng Docker và Cloudflare Tunnel trên máy production `pc-chinh`, không phải máy dev. `docs/deployment.md` là nguồn đúng về tên container, volume và các cờ.
 - Không build, restart hay deploy container khi chưa được yêu cầu rõ.
-- Bản đang chạy có thể khác working tree: các lần release trước cố ý loại phần đang làm dở. Muốn biết bản đang chạy có gì thì xem release mới nhất trong `docs/deployment.md`.
-- Sau khi release, ghi bản mới vào `docs/deployment.md`.
+- **Deploy chỉ bằng một lệnh**, không tự làm tay qua SSH:
+
+  ```bash
+  gh workflow run deploy -f ref=main                          # deploy đầy đủ
+  gh workflow run deploy -f ref=<nhánh> -f candidate_only=true  # thử, không đụng production
+  gh run watch                                                # theo dõi, lỗi thì tự rollback
+  ```
+
+  Workflow `.github/workflows/deploy.yml` chạy `scripts/deploy.mjs` trên runner ở `pc-chinh`, mỗi lúc một lần. Mặc định deploy `main`; deploy nhánh khác thì phải được yêu cầu rõ.
+- Bản đang chạy là bản của lần chạy workflow `Deploy` thành công gần nhất (xem tab Actions hoặc `gh run list -w deploy`).
+- Sau khi release, ghi bản mới vào `docs/deployment.md` (tóm tắt có sẵn trong trang kết quả của lần chạy).
 
 ## Nhạc nền
 

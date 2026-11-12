@@ -1,0 +1,32 @@
+#hud > .cultivation-panel {
+  position: absolute; left: 50%; bottom: calc(62px + var(--safe-b)); transform: translateX(-50%);
+  width: 104px; text-align: center; pointer-events: none;
+}
+.cultivation-orb {
+  display: block; width: 88px; height: 88px; margin: 0 auto; padding: 0; border: 0;
+  background: none; border-radius: 50%; pointer-events: auto;
+  filter: drop-shadow(0 3px 5px #12272bcc);
+}
+.cultivation-orb img { display: block; width: 100%; height: 100%; }
+.cultivation-progress {
+  display: block; width: 88px; height: 7px; margin: 1px auto 0;
+  appearance: none; border: 1px solid #8da89e; border-radius: 4px; overflow: hidden;
+  background: #102b25; accent-color: #72ce6e;
+}
+.cultivation-progress::-webkit-progress-bar { background: #102b25; }
+.cultivation-progress::-webkit-progress-value { background: linear-gradient(#b7eb8e, #48ad56); }
+.cultivation-progress::-moz-progress-bar { background: linear-gradient(#b7eb8e, #48ad56); }
+.cultivation-notice {
+  position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+.cultivation-panel .btn.ghost {
+  min-height: 44px; margin-top: 8px; padding: 4px 12px; font-size: 12px; pointer-events: auto;
+  color: #f8ebd2; background: #1b2a24dd; border: 1px solid #b89b5b; border-radius: 20px;
+}
+.cultivation-panel :focus-visible { outline: 2px solid #e6d292; outline-offset: 3px; }
+@media (max-width: 600px), (max-height: 500px) {
+  .cultivation-orb { width: 64px; height: 64px; }
+  .cultivation-progress { width: 64px; }
+  .touch #hud > .cultivation-panel { bottom: calc(12px + var(--safe-b)); }
+}

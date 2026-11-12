@@ -1,10 +1,12 @@
-// Audition: nhập chuỗi mũi tên trong ô nhịp, bấm Space ở phách cuối để chấm cả chuỗi.
+// Chuỗi phím và cửa sổ chấm nhịp dùng chung; server tự chấm theo giờ nhận gói.
+// Kiểu WWM (Graceful Melody): nốt rơi về vạch theo từng phím, bấm sai mất nốt đó — chống spam.
 export const RHYTHM = { bpm: 96, beatMs: 625, barMs: 2500, perfectMs: 110, goodMs: 240, lateMs: 360 };
 export const ARROWS = ['←', '↑', '↓', '→'];
-export const RHYTHM_ROUNDS = { bell: 16 };
+export const RHYTHM_ROUNDS = { bell: 16, meditate: 24 };
 
 export function rhythmPattern(at, round, kind) {
-  let seed = ((at / RHYTHM.barMs) ^ (round * 2654435761) ^ 19) >>> 0;
+  let seed = ((at / RHYTHM.barMs) ^ (round * 2654435761) ^ (kind === 'bell' ? 19 : 71)) >>> 0;
+  // 3 nốt cho rounds đầu, 4 nốt từ round 6: nốt nằm trên beat 0..3 của ô nhịp.
   return Array.from({ length: 3 + (round >= 6 ? 1 : 0) }, () => {
     seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
     return seed >>> 30;
@@ -12,8 +14,8 @@ export function rhythmPattern(at, round, kind) {
 }
 
 /** Thời điểm nốt idx của round chạm vạch: nốt rải trên beat 0, 1, 2… trong ô nhịp. */
-export function roundTargetAt(at, round) {
-  return at + round * RHYTHM.barMs + RHYTHM.barMs - RHYTHM.beatMs;
+export function noteTargetAt(at, round, idx) {
+  return at + round * RHYTHM.barMs + idx * RHYTHM.beatMs;
 }
 
 export function rhythmGrade(delta, correct) {
@@ -22,7 +24,7 @@ export function rhythmGrade(delta, correct) {
   return error <= RHYTHM.perfectMs ? 'perfect' : error <= RHYTHM.goodMs ? 'good' : 'miss';
 }
 
-/** Gộp kết quả từng chuỗi thành điểm/combo. */
+/** Gộp mảng grade từng nốt (phẳng) thành điểm/combo. */
 export function rhythmSummary(results) {
   let combo = 0;
   let maxCombo = 0;

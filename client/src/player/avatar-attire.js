@@ -1,6 +1,5 @@
-// Trang phục chibi 7 kiểu: lữ khách (mặc định), đạo bào vân thủy, bạch y hiệp khách,
-// hán phục vân kiêm (Trung), hanbok (Hàn), kimono (Nhật), áo dài (Việt).
-// Mọi hình khối dựng bằng code, vật liệu cache theo (style, màu) dùng chung cho mọi nhân vật.
+// Trang phục chibi 4 kiểu: lữ khách (mặc định), đạo bào vân thủy, bạch y hiệp khách,
+// võ tăng bang thân. Mọi hình khối dựng bằng code, vật liệu cache theo (style, màu) dùng chung.
 import * as THREE from 'three';
 import { SHIRT_COLORS } from '../../../shared/protocol.js';
 
@@ -28,6 +27,13 @@ const GEO = {
   highCollar: new THREE.CylinderGeometry(0.16, 0.2, 0.12, 8, 1, true),
   leatherBelt: new THREE.CylinderGeometry(0.21, 0.235, 0.06, 8),
   buckle: new THREE.BoxGeometry(0.07, 0.05, 0.03),
+  // Võ tăng bang thân: băng cánh tay, quấn cổ tay, băng ống chân, dây thừng khoen vàng, knot đai.
+  armBand: new THREE.CylinderGeometry(0.085, 0.092, 0.09, 8, 1, true),
+  wristWrap: new THREE.CylinderGeometry(0.072, 0.079, 0.11, 8),
+  shinWrap: new THREE.CylinderGeometry(0.078, 0.086, 0.13, 8),
+  ropeBelt: new THREE.TorusGeometry(0.245, 0.018, 5, 14),
+  goldHoop: new THREE.TorusGeometry(0.055, 0.016, 5, 12),
+  sashKnot: new THREE.BoxGeometry(0.13, 0.07, 0.05),
   // Hán phục vân kiêm: cánh quạt cheo vai, vạt khép chéo ngực, nút thắt vàng.
   capePetal: new THREE.CylinderGeometry(0.15, 0.33, 0.17, 2, 1, true, -0.35, 0.7),
   placket: new THREE.BoxGeometry(0.035, 0.42, 0.02),
@@ -88,6 +94,9 @@ const shared = {
   leather: new THREE.MeshLambertMaterial({ color: 0x6e4f33, flatShading: true }),
   ink: new THREE.MeshLambertMaterial({ color: 0x241a14, flatShading: true }),
   skin: new THREE.MeshLambertMaterial({ color: 0xf0c8a0, flatShading: true }),
+  // Da ráng nắng cho võ tăng trần thân, khớp da đầu trụi ở avatar.js.
+  skinTan: new THREE.MeshLambertMaterial({ color: 0xd9a06e, flatShading: true }),
+  wrap: new THREE.MeshLambertMaterial({ color: 0xf2e9d6, flatShading: true }),
   cream: new THREE.MeshLambertMaterial({ color: CREAM, flatShading: true }),
   // Accent cố định theo nước: đỏ hồng diệp (Nhật), đan thanh đỏ – xanh (Hàn).
   maple: new THREE.MeshLambertMaterial({ color: 0xa63b2a, flatShading: true }),
@@ -108,16 +117,13 @@ function wardrobe(style, color) {
         edge: new THREE.MeshLambertMaterial({ color: base.clone().lerp(CREAM, 0.25), flatShading: true }),
         trim: new THREE.MeshLambertMaterial({ color: base, flatShading: true, side: THREE.DoubleSide }),
       });
-    } else if (style === 4) {
-      // Hanbok tiên hiệp: jeogori và tay áo pha loãng màu áo, chima đậm màu áo.
-      const pale = base.clone().lerp(CREAM, 0.52);
+    } else if (style === 3) {
+      // Võ tăng: băng tay và đai lấy màu áo, da và băng kem cố định.
       fabrics.set(key, {
-        robe: new THREE.MeshLambertMaterial({ color: pale, flatShading: true }),
-        shade: new THREE.MeshLambertMaterial({ color: pale.clone().multiplyScalar(0.78), flatShading: true, side: THREE.DoubleSide }),
-        edge: new THREE.MeshLambertMaterial({ color: base.clone().lerp(CREAM, 0.35), flatShading: true }),
         trim: new THREE.MeshLambertMaterial({ color: base, flatShading: true, side: THREE.DoubleSide }),
+        edge: new THREE.MeshLambertMaterial({ color: base.clone().lerp(CREAM, 0.45), flatShading: true, side: THREE.DoubleSide }),
       });
-    } else if (style === 6) {
+    } else if (style === 7) {
       // Áo dài: tà hở hai bên nên thân và tà cần material hai mặt, viền gấu hai mặt.
       fabrics.set(key, {
         robe: new THREE.MeshLambertMaterial({ color: base, flatShading: true, side: THREE.DoubleSide }),
@@ -172,14 +178,16 @@ function silkTail(geo, material, x, y, z, parent, yaw = 0) {
   return pivot;
 }
 
-/** Dựng bộ trang phục theo style. API chung: { group, tails, hide, setColor, update }. */
-export function createAttire(style, color, armL, armR, legL, legR) {
+/** Dựng bộ trang phục theo style. API chung: { group, extras, hide, setColor, update }.
+ *  extras: phụ kiện gắn thẳng vào khớp tay/chân (khác group), avatar dọn khi đổi đồ. */
+export function createAttire(style, color, armL, armR, body, legL, legR) {
   if (style === 1) return daoBao(color, armL, armR);
   if (style === 2) return bachY(color, armL, armR);
-  if (style === 3) return hanPhuc(color, armL, armR);
-  if (style === 4) return hanBok(color, armL, armR);
-  if (style === 5) return kimono(color, armL, armR);
-  if (style === 6) return aoDai(color, armL, armR, legL, legR);
+  if (style === 3) return voTang(color, armL, armR, body, legL, legR);
+  if (style === 4) return hanPhuc(color, armL, armR);
+  if (style === 5) return hanBok(color, armL, armR);
+  if (style === 6) return kimono(color, armL, armR);
+  if (style === 7) return aoDai(color, armL, armR, body, legL, legR);
   return luKhach(color, armL, armR);
 }
 
@@ -214,6 +222,7 @@ function luKhach(color, armL, armR) {
   return {
     group,
     tails,
+    extras: [...sleeves, ...hands],
     hide() {
       group.visible = false;
       for (const item of [...sleeves, ...hands]) item.visible = false;
@@ -275,6 +284,7 @@ function daoBao(color, armL, armR) {
   return {
     group,
     tails,
+    extras: [...sleeves, ...rims, ...hands],
     hide() {
       group.visible = false;
       for (const item of [...sleeves, ...rims, ...hands]) item.visible = false;
@@ -339,6 +349,7 @@ function bachY(color, armL, armR) {
   return {
     group,
     tails,
+    extras: [...sleeves, ...hands],
     hide() {
       group.visible = false;
       for (const item of [...sleeves, ...hands]) item.visible = false;
@@ -366,10 +377,82 @@ function bachY(color, armL, armR) {
   };
 }
 
-/** Style 3 — hán phục vân kiêm: cổ chéo V, 6 cánh quạt cheo vai, vạt khép, lụa bay trước sau. */
-function hanPhuc(color, armL, armR) {
+/** Style 3 — võ tăng bang thân: trần thân quấn băng, đai đỏ theo màu áo,
+ *  dây thừng khoen vàng, khố đen và băng ống chân. Không tay áo, không váy. */
+function voTang(color, armL, armR, body, legL, legR) {
   const group = new THREE.Group();
   const cloth = wardrobe(3, color);
+
+  // Trần thân: thân và hai tay lộ da ráng nắng, khố đen là quần gốc sẵn có của rig.
+  body.material = shared.skinTan;
+  for (const arm of [armL, armR]) arm.children[0].material = shared.skinTan;
+
+  // Băng cánh tay theo màu áo, quấn cổ tay kem và nắm đấm to hơn thường.
+  const bands = [];
+  const extras = [];
+  for (const arm of [armL, armR]) {
+    bands.push(part(GEO.armBand, cloth.trim, 0, -0.07, 0, arm));
+    extras.push(part(GEO.wristWrap, shared.wrap, 0, -0.32, 0, arm));
+    const fist = part(GEO.hand, shared.skinTan, 0, -0.41, 0, arm);
+    fist.scale.setScalar(1.2);
+    extras.push(fist);
+  }
+  // Băng ống chân gắn vào khớp chân để đi lại vẫn theo chân.
+  for (const leg of [legL, legR]) extras.push(part(GEO.shinWrap, shared.wrap, 0, -0.2, 0, leg));
+
+  // Đai đen + knot đỏ trước bụng, dây thừng trắng với khoen vàng buông hông.
+  part(GEO.belt, shared.ink, 0, 0.44, 0, group);
+  part(GEO.sashKnot, cloth.trim, 0, 0.43, 0.24, group);
+  const rope = part(GEO.ropeBelt, shared.wrap, 0, 0.375, 0, group);
+  rope.rotation.x = Math.PI / 2;
+  const hoop = part(GEO.goldHoop, shared.gold, 0.12, 0.32, 0.19, group);
+  hoop.rotation.x = 0.25;
+
+  // Dải lụa: hai dải trước buông từ knot, hai dải sau bay từ đai.
+  const frontTails = new THREE.Group();
+  frontTails.position.set(0, 0.4, 0.25);
+  const backTails = new THREE.Group();
+  backTails.position.set(0, 0.46, -0.23);
+  const tailPivots = [
+    ribbonTail('short', cloth.trim, -0.05, 0, 0, -0.25, frontTails, 0),
+    ribbonTail('short', cloth.edge, 0.05, 0, 0, 0.3, frontTails, 1.4),
+    ribbonTail('short', cloth.trim, -0.07, 0, 0, -0.35, backTails, 0.7),
+    ribbonTail('short', cloth.edge, 0.07, 0, 0, 0.35, backTails, 2),
+  ];
+  group.add(frontTails, backTails);
+
+  return {
+    group,
+    tails: backTails,
+    extras,
+    hide() {
+      group.visible = false;
+      for (const item of extras) item.visible = false;
+    },
+    setColor(next) {
+      const material = wardrobe(3, next);
+      body.material = shared.skinTan;
+      for (const arm of [armL, armR]) arm.children[0].material = shared.skinTan;
+      for (const band of bands) band.material = material.trim;
+      tailPivots.forEach((pivot, i) => { pivot.children[0].material = i % 2 ? material.edge : material.trim; });
+    },
+    update(t, walkAmt, sitAmt) {
+      backTails.rotation.x = -0.08 - walkAmt * 0.26 + Math.sin(t * 2.2) * 0.05 + sitAmt * 0.1;
+      frontTails.rotation.x = 0.04 + walkAmt * 0.1 + Math.sin(t * 1.8 + 1) * 0.04;
+      for (let i = 0; i < tailPivots.length; i++) {
+        const side = i % 2 ? 1 : -1;
+        tailPivots[i].rotation.z = side * (0.05 + Math.sin(t * 2.7 + i * 1.9) * 0.09 * (0.4 + walkAmt));
+        tailPivots[i].rotation.x = Math.sin(t * 2.4 + i * 1.3) * 0.1 * (0.3 + walkAmt);
+      }
+      hoop.rotation.z = Math.sin(t * 1.4) * 0.12; // khoen vàng đung đưa theo nhịp thở
+    },
+  };
+}
+
+/** Style 4 — hán phục vân kiêm: cổ chéo V, 6 cánh quạt cheo vai, vạt khép, lụa bay trước sau. */
+function hanPhuc(color, armL, armR) {
+  const group = new THREE.Group();
+  const cloth = wardrobe(4, color);
   const inner = part(GEO.innerRobe, cloth.edge, 0, 0.24, 0, group);
   const outer = part(GEO.outerRobe, cloth.robe, 0, 0.32, 0, group);
   part(GEO.outerHem, shared.brightGold, 0, 0.055, 0, group);
@@ -427,7 +510,7 @@ function hanPhuc(color, armL, armR) {
       for (const item of [...sleeves, ...rims, ...hands]) item.visible = false;
     },
     setColor(next) {
-      const material = wardrobe(3, next);
+      const material = wardrobe(4, next);
       inner.material = material.edge;
       outer.material = material.robe;
       belt.material = material.shade;
@@ -458,10 +541,11 @@ function hanPhuc(color, armL, armR) {
   };
 }
 
-/** Style 4 — hanbok: jeogori pha màu áo, chima đậm màu, otgoreum, norigae ngọc bội, lụa bay sau. */
+
+/** Style 5 — hanbok: jeogori pha màu áo, chima đậm màu, otgoreum, norigae ngọc bội, lụa bay sau. */
 function hanBok(color, armL, armR) {
   const group = new THREE.Group();
-  const cloth = wardrobe(4, color);
+  const cloth = wardrobe(5, color);
   const chima = part(GEO.chima, cloth.trim, 0, 0.33, 0, group);
   const chimaBand = part(GEO.chimaBand, cloth.edge, 0, 0.575, 0, group);
   const jeogori = part(GEO.jeogori, cloth.robe, 0, 0.75, 0, group);
@@ -508,7 +592,7 @@ function hanBok(color, armL, armR) {
       for (const item of [...sleeves, ...cuffs, ...hands]) item.visible = false;
     },
     setColor(next) {
-      const material = wardrobe(4, next);
+      const material = wardrobe(5, next);
       chima.material = material.trim;
       chimaBand.material = material.edge;
       jeogori.material = material.robe;
@@ -535,10 +619,11 @@ function hanBok(color, armL, armR) {
   };
 }
 
-/** Style 5 — kimono: thân thẳng, cổ chéo hai lớp, obi đỏ nơ hộp, tay áo furisode dài, lụa bay sau. */
+
+/** Style 6 — kimono: thân thẳng, cổ chéo hai lớp, obi đỏ nơ hộp, tay áo furisode dài, lụa bay sau. */
 function kimono(color, armL, armR) {
   const group = new THREE.Group();
-  const cloth = wardrobe(5, color);
+  const cloth = wardrobe(6, color);
   const robe = part(GEO.kRobe, cloth.robe, 0, 0.33, 0, group);
   const hem = part(GEO.kHem, cloth.edge, 0, 0.03, 0, group);
   part(GEO.obi, shared.maple, 0, 0.46, 0, group);
@@ -582,7 +667,7 @@ function kimono(color, armL, armR) {
       for (const item of [...sleeves, ...hems, ...hands]) item.visible = false;
     },
     setColor(next) {
-      const material = wardrobe(5, next);
+      const material = wardrobe(6, next);
       robe.material = material.robe;
       hem.material = material.edge;
       outerL.material = material.edge;
@@ -609,10 +694,11 @@ function kimono(color, armL, armR) {
   };
 }
 
-/** Style 6 — áo dài: thân ôm cổ đứng, hàng khuy vàng, tà trước/sau hở hai bên lộ quần ngà. */
-function aoDai(color, armL, armR, legL, legR) {
+
+/** Style 7 — áo dài: thân ôm cổ đứng, hàng khuy vàng, tà trước/sau hở hai bên lộ quần ngà. */
+function aoDai(color, armL, armR, body, legL, legR) {
   const group = new THREE.Group();
-  const cloth = wardrobe(6, color);
+  const cloth = wardrobe(7, color);
   const tunic = part(GEO.aTunic, cloth.robe, 0, 0.56, 0, group);
   part(GEO.mandarin, cloth.robe, 0, 0.92, -0.01, group);
   // Hàng khuy vàng dọc ngực, đi theo độ vòm thân.
@@ -654,7 +740,7 @@ function aoDai(color, armL, armR, legL, legR) {
       for (const item of [...sleeves, ...hands, ...pants]) item.visible = false;
     },
     setColor(next) {
-      const material = wardrobe(6, next);
+      const material = wardrobe(7, next);
       tunic.material = material.robe;
       panelF.material = material.robe;
       panelB.material = material.shade;

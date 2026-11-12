@@ -4,7 +4,7 @@ import { ATTIRE_NAMES, AVATAR, EFFECT_NAMES, HAIR_NAMES, HAT_NAMES, LIMITS, PREM
 
 // Hàng mũ bỏ 3 id đầu (id cũ trộn tóc vào mũ, chỉ còn để di trú người chơi cũ).
 const HAT_CHIP_START = 3;
-const HAT_NONE = 6; // 'Không đội'
+const HAT_NONE = 7; // 'Không đội'
 import { LoginMusic } from '../audio/login-music.js';
 import { $, h, store } from './dom.js';
 
@@ -29,22 +29,6 @@ export class Welcome {
       autocomplete: 'nickname',
       enterKeyHint: 'go',
     });
-    this.codeInput = h('input', {
-      id: 'codeInput',
-      class: 'code-input',
-      type: 'text',
-      maxLength: 32,
-      placeholder: 'Mã trong nhóm Zalo công ty',
-      value: this.profile.code ?? '',
-      autocomplete: 'off',
-      autocapitalize: 'characters',
-      spellcheck: false,
-      enterKeyHint: 'go',
-    });
-    this.codeInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') this.submit();
-    });
-    this.codeField = h('label', { class: 'field', for: 'codeInput', hidden: true }, 'Mã vào cửa', this.codeInput);
     this.errorEl = h('p', { class: 'welcome-error', role: 'alert' });
     this.enterBtn = h('button', { class: 'btn primary big', type: 'button', id: 'enterBtn' }, 'Vào');
 
@@ -120,10 +104,16 @@ export class Welcome {
         h('p', { class: 'welcome-sub' }, 'Hít thở một chút giữa giờ nghỉ, cùng cả nhà.'),
         this.music.button,
         this.music.audio,
-        this.codeField,
         h('label', { class: 'field', for: 'nameInput' }, 'Tên của bạn', this.nameInput),
         this.errorEl,
         this.enterBtn,
+        h('button', { class: 'btn ghost', type: 'button', onClick: () => {
+          this.setColor(0);
+          this.setHat(6);
+          this.setAttire(3);
+          this.setWeapon(3);
+          this.setEffect(9);
+        } }, 'Mặc bộ Lee Sin · Long quyền'),
         // Nhập tên là vào được ngay; thay đồ là phần thêm, không bắt người mới phải cuộn qua mới thấy nút Vào.
         h('details', { class: 'welcome-more' },
           h('summary', {}, 'Đổi trang phục (không bắt buộc)'),
@@ -202,19 +192,7 @@ export class Welcome {
     this.onPreview(this.profile);
   }
 
-  /** Server cho biết có cần mã không; chỉ khi đó mới hiện ô nhập. */
-  setNeedCode(need) {
-    this.needCode = need;
-    this.codeField.hidden = !need;
-  }
-
   submit() {
-    const code = this.codeInput.value.replace(/\s+/g, '');
-    if (this.needCode && !code) {
-      this.showError('Nhập mã vào cửa nhé, mã có trong nhóm Zalo công ty.');
-      this.codeInput.focus();
-      return;
-    }
     const name = this.nameInput.value.replace(/\s+/g, ' ').trim();
     if (!name) {
       this.showError('Nhập tên hiển thị để cả nhà nhận ra bạn nhé.');
@@ -222,22 +200,16 @@ export class Welcome {
       return;
     }
     this.profile.name = name;
-    this.profile.code = code;
     this.enterBtn.disabled = true;
     this.enterBtn.textContent = 'Đang lên tu viện…';
     this.errorEl.textContent = '';
     this.onEnter({ ...this.profile });
   }
 
-  showError(message, focusCode = false) {
+  showError(message) {
     this.errorEl.textContent = message;
     this.enterBtn.disabled = false;
     this.enterBtn.textContent = 'Vào';
-    if (focusCode) {
-      this.setNeedCode(true);
-      this.codeInput.focus();
-      this.codeInput.select();
-    }
   }
 
   hide() {

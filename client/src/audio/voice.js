@@ -70,7 +70,7 @@ export class ProximityVoice {
         track.enabled = false;
         track.onended = () => this.stop();
       }
-      const res = await this.app.net.call('voice:enable', { enabled: true });
+      const res = await this.app.net.call('voice:enable', { enabled: true }, 12000);
       if (generation !== this.generation) return;
       if (!res?.ok) throw new Error(res?.error || 'VoiceUnavailable');
       this.iceServers = res.iceServers;
@@ -123,7 +123,7 @@ export class ProximityVoice {
   update() {
     const activity = this.app.activities?.current;
     this.blocked = Boolean(document.hidden || !document.hasFocus() || activity?.isRhythm ||
-      activity === this.app.activities?.meditation || this.app.modalBusy() || document.activeElement?.matches('input:not([type="range"]), textarea, [contenteditable]'));
+      this.app.modalBusy() || document.activeElement?.matches('input:not([type="range"]), textarea, [contenteditable]'));
     this.transmitting = this.active && !this.blocked && !this.deafened && !this.micMuted && (this.mode === 'open' || this.holding);
     for (const track of this.stream?.getAudioTracks() || []) track.enabled = this.transmitting;
     for (const peer of this.peers.values()) peer.update();

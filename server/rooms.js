@@ -1,23 +1,26 @@
-// Phòng chung duy nhất: người online, gói vị trí 10 lần/giây, chat, emoji, vẫy tay, kết nối lại.
+// Phòng chung duy nhất: người online, gói vị trí 20 lần/giây, chat, emoji, vẫy tay, kết nối lại.
 import crypto from 'node:crypto';
 import { MATS, SPAWN, clampToWalkable } from '../shared/layout.js';
-import { ACTIVITY, ACTIVITY_BY_NAME, AVATAR, EMOJIS, LIMITS, PLAYER_ID_RE, PREMIUM_COLORS, SHIRT_COLORS } from '../shared/protocol.js';
+import { ACTIVITY, ACTIVITY_BY_NAME, AVATAR, EMOJIS, LIMITS, MOTION, PLAYER_ID_RE, PREMIUM_COLORS, SHIRT_COLORS } from '../shared/protocol.js';
 import { cleanText } from './filter.js';
-import { WindowCounter, clientIp, codeMatches } from './limits.js';
+import { WindowCounter, clientIp } from './limits.js';
 import { localDate } from './time.js';
 import { Voice } from './voice.js';
+import { QI_INTERVAL_MS } from '../shared/cultivation.js';
 
 /** Chỉ socket đã qua bước hello mới ở trong nhóm này và mới nhận tin phát chung. */
 export const PLAYERS_ROOM = 'players';
 
-const TICK_MS = 100;
-const FULL_STATE_EVERY = 20; // Mỗi 2 giây gửi đủ, phòng khi gói volatile bị rơi.
-const GHOST_MS = 15_000;
+const TICK_MS = MOTION.tickMs;
+const ticksIn = (ms) => Math.round(ms / TICK_MS);
+const FULL_STATE_EVERY = ticksIn(1000); // Mỗi giây gửi đủ, phòng khi gói volatile bị rơi.
+const DAY_CHECK_EVERY = ticksIn(1000);
+const SWEEP_EVERY = ticksIn(500);
+const GHOST_MS = 10_000;
 const KICK_BLOCK_MS = 60_000;
 const HELLO_TIMEOUT_MS = 20_000; // Kết nối mà không vào phòng thì ngắt, tránh chiếm chỗ.
-const MAX_EVENTS_PER_SEC = 60; // Người chơi thật khoảng 15/giây; vượt thì bỏ gói.
+const MAX_EVENTS_PER_SEC = 60; // Người chơi thật khoảng 25/giây; vượt thì bỏ gói.
 const DISCONNECT_EVENTS_PER_SEC = 180; // Vượt mức này chắc chắn là dội, ngắt luôn.
-const CODE_WINDOW_MS = 10 * 60_000;
 const SIT_INTERVAL_MS = 1000; // Ngồi xuống phát tin cho cả phòng nên phải giới hạn riêng.
 
 const round2 = (n) => Math.round(n * 100) / 100;
@@ -45,7 +48,6 @@ export class Room {
     this.byPid = new Map();
     this.kicked = new Map(); // pid -> hết hạn chặn
     this.newPlayers = new WindowCounter(60_000);
-    this.codeFailures = new WindowCounter(CODE_WINDOW_MS);
     this.nextSid = 1;
     this.tickCount = 0;
     this.lastDate = this.today();
@@ -62,7 +64,10 @@ export class Room {
 
   stop() {
     clearInterval(this.interval);
-    for (const p of this.players.values()) clearTimeout(p.ghostTimer);
+    for (const p of this.players.values()) {
+      this.meditation.leave(p);
+      clearTimeout(p.ghostTimer);
+    }
   }
 
   onlineCount() {
@@ -79,6 +84,8 @@ export class Room {
       attire: p.attire,
       weapon: p.weapon,
       effect: p.effect,
+      cultivationTier: p.cultivationTier ?? 0,
+      qi: p.qi ?? 0,
       x: p.x,
       z: p.z,
       rot: p.rot,
@@ -91,15 +98,18 @@ export class Room {
   tick() {
     this.tickCount++;
     const full = this.tickCount % FULL_STATE_EVERY === 0;
+    const now = Date.now();
     const rows = [];
     for (const p of this.players.values()) {
       if (!p.dirty && !full) continue;
       p.dirty = false;
-      rows.push([p.sid, p.x, p.z, p.rot, p.anim, p.activity]);
+      // Cột cuối: tuổi của vị trí (ms). Client phát lại theo lúc mẫu được lấy, không theo lúc tick.
+      // Cột 8: chân khí, client vẽ hào quang thiền theo qi.
+      rows.push([p.sid, p.x, p.z, p.rot, p.anim, p.activity, now - p.moveAt, p.qi ?? 0]);
     }
-    if (rows.length) this.broadcast.volatile.emit('state', { t: Date.now(), p: rows });
+    if (rows.length) this.broadcast.volatile.emit('state', { t: now, p: rows });
 
-    if (this.tickCount % 10 === 0) {
+    if (this.tickCount % DAY_CHECK_EVERY === 0) {
       const d = this.today();
       if (d !== this.lastDate) {
         this.lastDate = d; // Qua 0h: bộ đếm "Hôm nay" về 0.
@@ -107,8 +117,9 @@ export class Room {
       }
     }
     // Quét minigame 2 lần/giây: giờ cá cắn, cá tuột, lượt đầu hồ hết giờ.
-    if (this.tickCount % 5 === 0) {
+    if (this.tickCount % SWEEP_EVERY === 0) {
       this.voice.sync();
+      this.meditation.sweep();
       this.fishing.sweep(this.players);
       this.pitch.sweep(this.players);
       this.melody?.sweep();
@@ -156,7 +167,7 @@ export class Room {
     socket.on('disconnect', () => clearTimeout(helloTimer));
 
     const on = (event, handler) => {
-      socket.on(event, (...args) => {
+      socket.on(event, async (...args) => {
         const ack = typeof args[args.length - 1] === 'function' ? args.pop() : null;
         try {
           const player = socket.data.player;
@@ -168,7 +179,7 @@ export class Room {
             ack?.({ ok: false, error: 'Rời sân đàn trước nhé.' });
             return;
           }
-          const result = handler(player, args[0]);
+          const result = await handler(player, args[0]);
           ack?.(result ?? { ok: true });
         } catch (err) {
           console.error(`Lỗi xử lý ${event}:`, err);
@@ -223,15 +234,6 @@ export class Room {
     if (socket.data.player) return { ok: false, error: 'Bạn đã ở trong tu viện rồi.' };
 
     const ip = clientIp(socket.handshake, this.config.trustProxy);
-    if (this.config.joinCode) {
-      if (this.codeFailures.peek(ip, now) >= this.config.codeAttemptsPer10Min) {
-        return { ok: false, needCode: true, error: 'Nhập sai nhiều lần quá, đợi 10 phút rồi thử lại nhé.' };
-      }
-      if (!codeMatches(data?.code, this.config.joinCode)) {
-        this.codeFailures.take(ip, this.config.codeAttemptsPer10Min, now);
-        return { ok: false, needCode: true, error: 'Mã vào cửa chưa đúng, xem lại trong nhóm Zalo công ty nhé.' };
-      }
-    }
 
     const baseName = cleanText(data?.name, LIMITS.nameMax);
     if (!baseName) return { ok: false, error: 'Nhập tên hiển thị nhé.' };
@@ -277,6 +279,7 @@ export class Room {
       player.ghostTimer = null;
       const old = player.socket;
       if (old && old.id !== socket.id) {
+        this.onActionStop(player);
         this.voice.leave(player);
         old.data.player = null;
         old.emit('session:replaced');
@@ -306,6 +309,7 @@ export class Room {
         z: SPAWN.z,
         rot: SPAWN.rot,
         anim: 0,
+        moveAt: now,
         activity: ACTIVITY.none,
         dirty: true,
         socket,
@@ -329,6 +333,8 @@ export class Room {
 
     const date = localDate(now, this.config.timezone);
     this.db.touchPlayer({ id: pid, name: player.name, color: player.color, hair: player.hair, hat: player.hat, attire: player.attire, weapon: player.weapon, effect: player.effect, now, isVisit: !isResume });
+    player.cultivationTier = this.db.cultivation(pid).tier;
+    player.qi = Math.floor((this.db.playerRow(pid)?.cultivation_ms ?? 0) / QI_INTERVAL_MS);
     if (!isResume) {
       this.db.bumpStat(date, { visits: 1 });
       socket.to(PLAYERS_ROOM).emit('player:join', this.publicPlayer(player));
@@ -374,10 +380,10 @@ export class Room {
       p.moveCount = 0;
     }
     if (++p.moveCount > LIMITS.moveMaxPerSec) return undefined;
-    if (p.mat !== null && p.mat !== undefined) return undefined; // Đang ngồi thiền thì đứng yên.
+    if (p.activity === ACTIVITY.meditate) return undefined; // Đang ngồi thiền thì đứng yên.
     if (p.rod) return undefined; // Đã buông cần: rút mồi trước khi đi (client tự gửi fish:cancel).
 
-    const [x, z, rot, anim] = data.map(Number);
+    const [x, z, rot, anim, sampledAt] = data.map(Number);
     if (!Number.isFinite(x) || !Number.isFinite(z) || !Number.isFinite(rot)) return undefined;
     const [cx, cz] = clampToWalkable(x, z);
     const nx = round2(cx);
@@ -390,13 +396,16 @@ export class Room {
       p.rot = nr;
       p.anim = na;
       p.dirty = true;
+      // Mốc của client chỉ để phát lại cho mượt nên chỉ cần kẹp: không ở tương lai, không quá cũ, không lùi.
+      const stamp = Number.isFinite(sampledAt) ? Math.min(now, Math.max(sampledAt, now - MOTION.stampMaxAgeMs)) : now;
+      p.moveAt = Math.max(p.moveAt, stamp);
     }
     return undefined;
   }
 
   onChat(p, data) {
     const now = Date.now();
-    if (p.mat !== null && p.mat !== undefined) return { ok: false, error: 'Đang thiền thì mình giữ yên lặng nhé.' };
+    if (p.rhythm?.kind === 'meditate') return { ok: false, error: 'Đang chơi Nhịp sen thì mình giữ yên lặng nhé.' };
     if (now - p.lastChat < LIMITS.chatIntervalMs) return { ok: false, error: 'Từ từ thôi, đợi 2 giây nhé.' };
     const text = cleanText(data?.text, LIMITS.chatMax);
     if (!text) return { ok: false };
@@ -431,20 +440,27 @@ export class Room {
     const code = ACTIVITY_BY_NAME[data?.kind];
     if (!code) return { ok: false };
     if (code === ACTIVITY.meditate) {
+      if (p.rod || p.pitch || p.rhythm || (p.activity !== ACTIVITY.none && p.activity !== ACTIVITY.meditate)) {
+        return { ok: false, error: 'Kết thúc hoạt động hiện tại trước khi ngồi thiền nhé.' };
+      }
       const now = Date.now();
       if (now - p.lastSit < SIT_INTERVAL_MS) return { ok: false, error: 'Từ từ thôi, thở một nhịp đã nhé.' };
       const res = this.meditation.sit(p, data?.mat);
       if (!res.ok) return res;
       p.lastSit = now;
       const mat = MATS[res.mat];
-      p.x = round2(mat.x);
-      p.z = round2(mat.z);
-      p.rot = round2(mat.rot);
+      if (mat) {
+        p.x = round2(mat.x);
+        p.z = round2(mat.z);
+        p.rot = round2(mat.rot);
+      }
       p.anim = 0;
+      p.moveAt = now;
       p.activity = code;
       p.dirty = true;
-      return res;
+      return { ...res, x: p.x, z: p.z, rot: p.rot };
     }
+    if (p.activity === ACTIVITY.meditate) return { ok: false, error: 'Đứng dậy trước khi bắt đầu hoạt động khác nhé.' };
     p.activity = code;
     p.dirty = true;
     return { ok: true };

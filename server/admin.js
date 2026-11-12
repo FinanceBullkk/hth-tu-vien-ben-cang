@@ -4,7 +4,6 @@ import path from 'node:path';
 import express from 'express';
 import { BELL_EVENT } from '../shared/protocol.js';
 import { cleanText } from './filter.js';
-import { normalizeCode } from './limits.js';
 import { localDate } from './time.js';
 
 const UI_DIR = path.join(import.meta.dirname, 'admin-ui');
@@ -54,10 +53,11 @@ export function createAdminRouter({ config, saveContent, db, room, wishes, bell,
       res.status(403).type('text/plain; charset=utf-8').send('Link admin không đúng.');
       return;
     }
-    res.sendFile(path.join(UI_DIR, 'admin.html'));
+    // Fixed filenames only; checkouts may live beneath a hidden directory.
+    res.sendFile(path.join(UI_DIR, 'admin.html'), { dotfiles: 'allow' });
   });
-  router.get('/admin/admin.js', (_req, res) => res.sendFile(path.join(UI_DIR, 'admin-client.js')));
-  router.get('/admin/admin.css', (_req, res) => res.sendFile(path.join(UI_DIR, 'admin.css')));
+  router.get('/admin/admin.js', (_req, res) => res.sendFile(path.join(UI_DIR, 'admin-client.js'), { dotfiles: 'allow' }));
+  router.get('/admin/admin.css', (_req, res) => res.sendFile(path.join(UI_DIR, 'admin.css'), { dotfiles: 'allow' }));
 
   const api = express.Router();
   api.use((req, res, next) => {
@@ -96,20 +96,8 @@ export function createAdminRouter({ config, saveContent, db, room, wishes, bell,
       meditationPhrases: config.meditationPhrases,
       riddles: config.riddles,
       welcomeMessage: config.welcomeMessage,
-      joinCode: config.joinCode,
       activeBell: bell.publicEvent(),
     });
-  });
-
-  // Đổi mã: người đang chơi vẫn ở lại, nhưng kết nối lại hoặc vào mới đều phải dùng mã mới.
-  api.put('/join-code', (req, res) => {
-    const code = normalizeCode(req.body?.joinCode);
-    if (code && !/^[A-Z0-9-]{4,32}$/.test(code)) {
-      res.status(400).json({ error: 'Mã gồm 4 đến 32 chữ cái không dấu hoặc số. Để trống là tắt mã.' });
-      return;
-    }
-    saveContent({ joinCode: code });
-    res.json({ ok: true, joinCode: code });
   });
 
   api.put('/schedule', (req, res) => {

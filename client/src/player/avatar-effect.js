@@ -8,7 +8,10 @@
 // 5 Đào hoa — mưa cánh đào hồng rơi li ti, trận đào, trụ hoa, sương hồng, chân ngôn 桃;
 // 6 Bích ngọc — lá ngọc rơi xoay, trúc khí mọc quanh chân, viên ngọc lục bay vòng vai, chân ngôn 竹;
 // 7 Nguyệt bạch — trăng lưỡi liềm bạc treo sau vai, dải sao bạc nghiêng, bụi trăng rơi, chân ngôn 月;
-// 8 Hắc ám — hắc viêm lửa đen lõi tím vờn quanh người, vũng âm khí nuốt sáng, trận lục lăng, quỷ hỏa, chân ngôn 魔.
+// 8 Hắc ám — hắc viêm lửa đen lõi tím vờn quanh người, vũng âm khí nuốt sáng, trận lục lăng, quỷ hỏa, chân ngôn 魔;
+// 9 Long quyền — song long lửa quấn thân ngược chiều, vương miện lửa trên đầu, hỏa quyền bùng
+// kèm lõi trắng, chấn địa kiểu Tempest: sóng xung kích cam vàng dội từ chân kèm chỏm lửa bùng
+// theo rìa sóng, chân ngôn 龍.
 import * as THREE from 'three';
 import { createRibbonAura } from './vfx/ribbon-aura.js';
 import { createAuraSignature } from './aura-signature.js';
@@ -28,6 +31,8 @@ function canvasTex(name, w, h, draw) {
   return tex;
 }
 
+// đốm sáng mềm nhiều lớp: lõi trắng, quầng loang
+
 // Mềm hoá mép trận pháp: nét đừng đọc thành sticker cứng — guideline "mép tan" của hướng A.
 function softEdge(ctx, r, inner = .72, keep = .45) {
   ctx.globalCompositeOperation = 'destination-in';
@@ -39,7 +44,6 @@ function softEdge(ctx, r, inner = .72, keep = .45) {
   ctx.globalCompositeOperation = 'source-over';
 }
 
-// đốm sáng mềm nhiều lớp: lõi trắng, quầng loang
 function glowTexture() {
   return canvasTex('glow', 64, 64, (ctx) => {
     const g = ctx.createRadialGradient(32, 32, 1, 32, 32, 32);
@@ -782,7 +786,7 @@ function domeTexture() {
   });
 }
 
-// Bảng màu theo hiệu ứng: [Sen kim, Lưu ly, Tinh hà, Hỏa diễm, Đào hoa, Bích ngọc, Nguyệt bạch, Hắc ám]
+// Bảng màu theo hiệu ứng: [Sen kim, Lưu ly, Tinh hà, Hỏa diễm, Đào hoa, Bích ngọc, Nguyệt bạch, Hắc ám, Long quyền]
 // — mỗi mục 1-2 tông xen nhau cho phần tử phụ và chính.
 const PALETTES = [
   [0xffd98a],
@@ -793,6 +797,7 @@ const PALETTES = [
   [0x7ee8a0, 0xd0ffd8],
   [0xf6f7ff, 0xcdd9ff],
   [0x7a2ecc, 0x2a0d4a],
+  [0xff3d00, 0xffa200],
 ];
 const BASE_OPACITY = 0.9;
 
@@ -806,6 +811,7 @@ export function setAuraNight(v) {
 const TIME_GLOW = [
   [1.12, 0.92], [1, 1.05], [0.86, 1.2], [0.95, 1.15],
   [1.08, 0.95], [1.05, 1.0], [0.85, 1.25], [1.05, 1.25],
+  [0.95, 1.18],
 ];
 
 function fillSeeds(seed, count) {
@@ -821,7 +827,8 @@ function fillSeeds(seed, count) {
   const BREATH = [8, 13, 14, 9, 10, 12, 16, 8.5]; // V10: hệ 1 thở cùng chu kỳ 8 s của signature
 
 export function createEffect(effect, lowQuality = false) {
-  if (Number.isInteger(effect) && effect >= 9 && effect <= 11) return createRibbonAura(effect, lowQuality);
+  // 10..12: ba aura dải lụa (ribbon-aura.js đánh số nội bộ 9..11); 9 là Long quyền của bản prod.
+  if (Number.isInteger(effect) && effect >= 10 && effect <= 12) return createRibbonAura(effect - 1, lowQuality);
   if (!effect) return { points: null, update() {}, setColor() {} };
   // Người chơi đè "giảm chuyển động" của hệ điều hành bằng toggle "Hiệu ứng động đầy đủ"
   // trong Đổi trang phục (localStorage fullFx=1) — đọc lại mỗi khung nên đổi là áp ngay.
@@ -902,6 +909,7 @@ export function createEffect(effect, lowQuality = false) {
   const GLYPHS = [
     ['禪', '蓮', '光'], ['水', '冰', '澄'], ['星', '月', '河'], ['炎', '焱', '焚'],
     ['桃', '花', '蕊'], ['竹', '青', '翠'], ['月', '明', '輝'], ['魔', '冥', '影'],
+    ['龍', '拳', '氣'],
   ][effect - 1] ?? ['咒'];
   const makeGlyphs = (count, radius) => {
     const items = [];
@@ -958,6 +966,18 @@ export function createEffect(effect, lowQuality = false) {
     const mandala = flatMesh(mandalaTexture(), colors[0], 1.36, 0.045, 0.38);
     const mantra = flatMesh(runeRingTexture('rune-chan', '禪'), colors[0], 1.55, 0.06, 0.4);
     const counterRing = flatMesh(ringTexture(), colors[0], 1.0, 0.035, 0.18);
+
+    // vòm kim quang: V9 BỎ cho hệ 1 — mép silhouette của cylinder additive tạo 2 cột sáng
+    // dựng đứng ở góc ngang; pháp giới 3D của signature đã bao thân nên vòm chỉ còn chồng lớp.
+    const domeTex = domeTexture();
+    domeTex.wrapS = THREE.RepeatWrapping;
+    domeTex.wrapT = THREE.RepeatWrapping;
+    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
+      map: domeTex, color: colors[0], transparent: true, depthWrite: false,
+      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.12,
+    }), 0.12);
+    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.0, 1.95, 48, 1, true)), domeEntry.mat);
+    dome.position.y = 0.97;
 
     // trụ sen: 4 cột kim quang dâng chậm quanh đài
     const pillars = [];
@@ -1078,8 +1098,7 @@ export function createEffect(effect, lowQuality = false) {
     const mantra = flatMesh(runeRingTexture('rune-shui', '水'), colors[0], 1.45, 0.05, 0.85);
     const counterRing = flatMesh(ringTexture(), colors[0], 0.95, 0.04, 0.3);
 
-    // vòm kết giới: V9 BỎ cho hệ 1 — mép silhouette của cylinder additive tạo 2 cột sáng
-    // dựng đứng ở góc ngang; pháp giới 3D của signature đã bao thân nên vòm chỉ còn chồng lớp.
+    // vòm kết giới: ống khí mỏng bao toàn thân, vệt khí cuộn lên chậm rãi
     const domeTex = domeTexture();
     domeTex.wrapS = THREE.RepeatWrapping;
     domeTex.wrapT = THREE.RepeatWrapping;
@@ -1089,6 +1108,7 @@ export function createEffect(effect, lowQuality = false) {
     }), 0.15);
     const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.0, 1.95, 48, 1, true)), domeEntry.mat);
     dome.position.y = 0.97;
+    group.add(dome);
 
     // gợn nước: vành sáng loang từ chân ra rồi tan, hai vòng lệch pha nhau.
     const ripples = [];
@@ -1894,7 +1914,7 @@ export function createEffect(effect, lowQuality = false) {
       dust.geo.attributes.color.needsUpdate = true;
       updateGlyphs(glyphs, t);
     };
-  } else {
+  } else if (effect === 8) {
     // HẮC ÁM — hắc viêm lửa đen lõi tím vờn quanh người là chủ đạo, vũng âm khí đen nuốt sáng dưới chân,
     // trận lục lăng tím sẫm, quỷ hỏa chớp tắt, chân ngôn 魔.
     // Phần đen dùng NormalBlending màu gần đen để tối thật sự (blending cộng sáng không ra được màu đen).
@@ -2023,6 +2043,180 @@ export function createEffect(effect, lowQuality = false) {
       sparks.geo.attributes.color.needsUpdate = true;
       updateGlyphs(glyphs, t);
     };
+  } else {
+    // LONG QUYỀN — song long lửa quấn thân ngược chiều là chủ đạo, hỏa liên kèm trận tâm xoay,
+    // vương miện lửa trên đầu, hỏa quyền bùng đan nhau kèm lõi trắng, chấn địa Tempest:
+    // sóng xung kích dội từ chân kèm chỏm lửa bùng theo rìa sóng, chân ngôn 龍.
+    const sparkCount = lowQuality ? 12 : 22;
+    const pool = sprite(glowTexture(), colors[0], 1.35, 1.35, 0, 0.04, 0, 0.4);
+    const pillar = sprite(wispTexture(), colors[0], 0.55, 1.8, 0, 0.9, 0, 0.16);
+    const lotus = flatMesh(lotusTexture(), colors[0], 1.8, 0.02, 0.9); // hỏa liên cõng người
+    const core = flatMesh(mandalaTexture(), colors[1] ?? colors[0], 1.42, 0.045, 0.6); // trận tâm xoay ngược
+    const mantra = flatMesh(runeRingTexture('rune-long', '龍'), colors[0], 1.62, 0.06, 0.85);
+    const counterRing = flatMesh(ringTexture(), colors[0], 1.05, 0.035, 0.4);
+
+    // vòm hỏa khí: ống khí đỏ bao toàn thân — cùng cấu trúc vòm với các hiệu ứng khác
+    const domeTex = domeTexture();
+    domeTex.wrapS = THREE.RepeatWrapping;
+    domeTex.wrapT = THREE.RepeatWrapping;
+    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
+      map: domeTex, color: colors[0], transparent: true, depthWrite: false,
+      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.16,
+    }), 0.16);
+    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.0, 1.95, 48, 1, true)), domeEntry.mat);
+    dome.position.y = 0.97;
+    group.add(dome);
+
+    // song long: hai rồng lửa truy đuổi nhau quanh người — đỏ chủ đạo và vàng kim,
+    // tốc độ khác nhau nên đầu rồng lúc tách xa lúc vờn sát nhau; máy yếu giữ một rồng.
+    const dragonA = createDragon(colors, lowQuality);
+    dragonA.geos.forEach((g) => track(g));
+    for (const [mat, base] of dragonA.mats) parts.push({ mat, base });
+    dragonA.group.scale.setScalar(1.12);
+    group.add(dragonA.group);
+    let dragonB = null;
+    if (!lowQuality) {
+      dragonB = createDragon([colors[1], colors[0]], lowQuality);
+      dragonB.geos.forEach((g) => track(g));
+      for (const [mat, base] of dragonB.mats) parts.push({ mat, base });
+      dragonB.group.scale.setScalar(0.92);
+      group.add(dragonB.group);
+    }
+
+    // vương miện lửa: vòng lửa xoay nhanh trên đầu kèm lõi sáng giữa vương miện
+    const crownCount = lowQuality ? 5 : 7;
+    const crown = [];
+    for (let i = 0; i < crownCount; i++) {
+      const entry = dynMat(() => new THREE.SpriteMaterial({
+        map: flameTexture(), color: colors[i % colors.length], transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending, opacity: 0.75, rotation: ((i * 29) % 10) / 10 - 0.5,
+      }), 0.75);
+      const sp = new THREE.Sprite(entry.mat);
+      group.add(sp);
+      crown.push({ sp, entry, a0: (i / crownCount) * 6.283, tw: ((i * 29) % 10) / 10 });
+    }
+    const crownGlow = sprite(glowTexture(), colors[1] ?? colors[0], 0.55, 0.55, 0, 2.28, 0, 0.35);
+
+    // hỏa quyền: hai cụm lửa bùng đan nhau ở hai hông kèm lõi trắng nén — tay không mà khí bốc thành lửa
+    const fists = [];
+    for (const side of [-1, 1]) {
+      const body = dynMat(() => new THREE.SpriteMaterial({
+        map: flameTexture(), color: colors[0], transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending, opacity: 0.8, rotation: side * 0.15,
+      }), 0.8);
+      const hot = dynMat(() => new THREE.SpriteMaterial({
+        map: glowTexture(), color: 0xfff3d0, transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending, opacity: 0.9,
+      }), 0.9);
+      const spBody = new THREE.Sprite(body.mat);
+      const spHot = new THREE.Sprite(hot.mat);
+      group.add(spBody, spHot);
+      fists.push({ spBody, spHot, body, hot, side });
+    }
+
+    // chấn địa Tempest (E): ba vòng sóng xung kích dội từ chân ra lệch pha, mỗi vòng kéo theo
+    // chỏm lửa bùng lên theo rìa — sóng lan đến đâu lửa bùng đến đó; bước đi thì dội mạnh hơn
+    const waves = [];
+    const waveCount = lowQuality ? 2 : 3;
+    const crestCount = lowQuality ? 4 : 6;
+    for (let k = 0; k < waveCount; k++) {
+      const entry = dynMat(() => new THREE.MeshBasicMaterial({
+        map: ringTexture(), color: colors[k % colors.length], transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0,
+      }), 0);
+      const ring = new THREE.Mesh(track(new THREE.PlaneGeometry(1, 1)), entry.mat);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.03;
+      ring.userData.entry = entry;
+      ring.userData.k = k;
+      group.add(ring);
+      const crest = dynMat(() => new THREE.SpriteMaterial({
+        map: flameTexture(), color: colors[k % colors.length], transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending, opacity: 0,
+      }), 0);
+      const flames = [];
+      for (let i = 0; i < crestCount; i++) {
+        const sp = new THREE.Sprite(crest.mat);
+        group.add(sp);
+        flames.push(sp);
+      }
+      waves.push({ ring, entry, crest, flames, k });
+    }
+
+    const sparks = makeTwinkles(sparkCount, 0.06, (i, n) => ({
+      a0: (i / n) * Math.PI * 3.2,
+      r: 0.3 + ((i * 37) % 20) / 20 * 0.42,
+      y: 0.1 + ((i * 53) % 30) / 30 * 1.35,
+      tw: ((i * 29) % 10) / 10,
+      speed: 0.5 + ((i * 61) % 10) / 10,
+    }), colors[1] ?? colors[0]);
+    const glyphs = makeGlyphs(lowQuality ? 3 : 6, 0.62);
+
+    variantUpdate = (t, walkAmt) => {
+      const boost = 1 + walkAmt * 0.9; // bước đi thì cả trận bùng theo
+      pool.scale.setScalar(1.35 * (1 + Math.sin(t * 2.6) * 0.07) * (1 + walkAmt * 0.06));
+      pool.scale.y = pool.scale.x;
+      pillar.scale.y = 1.8 * (1 + Math.sin(t * 1.6) * 0.06);
+      lotus.rotation.z = t * 0.22;
+      core.rotation.z = -t * 0.55; // trận tâm xoay ngược hỏa liên
+      mantra.rotation.z = -t * (0.45 + walkAmt * 0.3);
+      counterRing.rotation.z = t * 0.6;
+      dome.rotation.y = t * 0.08;
+      domeTex.offset.y = -(t * 0.09) % 1;
+      domeEntry.base = 0.13 + 0.05 * (0.5 + 0.5 * Math.sin(t * 1.5));
+      dragonA.update(t * 1.25);
+      if (dragonB) dragonB.update(-t * 1.05 + 4.6);
+      for (const f of crown) {
+        const a = f.a0 + t * 1.7; // vòng lửa xoay nhanh trên đầu
+        f.sp.position.set(Math.cos(a) * 0.34, 2.22 + Math.sin(t * 2.2 + f.tw * 9) * 0.05 + Math.cos(a * 2) * 0.03, Math.sin(a) * 0.34);
+        f.sp.scale.set(0.1, 0.15 + 0.05 * Math.sin(t * 3.1 + f.tw * 7), 1);
+        f.sp.material.rotation = Math.sin(t * 1.8 + f.tw * 6) * 0.4;
+        f.entry.base = 0.55 + 0.25 * (0.5 + 0.5 * Math.sin(t * 2.8 + f.tw * 11));
+      }
+      crownGlow.scale.setScalar(0.55 * (1 + Math.sin(t * 2.2) * 0.08));
+      crownGlow.scale.y = crownGlow.scale.x;
+      // hai hỏa quyền nén đan nhau lệch pha, bước đi thì kéo lửa về sau như vệt tốc độ
+      for (const f of fists) {
+        const punch = Math.pow(0.5 + 0.5 * Math.sin(t * 4.2 + (f.side > 0 ? 0 : Math.PI / 2)), 3);
+        f.spBody.position.set(f.side * (0.31 + walkAmt * 0.07), 0.76 + punch * 0.12, 0.08 - walkAmt * 0.14);
+        f.spBody.scale.set(0.11 + punch * 0.13, 0.16 + punch * 0.19, 1);
+        f.body.base = 0.55 + punch * 0.6;
+        f.spHot.position.copy(f.spBody.position);
+        f.spHot.position.y += 0.03 + punch * 0.05;
+        f.spHot.scale.setScalar(0.06 + punch * 0.1);
+        f.hot.base = 0.45 + punch * 0.6;
+      }
+      for (const w of waves) {
+        const p = (t * 0.55 + w.k / waveCount) % 1; // sóng dội dày, lệch pha đều nhau
+        const reach = 0.35 + p * 2.05;
+        w.ring.scale.setScalar(reach);
+        const life = Math.pow(Math.sin(p * Math.PI), 0.7); // rực nhất lúc sóng đang lan rộng
+        w.entry.base = life * (0.62 + walkAmt * 0.3);
+        // chỏm lửa bùng theo rìa sóng: cao lên lúc sóng lan xa rồi tắt khi sóng tan
+        const rEdge = reach * 0.485;
+        for (let i = 0; i < w.flames.length; i++) {
+          const a = (i / w.flames.length) * 6.283 + w.k * 0.7 + t * 0.25;
+          w.flames[i].position.set(Math.cos(a) * rEdge, 0.1 + life * 0.24, Math.sin(a) * rEdge);
+          w.flames[i].scale.set(0.1, 0.16 + life * 0.2, 1);
+        }
+        w.crest.base = Math.pow(Math.sin(p * Math.PI), 0.8) * (0.55 + walkAmt * 0.25);
+      }
+      for (let i = 0; i < sparkCount; i++) {
+        const st = sparks.seeds[i];
+        const a = st.a0 + t * 0.08 * st.speed * boost;
+        sparks.pos[i * 3] = Math.cos(a) * st.r;
+        sparks.pos[i * 3 + 1] = st.y + Math.sin(t * 0.75 + st.tw * 9) * 0.05;
+        sparks.pos[i * 3 + 2] = Math.sin(a) * st.r;
+        const shine = 0.35 + 0.65 * (0.55 + 0.45 * Math.sin(t * 2.6 + st.tw * 12.6));
+        c.set(sparks.tint).multiplyScalar(shine);
+        sparks.col[i * 3] = c.r;
+        sparks.col[i * 3 + 1] = c.g;
+        sparks.col[i * 3 + 2] = c.b;
+      }
+      sparks.geo.attributes.position.needsUpdate = true;
+      sparks.geo.attributes.color.needsUpdate = true;
+      updateGlyphs(glyphs, t);
+    };
   }
 
   // Kiếm khí: hai lưỡi khí bay vòng quanh người, chỉ hiện khi nhân vật mang vũ khí.
@@ -2050,8 +2244,9 @@ export function createEffect(effect, lowQuality = false) {
   };
 
   // Lớp signature của phiên trước (phù văn chân, emblem, ribbon + manifestation + flow).
-  const signature = createAuraSignature(effect, lowQuality);
-  group.add(signature.group);
+  // V9: chỉ thiết kế cho hệ 1-8 — Long quyền (9) của prod không có signature riêng.
+  const signature = effect >= 1 && effect <= 8 ? createAuraSignature(effect, lowQuality) : null;
+  if (signature) group.add(signature.group);
 
   group.traverse((o) => {
     o.frustumCulled = false;
@@ -2073,15 +2268,15 @@ export function createEffect(effect, lowQuality = false) {
       const ts = reducedMotion?.matches ? .35 : 1;
       variantUpdate(t * ts, walkAmt);
       swordUpdate?.(t * ts, walkAmt);
-      signature.update(t * ts);
+      if (signature) signature.update(t * ts);
       const tg = TIME_GLOW[effect - 1] ?? [1, 1];
       const tf = tg[0] + (tg[1] - tg[0]) * nightAmt; // rực theo ngày/đêm
+      const f = group.material.opacity / BASE_OPACITY;
       // Nhịp thở ±12%: đỉnh phồng nhẹ, đáy nghỉ — tắt hẳn khi reduced motion.
       const b = reducedMotion?.matches ? 1 : .88 + .12 * Math.pow(.5 + .5 * Math.sin(t * Math.PI * 2 / (BREATH[effect - 1] ?? 12)), 2);
-      const f = group.material.opacity / BASE_OPACITY;
       // Lớp inline hạ còn 38% để signature dẫn câu chuyện (đúng phương án phiên trước).
       for (const { mat, base } of parts) mat.opacity = base * f * tf * b * 0.38;
-      signature.setOpacity(f);
+      if (signature) signature.setOpacity(f);
     },
     /** Nhân bản material chủ khi mờ dần để opacity riêng từng nhân vật. */
     beginFade() {
@@ -2111,10 +2306,9 @@ export function createEffect(effect, lowQuality = false) {
       }
     },
     dispose() {
-      signature.dispose();
+      if (signature) signature.dispose();
       geos.forEach((g) => g.dispose?.());
       parts.forEach(({ mat }) => mat.dispose());
-      if (group.material !== master) group.material.dispose();
       master.dispose();
     },
   };
