@@ -1,6 +1,28 @@
 # Deployment
 
-## Current release: 2026-11-12 camera look-up framing and pointer-lock spikes, 14:14 UTC+7
+## Current release: 2026-11-12 ink-style HUD and MMO skill bar, 15:52 UTC+7
+
+Deploy run [43186470687](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43186470687)
+released main `1afd543` (PR #38) as `hth:261112-1552-1afd543`, replacing
+`hth:261112-1414-d220050`. Client-only UI rework: the PK HUD now sits below the
+HUD and dialogs (`z-index: 2`) and hides during activities, so it no longer
+covers the play menu, dialogs, the fishing hints or the phone menu and joystick.
+HUD buttons use a self-drawn SVG line icon set (`client/src/ui/ink-icons.js`)
+instead of emoji, with tooltips instead of labels; the skill bar is an MMO-style
+frame with radial cooldown sweeps and the HP bar attached below; phones get a
+large attack button with three skills in an arc. Public bundle:
+`index-DTHm5lKp.js`, confirmed served at `https://game.hthlogistics.top/`.
+
+Local suite 167/167 and Vite build passed on Node 24; Docker tests 167/167.
+Candidate passed with DB `quick_check` ok (50 players, 23 wishes, 42 fish).
+Checked in a browser at 1280, 1024, 375 (touch) and 740x360 (touch landscape)
+before release; not yet played on a real phone after the cutover.
+
+Rollback container `hth-rollback-261112-1552-1afd543` preserves
+`hth:261112-1414-d220050`. Private backup is in the data volume at
+`backups/cutover-261112-1552-1afd543/`.
+
+## Previous release: 2026-11-12 camera look-up framing and pointer-lock spikes, 14:14 UTC+7
 
 Deploy run [43173722041](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43173722041)
 released main `d220050` (PR #36) as `hth:261112-1414-d220050`, replacing
