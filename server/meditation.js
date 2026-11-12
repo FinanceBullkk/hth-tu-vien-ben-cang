@@ -1,6 +1,6 @@
-// Giữ chỗ chiếu và phát trạng thái hoa sen của minigame Nhịp sen.
+// Giữ chỗ chiếu và phát nhịp thở chung; thiền không có minigame hay điểm.
 import { MAT_COUNT, MATS, dist2d } from '../shared/layout.js';
-import { rhythmSummary } from '../shared/rhythm.js';
+import { BREATH } from '../shared/protocol.js';
 
 export class Meditation {
   constructor({ db, io, config }) {
@@ -19,10 +19,8 @@ export class Meditation {
   scene() {
     return { epoch: this.epoch, seats: this.mats.flatMap((p, mat) => {
       if (!p) return [];
-      const game = p.rhythm;
-      const judged = game?.kind === 'meditate' ? game.notes.flat().filter((g) => g != null) : [];
-      const score = rhythmSummary(judged);
-      return [{ mat, startAt: p.medStartAt, bloom: judged.length ? (score.perfect + score.good) * 5 / judged.length : 0 }];
+      const elapsed = Math.max(0, Date.now() - p.medStartAt);
+      return [{ mat, startAt: p.medStartAt, bloom: Math.min(BREATH.cycles, elapsed / BREATH.cycle) }];
     }) };
   }
 

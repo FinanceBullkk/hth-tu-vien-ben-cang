@@ -13,7 +13,7 @@ export const LIMITS = {
   moveMaxPerSec: 20,
 };
 
-export const AVATAR = { colors: 10, hats: 6, attires: 7, weapons: 3, effects: 9 };
+export const AVATAR = { colors: 10, hairs: 6, hats: 10, attires: 7, weapons: 3, effects: 12 };
 
 // Màu áo: 4 màu đầu là màu cơ bản ai cũng có; phần sau là màu quý mở bằng TEU,
 // bitmask theo thứ tự trong PREMIUM_COLORS. Hai màu quý đầu giữ nguyên vị trí
@@ -33,7 +33,16 @@ export const SHIRT_COLORS = [
   '#23202e', // Huyền hắc
 ];
 
-export const HAT_NAMES = ['Tóc ngắn', 'Tóc dài', 'Tóc búi', 'Mũ lưỡi trai', 'Nón lá', 'Mũ bảo hộ'];
+// Tóc và mũ là hai slot riêng, kết hợp tự do. Id là số thứ tự lưu trong DB:
+// chỉ được nối tiếp, không đổi chỗ hay đổi tên option đã có.
+export const HAIR_NAMES = ['Tóc ngắn', 'Tóc dài', 'Tóc búi', 'Búi trâm ngọc', 'Song loạn', 'Bạch phát'];
+// 3 id đầu là id cũ trộn tóc vào mũ: bản mới không cho chọn nữa nhưng server vẫn
+// nhận để kiểu tóc của người chơi cũ không mất nghĩa khi di trú sang slot tóc.
+export const HAT_NAMES = [
+  'Tóc ngắn', 'Tóc dài', 'Tóc búi', // id cũ, chỉ còn để di trú
+  'Mũ lưỡi trai', 'Nón lá', 'Mũ bảo hộ',
+  'Không đội', 'Đạo quan', 'Kim quan', 'Nón lá màn sa',
+];
 
 // Trang phục tiên hiệp, vũ khí và hào quang: chọn ở màn vào game, đồng bộ qua server.
 // 3 bộ mới từ 4 nước: Hán phục (Trung), hanbok (Hàn), kimono (Nhật), áo dài (Việt).
@@ -42,28 +51,29 @@ export const ATTIRE_NAMES = [
   'Hán phục vân kiêm', 'Hàn phục đan thanh', 'Hòa phục hồng diệp', 'Áo dài quốc hương',
 ];
 export const WEAPON_NAMES = ['Không', 'Kiếm', 'Phất trần'];
-export const EFFECT_NAMES = ['Không', 'Sen kim', 'Lưu ly', 'Tinh hà', 'Hỏa diễm', 'Đào hoa', 'Bích ngọc', 'Nguyệt bạch', 'Hắc ám'];
+export const EFFECT_NAMES = ['Không', 'Sen kim', 'Lưu ly', 'Tinh hà', 'Hỏa diễm', 'Đào hoa', 'Bích ngọc', 'Nguyệt bạch', 'Hắc ám', 'Xích diễm', 'Kim long', 'Kiếm vũ'];
 
 export const EMOJIS = ['🙏', '🌸', '😊', '❤️', '👋', '🍵'];
 
-export const WISH_PLACES = ['tree', 'pond', 'container'];
+export const WISH_PLACES = ['tree', 'pond'];
 export const PLACE_LABELS = {
   tree: 'Dải lụa trên cây bồ đề',
   pond: 'Đèn hoa đăng trên hồ sen',
-  container: 'Thẻ giấy dán lên container',
 };
 
 // Mã trạng thái chuyển động và hoạt động (gửi dạng số cho gọn).
 export const ANIM = { idle: 0, walk: 1 };
-export const ACTIVITY = { none: 0, meditate: 1, bell: 2, write: 3, shake: 4, fish: 5, pitch: 6 };
+export const ACTIVITY = { none: 0, meditate: 1, bell: 2, write: 3, shake: 4, fish: 5, pitch: 6, melody: 7, pk: 8 };
 export const ACTIVITY_BY_NAME = { meditate: 1, bell: 2, write: 3, shake: 4, fish: 5, pitch: 6 };
 export const ACTIVITY_LABEL = {
+  7: 'đang tấu nhạc',
   1: 'đang ngồi thiền',
   2: 'đang thỉnh chuông',
   3: 'đang viết',
   4: 'đang rút quẻ',
   5: 'đang câu cá',
   6: 'đang chơi đầu hồ',
+  8: 'đang luận kiếm',
 };
 
 // Đố thuật ngữ: nhà sư ở cổng đưa câu đố, trả lời đúng nhận TEU theo bậc.

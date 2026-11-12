@@ -6,7 +6,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { BELL, SPAWN } from '../../shared/layout.js';
-import { EMOJIS } from '../../shared/protocol.js';
+import { AVATAR, EMOJIS } from '../../shared/protocol.js';
 import { Activities } from './activities/index.js';
 import { AudioEngine } from './audio/audio.js';
 import { ProximityVoice } from './audio/voice.js';
@@ -16,6 +16,7 @@ import { FollowCamera } from './player/camera.js';
 import { Input } from './player/controls.js';
 import { LocalPlayer } from './player/local.js';
 import { setAuraNight } from './player/avatar-effect.js';
+import './ui/pk.css';
 import { World, createRenderer } from './scene/world.js';
 import { AdaptiveQuality, renderPixelRatio } from './scene/render-quality.js';
 import { openShare } from './share/share.js';
@@ -31,6 +32,7 @@ import { WishReader } from './ui/wishReader.js';
 import './ui/voice.css';
 import './ui/pitch.css';
 import './ui/fishing.css';
+import './ui/melody.css';
 
 const isTouch = matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch', isTouch);
@@ -66,15 +68,19 @@ function main() {
     composer.addPass(new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.28, 0.5, 0.92));
     composer.addPass(new OutputPass());
   }
+  const savedProfile = store.getJson('profile') ?? {};
   const profile = {
     name: '',
     color: Math.floor(Math.random() * 8),
-    hat: Math.floor(Math.random() * 6),
+    hair: Math.floor(Math.random() * 3),
+    hat: 3 + Math.floor(Math.random() * (AVATAR.hats - 3)),
     attire: 0,
     weapon: 0,
     effect: 0,
-    ...store.getJson('profile'),
+    ...savedProfile,
   };
+  // Profile cũ không có slot tóc: id hat 0-2 là kiểu tóc, di trú như phía server.
+  if (savedProfile.hair === undefined && profile.hat <= 2) profile.hair = profile.hat;
 
   // Link gửi trong nhóm Zalo có sẵn mã: lấy ra rồi xoá khỏi thanh địa chỉ để khỏi lộ khi chụp màn hình.
   const linkCode = new URLSearchParams(location.search).get('code');
@@ -122,16 +128,17 @@ function main() {
   // ---------- Màn chào ----------
   const welcome = new Welcome({
     profile,
-    onPreview: (p) => app.me.avatar.setLook(p.color, p.hat, p.attire, p.weapon, p.effect),
+    onPreview: (p) => app.me.avatar.setLook(p.color, p.hat, p.hair, p.attire, p.weapon, p.effect),
     onEnter: (p) => {
       app.audio.unlock();
       Object.assign(profile, p);
-      store.setJson('profile', { name: p.name, color: p.color, hat: p.hat, attire: p.attire, weapon: p.weapon, effect: p.effect });
+      store.setJson('profile', { name: p.name, color: p.color, hair: p.hair, hat: p.hat, attire: p.attire, weapon: p.weapon, effect: p.effect });
       store.set('joinCode', p.code ?? '');
       app.net.connect(() => ({
         playerId: store.get('playerId'),
         name: profile.name,
         color: profile.color,
+        hair: profile.hair,
         hat: profile.hat,
         attire: profile.attire,
         weapon: profile.weapon,
@@ -197,6 +204,7 @@ function main() {
       const p = snap.players.find((pl) => pl.sid === f.sid);
       if (p) world.fishing.setRod(f.sid, { x: p.x, z: p.z, on: true, bx: f.bx, bz: f.bz });
     }
+    app.activities.pk.setSnapshot(snap.me, snap.players);
     world.fishing.shadows.setTaken(snap.fishShadowsTaken);
     hud.setPresence(snap.online, snap.visitsToday);
 
@@ -207,9 +215,11 @@ function main() {
     if (!entered) {
       entered = true;
       welcome.hide();
+      app.activities.pk.panel.root.hidden = false;
       hud.playMusic();
       hud.show();
       hud.startRadio(snap.radio);
+      app.voice.start();
       app.follow.intro = false;
       me.avatar.nameEl.hidden = false;
       me.rot = SPAWN.rot;
@@ -230,7 +240,8 @@ function main() {
   });
 
   net.on('player:join', (p) => {
-    remotes.add(p, net.now());
+    const remote = remotes.add(p, net.now());
+    remote.avatar.setCombatStatus(p.combat?.protectedUntil ? 'Bảo hộ' : p.combat?.satKhiUntil ? 'Sát khí' : '');
     hud.toast(`${p.name} vừa lên tu viện`);
     app.audio.chime(0.07);
   });
@@ -249,7 +260,10 @@ function main() {
     return r ? { x: r.avatar.root.position.x, z: r.avatar.root.position.z } : null;
   };
 
-  net.on('chat', ({ sid, text }) => avatarOf(sid)?.say(text));
+  net.on('chat', ({ sid, text }) => {
+    avatarOf(sid)?.say(text);
+    app.chat.receive(sid === mySid ? app.myName : remotes.map.get(sid)?.name ?? 'Người chơi', text);
+  });
   net.on('emoji', ({ sid, i }) => avatarOf(sid)?.say(EMOJIS[i] ?? '', 2500));
   net.on('wave', ({ from, to, name }) => {
     avatarOf(from)?.wave();
@@ -343,6 +357,10 @@ function main() {
     if (e.repeat && ['Space', 'KeyE', 'Enter'].includes(e.code)) return true;
     if (e.repeat && app.activities.current?.isRhythm && e.code.startsWith('Arrow')) return true;
     if (e.code === 'Escape') {
+      if (app.input.pointerLocked) {
+        document.exitPointerLock();
+        return true;
+      }
       if (closeTopModal()) return true;
       if (app.activities.current) {
         app.activities.exit();
@@ -352,11 +370,18 @@ function main() {
     }
     if (app.activities.onKey(e.code, true)) return true;
     if (modalOpen() || app.activities.current) return false;
-    if (e.code === 'KeyE' || e.code === 'Enter') {
+    if (e.code === 'Space') {
+      const zone = app.activities.zoneAt(app.me.x, app.me.z);
+      if (zone?.key.startsWith('mat')) {
+        zone.run();
+        return true;
+      }
+    }
+    if (e.code === 'KeyE') {
       hud.runAction();
       return true;
     }
-    if (e.code === 'KeyT') {
+    if (e.code === 'Enter' || e.code === 'KeyT') {
       app.chat.show();
       return true;
     }
@@ -369,26 +394,36 @@ function main() {
   app.input.onKeyUp = (e) => {
     if (entered) app.activities.onKey(e.code, false);
   };
+  app.input.canLock = () => !modalOpen() && (!app.activities.current || app.activities.current === app.activities.pk);
 
   // Chạm/bấm vào cảnh: vẫy tay với đồng nghiệp, vuốt mèo, đọc lời ước.
   const raycaster = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
   const heartAt = new THREE.Vector3();
-  app.input.onTap = (x, y) => {
-    if (!entered || app.isBusy()) return;
+  app.input.onTap = (x, y, event) => {
+    if (!entered || app.modalBusy()) return;
+    if (app.activities.current) return;
+    if (app.input.pointerLocked) { app.activities.pk.use('strike'); return; }
     ndc.set((x / window.innerWidth) * 2 - 1, -(y / window.innerHeight) * 2 + 1);
     raycaster.setFromCamera(ndc, camera);
     const person = remotes.atRay(raycaster.ray);
     if (person) {
-      net.call('wave', { to: person.sid });
+      if (event?.altKey || event?.pointerType === 'touch') {
+        const waveBtn = h('button', { class: 'btn', type: 'button' }, '👋 Vẫy tay');
+        const modal = openModal({ title: person.name, content: waveBtn });
+        waveBtn.onclick = () => {
+          app.net.call('wave', { to: person.sid });
+          heartAt.set(person.x, person.y + 1, person.z);
+          floater(app, heartAt, '👋');
+          modal.close();
+        };
+        return;
+      }
+      app.activities.pk.use('strike', { x, y });
       return;
     }
     if (world.abbot.atRay(raycaster.ray)) {
       world.abbot.advise();
-      return;
-    }
-    if (world.monk.atRay(raycaster.ray)) {
-      app.activities.riddle.start();
       return;
     }
     const cat = world.animals.catAtRay(raycaster.ray);
@@ -405,6 +440,7 @@ function main() {
       ?? world.wishes.pickScreen(x, y, camera, window.innerWidth, window.innerHeight);
     raycaster.far = Infinity;
     if (wish) app.reader.pin(wish);
+    else app.activities.pk.use('strike', { x, y });
   };
 
   // ---------- Khung hình ----------
@@ -445,9 +481,12 @@ function main() {
     const nowMs = net.now();
 
     const look = app.input.consumeLook();
+    if (app.input.pointerLocked && (modalOpen() || (app.activities.current && app.activities.current !== app.activities.pk))) {
+      document.exitPointerLock();
+    }
     // Đang mở hộp thoại hoặc đang làm hoạt động thì nhân vật đứng yên.
-    me.locked = !entered || app.isBusy();
-    me.update(dt, app.input, app.follow.yaw, net);
+    me.locked = !entered || (app.isBusy() && app.activities.current?.lockMove !== false);
+    me.update(dt, app.input, app.follow.yaw + look.yaw, net);
     remotes.update(dt, nowMs, camera);
     app.activities.update(dt);
     app.reader.update(dt);

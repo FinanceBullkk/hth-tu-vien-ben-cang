@@ -1,20 +1,106 @@
 # Deployment
 
+## Current release: 2026-11-09 camera orbit fix, 15:06 UTC+7
+
+Public image `hth:camera-orbit-1109` adds camera wall collision and 360-degree
+orbit fixes from commit `2470949` on `fix/camera-orbit-1109`. Mouse hover rotates
+the camera again after meditation ends, even without pointer lock. Built from
+the previous production source `D:/hth-chat-voice-release-1109` with only
+`client/src/player/camera.js`, `client/src/player/controls.js`, and the new
+camera orbit test overlaid. Release source: `D:/hth-camera-orbit-release-1109`.
+
+Branch Docker tests passed 142/142; release Docker tests passed; candidate
+health/page passed. Local and public health/page and Socket.IO polling returned
+200; public bundle `index-BUq_NKI_.js` matched candidate. SQLite quick_check:
+ok. Volume, network, localhost port and runtime hardening retained. Browser
+gameplay after cutover was not directly checked.
+
+Rollback container `hth-pre-camera-orbit-1109-1506` uses
+`hth:chat-voice-1109`, stopped with `restart=no`. Private online backup:
+`backups/cutover-camera-orbit-1109-1506/` in production volume; its DB
+quick_check passed. Restore image only unless DB restoration is required.
+
+## Previous release: 2026-11-09 chat HUD and mic control, 14:31 UTC+7
+
+Public image `hth:chat-voice-1109` adds lower-left chat history, Enter-to-chat,
+direct mic toggle, and nearby speaker names. Release source:
+`D:/hth-chat-voice-release-1109`, built from the running `hth:zoeyy-1109`
+image source with only chat/voice client files overlaid from commit `56d8843`.
+Clean-branch tests: 141/141; Docker release tests: 138/138; candidate
+WebRTC and chat browser checks passed. Public health, page and Socket.IO
+returned 200, bundle `index-B42r7Iof.js` matched local, SQLite quick_check
+was ok with 45 players retained. Existing runtime flags and data volume kept.
+Rollback: stopped `hth-pre-chat-voice-1109-1431` (`hth:zoeyy-1109`);
+private backup: `backups/cutover-chat-voice-1109-1431/` in production volume.
+
+
 ## Current target
 
-Cloudflare named Tunnel on this Windows host. Public URL:
-`https://game.hthlogistics.top/`. Porkbun manages registration; Cloudflare
-manages DNS and the Tunnel. `hth-tunnel-fixed` connects through Docker network
-`hth-net` with `--restart unless-stopped`. Its token is stored in Docker volume
-`hth-tunnel-credentials`, mounted read-only. Keep this volume private and back
-it up securely; never commit the token. A second owner-restricted copy exists
-at `%LOCALAPPDATA%\HTH-TuVien\tunnel\token` on this PC.
+Cloudflare named Tunnel on the production host `pc-chinh` (Windows, Tailscale
+hostname `anhhao.tail028c49.ts.net`, SSH alias `pc-chinh` from the dev machine
+`MSI`). Public URL: `https://game.hthlogistics.top/`. Porkbun manages
+registration; Cloudflare manages DNS and the Tunnel. `hth-tunnel-fixed`
+connects through Docker network `hth-net` with `--restart unless-stopped`. Its
+token is stored in Docker volume `hth-tunnel-credentials`, mounted read-only.
+Keep this volume private and back it up securely; never commit the token.
 
-Game container: `hth-tu-vien-ben-cang` on Docker network `hth-net`, with
-`TRUST_PROXY=1` and `--restart unless-stopped`. Only `127.0.0.1:3000` is published on the host. Persistent DB,
-join code, admin key, and shared radio clock are in Docker volume
-`hth-tu-vien-ben-cang-data`. The tunnel forwards to
-`http://hth-tu-vien-ben-cang:3000`.
+Game container: `hth-tu-vien-ben-cang` on Docker network `hth-net` on
+`pc-chinh`, with `TRUST_PROXY=1` and `--restart unless-stopped`. Only
+`127.0.0.1:3000` is published on the host. Persistent DB, admin key, and
+shared radio clock are in Docker volume `hth-tu-vien-ben-cang-data`. The
+tunnel forwards to `http://hth-tu-vien-ben-cang:3000`.
+
+Note: a stale copy of the stack (container `hth`, quick tunnel, volume
+`hth-data`) used to sit on machine `hao` (`hao.tail028c49.ts.net`). It served
+nothing public and was fully removed on 2026-11-07 (containers, volume, images
+`hth:1`–`hth:4` and `cloudflared`; its DB snapshot held 15 players / 4 wishes,
+superseded by production). Production is only on `pc-chinh`.
+
+## Releasing: the Deploy workflow
+
+Release only through the `Deploy` workflow, from any machine with `gh`:
+
+```bash
+gh workflow run deploy -f ref=main
+gh workflow run deploy -f ref=<branch> -f candidate_only=true
+gh run watch
+```
+
+`concurrency: production` queues runs, so two sessions can never cut over at
+once. The job runs `scripts/deploy.mjs` on the self-hosted runner and:
+
+1. Checks out the ref with LF line endings into a clean workspace.
+2. `docker build --target test`: `npm test` inside the same `node_modules` the
+   image ships. A failing test stops here.
+3. Builds `hth:<YYMMDD-HHMM>-<sha7>` (labels `hth.deploy=workflow`,
+   `hth.commit`).
+4. Copies the data volume (minus `backups/`) into a throwaway volume, runs a
+   candidate on a localhost port Docker picks, and checks health, page, bundle, Socket.IO
+   handshake and DB `quick_check`. The candidate is always removed.
+5. Unless `candidate_only`: backs up the DB (SQLite backup API) and config to
+   `backups/cutover-<tag>/` inside the data volume, stops production, renames it
+   `hth-rollback-<tag>` (`restart=no`), starts the new image with every runtime
+   flag below, and checks localhost and the public URL (bundle hash must match
+   the candidate). Any failure rolls back automatically.
+6. Tags `hth:latest` and keeps only the 3 newest `hth-rollback-*` containers
+   and their images. Older objects not created by the workflow are never touched.
+
+The run page shows a summary (image, bundle hash, DB counts, rollback name) to
+copy into the release notes below.
+
+Runner: `C:\actions-runner-hth` on `pc-chinh`, name `pc-chinh-hth`, labels
+`self-hosted, Windows, hth-prod`, running as user `anhha` because Docker
+Desktop only serves that user's session. At logon,
+`%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\hth-deploy-runner.cmd`
+waits 60 s (so the webdebit launcher checks for `Runner.Listener.exe` first),
+then starts `run.cmd` minimized if this runner is not already running. If runs
+stay queued, check that the runner is online in the repo's Settings → Actions →
+Runners, or start `C:\actions-runner-hth\run.cmd` on `pc-chinh`.
+
+Manual release (only when the runner is down): never build from the shared
+checkout. `git archive` the commit, copy to `pc-chinh`, extract, and run
+`set HTH_COMMIT=<sha>` then `node scripts/deploy.mjs` there. SSH lands in cmd.exe: keep remote commands
+simple and run pipes on the dev side.
 
 ## Operate (PowerShell)
 
@@ -24,7 +110,7 @@ docker logs hth-tunnel-fixed --tail 30
 curl.exe --noproxy '*' https://game.hthlogistics.top/api/health
 ```
 
-Add `?code=<joinCode>` only when sending an invitation. Never share the admin
+Never share the admin
 key. Updating game image
 requires rebuilding and recreating the game container on `hth-net` with the
 same volume, localhost port, `TRUST_PROXY=1`, and these runtime flags; keep
@@ -40,6 +126,128 @@ these flags again.
 
 `hth:latest` may not be the running image. Check the actual image with
 `docker ps --filter name=hth` before recreating or rolling back.
+
+## Current release: 2026-11-08 cross-network voice
+
+Deploy run [42465684418](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/42465684418)
+released main `69cf415` as `hth:261108-1605-69cf415` (also `hth:latest`) at
+16:08 UTC+7. Public bundle: `index-BhHaAhqA.js`. Cloudflare TURN environment
+variables are present in the production container; long-lived credentials
+remain server-side.
+
+Docker tests: 141/141 passed. Candidate health, page, bundle, Socket.IO and DB
+quick_check passed (27 players, 18 wishes, 33 fish). Workflow production and
+public checks passed. The public relay-only browser check passed with actual
+TURN candidates on both peers, bidirectional synthetic audio, mic controls,
+distance revocation, disconnect cleanup, and retained aura/meditation/melody.
+Physical microphones and two devices on separate Internet connections were
+not tested. Four public checks produced two complete passes, one TURN
+admission failure, and one peer connection timeout. Five direct credential
+requests from the container passed. The intermittent failures remain
+undiagnosed; the browser check now prints sanitized admission and ICE states
+on failure. These results do not prove reliable connectivity on every network.
+
+Rollback container `hth-rollback-261108-1605-69cf415` preserves
+`hth:aura-1108-1345`, stopped with `restart=no`. Private backup is in the data
+volume at `backups/cutover-261108-1605-69cf415/`.
+
+## Production baseline reconciled: 2026-11-08
+
+Before the voice release, the running container was `hth:aura-1108-1345`,
+including the later per-effect startup fix and the full-motion toggle. Its
+public bundle was `index-Cuy2F2KH.js`. The running source, not the older release
+notes below, was used to reconcile main before deploying voice.
+
+The reconciled sources retain Tau nhac and its audio, free meditation with the
+orb HUD and current qi rate, Lee Sin/Long quyen, all signature auras and titles,
+and the full-motion preference. The older standalone Sen Kim renderer remains
+tested but is not wired over the newer production signature aura.
+
+Cloudflare TURN uses the private environment file referenced by repository
+variable `HTH_VOICE_ENV_FILE`. Keep that variable on subsequent deploys. The
+file is outside the checkout, readable by the production runner account only
+and SYSTEM; do not commit or print its contents. See `proximity-voice.md`.
+
+## Previous workflow release: 2026-11-07 meditation anywhere and Lee Sin quick outfit
+
+Deployed as `hth:261107-1953-5cdb367` (also `hth:latest`) at 19:55 (UTC+7) on
+`pc-chinh`, from main `5cdb367` (PR #21) through Deploy run `42374410776`.
+Adds **Thiền tại chỗ** to the contextual action and **Chơi gì?** menu, keeping
+the server's current position while awarding qi. Real mats still support Nhịp sen.
+Adds **Mặc bộ Lee Sin · Long quyền** on welcome to select the existing full outfit.
+No DB schema change; partial meditation time and existing progress are retained.
+
+Local suite and Docker test gate: 119/119; Vite build passed. Local browser checks
+on desktop and mobile passed outfit selection and persistence after reload,
+meditation without travel, qi gain and standing up, with no page errors.
+Candidate on a copy of production: health, page, bundle, Socket.IO and DB
+`quick_check` passed (25 players, 13 wishes, 25 fish). Cutover from
+`hth:261107-1911-65ab644` retained the data volume, network, port and runtime flags.
+Public health, bundle `/assets/index-CzHwhGgN.js`, feature strings and WebSocket
+clock sync passed after cutover. Public gameplay was not repeated with a player.
+
+Rollback: stopped container `hth-rollback-261107-1953-5cdb367` using the previous
+image. Private backup: `backups/cutover-261107-1953-5cdb367/` inside the data volume.
+Deploy run: https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/42374410776
+
+## Previous release: 2026-11-07 seated meditation qi and ground aura
+
+Deployed as `hth:261107-1911-65ab644` (also `hth:latest`) at 19:11 (UTC+7) on `pc-chinh`, built
+from main `65ab644` (PR #19) through the Deploy workflow. Brings the seated-meditation feature
+(tĩnh tu tích Chân khí, 1 qi per 6 s of server-measured sitting time, stored in the new
+`cultivation_ms` column, ground aura `cultivation-aura.js` growing with qi tiers) that had only
+run on the separate `localhost:3992` preview (`feat/meditation-cultivation` `20cefcc`) and was
+never part of any public release. Cherry-picked onto current main; conflicts resolved to keep
+both cultivation systems: the existing Nhịp sen points tiers (`avatar-cultivation.js`) and the
+new qi tiers (`QI_TIERS`, renamed from the branch's `CULTIVATION_TIERS`). State rows grew from
+7 to 8 columns (column 7 stays position age, column 8 is qi).
+
+Test gate in the Docker build: 116/116 (106 previous + 10 new qi tests), including real-socket
+qi awarding, tab-switch and reconnect dedupe. Local worktree suite also 116/116 with a passing
+Vite build (`index-ByspXpni.js`). Candidate on a copy of the real volume: health, bundle,
+DB `quick_check` ok (24 players, 13 wishes, 25 fish). Cutover
+`hth:261107-1837-e3cd0b3` → `hth:261107-1911-65ab644` with the same volume, network, port and
+runtime flags. Post-cutover public checks: health ok, page serves `index-ByspXpni.js`,
+Socket.IO handshake ok, and the served bundle contains the meditation strings. Entry code
+state unchanged from before.
+
+Rollback container `hth-rollback-261107-1911-65ab644` is stopped with `restart=no`
+(image `hth:261107-1837-e3cd0b3`). Cutover backup is inside the data volume under
+`backups/cutover-261107-1911-65ab644/`. The separate meditation preview
+(`hth-meditation-preview`, `127.0.0.1:3992`, image `hth:meditation-261107-1524`, synthetic
+volume) is untouched and now redundant; remove it separately when no longer wanted.
+
+Note: the two intermediate releases `hth:melody-261107-1748` and `hth:261107-1837-e3cd0b3`
+(after the nontoc section below) were deployed by other sessions without recorded release notes;
+their rollback container and images remain as listed by `docker ps -a --filter name=hth`.
+
+## Previous release: 2026-11-07 separate hair slot and xianxia hair, hats
+
+Deployed as `hth:nontoc-261107-1702` (also `hth:latest`) at about 17:10 (UTC+7) on `pc-chinh`, built
+from a clean export of commit `7558252` (main, PR #14). Splits the avatar look into two free
+slots — hair and hat — adding three xianxia hairstyles (Búi trâm ngọc, Song loạn, Bạch phát) and
+four hats (Không đội, Đạo quan, Kim quan, Nón lá màn sa). Legacy mixed ids 0–2 of the old hat slot
+keep their meaning and are migrated to the hair slot server-side when a client omits `hair`; the
+DB gains a `hair` column via migration, no other schema change. Existing ids 3–6 keep theirs —
+Đầu trụi băng mắt now ignores the hair slot since it carries its own hair design.
+
+Test gate: 106/106 in a `node:24` container on the clean export, plus the same suite green in the
+dev worktree and a passing client build. Candidate on a copy of the real data volume: health,
+bundle hash (`index-DNSZSzp1.js`), DB `quick_check` (24 players, 13 wishes, 34 fish) and a browser
+run (welcome chip rows, avatar hair/hat state checks, entering the game) passed; pixel screenshots
+were not captured because the capture surface timed out on the heavy canvas. Cutover kept the same
+volume, `hth-net`, port `127.0.0.1:3000→3000`, `TRUST_PROXY=1` and all runtime flags. Post-cutover:
+local and public health passed, public bundle hash matched, Socket.IO WebSocket handshake OK,
+`quick_check` ok with the same counts; `CapDrop=ALL` and `NoNewPrivs=1` confirmed.
+
+Rollback container `hth-pre-nontoc-261107-1702` is stopped and preserved with `restart=no`
+(image `hth:tempest-261107-1638`). Private cutover backup is inside the data volume at
+`backups/cutover-nontoc-261107-1702/`. Candidate container and its volume were removed.
+
+Note: while this cutover happened, another session was preparing an aura release (candidates
+`hth:aura-redesign-261107-1705` and `hth:aura-public-261107-1715` were running). Production base
+is main `7558252`; the next release must build from main at or after this commit — or from merged
+sources containing it — so the hair/hat feature is not silently rolled back.
 
 After moving or restarting Docker, check the site. If the containers stayed stopped,
 start them with their existing images and data:
@@ -57,7 +265,31 @@ docker stop hth-tunnel-fixed
 
 Start it again with `docker start hth-tunnel-fixed`. Domain remains unchanged.
 
-## Latest release: 2026-11-07 campus layout and auras
+## Previous release: 2026-11-07 camera free look, campus activities and auras
+
+Deployed as `hth:tempest-261107-1638` (also `hth:latest`) at about 16:45
+(UTC+7) on `pc-chinh`, built from a clean export of commit `417b54e` (main,
+PRs #1–#9). Brings the WWM-style camera (right-click toggle free look without
+pointer lock, pitch down to −1.3 rad to look at the sky, zoom to 16 m,
+camera-facing strafe), removes the join code gate, and includes the campus
+activities, proximity voice, auras and attire work. No DB schema change.
+
+The previous running image (`hth:trangphuc-261107-1600`) had no deploy record;
+token probes showed its client predated PRs #1–#3, so this release caught
+production up with main. Test gate: 91/91 in a `node:24` container on
+`pc-chinh`. Candidate on a copy of the real data volume: health, bundle hash
+(`index-DB5CUnNC.js`) and DB `quick_check` passed. Cutover kept the same
+volume, `hth-net`, port `127.0.0.1:3000→3000`, `TRUST_PROXY=1` and all runtime
+flags. Post-cutover: public health and bundle hash passed, Socket.IO handshake
+OK, `quick_check` ok with 24 players, 13 wishes, 34 fish retained; `CapEff=0`
+and `NoNewPrivs=1` confirmed.
+
+Rollback container `hth-pre-tempest-261107-1638` is stopped and preserved with
+`restart=no`. Private cutover backup is inside the data volume at
+`backups/cutover-tempest-261107-1638/`. Candidate container and test volume
+were removed.
+
+## Previous release: 2026-11-07 campus layout and auras
 
 Deployed as `hth:campus-261107-1155` (also `hth:latest`) at 12:00 (UTC+7), built from a clean export
 of commit `5ee7e0d`. Campus areas are rearranged and five auras added. No `server/` change and no DB

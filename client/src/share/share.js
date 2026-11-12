@@ -1,4 +1,4 @@
-// Ảnh chia sẻ 1080×1350 và ảnh vận đơn, vẽ bằng canvas nên tiếng Việt dùng font hệ thống đúng dấu.
+// Ảnh chia sẻ và thẻ lời chúc, vẽ bằng canvas nên tiếng Việt dùng font hệ thống đúng dấu.
 import { fetchBook } from '../ui/book.js';
 import { downloadBlob, h } from '../ui/dom.js';
 import { openModal } from '../ui/modal.js';
@@ -40,7 +40,7 @@ export function captureScene(app) {
   return renderer.domElement;
 }
 
-export function renderShareCard({ sceneCanvas, name, wish, tamAn, fortune }) {
+export function renderShareCard({ sceneCanvas, name, wish, fortune }) {
   const W = 1080;
   const H = 1350;
   const canvas = document.createElement('canvas');
@@ -88,15 +88,6 @@ export function renderShareCard({ sceneCanvas, name, wish, tamAn, fortune }) {
   };
   if (wish) section('Lời ước', `“${wish}”`, `500 38px ${SERIF}`, 3);
   if (fortune) section('Quẻ hôm nay', fortune, `400 36px ${FONT}`, 2);
-  if (tamAn !== null && tamAn !== undefined) {
-    ctx.fillStyle = '#e0a458';
-    ctx.font = `600 30px ${FONT}`;
-    ctx.fillText('Nhịp sen', left, y);
-    ctx.fillStyle = '#fbf3e0';
-    ctx.font = `700 54px ${FONT}`;
-    ctx.fillText(String(tamAn), left + 130, y + 6);
-  }
-
   ctx.fillStyle = '#b98d5e';
   ctx.font = `600 30px ${FONT}`;
   ctx.textAlign = 'center';
@@ -104,8 +95,8 @@ export function renderShareCard({ sceneCanvas, name, wish, tamAn, fortune }) {
   return canvas;
 }
 
-/** Ảnh vận đơn để gửi Zalo. */
-export function renderBillOfLading(f) {
+/** Thẻ lời chúc để gửi Zalo. */
+export function renderFortuneCard(f) {
   const W = 1080;
   const H = 1350;
   const canvas = document.createElement('canvas');
@@ -122,18 +113,8 @@ export function renderBillOfLading(f) {
   ctx.textBaseline = 'alphabetic';
   ctx.textAlign = 'left';
   ctx.font = `800 62px ${FONT}`;
-  ctx.fillText('BILL OF LADING', 90, 150);
-  ctx.font = `600 32px ${FONT}`;
-  ctx.fillStyle = '#54392a';
-  ctx.fillText(`Số B/L: ${f.bl}`, 90, 200);
-
-  const rows = [
-    ['Shipper', 'Tu viện HTH'],
-    ['Consignee', f.consignee],
-    ['Port of Loading', 'Bình an'],
-    ['Port of Discharge', 'Nhà bạn'],
-  ];
-  let y = 250;
+  ctx.fillText('LỜI CHÚC HÔM NAY', 90, 150);
+  let y = 260;
   const line = (yy) => {
     ctx.strokeStyle = 'rgba(122,58,34,.45)';
     ctx.lineWidth = 2;
@@ -142,29 +123,10 @@ export function renderBillOfLading(f) {
     ctx.lineTo(W - 90, yy);
     ctx.stroke();
   };
-  const field = (label, value) => {
-    line(y);
-    ctx.fillStyle = '#8b6a4f';
-    ctx.font = `600 28px ${FONT}`;
-    ctx.fillText(label, 90, y + 42);
-    ctx.fillStyle = '#2b1c13';
-    ctx.font = `600 40px ${FONT}`;
-    ctx.fillText(value, 90, y + 92);
-    y += 118;
-  };
-  rows.forEach(([a, b]) => field(a, b));
-
   line(y);
-  ctx.fillStyle = '#8b6a4f';
-  ctx.font = `600 28px ${FONT}`;
-  ctx.fillText('Description of Goods', 90, y + 42);
   ctx.fillStyle = '#2b1c13';
-  ctx.font = `600 46px ${SERIF}`;
-  const end = drawLines(ctx, wrap(ctx, f.text, W - 180, 4), 90, y + 104, 62);
-  y = end + 26;
-
-  field('Gross Weight', '0 kg, nhẹ như không');
-  field('Freight', 'Prepaid — bằng một nụ cười');
+  ctx.font = `600 56px ${SERIF}`;
+  drawLines(ctx, wrap(ctx, `“${f.text}”`, W - 180, 7), 90, y + 110, 78);
   line(y);
 
   ctx.fillStyle = '#8b6a4f';
@@ -210,7 +172,6 @@ export async function openShare(app) {
     sceneCanvas: snap,
     name: app.myName,
     wish: book?.wishes[0]?.text,
-    tamAn: book?.meditation.last,
     fortune,
   });
   snap.width = 0;

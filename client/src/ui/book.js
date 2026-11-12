@@ -66,7 +66,7 @@ export async function openBook(app) {
   renderWishes();
 
   const fortunes = book.fortunes.length
-    ? h('ul', { class: 'book-list' }, book.fortunes.map((f) => h('li', {}, h('p', {}, f.text), h('p', { class: 'meta' }, `${f.date} · Số B/L ${f.bl}`))))
+    ? h('ul', { class: 'book-list' }, book.fortunes.map((f) => h('li', {}, h('p', {}, f.text), h('p', { class: 'meta' }, f.date))))
     : h('p', { class: 'muted' }, 'Chưa rút quẻ nào. Quán trà đang chờ bạn.');
 
   // Sổ cá: loài chưa bắt chỉ hiện gợi ý; quầy đổi quà màu áo quý bằng TEU ở ngay dưới.
@@ -120,8 +120,6 @@ export async function openBook(app) {
       stat('câu đố đã giải', book.riddleCorrect),
       stat('loài cá đã bắt', book.fish?.length ?? 0),
       stat('điểm đầu hồ cao nhất', book.pitch?.best),
-      stat('lượt Nhịp sen', book.meditation.sessions),
-      stat('độ chuẩn cao nhất (%)', book.meditation.best),
       stat('lần thỉnh chuông', book.bellCount),
       stat('sự kiện chuông đã cùng', book.bellEvents)),
     h('h3', { 'data-hanzi': '魚' }, 'Sổ cá'),

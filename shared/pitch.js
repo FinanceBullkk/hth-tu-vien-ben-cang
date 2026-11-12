@@ -18,9 +18,9 @@ export const PITCH = {
   sampleMs: 100,
   comboPoints: [10, 15, 15, 20, 25, 30, 35, 45, 50], // Điểm cho combo 1, 2, 3...; từ combo 9 giữ mức 50.
   opponents: [
-    { name: 'Chú tiểu Mõ', blurb: 'Mới học ném, hay trượt.', hitChance: 0.55, radius: 0.2, fillMs: 1300, drift: 0.16, wobble: 0.025, dualChance: 0.3, rank: 'B' },
-    { name: 'Sư huynh Thẻ', blurb: 'Tay chắc, ném đều.', hitChance: 0.72, radius: 0.165, fillMs: 1500, drift: 0.24, wobble: 0.04, dualChance: 0.5, rank: 'A' },
-    { name: 'Lão tăng Mười Năm', blurb: 'Mười năm chưa gặp đối thủ.', hitChance: 0.8, radius: 0.125, dualRadius: 0.165, fillMs: 1400, drift: 0.34, wobble: 0.055, dualChance: 0.5, rank: 'S' },
+    { name: 'A Phi', blurb: 'Mới học ném, hay trượt.', hitChance: 0.55, radius: 0.2, fillMs: 1300, drift: 0.16, wobble: 0.025, dualChance: 0.3, rank: 'B' },
+    { name: 'Lục Vân', blurb: 'Tay chắc, ném đều.', hitChance: 0.72, radius: 0.165, fillMs: 1500, drift: 0.24, wobble: 0.04, dualChance: 0.5, rank: 'A' },
+    { name: 'Kiếm Tôn Vô Danh', blurb: 'Mười năm chưa gặp đối thủ.', hitChance: 0.8, radius: 0.125, dualRadius: 0.165, fillMs: 1400, drift: 0.34, wobble: 0.055, dualChance: 0.5, rank: 'S' },
   ],
 };
 

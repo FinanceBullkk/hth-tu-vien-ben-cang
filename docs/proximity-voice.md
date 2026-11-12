@@ -4,13 +4,13 @@ Goose Goose Duck style nearby conversation. No meetings or voting mechanics.
 
 ## Controls
 
-- HUD shows only a microphone icon. Click it to expand/collapse voice controls; clicking outside or pressing Escape closes them. A slash indicates muted capture, gold indicates voice joined, and green indicates transmission. Controls remain available by keyboard and on touch screens.
-- Click **Bật voice**, then allow microphone access. Default mode is **Giữ để nói**: hold **V** or the touch button. Release to mute.
+- Entering starts voice and requests microphone permission, with capture muted. The microphone button toggles continuous speech; slash means muted, green means unmuted, and glow means transmitting. Names of nearby speakers appear beside the button and glow above their avatars.
+- Click **⋯** to open settings; clicking outside or pressing Escape closes them. Choose **Giữ để nói** to hold **V** or the touch button after unmuting. Release to stop transmission.
 - To hear your own mic, click **Thử mic** even while voice is off. It disables voice, records three seconds in browser memory, releases capture, then plays that recording locally. **Hủy thử mic**, leaving the page, or disconnecting discards the recording. Nothing is uploaded; playback completion also discards it. Normal voice never echoes your own microphone.
 - Choose **Mic mở** for continuous speech. **Tắt nghe** silences received voice and your microphone. Voice volume is separate from music/game effects and saved locally.
 - Full volume within 3 m; fades to silence at 18 m. Existing links close beyond 22 m to avoid reconnect churn at the audible boundary. A speaking player's name glows green.
 - Each participant has at most six nearby connections. In dense groups some neighbors will not be connected. Existing links take priority to avoid churn.
-- Voice stays off until explicitly enabled each session. Clicking **Tắt voice**, changing tabs, leaving the page, losing the game connection, being kicked, or opening the same player in another tab releases microphone capture. Returning/reconnecting requires enabling voice again.
+- Voice connects on entry with muted capture. Clicking **Tắt voice**, changing tabs, leaving the page, losing the game connection, being kicked, or opening the same player in another tab releases microphone capture. Returning/reconnecting requires enabling voice again.
 - Losing focus, entering a text field/modal, or playing rhythm/meditation mutes transmission. Open-mic mode resumes after these conditions clear. Deafen also mutes transmission.
 - Voice panel stays visible during minigames so capture can always be stopped. Live voice is not recorded or stored; only the explicit local mic test temporarily records in browser memory.
 

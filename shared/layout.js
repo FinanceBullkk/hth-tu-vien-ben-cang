@@ -54,6 +54,11 @@ export const LAKE = {
   sign: { x: 23, z: 17, r: 0.14 },
 };
 // Sân đầu hồ cạnh bãi container: người chơi đứng ở seat, quay về phía tây nhìn hai bình (trái của mình, phải của đối thủ).
+export const MELODY_ZONE = {
+  x: 8, z: 21.5, radius: 2,
+  seat: { x: 8, z: 21.5, rot: -Math.PI / 2 },
+  camera: { pos: { x: 4.1, y: 1.9, z: 19.4 }, look: { x: 8, y: 0.5, z: 21.5 } },
+};
 export const PITCH_ZONE = {
   x: 25,
   z: 3,
@@ -67,12 +72,12 @@ export const PITCH_ZONE = {
 
 // Menu "Chơi gì?": mỗi trò một chỗ đứng hợp lệ, chọn là được đưa tới và bắt đầu luôn.
 export const PLACES = [
+  { key: 'melody', icon: '♫', name: 'Tấu nhạc', desc: 'Độc tấu đàn nhị · sáu phím theo nhạc', x: 8, z: 21.5 },
   { key: 'fish', icon: '🎣', name: 'Câu cá', desc: 'Thả câu ở hồ, gom đủ các loài cá', x: 19, z: 16.7 },
-  { key: 'bell', icon: '🔔', name: 'Thỉnh chuông', desc: 'Bấm theo nhịp để chuông ngân', x: BELL.x, z: BELL.z + 3.2 },
-  { key: 'mat', icon: '🪷', name: 'Ngồi thiền', desc: 'Bấm theo nhịp cho sen nở', x: 0, z: -15.6 },
-  { key: 'pitch', icon: '🏺', name: 'Đầu hồ', desc: 'Ném tên vào bình, đấu với sư trong chùa', x: 23.4, z: 3 },
-  { key: 'riddle', icon: '📜', name: 'Câu đố của sư chú', desc: 'Đoán vui về nghề logistics', x: 3.2, z: 26.6 },
-  { key: 'tea', icon: '🍵', name: 'Rút quẻ vận đơn', desc: 'Lắc ống quẻ xin lời chúc hôm nay', x: TEA.x, z: TEA.z - 2.4 },
+  { key: 'bell', icon: '🔔', name: 'Audition chuông', desc: 'Nhập chuỗi mũi tên, chốt đúng nhịp', x: BELL.x, z: BELL.z + 3.2 },
+  { key: 'mat', icon: '🪷', name: 'Ngồi thiền', desc: 'Ngồi yên, thở chậm một lát', x: 0, z: -15.6 },
+  { key: 'pitch', icon: '🏺', name: 'Đầu hồ', desc: 'Ném tên vào bình, so tài cùng cao thủ', x: 23.4, z: 3 },
+  { key: 'tea', icon: '🍵', name: 'Rút xăm', desc: 'Lắc ống xăm xin lời chúc hôm nay', x: TEA.x, z: TEA.z - 2.4 },
   { key: 'tree', icon: '🌳', name: 'Treo lời ước', desc: 'Viết điều mong muốn lên cây bồ đề', x: TREE.x + 3, z: TREE.z },
 ];
 

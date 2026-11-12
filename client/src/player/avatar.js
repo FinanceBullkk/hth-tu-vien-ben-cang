@@ -5,7 +5,9 @@ import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { ACTIVITY, ACTIVITY_LABEL, SHIRT_COLORS } from '../../../shared/protocol.js';
 import { createAttire } from './avatar-attire.js';
 import { createWeapon } from './avatar-weapon.js';
+import { createInstrument } from './avatar-instrument.js';
 import { createEffect } from './avatar-effect.js';
+import { applyAvatarTitle } from './avatar-title.js';
 
 const G = {
   body: new THREE.CylinderGeometry(0.17, 0.25, 0.5, 8),
@@ -22,6 +24,16 @@ const G = {
   visor: new THREE.BoxGeometry(0.34, 0.03, 0.2),
   conical: new THREE.ConeGeometry(0.58, 0.34, 12),
   brim: new THREE.TorusGeometry(0.33, 0.035, 5, 14),
+  // Kiểu tóc và mũ tiên hiệp: trâm, dây buộc búi, mai tóc bên, đạo quan, kim quan, màn sa.
+  hairpin: new THREE.CylinderGeometry(0.018, 0.018, 0.34, 6),
+  cord: new THREE.TorusGeometry(0.09, 0.013, 5, 12),
+  sideLock: new THREE.BoxGeometry(0.07, 0.34, 0.07),
+  crown: new THREE.CylinderGeometry(0.15, 0.17, 0.13, 10),
+  quanBand: new THREE.TorusGeometry(0.165, 0.012, 5, 14),
+  quan: new THREE.TorusGeometry(0.3, 0.045, 6, 18),
+  gem: new THREE.OctahedronGeometry(0.055, 0),
+  wideConical: new THREE.ConeGeometry(0.68, 0.36, 14),
+  veil: new THREE.CylinderGeometry(0.66, 0.44, 0.34, 14, 1, true),
   halo: (() => {
     const g = new THREE.RingGeometry(0.5, 0.82, 28);
     g.rotateX(-Math.PI / 2);
@@ -37,8 +49,17 @@ const M = {
   conical: new THREE.MeshLambertMaterial({ color: 0xdcc58c, flatShading: true }),
   helmet: new THREE.MeshLambertMaterial({ color: 0xf2c230, flatShading: true }),
   cap: new THREE.MeshLambertMaterial({ color: 0x2f6d9e, flatShading: true }),
+  jade: new THREE.MeshLambertMaterial({ color: 0x3f9e7d, flatShading: true }),
+  hairWhite: new THREE.MeshLambertMaterial({ color: 0xdfe3ea, flatShading: true }),
+  red: new THREE.MeshLambertMaterial({ color: 0xc23b22, flatShading: true }),
+  ink: new THREE.MeshLambertMaterial({ color: 0x2b3a52, flatShading: true }),
+  veil: new THREE.MeshLambertMaterial({ color: 0xf2ead8, transparent: true, opacity: 0.38, side: THREE.DoubleSide, depthWrite: false }),
   halo: new THREE.MeshBasicMaterial({ color: 0xffd98a, transparent: true, opacity: 0.45, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }),
 };
+
+// Vòm mũ to hơn mái tóc bên dưới một chút để hai mặt cong không trùng nhau nhòe hình.
+G.capDome = G.hairTop.clone();
+G.capDome.scale(1.06, 1.08, 1.06);
 
 const shirtCache = new Map();
 function shirtMat(i) {
@@ -55,9 +76,10 @@ function mesh(geo, mat, x = 0, y = 0, z = 0, shadow = true) {
   return m;
 }
 
-function buildHat(hat) {
+// Kiểu tóc dựng riêng khỏi mũ để kết hợp tự do (shared/protocol.js: HAIR_NAMES).
+function buildHair(hair) {
   const g = new THREE.Group();
-  switch (hat) {
+  switch (hair) {
     case 1: { // Tóc dài
       const top = mesh(G.hairTop, M.hair);
       top.rotation.x = -0.28;
@@ -70,24 +92,36 @@ function buildHat(hat) {
       g.add(top, mesh(G.bun, M.hair, 0, 0.3, -0.14));
       break;
     }
-    case 3: { // Mũ lưỡi trai
-      const top = mesh(G.hairTop, M.cap);
-      top.rotation.x = -0.18;
-      g.add(top, mesh(G.visor, M.cap, 0, 0.06, 0.32));
-      break;
-    }
-    case 4: { // Nón lá
+    case 3: { // Búi trâm ngọc: búi cao cài trâm ngọc, đầu trâm chấm vàng
       const top = mesh(G.hairTop, M.hair);
-      top.rotation.x = -0.25;
-      g.add(top, mesh(G.conical, M.conical, 0, 0.27, 0));
+      top.rotation.x = -0.22;
+      const pin = mesh(G.hairpin, M.jade, 0.02, 0.33, -0.14);
+      pin.rotation.z = Math.PI / 2;
+      g.add(top, mesh(G.bun, M.hair, 0, 0.3, -0.14), pin, mesh(G.gem, M.helmet, 0.19, 0.33, -0.14));
       break;
     }
-    case 5: { // Mũ bảo hộ
-      const top = mesh(G.hairTop, M.helmet);
-      top.rotation.x = -0.1;
-      const brim = mesh(G.brim, M.helmet, 0, 0.04, 0.01);
-      brim.rotation.x = Math.PI / 2;
-      g.add(top, brim);
+    case 4: { // Song loạn: hai búi nhỏ hai bên đầu, chân búi buộc chỉ hồng
+      const top = mesh(G.hairTop, M.hair);
+      top.rotation.x = -0.24;
+      for (const s of [-1, 1]) {
+        const bun = mesh(G.bun, M.hair, 0.18 * s, 0.26, -0.04);
+        bun.scale.setScalar(0.8);
+        const cord = mesh(G.cord, M.red, 0.18 * s, 0.19, -0.04);
+        cord.rotation.x = Math.PI / 2;
+        g.add(bun, cord);
+      }
+      g.add(top);
+      break;
+    }
+    case 5: { // Bạch phát: tóc dài bạc trắng kèm mai tóc hai bên
+      const top = mesh(G.hairTop, M.hairWhite);
+      top.rotation.x = -0.28;
+      g.add(
+        top,
+        mesh(G.hairBack, M.hairWhite, 0, -0.14, -0.2),
+        mesh(G.sideLock, M.hairWhite, -0.21, -0.02, 0.1),
+        mesh(G.sideLock, M.hairWhite, 0.21, -0.02, 0.1),
+      );
       break;
     }
     default: { // Tóc ngắn
@@ -99,10 +133,68 @@ function buildHat(hat) {
   return g;
 }
 
+// Kiểu tóc đã có búi giữa đầu: đạo quan khỏi thêm búi đế nữa.
+const HAS_BUN = new Set([2, 3]);
+
+function buildHat(hat, hair) {
+  const g = new THREE.Group();
+  switch (hat) {
+    case 3: { // Mũ lưỡi trai
+      const dome = mesh(G.capDome, M.cap);
+      dome.rotation.x = -0.18;
+      g.add(dome, mesh(G.visor, M.cap, 0, 0.06, 0.32));
+      break;
+    }
+    case 4: { // Nón lá
+      g.add(mesh(G.conical, M.conical, 0, 0.27, 0));
+      break;
+    }
+    case 5: { // Mũ bảo hộ
+      const dome = mesh(G.capDome, M.helmet);
+      dome.rotation.x = -0.1;
+      const brim = mesh(G.brim, M.helmet, 0, 0.04, 0.01);
+      brim.rotation.x = Math.PI / 2;
+      g.add(dome, brim);
+      break;
+    }
+    case 7: { // Đạo quan: trụ mực lam có vành vàng, đội trên búi tóc
+      if (!HAS_BUN.has(hair)) g.add(mesh(G.bun, hair === 5 ? M.hairWhite : M.hair, 0, 0.3, -0.14));
+      const band = mesh(G.quanBand, M.helmet, 0, 0.355, -0.14);
+      band.rotation.x = Math.PI / 2;
+      g.add(mesh(G.crown, M.ink, 0, 0.41, -0.14), band);
+      break;
+    }
+    case 8: { // Kim quan: vành vàng vòng đỉnh đầu, ngọc bích trước trán
+      const quan = mesh(G.quan, M.helmet, 0, 0.22, 0);
+      quan.rotation.x = Math.PI / 2;
+      g.add(quan, mesh(G.gem, M.jade, 0, 0.25, 0.3));
+      break;
+    }
+    case 9: { // Nón lá màn sa: vành rộng hơn nón lá, rơi màn mờ che mặt
+      g.add(mesh(G.wideConical, M.conical, 0, 0.3, 0), mesh(G.veil, M.veil, 0, -0.05, 0, false));
+      break;
+    }
+    default: break; // Không đội (6) và id cũ: chỉ tóc
+  }
+  return g;
+}
+
+// Ghép tóc + mũ thành một nhóm gắn trên đầu. hat 0-2 là id cũ trộn tóc vào mũ:
+// hiện đúng kiểu tóc theo id hat và bỏ slot tóc, để client cũ và NPC giữ nguyên hình.
+function buildLook(hat, hair) {
+  const g = new THREE.Group();
+  const style = hat <= 2 ? hat : hair;
+  g.add(buildHair(style));
+  if (hat >= 3) g.add(buildHat(hat, style));
+  return g;
+}
+
 export class Avatar {
-  constructor({ name, color = 0, hat = 0, attire = 0, weapon = 0, effect = 0, lowQuality = false, isLocal = false }) {
+  constructor({ name, color = 0, hat = 0, hair, attire = 0, weapon = 0, effect = 0, lowQuality = false, isLocal = false }) {
     this.isLocal = isLocal;
     this.name = name;
+    // Caller cũ không truyền hair (NPC, client cũ): id hat 0-2 chính là kiểu tóc cũ.
+    this.hairIndex = hair ?? (hat <= 2 ? hat : 0);
     this.attireIndex = attire;
     this.weaponIndex = weapon;
     this.effectIndex = effect;
@@ -116,7 +208,7 @@ export class Avatar {
     this.head.position.y = 1.07;
     this.head.add(mesh(G.head, M.skin));
     this.head.add(mesh(G.eye, M.eye, -0.11, 0.03, 0.27, false), mesh(G.eye, M.eye, 0.11, 0.03, 0.27, false));
-    this.hatGroup = buildHat(hat);
+    this.hatGroup = buildLook(hat, this.hairIndex);
     this.head.add(this.hatGroup);
 
     const limb = (x, y, mat) => {
@@ -140,7 +232,12 @@ export class Avatar {
     this.rig.add(this.weaponFx.group);
 
     this.aura = createEffect(effect, lowQuality);
-    if (this.aura.points) this.root.add(this.aura.points);
+    if (this.aura.points) {
+      this.root.add(this.aura.points);
+      // Aura tự quản lý fade qua setOpacity(f): đánh dấu qiOwned để fadeOut không nhân
+      // bản material của nó — nếu bị clone, các lớp shader giữ uniform cũ và không tan.
+      this.aura.points.traverse((o) => { o.userData.qiOwned = true; });
+    }
     this.aura.setWeapon?.(weapon);
 
     this.halo = new THREE.Mesh(G.halo, M.halo);
@@ -157,11 +254,17 @@ export class Avatar {
     this.nameEl = document.createElement('div');
     this.nameEl.className = isLocal ? 'tag-name me' : 'tag-name';
     this.nameEl.textContent = name;
+    this.titleEl = document.createElement('div');
+    this.titleEl.className = 'tag-title';
+    applyAvatarTitle(this.tagEl, this.titleEl, effect);
     this.statusEl = document.createElement('div');
     this.statusEl.className = 'tag-status';
     this.statusEl.hidden = true;
-    this.tagEl.append(this.bubbleEl, this.nameEl, this.statusEl);
+    this.tagEl.append(this.bubbleEl, this.titleEl, this.nameEl, this.statusEl);
     this.label = new CSS2DObject(this.tagEl);
+    // Neo đáy nhãn vào điểm trên đầu: nhãn luôn mọc lên trời, không trùm xuống
+    // che người khi nhìn từ xa — CSS2D mặc định căn giữa nên nửa dưới đè lên đầu.
+    this.label.center.set(0.5, 1);
     this.label.position.y = 1.72;
     this.root.add(this.label);
 
@@ -169,6 +272,9 @@ export class Avatar {
     this.walkAmt = 0;
     this.sitAmt = 0;
     this.waveT = 0;
+    this.slashT = 0;
+    this.flinchT = 0;
+    this.inCombat = false;
     this.activity = ACTIVITY.none;
     this.bubbleTimer = 0;
     this.fading = 0;
@@ -180,7 +286,7 @@ export class Avatar {
     this.nameEl.textContent = name;
   }
 
-  setLook(color, hat, attire = this.attireIndex, weapon = this.weaponIndex, effect = this.effectIndex) {
+  setLook(color, hat, hair = this.hairIndex, attire = this.attireIndex, weapon = this.weaponIndex, effect = this.effectIndex) {
     const mat = shirtMat(color);
     this.body.material = mat;
     this.armL.children[0].material = mat;
@@ -205,28 +311,47 @@ export class Avatar {
     }
     if (effect !== this.effectIndex) {
       this.effectIndex = effect;
+      applyAvatarTitle(this.tagEl, this.titleEl, effect);
       if (this.aura.points) {
         this.root.remove(this.aura.points);
         this.aura.dispose();
       }
       this.aura = createEffect(effect, this.lowQuality);
+      this.aura.setWeapon?.(weapon);
       if (this.aura.points) {
         if (this.fading > 0) this.aura.beginFade();
         this.root.add(this.aura.points);
+        this.aura.points.traverse((o) => { o.userData.qiOwned = true; });
       }
     }
     this.head.remove(this.hatGroup);
-    this.hatGroup = buildHat(hat);
+    this.hairIndex = hair;
+    this.hatGroup = buildLook(hat, hair);
     this.head.add(this.hatGroup);
   }
 
   setActivity(code) {
     if (code === this.activity) return;
     this.activity = code;
-    const label = ACTIVITY_LABEL[code];
+    this.renderStatus();
+    if (code === ACTIVITY.melody && !this.instrument) {
+      this.instrument = createInstrument();
+      this.rig.add(this.instrument.group);
+    }
+    if (this.instrument) this.instrument.group.visible = code === ACTIVITY.melody;
+    this.weaponFx.group.visible = code !== ACTIVITY.melody;
+    this.halo.visible = code === ACTIVITY.meditate;
+  }
+
+  setCombatStatus(label) {
+    this.combatStatus = label;
+    this.renderStatus();
+  }
+
+  renderStatus() {
+    const label = [ACTIVITY_LABEL[this.activity], this.combatStatus].filter(Boolean).join(' · ');
     this.statusEl.hidden = !label;
     this.statusEl.textContent = label || '';
-    this.halo.visible = code === ACTIVITY.meditate;
   }
 
   say(text, ms = 5000) {
@@ -240,11 +365,64 @@ export class Avatar {
     this.waveT = 1.8;
   }
 
+  slash() {
+    this.slashT = 0.32;
+  }
+
+  flinch() {
+    this.flinchT = 0.22;
+  }
+
+  setCombat(inCombat) {
+    if (this.inCombat === inCombat) return;
+    this.inCombat = inCombat;
+    if (inCombat) {
+      if (!this.combatSword) {
+        const g = new THREE.Group();
+        const blade = new THREE.Mesh(
+          new THREE.BoxGeometry(0.045, 0.65, 0.014),
+          new THREE.MeshLambertMaterial({
+            color: 0xe8f4ff,
+            emissive: 0x5a9be6,
+            emissiveIntensity: 0.45,
+            flatShading: true,
+          })
+        );
+        blade.position.y = 0.32;
+        const guard = new THREE.Mesh(
+          new THREE.BoxGeometry(0.12, 0.024, 0.035),
+          new THREE.MeshLambertMaterial({ color: 0xdfb14e, flatShading: true })
+        );
+        guard.position.y = 0.02;
+        const grip = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.016, 0.018, 0.14, 6),
+          new THREE.MeshLambertMaterial({ color: 0x6e2c22, flatShading: true })
+        );
+        grip.position.y = -0.06;
+        g.add(blade, guard, grip);
+        g.position.set(0, -0.22, 0.06);
+        g.rotation.set(-Math.PI / 2 + 0.35, 0, 0);
+        this.combatSword = g;
+      }
+      this.armR.add(this.combatSword);
+      this.combatSword.visible = true;
+      if (this.weaponFx?.group) this.weaponFx.group.visible = false;
+    } else {
+      if (this.combatSword) {
+        this.combatSword.visible = false;
+        this.armR.remove(this.combatSword);
+      }
+      if (this.weaponFx?.group && this.activity !== ACTIVITY.melody) {
+        this.weaponFx.group.visible = true;
+      }
+    }
+  }
+
   /** Bắt đầu mờ dần khi người chơi rời đi. */
   fadeOut() {
     this.fading = 1;
     this.root.traverse((o) => {
-      if (o.isMesh && o !== this.halo) {
+      if (o.isMesh && o !== this.halo && !o.userData.qiOwned) {
         o.material = o.material.clone();
         o.material.transparent = true;
         o.castShadow = false;
@@ -259,7 +437,7 @@ export class Avatar {
   update(dt, moving, cameraDist = 0) {
     this.time += dt;
     const t = this.time;
-    const sit = this.activity === ACTIVITY.meditate;
+    const sit = this.activity === ACTIVITY.meditate || this.activity === ACTIVITY.melody;
 
     this.walkAmt += ((moving ? 1 : 0) - this.walkAmt) * Math.min(1, dt * 10);
     this.sitAmt += ((sit ? 1 : 0) - this.sitAmt) * Math.min(1, dt * 6);
@@ -298,10 +476,41 @@ export class Avatar {
       armLz = -0.15 * this.sitAmt;
       armRz = 0.15 * this.sitAmt;
     }
-    if (this.waveT > 0) {
+    if (this.activity === ACTIVITY.melody) {
+      armLx = -1.5; armLz = -0.15;
+      armRx = -1.05; armRz = 0.3 + Math.sin(t * 3) * 0.2;
+      this.instrument?.update(t);
+    }
+    if (this.inCombat && !moving && this.slashT <= 0 && this.activity !== ACTIVITY.melody) {
+      armRx = -0.75;
+      armRz = 0.25;
+      armLx = -0.45;
+      armLz = -0.2;
+    }
+    if (this.waveT > 0 && this.activity !== ACTIVITY.melody) {
       this.waveT -= dt;
       armRx = 0;
       armRz = 2.5 + Math.sin(t * 14) * 0.35;
+    }
+    if (this.slashT > 0 && this.activity !== ACTIVITY.melody) {
+      this.slashT -= dt;
+      const progress = 1 - Math.max(0, this.slashT / 0.32);
+      const p = Math.sin(progress * Math.PI);
+      armRx = -2.2 + progress * 1.8;
+      armRz = -0.6 + progress * 1.4;
+      this.body.rotation.y = p * 0.45;
+      this.body.rotation.x = p * 0.2;
+    } else {
+      this.body.rotation.y = 0;
+      this.body.rotation.x = 0;
+    }
+    if (this.flinchT > 0) {
+      this.flinchT -= dt;
+      const f = Math.sin((this.flinchT / 0.22) * Math.PI);
+      this.body.rotation.x = -f * 0.35;
+      this.rig.position.z = -f * 0.15;
+    } else if (this.slashT <= 0) {
+      this.rig.position.z = 0;
     }
     this.armL.rotation.set(armLx, 0, armLz);
     this.armR.rotation.set(armRx, 0, armRz);
@@ -313,7 +522,7 @@ export class Avatar {
     this.body.scale.y = 1 + breathe * 2;
     this.attire.update?.(t, this.walkAmt, this.sitAmt);
     this.weaponFx.update?.(t, this.walkAmt);
-    this.aura.update?.(t, this.walkAmt);
+    this.aura.update?.(t, this.walkAmt, cameraDist);
 
     if (this.halo.visible) {
       const pulse = 1 + Math.sin(t * 1.05) * 0.14;
@@ -324,7 +533,15 @@ export class Avatar {
       this.bubbleTimer -= dt;
       if (this.bubbleTimer <= 0) this.bubbleEl.hidden = true;
     }
-    this.label.visible = cameraDist < 48;
+    // Nhãn mờ dần theo khoảng cách (đậm nguyên đến 16 đơn vị, tan hẳn ở 48) để
+    // nhìn người ở xa thì tên không đè lên hào quang phía trên đầu; nhãn cũng
+    // tan theo khi người chơi rời đi.
+    const tagAlpha = Math.min(
+      this.fading > 0 ? this.fading : 1,
+      Math.max(0, Math.min(1, (48 - cameraDist) / 32)),
+    );
+    this.label.visible = tagAlpha > 0;
+    this.tagEl.style.opacity = tagAlpha < 1 ? String(tagAlpha) : '';
 
     if (this.fading > 0) {
       this.fading = Math.max(0, this.fading - dt / 0.9);
@@ -332,7 +549,6 @@ export class Avatar {
         if (o.isMesh && o !== this.halo && o.material.transparent) o.material.opacity = this.fading;
       });
       if (this.aura.points) this.aura.points.material.opacity = this.fading * 0.9;
-      this.tagEl.style.opacity = String(this.fading);
     }
   }
 
@@ -342,8 +558,16 @@ export class Avatar {
     this.tagEl.remove();
     this.label.removeFromParent();
     this.root.traverse((o) => {
-      if (o.isMesh && o !== this.halo && o.material.transparent) o.material.dispose();
+      if (o.isMesh && o !== this.halo && o.material.transparent && !o.userData.qiOwned) o.material.dispose();
     });
     if (this.aura.points) this.aura.dispose();
+    if (this.combatSword) {
+      this.armR.remove(this.combatSword);
+      this.combatSword.traverse((o) => {
+        o.geometry?.dispose();
+        o.material?.dispose();
+      });
+      this.combatSword = null;
+    }
   }
 }

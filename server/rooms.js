@@ -12,7 +12,7 @@ export const PLAYERS_ROOM = 'players';
 
 const TICK_MS = 100;
 const FULL_STATE_EVERY = 20; // Mỗi 2 giây gửi đủ, phòng khi gói volatile bị rơi.
-const GHOST_MS = 10_000;
+const GHOST_MS = 15_000;
 const KICK_BLOCK_MS = 60_000;
 const HELLO_TIMEOUT_MS = 20_000; // Kết nối mà không vào phòng thì ngắt, tránh chiếm chỗ.
 const MAX_EVENTS_PER_SEC = 60; // Người chơi thật khoảng 15/giây; vượt thì bỏ gói.
@@ -23,7 +23,7 @@ const SIT_INTERVAL_MS = 1000; // Ngồi xuống phát tin cho cả phòng nên p
 const round2 = (n) => Math.round(n * 100) / 100;
 
 export class Room {
-  constructor({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch }) {
+  constructor({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch, melody, pk }) {
     this.io = io;
     this.broadcast = io.to(PLAYERS_ROOM);
     this.db = db;
@@ -36,7 +36,11 @@ export class Room {
     this.riddle = riddle;
     this.fishing = fishing;
     this.pitch = pitch;
+    this.melody = melody;
+    this.pk = pk;
+    if (this.pk) this.pk.onKnockout = (player) => this.onActionStop(player);
     this.players = new Map(); // sid -> player
+    this.pk?.bind(this.players);
     this.voice = new Voice(this.players);
     this.byPid = new Map();
     this.kicked = new Map(); // pid -> hết hạn chặn
@@ -70,6 +74,7 @@ export class Room {
       sid: p.sid,
       name: p.name,
       color: p.color,
+      hair: p.hair,
       hat: p.hat,
       attire: p.attire,
       weapon: p.weapon,
@@ -79,6 +84,7 @@ export class Room {
       rot: p.rot,
       anim: p.anim,
       activity: p.activity,
+      combat: this.pk?.state(p),
     };
   }
 
@@ -105,6 +111,8 @@ export class Room {
       this.voice.sync();
       this.fishing.sweep(this.players);
       this.pitch.sweep(this.players);
+      this.melody?.sweep();
+      this.pk?.sweep();
     }
   }
 
@@ -156,6 +164,10 @@ export class Room {
             ack?.({ ok: false, error: 'Chưa vào phòng.' });
             return;
           }
+          if (player?.melody && /^(action:start|rhythm:|fish:|pitch:|riddle:)/.test(event)) {
+            ack?.({ ok: false, error: 'Rời sân đàn trước nhé.' });
+            return;
+          }
           const result = handler(player, args[0]);
           ack?.(result ?? { ok: true });
         } catch (err) {
@@ -188,6 +200,9 @@ export class Room {
     on('fish:pull', (p, data) => this.fishing.pull(p, data));
     on('fish:reel', (p) => this.fishing.reel(p));
     on('fish:cancel', (p) => this.fishing.cancel(p));
+    on('melody:start', (p) => this.melody.start(p));
+    on('melody:hit', (p, data) => this.melody.hit(p, data));
+    on('melody:finish', (p, data) => this.melody.finish(p, data));
     on('pitch:start', (p, data) => this.pitch.start(p, data));
     on('pitch:aim', (p, data) => this.pitch.aim(p, data));
     on('pitch:throw', (p, data) => this.pitch.throw(p, data));
@@ -196,6 +211,8 @@ export class Room {
     on('wish:delete', (p, data) => this.wishes.remove(p, data));
     on('fortune:draw', (p) => this.wishes.drawFortune(p));
     on('cosmetic:unlock', (p, data) => this.onUnlock(p, data));
+    on('pk:attack', (p, data) => this.pk.attack(p, data));
+    on('pk:skill', (p, data) => this.pk.skill(p, data));
 
     socket.on('disconnect', () => this.onDisconnect(socket));
   }
@@ -228,6 +245,9 @@ export class Room {
 
     let color = clampInt(data?.color, AVATAR.colors);
     const hat = clampInt(data?.hat, AVATAR.hats);
+    // Client bản cũ không có slot tóc: id hat 0-2 là kiểu tóc, di trú sang slot tóc
+    // để người chơi cũ giữ nguyên ngoại hình; hair lệch phạm vi thì rớt về tóc ngắn.
+    const hair = data?.hair === undefined ? (hat <= 2 ? hat : 0) : clampInt(data.hair, AVATAR.hairs);
     const attire = clampInt(data?.attire, AVATAR.attires);
     const weapon = clampInt(data?.weapon, AVATAR.weapons);
     const effect = clampInt(data?.effect, AVATAR.effects);
@@ -265,6 +285,7 @@ export class Room {
       player.socket = socket;
       // Nhân vật có thể đổi đồ giữa hai lần vào: cập nhật luôn ngoại hình mới.
       player.color = color;
+      player.hair = hair;
       player.hat = hat;
       player.attire = attire;
       player.weapon = weapon;
@@ -276,6 +297,7 @@ export class Room {
         pid,
         name: this.dedupeName(baseName, pid),
         color,
+        hair,
         hat,
         attire,
         weapon,
@@ -306,7 +328,7 @@ export class Room {
     socket.join(PLAYERS_ROOM);
 
     const date = localDate(now, this.config.timezone);
-    this.db.touchPlayer({ id: pid, name: player.name, color: player.color, hat: player.hat, attire: player.attire, weapon: player.weapon, effect: player.effect, now, isVisit: !isResume });
+    this.db.touchPlayer({ id: pid, name: player.name, color: player.color, hair: player.hair, hat: player.hat, attire: player.attire, weapon: player.weapon, effect: player.effect, now, isVisit: !isResume });
     if (!isResume) {
       this.db.bumpStat(date, { visits: 1 });
       socket.to(PLAYERS_ROOM).emit('player:join', this.publicPlayer(player));
@@ -342,7 +364,9 @@ export class Room {
   }
 
   onMove(p, data) {
+    if (p.melody) return undefined;
     if (!Array.isArray(data) || data.length < 4) return undefined;
+
     // Chặn gửi quá dày: quá giới hạn trong cửa sổ 1 giây thì bỏ gói.
     const now = Date.now();
     if (now - p.moveWindow > 1000) {
@@ -432,6 +456,7 @@ export class Room {
     this.fishing.cancel(p);
     this.riddle.leave(p);
     this.pitch.leave(p);
+    this.melody?.leave(p);
     if (p.activity !== ACTIVITY.none) {
       p.activity = ACTIVITY.none;
       p.dirty = true;
@@ -486,6 +511,7 @@ export class Room {
     this.fishing.cancel(p);
     this.riddle.leave(p);
     this.pitch.leave(p);
+    this.melody?.leave(p);
     this.removePlayer(p);
     return true;
   }

@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import Database from 'better-sqlite3';
+import { pkTitleMask } from '../shared/pk.js';
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS players (
@@ -108,6 +109,15 @@ CREATE TABLE IF NOT EXISTS riddle_daily (
   correct INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (player_id, local_date)
 );
+CREATE TABLE IF NOT EXISTS pk_matches (
+  id TEXT PRIMARY KEY,
+  winner_id TEXT,
+  loser_id TEXT,
+  draw INTEGER NOT NULL DEFAULT 0,
+  local_date TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_pk_matches_week ON pk_matches(local_date, winner_id);
 `;
 
 function publicWish(row, playerId) {
@@ -139,7 +149,7 @@ export class Db {
   // CREATE TABLE IF NOT EXISTS không thêm cột cho DB cũ: kiểm tra rồi ALTER từng cột cosmetic.
   #migrate() {
     const have = new Set(this.db.pragma('table_info(players)').map((c) => c.name));
-    for (const col of ['attire', 'weapon', 'effect', 'teu', 'riddle_correct', 'pitch_best', 'unlocked']) {
+    for (const col of ['hair', 'attire', 'weapon', 'effect', 'teu', 'riddle_correct', 'pitch_best', 'unlocked', 'cultivation_tier', 'pk_wins', 'pk_losses', 'pk_title_mask', 'pk_title']) {
       if (!have.has(col)) this.db.exec(`ALTER TABLE players ADD COLUMN ${col} INTEGER NOT NULL DEFAULT 0`);
     }
   }
@@ -147,9 +157,9 @@ export class Db {
   #prepare() {
     const p = (sql) => this.db.prepare(sql);
     this.s = {
-      upsertPlayer: p(`INSERT INTO players (id,name,color,hat,attire,weapon,effect,first_seen,last_seen,visits)
-        VALUES (@id,@name,@color,@hat,@attire,@weapon,@effect,@now,@now,@inc)
-        ON CONFLICT(id) DO UPDATE SET name=@name,color=@color,hat=@hat,attire=@attire,weapon=@weapon,effect=@effect,last_seen=@now,visits=visits+@inc`),
+      upsertPlayer: p(`INSERT INTO players (id,name,color,hair,hat,attire,weapon,effect,first_seen,last_seen,visits)
+        VALUES (@id,@name,@color,@hair,@hat,@attire,@weapon,@effect,@now,@now,@inc)
+        ON CONFLICT(id) DO UPDATE SET name=@name,color=@color,hair=@hair,hat=@hat,attire=@attire,weapon=@weapon,effect=@effect,last_seen=@now,visits=visits+@inc`),
       player: p('SELECT * FROM players WHERE id=?'),
       bumpBell: p('UPDATE players SET bell_count=bell_count+1 WHERE id=?'),
       stat: p(`INSERT INTO daily_stats (local_date,visits,wishes,bells) VALUES (@d,@v,@w,@b)
@@ -219,6 +229,17 @@ export class Db {
       riddleCorrectBump: p('UPDATE players SET riddle_correct=riddle_correct+1 WHERE id=?'),
       // Mở khoá màu áo quý.
       unlockBump: p('UPDATE players SET unlocked=unlocked|@mask, teu=teu-@price WHERE id=@pid AND teu>=@price'),
+      pkMatchInsert: p(`INSERT OR IGNORE INTO pk_matches (id,winner_id,loser_id,draw,local_date,created_at)
+        VALUES (@id,@winner,@loser,@draw,@date,@now)`),
+      pkWin: p('UPDATE players SET pk_wins=pk_wins+1, pk_title_mask=@mask WHERE id=@pid'),
+      pkLoss: p('UPDATE players SET pk_losses=pk_losses+1 WHERE id=?'),
+      pkStats: p('SELECT pk_wins wins,pk_losses losses,pk_title_mask titleMask,pk_title title,cultivation_tier tier FROM players WHERE id=?'),
+      pkTitle: p('UPDATE players SET pk_title=? WHERE id=? AND (pk_title_mask & ?) != 0'),
+      pkWeekTop: p(`SELECT p.id player_id,p.name,p.pk_wins wins,p.pk_losses losses,
+        SUM(CASE WHEN m.winner_id=p.id THEN 1 ELSE 0 END) weekWins,
+        SUM(CASE WHEN m.loser_id=p.id THEN 1 ELSE 0 END) weekLosses
+        FROM players p JOIN pk_matches m ON m.winner_id=p.id OR m.loser_id=p.id
+        WHERE m.local_date>=@since GROUP BY p.id ORDER BY weekWins DESC, weekLosses ASC, p.name LIMIT 10`),
     };
     this.teuTx = this.db.transaction((pid, amount, reason, date, now) => {
       if (amount > 0) {
@@ -236,10 +257,18 @@ export class Db {
       for (const pid of players) this.s.bellEventPlayer.run(id, pid);
       return id;
     });
+    this.pkResultTx = this.db.transaction((result) => {
+      const inserted = this.s.pkMatchInsert.run(result).changes > 0;
+      if (!inserted || result.draw) return inserted;
+      const wins = (this.s.pkStats.get(result.winner)?.wins ?? 0) + 1;
+      this.s.pkWin.run({ pid: result.winner, mask: pkTitleMask(wins) });
+      this.s.pkLoss.run(result.loser);
+      return true;
+    });
   }
 
-  touchPlayer({ id, name, color, hat, attire = 0, weapon = 0, effect = 0, now, isVisit }) {
-    this.s.upsertPlayer.run({ id, name, color, hat, attire, weapon, effect, now, inc: isVisit ? 1 : 0 });
+  touchPlayer({ id, name, color, hair = 0, hat, attire = 0, weapon = 0, effect = 0, now, isVisit }) {
+    this.s.upsertPlayer.run({ id, name, color, hair, hat, attire, weapon, effect, now, inc: isVisit ? 1 : 0 });
   }
 
   playerRow(id) {
@@ -378,6 +407,7 @@ export class Db {
       teu: this.s.teuWeekTop.all({ since: weekStart }),
       fish: this.s.fishWeekTop.all({ since: weekStart }),
       pitch: this.s.pitchWeekTop.all({ since: weekStart }),
+      pk: this.s.pkWeekTop.all({ since: weekStart }),
     };
   }
 
@@ -396,6 +426,7 @@ export class Db {
       unlocked: player.unlocked ?? 0,
       riddleCorrect: player.riddle_correct ?? 0,
       pitch: { best: pitch.best, plays: pitch.plays },
+      pk: this.pkStats(playerId),
       fish: this.s.fishCaughtOf.all(playerId).map((f) => ({ id: f.fish_id, count: f.count, best: f.best_weight, firstAt: f.first_caught_at })),
       meditation: { sessions: med.sessions, best: med.best, last: med.last },
       wishes: this.s.wishesOf.all(playerId).map((r) => ({
@@ -412,6 +443,21 @@ export class Db {
         bl: f.bl_number,
       })),
     };
+  }
+
+  pkStats(playerId) {
+    return this.s.pkStats.get(playerId) ?? { wins: 0, losses: 0, titleMask: 0, title: 0, tier: 0 };
+  }
+
+  recordPkResult({ id, winner = null, loser = null, draw = false, date, now = Date.now() }) {
+    return this.pkResultTx({ id, winner, loser, draw: draw ? 1 : 0, date, now });
+  }
+
+  setPkTitle(playerId, bit) {
+    const n = Number(bit);
+    if (![0, 1, 2, 4, 8].includes(n)) return false;
+    if (n === 0) return this.db.prepare('UPDATE players SET pk_title=0 WHERE id=?').run(playerId).changes > 0;
+    return this.s.pkTitle.run(n, playerId, n).changes > 0;
   }
 
   close() {

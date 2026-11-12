@@ -5,7 +5,7 @@ import { ABBOT, floorHeight } from '../../../shared/layout.js';
 import { Avatar } from '../player/avatar.js';
 
 // Đổi tên hiển thị ở đây.
-const ABBOT_NAME = 'Trụ trì Ethan';
+const ABBOT_NAME = 'Zoeyy Gay';
 
 const GREET_RADIUS = 6;
 const GREET_COOLDOWN_S = 60;
@@ -14,14 +14,14 @@ const BOW_S = 1.4;
 const TAP_RANGE = 30;
 
 const GREETINGS = [
-  'A Di Đà Phật. Con lên chơi đấy à?',
-  'Lên chùa rồi thì để email ở dưới cảng nhé con.',
-  'Vào thiền đường ngồi một lát đi con, chiếu còn chỗ.',
-  'Chuông chiều nay con đã thỉnh chưa?',
+  'Hữu duyên gặp nhau. Thiếu hiệp lên chơi đấy à?',
+  'Lên Vân Đài rồi thì để email ở dưới cảng nhé.',
+  'Vào Tĩnh Tâm Các ngồi một lát đi, vẫn còn chiếu trống.',
+  'Chuông chiều nay thiếu hiệp đã đánh chưa?',
 ];
 
 const ADVICE = [
-  'Tàu nào rồi cũng cập bến, con ạ.',
+  'Tàu nào rồi cũng cập bến, thiếu hiệp ạ.',
   'Hàng chậm thì đợi, lòng đừng chậm theo.',
   'Deadline có cut-off, lòng từ bi thì không.',
   'Uống chén trà đi đã, tờ khai không chạy mất đâu.',
@@ -30,7 +30,7 @@ const ADVICE = [
   'Roll-over là chuyện của tàu, đừng để nó cuốn luôn cả ngày của con.',
   'Việc hôm nay làm hết sức, phần còn lại để sóng lo.',
   'Khách chưa trả lời thì mình hít thở. Khách trả lời rồi thì hít thở tiếp.',
-  'Con đã làm tốt hơn con nghĩ đấy.',
+  'Thiếu hiệp đã làm tốt hơn mình nghĩ đấy.',
 ];
 
 const MAT = {

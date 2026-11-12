@@ -4,7 +4,7 @@ import { GATE_MONK, floorHeight } from '../../../shared/layout.js';
 import { Avatar } from '../player/avatar.js';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
-const MONK_NAME = 'Sư chú Bừng';
+const MONK_NAME = 'Mặc Vũ';
 const GREET_RADIUS = 5;
 const GREET_COOLDOWN_S = 45;
 const FACE_RADIUS = 7;
@@ -13,8 +13,8 @@ const TAP_RANGE = 30;
 
 const GREETINGS = [
   'Câu đố miễn phí, đáp án đúng có TEU nhé!',
-  'Lên tu viện mà đầu óc vẫn ở cảng à? Đố một câu cho tỉnh.',
-  'Trả lời sai hai lần sư chú gợi ý cho.',
+  'Lên Vân Đài mà đầu óc vẫn ở cảng à? Đố một câu cho tỉnh.',
+  'Trả lời sai hai lần Mặc Vũ sẽ gợi ý.',
   'Mười câu một ngày, muốn đố nữa thì mai quay lại.',
 ];
 

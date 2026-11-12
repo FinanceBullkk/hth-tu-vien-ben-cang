@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="vi">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quy hoạch tu viện</title>
+<style>
+  body { margin: 0; background: #d5dfd6; color: #243f36; font: 16px Georgia, serif; }
+  canvas { display: block; touch-action: none; }
+  nav { position: fixed; top: 16px; left: 16px; right: 16px; padding: 16px; background: #fff9ebed; border: 1px solid #b5b39a; max-width: 420px; }
+  h1 { font-size: 24px; margin: 0 0 8px; }
+  p { margin: 8px 0; line-height: 1.4; }
+  button { background: #294e40; color: #fff9eb; border: 0; padding: 12px; cursor: pointer; font: inherit; }
+  button:focus-visible { outline: 3px solid #a7602d; outline-offset: 3px; }
+</style>
+<nav aria-label="Góc nhìn khuôn viên">
+  <h1>Tu viện bên cảng</h1>
+  <p>Trục chính thông thoáng. Vườn tĩnh phía bắc, sinh hoạt hai bên sân.</p>
+  <button data-view="overview">Toàn cảnh</button>
+  <button data-view="plan">Mặt bằng</button>
+  <button data-view="gate">Từ cổng</button>
+  <p>Kéo để xoay · Cuộn để phóng to</p>
+</nav>
+<script type="module">
+  import * as THREE from 'three';
+  import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+  import { createMonastery } from '/src/scene/monastery.js';
+  import { createWuxiaProps } from '/src/scene/wuxia-props.js';
+  import { FishingScene } from '/src/scene/fishing.js';
+  import { PitchPotCourt } from '/src/scene/pitch-pot-court.js';
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color('#d5dfd6');
+  const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 300);
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+  document.body.append(renderer.domElement);
+  scene.add(new THREE.HemisphereLight(0xfff5df, 0x657655, 2.3));
+  const sun = new THREE.DirectionalLight(0xffe5ba, 2);
+  sun.position.set(-35, 60, 30);
+  scene.add(sun);
+  createMonastery(scene);
+  createWuxiaProps(scene);
+  new FishingScene(scene);
+  new PitchPotCourt(scene);
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.maxPolarAngle = Math.PI / 2 - 0.04;
+  controls.maxDistance = 150;
+  controls.minDistance = 4;
+  const views = {
+    overview: { pos: [65, 70, 90], target: [0, 0, 0] },
+    plan: { pos: [0, 105, 0.01], target: [0, 0, 0] },
+    gate: { pos: [0, 5, 27], target: [0, 3, -18] },
+  };
+  function view(key) {
+    camera.position.fromArray(views[key].pos);
+    controls.target.fromArray(views[key].target);
+    controls.update();
+  }
+  document.querySelectorAll('button').forEach(button => button.onclick = () => view(button.dataset.view));
+  function resize() {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  }
+  addEventListener('resize', resize);
+  resize();
+  view('overview');
+  renderer.setAnimationLoop(() => renderer.render(scene, camera));
+</script>
+</html>

@@ -16,6 +16,9 @@ import { MeditationGarden } from './meditation-garden.js';
 import { createWuxiaProps } from './wuxia-props.js';
 import { renderPixelRatio } from './render-quality.js';
 
+import { createMelodyStage } from './melody-stage.js';
+import { PkVfx } from './pk-vfx.js';
+
 export class World {
   constructor(scene, lowQuality) {
     this.scene = scene;
@@ -40,6 +43,8 @@ export class World {
     this.wuxia = createWuxiaProps(scene);
     this.pitchCourt = new PitchPotCourt(scene);
     this.fishing = new FishingScene(scene);
+    this.melodyStage = createMelodyStage(scene);
+    this.pkVfx = new PkVfx(scene);
     this.bellPull = 0;
 
     this.bellSwing = 0;
@@ -82,6 +87,7 @@ export class World {
     this.meditation.update(nowMs);
     this.wuxia.update(dt, night);
     this.fishing.update(dt, nowMs);
+    this.pkVfx.update(dt);
 
     this.lanternBoost = Math.max(0, this.lanternBoost - dt * 0.12);
     const flick = 0.94 + Math.sin(this.time * 9.1) * 0.04 + Math.sin(this.time * 17.3) * 0.02;

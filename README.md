@@ -1,6 +1,6 @@
 # HTH – Tu viện bên cảng
 
-Game web 3D nhiều người chơi, dùng nội bộ cho nhân viên HTH Logistics: lên tu viện cạnh cảng container để thỉnh chuông, ngồi thiền, câu cá, viết lời ước, rút quẻ vận đơn và trò chuyện trong giờ nghỉ. Không thắng thua, không xếp hạng, không thu tiền.
+Game web 3D nhiều người chơi, dùng nội bộ cho nhân viên HTH Logistics: lên tu viện cạnh cảng container để thỉnh chuông, ngồi thiền, câu cá, viết lời ước, rút xăm và trò chuyện trong giờ nghỉ. Không thắng thua, không xếp hạng, không thu tiền.
 
 Không biết chơi gì? Bấm nút **Chơi gì?** ở góc trên, chọn một trò là game đưa bạn tới và bắt đầu ngay.
 
@@ -58,13 +58,18 @@ docker exec hth node -p "require('/app/data/config.json').adminKey"
 
 Cập nhật lên bản mới: chép mã mới lên máy, chạy `docker build -t hth .`, rồi `docker rm -f hth` và chạy lại lệnh `docker run` ở trên.
 
-## Thỉnh chuông và thiền
+## Audition chuông và thiền
 
-- Hai minigame nhịp điệu kiểu Audition: nhập chuỗi **phím mũi tên**, rồi bấm **Space** khi vạch trắng tới tâm vùng vàng. Điện thoại có bốn phím chạm và nút **Chốt nhịp**. Có Perfect, Good, Miss và combo; không cần giữ/thả. Phách chấm nhịp tạo tại máy bằng Web Audio.
+- **Audition chuông:** nhập chuỗi **phím mũi tên**, rồi bấm **Space** khi vạch trắng tới tâm vùng vàng. Điện thoại có bốn phím chạm và nút **Chốt nhịp**. Có Perfect, Good, Miss và combo.
 - Login và trong game đều dùng bản *Where Winds Meet Character Creation Song*, với âm lượng giảm 50%. Server giữ một mốc phát chung trong game; mỗi máy vào sẽ phát cùng đoạn. Nhạc MP3 được phục vụ từ game. Nút **Nhạc** mở bảng phát/tạm dừng và chỉnh âm lượng; mức âm lượng được lưu trên máy. Nếu trình duyệt chặn phát tự động, bấm **Phát nhạc**. Đóng bảng không dừng nhạc. Phách minigame chạy độc lập.
-- **Nhịp chuông:** tới gần gác chuông, chơi 16 chuỗi trong khoảng 40 giây. Chốt đúng làm chuông ngân; đồng nghiệp chốt cùng nhịp làm âm dày hơn.
-- **Nhịp sen:** chọn chiếu trống, chơi 24 chuỗi trong khoảng một phút. Chốt đúng làm sen bên chiếu mở dần và vòng sáng lan theo nhịp. Người ngồi cùng thấy hiệu ứng của nhau.
-- Mỗi chuỗi dài từ 3 tới 5 phím. Nhạc 96 BPM; Perfect trong 110 ms, Good trong 240 ms quanh nhịp chuẩn. Server chấm theo thời điểm nhận Space, không tin điểm client gửi. Sổ lưu điểm Nhịp sen riêng của bạn, không có bảng xếp hạng. Thoát sớm không lưu kết quả; mất mạng sẽ dừng lượt chơi.
+- Tới gần gác chuông, chơi 16 chuỗi trong khoảng 40 giây. Chốt đúng làm chuông ngân; đồng nghiệp chốt cùng nhịp làm âm dày hơn. Server kiểm tra cả chuỗi và thời điểm nhận Space.
+- **Thiền:** đứng gần chiếu trống, bấm Space để ngồi; E cũng dùng được qua nút tương tác. Ngồi yên và thở chậm. Không game, không điểm, không chuỗi phím.
+
+## Tỉ võ tự do
+
+Trên bản đồ, bấm phím 1 hoặc chuột trái để đánh thường; phím 2 gọi kiếm trận AOE tại điểm ngắm (tầm 8,5 m, bán kính 4 m), phím 3 bật hộ thể, phím 4 lướt né. E tương tác với điểm gần người chơi; Space ngồi thiền khi đứng gần chiếu trống. Đánh thường, kiếm trận và lướt theo hướng con trỏ; khi khóa chuột thì theo tâm màn hình. Cả bốn chiêu hồi sau 0,5 giây. Bốn nút dưới màn hình dùng được trên điện thoại. Không cần khiêu chiến hay vào võ đài. Alt + bấm vào người khác để vẫy tay; trên điện thoại chạm người để mở nút vẫy tay.
+
+Khi bị hạ, nhân vật hồi sinh tại cổng với đầy HP và khiên bảo hộ 30 giây. Trong thời gian đó không nhận sát thương. Chủ động đánh thường hoặc dùng kiếm khí sẽ mất khiên ngay và hiện dấu **Sát khí** trong 60 giây; lướt và hộ thể không phá khiên.
 
 ## Đầu hồ
 
@@ -73,7 +78,7 @@ Tới sân cạnh bãi container, bấm **Chơi đầu hồ** rồi chọn đố
 - **Mỗi lượt:** đưa tâm vào vòng đang trôi, giữ cho vòng đầy rồi bấm chuột hoặc **Space**. Ném khi chưa đầy hoặc để hết 10 giây ngắm là trượt. Tâm lắc nhẹ như người say, còn đối thủ ném ngay sau bạn.
 - **Hai tâm:** có lượt phải giữ cả tâm chuột lẫn tâm phím (**WASD** hoặc mũi tên) trong hai vòng riêng. Trên điện thoại, ngón đầu lái tâm chính, ngón hai lái tâm phụ, vòng đầy là tự ném.
 - **Combo:** trúng liên tiếp lần lượt được 10, 15, 15, 20, 25, 30, 35, 45, 50 điểm và giữ mức 50 từ đó. Trượt là combo về 0.
-- **Thưởng:** thắng Chú tiểu Mõ, Sư huynh Thẻ, Lão tăng Mười Năm được hạng B, A, S (3, 5, 8 TEU). Thua hoặc hoà được hạng C (1 TEU). Rời sân giữa trận không lưu điểm.
+- **Thưởng:** thắng A Phi, Lục Vân, Kiếm Tôn Vô Danh được hạng B, A, S (3, 5, 8 TEU). Thua hoặc hoà được hạng C (1 TEU). Rời sân giữa trận không lưu điểm.
 
 ## Câu cá
 
@@ -90,7 +95,7 @@ Bấm nút **Chơi gì?** ở góc trên rồi chọn **Câu cá**, hoặc tự 
 
 ## Trò chuyện bằng mic
 
-Voice gần kiểu Goose Goose Duck: **Bật voice**, cho phép mic, rồi giữ **V** hoặc nút **Giữ để nói**. Đứng gần nghe rõ, xa dần nhỏ tiếng, từ 18 m thì im. Có **Mic mở**, tắt nghe và chỉnh âm lượng riêng; tối đa 6 kết nối gần mỗi người. Tắt voice hoặc rời tab sẽ nhả mic.
+Voice gần kiểu Goose Goose Duck: vào game thì kết nối voice và xin quyền mic; mic ban đầu tắt. Bấm nút hình mic để bật nói liên tục, bấm lại để tắt. Người đang nói hiện cạnh nút mic và sáng tên trên nhân vật. Nút **⋯** mở cài đặt để chọn giữ **V** hoặc nút **Giữ để nói**, tắt nghe và chỉnh âm lượng. Đứng gần nghe rõ, xa dần nhỏ tiếng, từ 18 m thì im; tối đa 6 kết nối gần mỗi người. Tắt voice hoặc rời tab sẽ nhả mic.
 
 Mic cần HTTPS hoặc localhost. Khác mạng có thể cần TURN; Cloudflare Tunnel không chuyển tiếp tiếng WebRTC. Xem [thiết lập voice](docs/proximity-voice.md).
 
@@ -108,7 +113,7 @@ Khi nghi lộ mã, vào trang admin đổi mã mới rồi gửi lại link. Ng�
 | --- | --- |
 | Giờ chuông, câu thông báo | Mục **Sự kiện chuông**. Bấm "+ Lịch hằng ngày" hoặc "+ Lịch một lần", rồi **Lưu lịch** |
 | Từ cấm | Mục **Từ lọc**, mỗi dòng một từ, rồi **Lưu từ lọc** |
-| Câu chúc quẻ, câu khen sau thiền, lời chào | Mục **Nội dung**, mỗi dòng một câu, rồi **Lưu nội dung** |
+| Câu chúc khi rút xăm, lời chào | Mục **Nội dung**, mỗi dòng một câu, rồi **Lưu nội dung** |
 | Ẩn một lời ước | Mục **Lời ước**, bấm **Ẩn**. Bấm **Bỏ ẩn** để hiện lại |
 | Mời một người ra khỏi game | Mục **Người đang online**, bấm **Kích** (vào lại được sau 1 phút) |
 
@@ -118,7 +123,7 @@ Lưu ý khi thêm từ lọc: có dấu và không dấu là **hai từ riêng**
 
 Trong câu thông báo chuông, viết `{time}` thì game tự thay bằng giờ thật.
 
-Tên và lời nói của thầy trụ trì nằm ở đầu file `client/src/scene/abbot.js`. Sửa xong phải chạy lại `npm run build`.
+Tên và lời nói của Zoeyy Gay nằm ở đầu file `client/src/scene/abbot.js`. Sửa xong phải chạy lại `npm run build`.
 
 ## Cấu hình
 
@@ -204,8 +209,8 @@ server/
   bell.js        Chuông cá nhân, lịch và sự kiện chuông
   fishing.js     Câu cá: định giờ cắn, roll loài, tự mô phỏng pha giằng co
   meditation.js  Giữ chỗ chiếu, nhịp thở chung
-  rhythm.js      Minigame Nhịp chuông và Nhịp sen
-  riddle.js      Đố thuật ngữ với sư chú giữ cổng
+  rhythm.js      Minigame Audition chuông
+  riddle.js      Đố thuật ngữ với Mặc Vũ
   pitch.js       Đầu hồ đấu với NPC
   voice.js       Ghép cặp và chuyển tín hiệu voice theo khoảng cách
   admin.js       API và trang admin (giao diện ở admin-ui/)

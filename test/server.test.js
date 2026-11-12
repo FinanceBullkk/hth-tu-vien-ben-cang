@@ -10,7 +10,7 @@ import { WordFilter } from '../server/filter.js';
 import { WindowCounter, clientIp } from '../server/limits.js';
 import { localDate, zonedToTs } from '../server/time.js';
 import { fightGreen } from '../shared/fish.js';
-import { noteTargetAt, rhythmPattern } from '../shared/rhythm.js';
+import { rhythmPattern, roundTargetAt } from '../shared/rhythm.js';
 import {
   ABBOT, BELL, BOUNDS, BOXES, CIRCLES, CONTAINERS, MATS, PLAYER_RADIUS, POND, SPAWN, TEA, TREE, clampToWalkable, inBox, resolveCollision,
 } from '../shared/layout.js';
@@ -24,7 +24,6 @@ const example = JSON.parse(fs.readFileSync(new URL('../config.example.json', imp
 example.bellSchedule = [];
 example.newPlayersPerMinute = 1000; // Bộ test vào phòng liên tục từ cùng một IP.
 example.maxConnectionsPerIp = 1000;
-example.joinCode = ''; // Các test chung không xét mã; test riêng bên dưới bật mã.
 fs.writeFileSync(cfg, JSON.stringify(example));
 
 /** Chạy một server riêng với cấu hình và IP giả lập như đang đứng sau Funnel. */
@@ -81,6 +80,13 @@ function connect() {
 
 const call = (s, ev, data) => s.timeout(3000).emitWithAck(ev, data);
 const once = (s, ev) => new Promise((resolve) => s.once(ev, resolve));
+// Chờ lần phát đầu tiên thoả điều kiện. Dùng khi một bản phát cũ có thể tới muộn: các socket
+// khác nhau không giữ thứ tự với nhau, nên ack trên socket này có thể về trước sự kiện của socket kia.
+const until = (s, ev, ok, ms = 3000) => new Promise((resolve, reject) => {
+  const timer = setTimeout(() => { s.off(ev, h); reject(new Error(`hết ${ms}ms chờ ${ev}`)); }, ms);
+  const h = (v) => { if (ok(v)) { clearTimeout(timer); s.off(ev, h); resolve(v); } };
+  s.on(ev, h);
+});
 
 async function join(name, playerId) {
   const s = await connect();
@@ -204,6 +210,154 @@ test('hai người vào phòng thấy nhau, trùng tên tự thêm số', async 
   b.s.disconnect();
 });
 
+/** Đợi gói state kế tiếp có hàng của sid, thoả điều kiện. */
+function nextRow(socket, sid, match = () => true) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      socket.off('state', handler);
+      reject(new Error('không thấy gói state mong đợi'));
+    }, 3000);
+    function handler(m) {
+      const row = m.p.find((r) => r[0] === sid);
+      if (row && match(row)) {
+        clearTimeout(timer);
+        socket.off('state', handler);
+        resolve({ row, t: m.t });
+      }
+    }
+    socket.on('state', handler);
+  });
+}
+
+test('vị trí phát 20 lần/giây và kèm tuổi mẫu theo mốc client, mốc giả bị kẹp', async () => {
+  const a = await join('Tuoi');
+  const b = await join('Xem');
+  const sid = a.res.sid;
+  await new Promise((r) => setTimeout(r, 400)); // Mốc không được lùi quá lúc vào phòng.
+
+  // Mốc hợp lệ cách đây 200 ms: tuổi phản ánh đúng lúc lấy mẫu, không phải lúc tick.
+  a.s.emit('move', [1, 1, 0, 1, Date.now() - 200]);
+  let { row } = await nextRow(b.s, sid, (r) => r[1] === 1);
+  assert.ok(row[6] >= 200 && row[6] < 800, `tuổi ${row[6]}`);
+
+  // Mốc ở tương lai bị kẹp về hiện tại.
+  a.s.emit('move', [2, 1, 0, 1, Date.now() + 60_000]);
+  ({ row } = await nextRow(b.s, sid, (r) => r[1] === 2));
+  assert.ok(row[6] >= 0 && row[6] < 500, `tuổi ${row[6]}`);
+
+  // Mốc rất cũ không được làm thời gian lùi: vẫn giữ mốc đã có.
+  a.s.emit('move', [3, 1, 0, 1, 1]);
+  ({ row } = await nextRow(b.s, sid, (r) => r[1] === 3));
+  assert.ok(row[6] >= 0 && row[6] < 1000, `tuổi ${row[6]}`);
+
+  // Mốc rác và client cũ không gửi mốc: vẫn đi được, lấy giờ server.
+  for (const [i, stamp] of [['abc'], [null], [{}], [Number.NaN], [Number.POSITIVE_INFINITY]].entries()) {
+    const x = 4 + i;
+    a.s.emit('move', [x, 1, 0, 1, stamp[0]]);
+    ({ row } = await nextRow(b.s, sid, (r) => r[1] === x));
+    assert.ok(Number.isFinite(row[6]) && row[6] >= 0 && row[6] < 1000, `tuổi ${row[6]}`);
+  }
+  a.s.emit('move', [10, 1, 0, 0]);
+  ({ row } = await nextRow(b.s, sid, (r) => r[1] === 10));
+  assert.ok(row[6] >= 0 && row[6] < 500, `tuổi ${row[6]}`);
+
+  // Đi liên tục ở nhịp client thật: phần lớn gói phát đi đều có mẫu mới, không còn nhịp 10 Hz cũ.
+  let seen = 0;
+  const count = (m) => { if (m.p.some((r) => r[0] === sid)) seen++; };
+  b.s.on('state', count);
+  const t0 = Date.now();
+  let x = 11;
+  const sender = setInterval(() => {
+    x += 0.05;
+    a.s.emit('move', [x, 1, 0, 1, Date.now()]);
+  }, 50);
+  await new Promise((r) => setTimeout(r, 2000));
+  clearInterval(sender);
+  b.s.off('state', count);
+  const rate = seen / ((Date.now() - t0) / 1000);
+  assert.ok(rate >= 14 && rate <= 21, `nhận ${rate.toFixed(1)} gói/giây`);
+
+  // Ngắt khi đang đi: server vẫn phục vụ người còn lại, gói state của họ vẫn tới.
+  a.s.emit('move', [x, 1, 0, 1, Date.now()]);
+  a.s.disconnect();
+  b.s.emit('move', [2, 2, 0, 0, Date.now()]);
+  assert.ok((await nextRow(b.s, b.res.sid, (r) => r[1] === 2)).row);
+  b.s.disconnect();
+});
+
+test('ngoại hình: nhận đủ bộ skin mới, người khác nhìn thấy, giá trị ngoài phạm vi bị kẹp', async () => {
+  const a = await connect();
+  const res = await call(a, 'hello', {
+    name: 'Võ Sư', color: 0, hair: 3, hat: 6, attire: 3, weapon: 3, effect: 9, playerId: 'b'.repeat(32),
+  });
+  assert.equal(res.ok, true);
+  assert.equal(res.snapshot.me.hair, 3);
+  assert.equal(res.snapshot.me.hat, 6);
+  assert.equal(res.snapshot.me.attire, 3);
+  assert.equal(res.snapshot.me.weapon, 3);
+  assert.equal(res.snapshot.me.effect, 9);
+
+  // Người vào sau nhìn thấy đúng ngoại hình qua snapshot.
+  const b = await join('Khán Giả');
+  const row = b.res.snapshot.players.find((p) => p.sid === res.sid);
+  assert.equal(row.hair, 3);
+  assert.equal(row.hat, 6);
+  assert.equal(row.attire, 3);
+  assert.equal(row.weapon, 3);
+  assert.equal(row.effect, 9);
+
+  // Giá trị rác ngoài phạm vi bị kẹp về mặc định, không vỡ server (kết nối mới vì
+  // mỗi kết nối chỉ vào phòng một lần; trùng playerId để nối tiếp người chơi cũ).
+  const junkSock = await connect();
+  const junk = await call(junkSock, 'hello', {
+    name: 'Võ Sư', hair: 99, hat: 99, attire: -5, weapon: 'kiếm', effect: 1e9, playerId: 'b'.repeat(32),
+  });
+  assert.equal(junk.ok, true);
+  assert.equal(junk.snapshot.me.hair, 0);
+  assert.equal(junk.snapshot.me.hat, 0);
+  assert.equal(junk.snapshot.me.attire, 0);
+  assert.equal(junk.snapshot.me.weapon, 0);
+  assert.equal(junk.snapshot.me.effect, 0);
+  a.disconnect();
+  junkSock.disconnect();
+  b.s.disconnect();
+});
+
+test('slot tóc: chọn riêng, client cũ không gửi hair thì di trú từ id mũ cũ', async () => {
+  // Client bản cũ không có slot tóc: id hat 0-2 là kiểu tóc, id mũ thật thì tóc về mặc định.
+  const legacyBun = await connect();
+  const resBun = await call(legacyBun, 'hello', { name: 'Tóc Cũ', color: 0, hat: 2, playerId: 'd'.repeat(32) });
+  assert.equal(resBun.snapshot.me.hair, 2);
+  const legacyHat = await connect();
+  const resHat = await call(legacyHat, 'hello', { name: 'Mũ Cũ', color: 0, hat: 5, playerId: 'c'.repeat(32) });
+  assert.equal(resHat.snapshot.me.hair, 0);
+
+  // Client mới gửi hair: chọn riêng tóc + mũ, vào lại với look mới thì nhận look mới.
+  const fresh = await connect();
+  const resNew = await call(fresh, 'hello', { name: 'Tóc Mới', color: 0, hair: 5, hat: 7, playerId: 'd'.repeat(32) });
+  assert.equal(resNew.snapshot.me.hair, 5);
+  assert.equal(resNew.snapshot.me.hat, 7);
+  legacyBun.disconnect();
+  legacyHat.disconnect();
+  fresh.disconnect();
+});
+
+test('new aura IDs reach own and remote snapshots; malformed IDs reset', async () => {
+  const open = [];
+  try {
+    for (const effect of [9, 10, 11, 12, -1, '9', 9.5]) {
+      const s = await connect(); open.push(s);
+      const res = await call(s, 'hello', { name: 'Aura Test', color: 0, effect });
+      const expected = [9, 10, 11].includes(Number(effect)) ? Number(effect) : 0;
+      assert.equal(res.ok, true);
+      assert.equal(res.snapshot.me.effect, expected);
+      const observer = await join('Aura Observer'); open.push(observer.s);
+      assert.equal(observer.res.snapshot.players.find(p => p.sid === res.sid)?.effect, expected);
+      s.disconnect(); observer.s.disconnect();
+    }
+  } finally { open.forEach(s => s.disconnect()); }
+});
+
 test('chat: phát cho mọi người, chặn từ thô, giới hạn 2 giây, cắt 80 ký tự', async () => {
   const a = await join('Minh');
   const b = await join('Hoa');
@@ -242,7 +396,7 @@ test('lời ước: tạo, hiện cho người khác, tim, giới hạn 3/ngày,
   assert.equal((await call(a.s, 'wish:create', { text: 'đm', place: 'tree' })).ok, false);
   assert.equal((await call(a.s, 'wish:create', { text: 'hai', place: 'nowhere' })).ok, false);
   assert.equal((await call(a.s, 'wish:create', { text: 'hai', place: 'pond' })).ok, true);
-  const third = await call(a.s, 'wish:create', { text: 'ba', place: 'container' });
+  const third = await call(a.s, 'wish:create', { text: 'ba', place: 'tree' });
   assert.equal(third.ok, true);
   assert.equal((await call(a.s, 'wish:create', { text: 'bốn', place: 'tree' })).ok, false);
 
@@ -305,8 +459,8 @@ test('nhịp chuông: đứng gần mới chơi, chặn kết thúc sớm và hu
   const started = await call(a.s, 'rhythm:start', { kind: 'bell' });
   assert.equal(started.ok, true);
   assert.equal((await call(a.s, 'rhythm:finish', { id: started.game.id })).saved, false);
-  await new Promise((r) => setTimeout(r, Math.max(0, noteTargetAt(started.game.at, 0, 0) - Date.now())));
-  const strike = { id: started.game.id, round: 0, idx: 0, note: rhythmPattern(started.game.at, 0, 'bell')[0] };
+  await new Promise((r) => setTimeout(r, Math.max(0, roundTargetAt(started.game.at, 0) - Date.now())));
+  const strike = { id: started.game.id, round: 0, sequence: rhythmPattern(started.game.at, 0, 'bell') };
   const heard = once(b.s, 'bell:ring');
   const judged = await call(a.s, 'rhythm:hit', strike);
   assert.equal(judged.ok, true);
@@ -339,12 +493,62 @@ test('thiền: giữ chỗ chiếu, nhịp chung, chat bị chặn khi ngồi', 
   assert.equal(r2.epoch, r1.epoch, 'người vào sau phải theo nhịp của người đầu');
   assert.deepEqual((await sync).mates, ['Thiền B']);
   assert.equal((await call(a.s, 'chat', { text: 'ê' })).ok, false);
-  const game = await call(a.s, 'rhythm:start', { kind: 'meditate' });
-  assert.equal(game.ok, true);
-  const early = await call(a.s, 'rhythm:finish', { id: game.game.id, score: 100 });
-  assert.equal(early.saved, false, 'ngồi chưa đủ năm hơi thở thì không lưu buổi');
+  assert.equal((await call(a.s, 'rhythm:start', { kind: 'meditate' })).ok, false, 'thiền không còn minigame');
   a.s.disconnect();
   b.s.disconnect();
+});
+
+test('Chân khí: đồng bộ, đổi tab, mất mạng và vào lại không nhận trùng', { timeout: 15000 }, async () => {
+  const a = await join('Tĩnh tu A');
+  const viewer = await join('Tĩnh tu B');
+  a.s.emit('move', [MATS[0].x, MATS[0].z, 0, 0]);
+  const awarded = once(viewer.s, 'cultivation:progress');
+  assert.equal((await call(a.s, 'action:start', { kind: 'meditate', mat: 0, qi: 999999 })).ok, true);
+  const progress = await awarded;
+  assert.deepEqual(progress, { sid: a.res.sid, qi: 1 });
+  const replacement = await join('Tĩnh tu A', a.res.playerId);
+  assert.equal(replacement.res.snapshot.me.qi, 1);
+  assert.equal(replacement.res.snapshot.me.activity, 0);
+  assert.equal(replacement.res.snapshot.mats[0], 0);
+  assert.equal(replacement.res.snapshot.players.some((p) => 'playerId' in p), false);
+  replacement.s.emit('move', [MATS[0].x, MATS[0].z, 0, 0]);
+  assert.equal((await call(replacement.s, 'action:start', { kind: 'meditate', mat: 0 })).ok, true);
+  const released = once(viewer.s, 'meditation:mats');
+  replacement.s.disconnect();
+  assert.equal((await released)[0], 0);
+  const resumed = await join('Tĩnh tu A', a.res.playerId);
+  assert.equal(resumed.res.snapshot.me.qi, 1);
+  assert.equal(resumed.res.snapshot.me.activity, 0);
+  const book = await fetch(`${URL_BASE}/api/me`, { headers: { 'x-player-id': a.res.playerId } }).then((r) => r.json());
+  assert.equal(book.qi, 1);
+  resumed.s.disconnect();
+  viewer.s.disconnect();
+});
+
+test('thiền tại chỗ qua socket: giữ vị trí, tăng khí, mất mạng dừng và vào lại giữ khí', { timeout: 15000 }, async () => {
+  const a = await join('Thiền tại chỗ');
+  const viewer = await join('Xem tĩnh tu');
+  const { x, z, rot } = a.res.snapshot.me;
+  const awarded = until(viewer.s, 'cultivation:progress', (p) => p.sid === a.res.sid, 9000);
+  const seated = await call(a.s, 'action:start', { kind: 'meditate', qi: 999999, x: 999, z: 999 });
+  assert.equal(seated.ok, true);
+  assert.equal(seated.mat, -1);
+  assert.deepEqual([seated.x, seated.z, seated.rot], [x, z, rot]);
+  assert.equal((await call(a.s, 'rhythm:start', { kind: 'meditate' })).ok, false);
+  assert.equal((await call(a.s, 'action:start', { kind: 'fish' })).ok, false);
+  await call(a.s, 'move', [20, 20, 1, 1]);
+  const observer = await join('Xem vị trí');
+  const still = observer.res.snapshot.players.find((p) => p.sid === a.res.sid);
+  assert.deepEqual([still.x, still.z, still.rot, still.activity], [x, z, rot, 1]);
+  assert.equal((await awarded).qi, 1);
+  a.s.disconnect();
+  const resumed = await join('Thiền tại chỗ', a.res.playerId);
+  assert.equal(resumed.res.snapshot.me.qi, 1);
+  assert.equal(resumed.res.snapshot.me.activity, 0);
+  assert.equal(resumed.res.snapshot.mats.some((sid) => sid === a.res.sid), false);
+  resumed.s.disconnect();
+  observer.s.disconnect();
+  viewer.s.disconnect();
 });
 
 test('câu cá qua socket thật: quăng, cắn, giữ kim theo vùng xanh, kéo lên được ghi sổ', { timeout: 40000 }, async () => {
@@ -484,19 +688,20 @@ test('voice: admitted near peers only; cleanup on tab replacement, disconnect an
   assert.equal((await call(a.s, 'voice:signal', payload)).ok, true);
   assert.equal((await signal).from, a.res.sid);
   assert.equal(res.peers[0].token, peers[0].token);
-  const revoked = once(b.s, 'voice:peers');
+  const noPeers = (p) => p.length === 0;
+  const revoked = until(b.s, 'voice:peers', noPeers);
   const replacement = await join('Voice A tab 2', a.res.playerId);
   assert.deepEqual(await revoked, [], 'replaced session immediately loses voice');
   assert.equal((await call(replacement.s, 'voice:signal', payload)).ok, false);
   const again = await enabled(replacement.s);
   assert.equal(again.peers.length, 1);
   assert.notEqual(again.peers[0].token, peers[0].token);
-  const disconnected = once(b.s, 'voice:peers');
+  const disconnected = until(b.s, 'voice:peers', noPeers);
   replacement.s.disconnect();
   assert.deepEqual(await disconnected, []);
   const c = await join('Voice C');
   await enabled(c.s);
-  const kicked = once(b.s, 'voice:peers');
+  const kicked = until(b.s, 'voice:peers', noPeers);
   await admin('/kick', 'POST', { playerId: c.res.playerId });
   assert.deepEqual(await kicked, []);
   b.s.disconnect(); stranger.disconnect();
@@ -617,66 +822,6 @@ test('dội sự kiện: phần vượt bị bỏ, dội quá mạnh thì bị n
     await closed;
     assert.equal(a.connected, false, 'dội quá mạnh bị ngắt');
     assert.ok((await call(viewer, 'time:sync')).now > 0, 'người khác không bị ảnh hưởng');
-  });
-});
-
-test('mã vào cửa: sai mã không vào được, không nghe lén được, không đọc được lời ước', async () => {
-  await withServer({ joinCode: 'ABC234', codeAttemptsPer10Min: 3 }, async ({ connectAs, base }) => {
-    assert.deepEqual(await (await fetch(`${base}/api/info`)).json(), { codeRequired: true });
-
-    const insider = await connectAs('203.0.113.20');
-    const ok = await call(insider, 'hello', { name: 'Người nhà', code: ' abc 234 ' });
-    assert.equal(ok.ok, true, 'mã không phân biệt hoa thường và khoảng trắng');
-    assert.ok((await call(insider, 'wish:create', { text: 'Bình an', place: 'tree' })).ok);
-
-    // Người lạ: chưa có mã thì không nhận được bất cứ tin phát chung nào.
-    const stranger = await connectAs('198.51.100.20');
-    const heard = [];
-    stranger.onAny((ev) => heard.push(ev));
-    const wrong = await call(stranger, 'hello', { name: 'Người lạ', code: 'SAI' });
-    assert.equal(wrong.ok, false);
-    assert.equal(wrong.needCode, true);
-    assert.equal(wrong.snapshot, undefined, 'không lộ dữ liệu');
-    assert.equal((await call(stranger, 'hello', { name: 'Không mã' })).ok, false);
-    await call(insider, 'chat', { text: 'chuyện nội bộ' });
-    await call(insider, 'wish:create', { text: 'Điều riêng tư', place: 'pond' });
-    await new Promise((r) => setTimeout(r, 300));
-    assert.deepEqual(heard, [], 'kết nối chưa qua cửa không nhận được gì');
-    assert.equal((await call(stranger, 'chat', { text: 'x' })).ok, false);
-
-    // REST: chỉ người đã vào mới đọc được bảng ước, kể cả đoán ID ngẫu nhiên cũng không được.
-    assert.equal((await fetch(`${base}/api/wishes`)).status, 403);
-    assert.equal((await fetch(`${base}/api/wishes`, { headers: { 'x-player-id': 'a'.repeat(32) } })).status, 403);
-    const list = await fetch(`${base}/api/wishes`, { headers: { 'x-player-id': ok.playerId } });
-    assert.equal(list.status, 200);
-    assert.equal((await list.json()).items.length, 2);
-
-    // Dò mã: hết lượt thì mã đúng cũng bị từ chối, IP khác không bị liên luỵ.
-    assert.equal((await call(stranger, 'hello', { name: 'Dò', code: 'SAI2' })).ok, false);
-    const locked = await call(stranger, 'hello', { name: 'Dò', code: 'ABC234' });
-    assert.equal(locked.ok, false, 'đã hết lượt thử');
-    assert.match(locked.error, /10 phút/);
-    const other = await connectAs('203.0.113.21');
-    assert.equal((await call(other, 'hello', { name: 'Người khác', code: 'ABC234' })).ok, true);
-  });
-});
-
-test('admin đổi mã: mã cũ hết hiệu lực ngay, ghi vào config, tắt được mã', async () => {
-  await withServer({ joinCode: 'OLD234' }, async ({ connectAs, base, file }) => {
-    const put = (joinCode) => fetch(`${base}/admin/api/join-code`, {
-      method: 'PUT',
-      headers: { 'x-admin-key': ADMIN, 'content-type': 'application/json' },
-      body: JSON.stringify({ joinCode }),
-    });
-    assert.equal((await fetch(`${base}/admin/api/join-code`, { method: 'PUT' })).status, 403, 'cần khoá admin');
-    assert.equal((await put('có dấu!')).status, 400);
-    assert.equal((await put('new-234')).status, 200);
-    assert.equal(JSON.parse(fs.readFileSync(file, 'utf8')).joinCode, 'NEW-234');
-    const s = await connectAs('203.0.113.30');
-    assert.equal((await call(s, 'hello', { name: 'Cũ', code: 'OLD234' })).ok, false);
-    assert.equal((await call(s, 'hello', { name: 'Mới', code: 'NEW-234' })).ok, true);
-    assert.equal((await put('')).status, 200);
-    assert.deepEqual(await (await fetch(`${base}/api/info`)).json(), { codeRequired: false });
   });
 });
 

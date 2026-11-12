@@ -1,4 +1,4 @@
-// Nhận thao tác: WASD/mũi tên, kéo chuột xoay, lăn zoom; điện thoại có cần ảo và kéo nửa phải.
+// Nhận thao tác: WASD/mũi tên, rê chuột xoay khi khóa trỏ, lăn zoom; điện thoại dùng cần ảo.
 
 const MOVE_KEYS = {
   KeyW: [0, 1], ArrowUp: [0, 1], KeyS: [0, -1], ArrowDown: [0, -1],
@@ -21,11 +21,19 @@ export class Input {
     this.stickId = null;
     this.camId = null;
     this.camLast = { x: 0, y: 0 };
+    this.pointerX = window.innerWidth / 2;
+    this.pointerY = window.innerHeight / 2;
     this.downAt = { x: 0, y: 0, t: 0, moved: false };
     this.onTap = null;
     this.onKeyDown = null;
     this.onKeyUp = null;
     this.enabled = false;
+    this.pointerLocked = false;
+    this.lockClick = false;
+    document.addEventListener('pointerlockchange', () => {
+      this.pointerLocked = document.pointerLockElement === canvas;
+      this.camId = null;
+    });
 
     window.addEventListener('keydown', (e) => this.#keyDown(e));
     window.addEventListener('keyup', (e) => this.#keyUp(e));
@@ -71,6 +79,11 @@ export class Input {
   #down(e) {
     if (!this.enabled) return;
     const isTouch = e.pointerType === 'touch';
+    if (!isTouch && e.button === 0 && !e.altKey && !this.pointerLocked && (this.canLock?.() ?? true)) {
+      this.lockClick = true;
+      Promise.resolve(this.canvas.requestPointerLock?.()).catch(() => { this.lockClick = false; });
+    }
+    if (!isTouch && this.pointerLocked) return;
     const leftZone = isTouch && e.clientX < window.innerWidth * 0.45 && e.clientY > window.innerHeight * 0.45;
     if (leftZone && this.stickId === null) {
       this.stickId = e.pointerId;
@@ -87,6 +100,15 @@ export class Input {
   }
 
   #move(e) {
+    if (e.pointerType === 'mouse' && !this.pointerLocked && e.target === this.canvas) {
+      this.pointerX = e.clientX;
+      this.pointerY = e.clientY;
+    }
+    if (e.pointerType === 'mouse' && (this.pointerLocked || (!this.canvas.requestPointerLock && e.target === this.canvas && this.enabled && (this.canLock?.() ?? true)))) {
+      this.yawDelta -= e.movementX * 0.0028;
+      this.pitchDelta += e.movementY * 0.0028 * 0.7;
+      return;
+    }
     if (e.pointerId === this.stickId) {
       this.#stickUpdate(e);
       return;
@@ -105,6 +127,12 @@ export class Input {
   }
 
   #up(e) {
+    if (this.pointerLocked && e.pointerType === 'mouse') {
+      this.lockClick = false;
+      if (e.button === 0) this.onTap?.(window.innerWidth / 2, window.innerHeight / 2, e);
+      return;
+    }
+    this.lockClick = false;
     if (e.pointerId === this.stickId) {
       this.#stickEnd();
       return;
@@ -112,7 +140,7 @@ export class Input {
     if (e.pointerId !== this.camId) return;
     this.camId = null;
     const isTap = !this.downAt.moved && performance.now() - this.downAt.t < TAP_MS;
-    if (isTap && e.type === 'pointerup') this.onTap?.(e.clientX, e.clientY);
+    if (isTap && e.type === 'pointerup') this.onTap?.(e.clientX, e.clientY, e);
   }
 
   #stickUpdate(e) {
