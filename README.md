@@ -96,7 +96,7 @@ Tới sân cạnh bãi container, bấm **Chơi đầu hồ** rồi chọn đố
 
 ## Bầu cua
 
-Bàn bầu cua ở góc chợ sau Sạp Kim Bảo. Bấm **Chơi gì?** rồi chọn **Bầu cua**, hoặc đứng quanh bàn bấm **E**. Cả sân chơi chung một bàn: ai đặt cược đầu tiên thì mở ván, có 20 giây cho mọi người đặt, rồi nhà cái xóc một lần cho cả bàn.
+Bàn bầu cua ở góc chợ sau Sạp Kim Bảo. Bấm **Chơi gì?** rồi chọn **Bầu cua**, hoặc đứng quanh bàn bấm **E**. Cả sân chơi chung một bàn: ai đặt cược đầu tiên thì mở ván, có 8 giây cho mọi người đặt, rồi Chú Tư nhà cái xóc đĩa 2 giây và mở bát cho cả bàn. Ba viên xúc xắc hiện to giữa màn hình kèm số TEU thắng/thua; ván mới mở ngay khi có người cược tiếp.
 
 - **Đặt cược:** chọn chip 1, 5 hoặc 10 TEU rồi bấm ô Nai, Bầu, Gà, Cá, Cua, Tôm (hoặc phím **1–6**). Tối đa 30 TEU một mặt và 50 TEU một ván. Còn đang đếm ngược thì **Xoá cược** hoàn lại đủ.
 - **Trả thưởng:** ra `n` viên trùng mặt bạn cược thì nhận lại tiền cược cộng `n` lần tiền cược. Không trùng là mất. Nhà cái lợi khoảng 8%, nên chơi lâu thì TEU có xu hướng hao dần.
