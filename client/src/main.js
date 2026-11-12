@@ -109,7 +109,7 @@ function main() {
     me: new LocalPlayer(scene, profile, isTouch),
     modalBusy: () => modalOpen(),
     isBusy: () => modalOpen() || Boolean(app.activities.current && app.activities.current !== app.activities.meditation),
-    chatBlocked: () => app.activities.current === app.activities.lotus,
+    chatBlocked: () => false,
   };
   app.remotes._p = new THREE.Vector3();
   app.bloom = bloomPass;
@@ -292,11 +292,9 @@ function main() {
   });
   net.on('meditation:sync', (data) => {
     app.activities.meditation.onSync(data);
-    app.activities.lotus.onSync(data);
   });
   net.on('cultivation:progress', ({ sid, qi }) => avatarOf(sid)?.setQi(qi));
   net.on('meditation:scene', (data) => world.meditation.apply(data));
-  net.on('rhythm:bloom', (data) => world.meditation.bloom(data));
 
   // ---------- Câu cá ----------
   net.on('fish:bobber', ({ sid, bx, bz }) => {
@@ -432,6 +430,10 @@ function main() {
       world.abbot.advise();
       return;
     }
+    if (world.zoeyy.atRay(raycaster.ray)) {
+      world.zoeyy.advise();
+      return;
+    }
     const cat = world.animals.catAtRay(raycaster.ray);
     if (cat) {
       app.audio.meow();
@@ -502,6 +504,7 @@ function main() {
     world.wishes.setViewer(me.x, me.z, camera);
     world.update(dt, nowMs);
     world.abbot.update(dt, me.x, me.z, camera);
+    world.zoeyy.update(dt, me.x, me.z, camera);
     world.monk.update(dt, me.x, me.z, camera);
     world.pitchCourt.update(dt, camera);
     app.follow.update(dt, me.x, me.y, me.z, look);

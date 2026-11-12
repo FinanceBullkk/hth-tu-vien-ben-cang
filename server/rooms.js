@@ -405,7 +405,6 @@ export class Room {
 
   onChat(p, data) {
     const now = Date.now();
-    if (p.rhythm?.kind === 'meditate') return { ok: false, error: 'Đang chơi Nhịp sen thì mình giữ yên lặng nhé.' };
     if (now - p.lastChat < LIMITS.chatIntervalMs) return { ok: false, error: 'Từ từ thôi, đợi 2 giây nhé.' };
     const text = cleanText(data?.text, LIMITS.chatMax);
     if (!text) return { ok: false };

@@ -12,7 +12,7 @@ import { WordFilter } from '../server/filter.js';
 import { WindowCounter, clientIp } from '../server/limits.js';
 import { localDate, zonedToTs } from '../server/time.js';
 import { fightGreen } from '../shared/fish.js';
-import { noteTargetAt, rhythmPattern } from '../shared/rhythm.js';
+import { rhythmPattern, roundTargetAt } from '../shared/rhythm.js';
 import {
   ABBOT, BELL, BOUNDS, BOXES, CIRCLES, CONTAINERS, MATS, PLAYER_RADIUS, POND, SPAWN, TEA, TREE, clampToWalkable, inBox, resolveCollision,
 } from '../shared/layout.js';
@@ -461,8 +461,8 @@ test('nhịp chuông: đứng gần mới chơi, chặn kết thúc sớm và hu
   const started = await call(a.s, 'rhythm:start', { kind: 'bell' });
   assert.equal(started.ok, true);
   assert.equal((await call(a.s, 'rhythm:finish', { id: started.game.id })).saved, false);
-  await new Promise((r) => setTimeout(r, Math.max(0, noteTargetAt(started.game.at, 0, 0) - Date.now())));
-  const strike = { id: started.game.id, round: 0, idx: 0, note: rhythmPattern(started.game.at, 0, 'bell')[0] };
+  await new Promise((r) => setTimeout(r, Math.max(0, roundTargetAt(started.game.at, 0) - Date.now())));
+  const strike = { id: started.game.id, round: 0, sequence: rhythmPattern(started.game.at, 0, 'bell') };
   const heard = once(b.s, 'bell:ring');
   const judged = await call(a.s, 'rhythm:hit', strike);
   assert.equal(judged.ok, true);
@@ -478,7 +478,7 @@ test('nhịp chuông: đứng gần mới chơi, chặn kết thúc sớm và hu
   b.s.disconnect();
 });
 
-test('thiền: giữ chỗ chiếu, chat bình thường; chỉ chặn chat trong Nhịp sen', async () => {
+test('thiền: giữ chỗ chiếu, chat bình thường và không còn minigame', async () => {
   const a = await join('Thiền A');
   const b = await join('Thiền B');
   // Đi vào gần chiếu số 0 ở phía nam vòng tròn.
@@ -495,11 +495,7 @@ test('thiền: giữ chỗ chiếu, chat bình thường; chỉ chặn chat tron
   assert.equal(r2.epoch, r1.epoch, 'người vào sau phải theo nhịp của người đầu');
   assert.deepEqual((await sync).mates, ['Thiền B']);
   assert.equal((await call(a.s, 'chat', { text: 'Chào bạn' })).ok, true);
-  const game = await call(a.s, 'rhythm:start', { kind: 'meditate' });
-  assert.equal(game.ok, true);
-  assert.equal((await call(a.s, 'chat', { text: 'Đang chơi nhịp' })).ok, false);
-  const early = await call(a.s, 'rhythm:finish', { id: game.game.id, score: 100 });
-  assert.equal(early.saved, false, 'ngồi chưa đủ năm hơi thở thì không lưu buổi');
+  assert.equal((await call(a.s, 'rhythm:start', { kind: 'meditate' })).ok, false);
   a.s.disconnect();
   b.s.disconnect();
 });

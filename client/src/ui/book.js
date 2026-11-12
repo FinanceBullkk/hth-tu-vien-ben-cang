@@ -128,7 +128,7 @@ export async function openBook(app) {
     h('p', {}, book.cultivation
       ? `${book.cultivation.name} · ${book.cultivation.points}${book.cultivation.next ? `/${book.cultivation.next}` : ' · viên mãn'} công pháp`
       : 'Khởi khí · 0 công pháp'),
-    h('p', { class: 'muted small' }, 'Hoàn thành Nhịp sen để tích công pháp, nâng hình thái aura đã chọn. Bỏ dở không nhận điểm. Chọn Không vẫn tích điểm nhưng không hiện aura.'),
+    h('p', { class: 'muted small' }, 'Ngồi thiền để tích Chân khí và nâng tầng aura đã chọn. Chọn Không vẫn tích Chân khí nhưng không hiện aura.'),
     h('h3', { 'data-hanzi': '氣' }, `Chân khí · Tầng ${cultivation(book.qi).level} · ${cultivation(book.qi).name}`),
     h('p', { class: 'muted small' }, 'Ngồi thiền để tích Chân khí. Khí càng nhiều, aura càng lớn; lên tầng mở thêm hiệu ứng.'),
     h('h3', { 'data-hanzi': '魚' }, 'Sổ cá'),

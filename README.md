@@ -62,10 +62,8 @@ Cập nhật lên bản mới: chép mã mới lên máy, chạy `docker build -
 
 - **Audition chuông:** nhập chuỗi **phím mũi tên**, rồi bấm **Space** khi vạch trắng tới tâm vùng vàng. Điện thoại có bốn phím chạm và nút **Chốt nhịp**. Có Perfect, Good, Miss và combo.
 - Login và trong game đều dùng bản *Where Winds Meet Character Creation Song*, với âm lượng giảm 50%. Server giữ một mốc phát chung trong game; mỗi máy vào sẽ phát cùng đoạn. Nhạc MP3 được phục vụ từ game. Nút **Nhạc** mở bảng phát/tạm dừng và chỉnh âm lượng; mức âm lượng được lưu trên máy. Nếu trình duyệt chặn phát tự động, bấm **Phát nhạc**. Đóng bảng không dừng nhạc. Phách minigame chạy độc lập.
-- **Nhịp chuông:** tới gần gác chuông, chơi 16 chuỗi trong khoảng 40 giây. Chốt đúng làm chuông ngân; đồng nghiệp chốt cùng nhịp làm âm dày hơn.
-- **Tĩnh tu:** bấm **Space** hoặc nút **Thiền tại chỗ** để ngồi ngay vị trí hiện tại; nút này cũng có trong menu **Chơi gì?**. Chọn **Ngồi thiền** trong menu để tới chiếu trống trong thiền đường. Cứ 6 giây đang ngồi nhận 1 Chân khí; đứng dậy giữ cả khí và thời gian lẻ. Tầng tự tăng tại 0 / 50 / 150 / 350 / 750 khí: Tụ khí, Dẫn khí, Ngưng khí, Hóa khí, Viên mãn. Aura lớn dần có giới hạn; ngồi thiền hiện thêm hạt khí, sen, phù văn và dải khí theo tầng, đứng dậy giữ vòng sáng nhỏ. Mất mạng ngừng tích khí, không cộng offline. Sổ an hiển thị Chân khí và tầng hiện tại.
-- **Nhịp sen:** khi ngồi trên chiếu, từ bảng Tĩnh tu bấm **Chơi Nhịp sen**, chơi 24 chuỗi trong khoảng một phút; vẫn tích Chân khí khi ngồi. Chốt đúng làm sen bên chiếu mở dần và vòng sáng lan theo nhịp. Người ngồi cùng thấy hiệu ứng của nhau.
-- Mỗi chuỗi dài từ 3 tới 5 phím. Nhạc 96 BPM; Perfect trong 110 ms, Good trong 240 ms quanh nhịp chuẩn. Server chấm theo thời điểm nhận Space, không tin điểm client gửi. Sổ lưu điểm Nhịp sen riêng của bạn, không có bảng xếp hạng. Thoát sớm không lưu kết quả; mất mạng sẽ dừng lượt chơi.
+- Tới gần gác chuông, chơi 16 chuỗi trong khoảng 40 giây. Chốt đúng làm chuông ngân; đồng nghiệp chốt cùng nhịp làm âm dày hơn. Server kiểm tra cả chuỗi và thời điểm nhận Space.
+- **Thiền:** bấm **Space** để ngồi ngay tại chỗ; đứng cạnh chiếu trống trong thiền đường thì ngồi lên chiếu. Ngồi yên và thở chậm để tích Chân khí; tầng tự tăng tại 0 / 50 / 150 / 350 / 750 khí: Tụ khí, Dẫn khí, Ngưng khí, Hóa khí, Viên mãn. Bấm quả cầu hoặc di chuyển để đứng dậy; khí đã tích được giữ lại. Mất mạng ngừng tích khí, không cộng offline.
 
 ## Tỉ võ tự do
 

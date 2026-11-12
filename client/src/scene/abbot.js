@@ -5,7 +5,7 @@ import { ABBOT, floorHeight } from '../../../shared/layout.js';
 import { Avatar } from '../player/avatar.js';
 
 // Đổi tên hiển thị ở đây.
-const ABBOT_NAME = 'Zoeyy Gay';
+const ABBOT_NAME = 'Trụ trì Ethan';
 
 const GREET_RADIUS = 6;
 const GREET_COOLDOWN_S = 60;
@@ -14,14 +14,14 @@ const BOW_S = 1.4;
 const TAP_RANGE = 30;
 
 const GREETINGS = [
-  'Hữu duyên gặp nhau. Thiếu hiệp lên chơi đấy à?',
-  'Lên Vân Đài rồi thì để email ở dưới cảng nhé.',
-  'Vào Tĩnh Tâm Các ngồi một lát đi, vẫn còn chiếu trống.',
-  'Chuông chiều nay thiếu hiệp đã đánh chưa?',
+  'A Di Đà Phật. Con lên chơi đấy à?',
+  'Lên chùa rồi thì để email ở dưới cảng nhé con.',
+  'Vào thiền đường ngồi một lát đi con, chiếu còn chỗ.',
+  'Chuông chiều nay con đã thỉnh chưa?',
 ];
 
 const ADVICE = [
-  'Tàu nào rồi cũng cập bến, thiếu hiệp ạ.',
+  'Tàu nào rồi cũng cập bến, con ạ.',
   'Hàng chậm thì đợi, lòng đừng chậm theo.',
   'Deadline có cut-off, lòng từ bi thì không.',
   'Uống chén trà đi đã, tờ khai không chạy mất đâu.',
@@ -30,7 +30,7 @@ const ADVICE = [
   'Roll-over là chuyện của tàu, đừng để nó cuốn luôn cả ngày của con.',
   'Việc hôm nay làm hết sức, phần còn lại để sóng lo.',
   'Khách chưa trả lời thì mình hít thở. Khách trả lời rồi thì hít thở tiếp.',
-  'Thiếu hiệp đã làm tốt hơn mình nghĩ đấy.',
+  'Con đã làm tốt hơn con nghĩ đấy.',
 ];
 
 const MAT = {
@@ -110,8 +110,9 @@ function addBeads(rig) {
 }
 
 export class Abbot {
-  constructor(scene) {
-    this.avatar = new Avatar({ name: ABBOT_NAME });
+  constructor(scene, name = ABBOT_NAME, position = ABBOT) {
+    this.position = position;
+    this.avatar = new Avatar({ name });
     this.avatar.nameEl.classList.add('abbot');
     this.avatar.label.position.y = 1.86;
     this.avatar.rig.scale.set(1.2, 1.06, 1.14); // Dáng đậm người.
@@ -121,9 +122,9 @@ export class Abbot {
     addGlasses(this.avatar.head);
     addBeads(this.avatar.rig);
 
-    this.y = floorHeight(ABBOT.x, ABBOT.z);
-    this.avatar.root.position.set(ABBOT.x, this.y, ABBOT.z);
-    this.avatar.root.rotation.y = ABBOT.rot;
+    this.y = floorHeight(position.x, position.z);
+    this.avatar.root.position.set(position.x, this.y, position.z);
+    this.avatar.root.rotation.y = position.rot;
     scene.add(this.avatar.root);
 
     this.bowT = 0;
@@ -143,13 +144,13 @@ export class Abbot {
   }
 
   atRay(ray) {
-    const p = this._p.set(ABBOT.x, this.y + 0.8, ABBOT.z);
+    const p = this._p.set(this.position.x, this.y + 0.8, this.position.z);
     return ray.distanceSqToPoint(p) < 0.5 && ray.origin.distanceTo(p) < TAP_RANGE;
   }
 
   update(dt, playerX, playerZ, camera) {
-    const dx = playerX - ABBOT.x;
-    const dz = playerZ - ABBOT.z;
+    const dx = playerX - this.position.x;
+    const dz = playerZ - this.position.z;
     const dist = Math.hypot(dx, dz);
 
     // Chào một lần khi người chơi bước lại gần, không chào lại ngay nếu họ đi quanh quẩn.
@@ -163,7 +164,7 @@ export class Abbot {
     }
     this.near = near;
 
-    const targetRot = dist < FACE_RADIUS ? Math.atan2(dx, dz) : ABBOT.rot;
+    const targetRot = dist < FACE_RADIUS ? Math.atan2(dx, dz) : this.position.rot;
     const { root, rig, armL, armR } = this.avatar;
     root.rotation.y = lerpAngle(root.rotation.y, targetRot, Math.min(1, dt * 3));
 

@@ -824,7 +824,7 @@ function fillSeeds(seed, count) {
 }
 
 // Nhịp thở theo hệ (giây/vòng): hút – phát – nghỉ chậm rãi, lệh pha tự nhiên vì t là giờ từng nhân vật.
-  const BREATH = [8, 13, 14, 9, 10, 12, 16, 8.5]; // V10: hệ 1 thở cùng chu kỳ 8 s của signature
+const BREATH = [8, 13, 14, 9, 10, 12, 16, 8.5]; // V10: hệ 1 thở cùng chu kỳ 8 s của signature
 
 export function createEffect(effect, lowQuality = false) {
   // 10..12: ba aura dải lụa (ribbon-aura.js đánh số nội bộ 9..11); 9 là Long quyền của bản prod.
@@ -2255,7 +2255,7 @@ export function createEffect(effect, lowQuality = false) {
   // V10 Sen Kim: traverse trên đè renderOrder bên trong signature thành 6 — mực
   // normal-blend phải vẽ trước lớp additive cùng mặt phẳng nên trả thứ tự tường minh.
   // Hệ khác giữ nguyên hành vi cũ.
-  if (effect === 1) signature.group.traverse((o) => {
+  if (effect === 1 && signature) signature.group.traverse((o) => {
     const order = { 'aura-emblem-ink': 1, 'aura-emblem-rim-ink': 1,
       'aura-emblem-core': 2, 'aura-emblem-rim': 2, 'aura-emblem-glow': 3 }[o.name];
     if (order) o.renderOrder = order;
@@ -2283,14 +2283,14 @@ export function createEffect(effect, lowQuality = false) {
       if (group.material !== master) return;
       group.material = master.clone();
       // V10.2 Sen Kim: Dissolve có trình tự (khí tan → vòng → cánh → trận) thay vì tắt cụm.
-      signature.onFadeStart?.();
+      signature?.onFadeStart?.();
     },
     setColor() {},
     /** V10.2: điều khiển trạng thái trình diễn của aura hệ 1
         (summon / idle / enhanced / breakthrough / dissolve); hệ khác bỏ qua. */
-    setAuraState(name) { signature.setState?.(name); },
+    setAuraState(name) { signature?.setState?.(name); },
     /** QA/preview: ghim trạng thái + tiến trình để chụp khung tái lập (T null = bỏ ghim). */
-    qaState(name, T) { signature.qaState?.(name, T); },
+    qaState(name, T) { signature?.qaState?.(name, T); },
     /** Bật/tắt kiếm khí theo vũ khí nhân vật đang mang. */
     setWeapon(w) {
       if (w > 0 && !swords) buildSwords();
