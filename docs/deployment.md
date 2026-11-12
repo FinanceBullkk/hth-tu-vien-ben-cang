@@ -1,6 +1,34 @@
 # Deployment
 
-## Current release: 2026-11-09 camera orbit fix, 15:06 UTC+7
+## Current release: 2026-11-12 main after D drive recovery, 10:17 UTC+7
+
+Deploy run [43147193947](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43147193947)
+released main `3d78fd8` (PR #27, work restored after the D drive loss on
+2026-11-11) as `hth:261112-1017-3d78fd8`, replacing `hth:camera-orbit-1109`.
+This is the first workflow release since the manual 2026-11-09 releases; their
+features (Zoeyy, chat HUD, camera orbit) are in main. Public bundle:
+`index-DUMEUq2e.js` (SHA256 `e776365a…777ebf`).
+
+Before the release, production and `hth-tunnel-fixed` had been stopped since
+2026-11-10 (Docker Desktop data move); both were restarted with `docker start`
+and their existing images and volumes. The earlier candidate run 43130166254
+failed only because production was not running. An offline tar backup of the
+data volume was taken before restart, outside the repository on `pc-chinh`.
+
+Local suite 154/154 and Vite build passed on Node 24. Candidate run
+[43146939540](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43146939540):
+Docker tests 154/154; health, page, bundle, Socket.IO and DB passed. Production
+run: candidate, localhost and public checks passed; DB quick_check ok with 49
+players, 23 wishes, 42 fish (no decrease). Runtime flags, `hth-net`, volume
+and localhost port retained. Public browser check after cutover: skills 1-4
+cast, Space meditates in place with the qi orb, E talks to Trụ trì Ethan and
+Zoeyy. Voice and other activities were not rechecked.
+
+Rollback container `hth-rollback-261112-1017-3d78fd8` preserves
+`hth:camera-orbit-1109`, stopped with `restart=no`. Private backup is in the
+data volume at `backups/cutover-261112-1017-3d78fd8/`.
+
+## Previous release: 2026-11-09 camera orbit fix, 15:06 UTC+7
 
 Public image `hth:camera-orbit-1109` adds camera wall collision and 360-degree
 orbit fixes from commit `2470949` on `fix/camera-orbit-1109`. Mouse hover rotates
