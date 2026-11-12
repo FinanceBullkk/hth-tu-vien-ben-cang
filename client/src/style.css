@@ -405,7 +405,7 @@ kbd { font: inherit; }
 .touch.emoji-open #emojiBar { display: flex; background: rgba(33, 20, 14, .94); }
 .touch.emoji-open #chatHistory { visibility: hidden; }
 .touch .emoji-btn { width: 40px; height: 40px; font-size: 20px; }
-.touch #chatHistory { left: 8px; bottom: calc(222px + var(--safe-b)); width: min(300px, calc(100vw - 80px)); max-height: min(170px, 24dvh); }
+.touch #chatHistory { left: 8px; bottom: calc(228px + var(--safe-b)); width: min(300px, calc(100vw - 80px)); max-height: min(170px, 24dvh); }
 .touch #chatForm { left: 8px; bottom: calc(8px + var(--safe-b)); width: min(420px, calc(100vw - 16px)); }
 .touch.chatting #chatHistory { left: 8px; bottom: calc(52px + var(--safe-b)); width: min(420px, calc(100vw - 16px)); }
 .touch #wishReader { bottom: calc(210px + var(--safe-b)); }
