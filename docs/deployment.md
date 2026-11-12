@@ -1,6 +1,26 @@
 # Deployment
 
-## Current release: 2026-11-12 main after D drive recovery, 10:17 UTC+7
+## Current release: 2026-11-12 shader warm-up and pinning, 11:13 UTC+7
+
+Deploy run [43153303297](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43153303297)
+released main `07d52bb` (PR #29) as `hth:261112-1113-07d52bb`, replacing
+`hth:261112-1017-3d78fd8`. Client-only change: shaders for every PK move and 13
+avatar variants compile on the welcome screen and stay alive for the session,
+so PK casts and players joining or leaving no longer stall frames; a
+self-lowered graphics level is remembered per GPU for 7 days. Public bundle:
+`index-BNmR_Sr2.js`.
+
+Local suite 158/158 and Vite build passed on Node 24; Docker tests 158/158.
+Candidate passed health, page, bundle, Socket.IO and DB `quick_check` (49
+players, 23 wishes, 42 fish, no decrease). Production cutover passed localhost
+and public checks with the candidate's bundle hash. Not measured on an office
+laptop with integrated graphics.
+
+Rollback container `hth-rollback-261112-1113-07d52bb` preserves
+`hth:261112-1017-3d78fd8`. Private backup is in the data volume at
+`backups/cutover-261112-1113-07d52bb/`.
+
+## Previous release: 2026-11-12 main after D drive recovery, 10:17 UTC+7
 
 Deploy run [43147193947](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43147193947)
 released main `3d78fd8` (PR #27, work restored after the D drive loss on
