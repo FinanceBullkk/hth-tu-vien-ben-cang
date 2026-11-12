@@ -4,7 +4,9 @@
 import { BAUCUA, emptyBets } from '../../../shared/baucua.js';
 import { BAUCUA_ZONE, dist2d } from '../../../shared/layout.js';
 import { BauCuaPanel } from '../ui/baucua-panel.js';
+import { BauCuaReveal } from '../ui/baucua-reveal.js';
 
+const RATTLE_EVERY_S = 0.11; // Tiếng xúc xắc lắc trong đĩa khi nhà cái xóc.
 const LEAVE_MARGIN = 0.9; // Đi xa hơn bán kính bàn chừng này thì tự rời (server cho dung sai rộng hơn).
 const BET_GAP_MS = 140; // Giữ nhịp trên server (120 ms): bấm giữ phím số không đốt hết chip.
 const DEFAULT_CHIP = BAUCUA.chips[Math.min(1, BAUCUA.chips.length - 1)];
@@ -19,6 +21,9 @@ export class BauCuaActivity {
     this.mine = emptyBets();
     this.chip = DEFAULT_CHIP;
     this.lastBet = 0;
+    this.payout = null; // Kết quả riêng của ván gần nhất { round, net }, tới ngay trước tin mở bát.
+    this.rattleT = 0;
+    this.reveal = new BauCuaReveal();
     this.panel = new BauCuaPanel({
       onBet: (symbol) => this.bet(symbol),
       onChip: (amount) => {
@@ -37,15 +42,16 @@ export class BauCuaActivity {
     // Quay mặt vào bàn. Camera để nguyên cho người chơi tự xoay: góc chợ này chật, camera ép sẵn dễ bị cây và mái sạp chắn.
     app.me.placeAt(app.me.x, app.me.z, Math.atan2(BAUCUA_ZONE.x - app.me.x, BAUCUA_ZONE.z - app.me.z));
     this.panel.show();
-    this.panel.setMessage('Chọn chip rồi bấm ô để cược. Thắng nhận lại cược cộng một lần cược cho mỗi viên trùng.');
+    this.panel.setMessage('Chọn chip, bấm ô (hoặc phím 1–6) để cược. Trùng mấy viên ăn mấy lần.');
     this.#render();
   }
 
   cancel() {
     this.panel.hide();
+    this.reveal.hide();
   }
 
-  update() {
+  update(dt) {
     const { app } = this;
     if (dist2d(app.me.x, app.me.z, BAUCUA_ZONE.x, BAUCUA_ZONE.z) > BAUCUA_ZONE.radius + LEAVE_MARGIN) {
       app.hud.toast('Bạn đã rời bàn bầu cua.');
@@ -53,6 +59,13 @@ export class BauCuaActivity {
       return;
     }
     this.panel.tick(app.net.now(), this.state);
+    if (this.state?.phase === 'rolling') {
+      this.rattleT -= dt;
+      if (this.rattleT <= 0) {
+        this.rattleT = RATTLE_EVERY_S;
+        app.audio.rattle();
+      }
+    }
   }
 
   onKey(code, isDown) {
@@ -80,6 +93,7 @@ export class BauCuaActivity {
   /** Server phát trạng thái bàn (đổi pha, tổng cược). Sang ván mới thì cược cũ của mình đã được chấm xong. */
   applyState(state) {
     if (!state) return;
+    const opening = state.phase === 'result' && (this.state?.phase !== 'result' || this.state?.round !== state.round);
     if (state.round !== this.round) {
       this.round = state.round;
       this.mine = emptyBets();
@@ -88,6 +102,16 @@ export class BauCuaActivity {
     this.state = state;
     this.app.world.baucuaTable.setState(state);
     this.#render();
+    if (opening && state.dice && this.app.activities.current === this) this.#open(state);
+  }
+
+  /** Mở bát: ba viên to giữa màn hình, kèm lãi/lỗ của mình nếu ván này mình có cược. */
+  #open(state) {
+    const { app } = this;
+    const net = this.payout?.round === state.round ? this.payout.net : null;
+    this.reveal.show(state.dice, net);
+    app.audio.pop();
+    if (net > 0) app.audio.chime(0.09);
   }
 
   async bet(symbol) {
@@ -124,13 +148,17 @@ export class BauCuaActivity {
   }
 
   /** Kết quả ván của riêng mình (server chỉ gửi cho người có cược). */
-  onPayout({ stake, payout, net, teu }) {
+  onPayout({ round, stake, payout, net, teu }) {
     const { app } = this;
+    this.payout = { round, net };
     app.wallet.apply({ teu });
     const text = net > 0 ? `Thắng +${net} TEU` : net < 0 ? `Thua ${-net} TEU` : 'Hoà vốn';
-    if (net > 0) app.audio.chime(0.08);
     if (app.activities.current === this) this.panel.setMessage(`${text} · cược ${stake}, nhận ${payout}`, net > 0 ? 'win' : 'lose');
-    else app.hud.toast(`Bầu cua: ${text}`);
+    else {
+      // Đã rời bàn: không có màn mở bát, báo gọn bằng toast.
+      if (net > 0) app.audio.chime(0.08);
+      app.hud.toast(`Bầu cua: ${text}`);
+    }
   }
 
   #render() {

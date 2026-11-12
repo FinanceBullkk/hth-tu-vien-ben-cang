@@ -1,8 +1,10 @@
-// Họa tiết bàn bầu cua vẽ bằng canvas: mặt xúc xắc và mặt bàn sáu ô. Không dùng ảnh ngoài (CSP chỉ cho cùng nguồn).
+// Họa tiết bàn bầu cua vẽ bằng canvas: mặt xúc xắc và tấm bạt 3×2 như bạt bầu cua ngoài chợ Tết.
+// Không dùng ảnh ngoài (CSP chỉ cho cùng nguồn); emoji vẽ bằng font hệ thống, tên in kèm để máy thiếu font vẫn đọc được.
 import * as THREE from 'three';
 import { BAUCUA_SYMBOLS } from '../../../shared/baucua.js';
 
 const EMOJI_FONT = '"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
+const SERIF = '"Palatino Linotype", "Book Antiqua", Georgia, serif';
 
 function canvasTexture(canvas) {
   const texture = new THREE.CanvasTexture(canvas);
@@ -11,86 +13,95 @@ function canvasTexture(canvas) {
   return texture;
 }
 
-/** Mặt xúc xắc: nền ngà, biểu tượng lớn và tên nhỏ bên dưới (tên giúp đọc được cả khi máy không có font emoji màu). */
+function roundRect(g, x, y, w, h, r) {
+  g.beginPath();
+  g.moveTo(x + r, y);
+  g.arcTo(x + w, y, x + w, y + h, r);
+  g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r);
+  g.arcTo(x, y, x + w, y, r);
+  g.closePath();
+}
+
+/** Mặt xúc xắc: nền ngà, viền màu của con vật, biểu tượng chiếm gần hết mặt. */
 export function diceFaceTexture(symbol) {
   const s = BAUCUA_SYMBOLS[symbol];
   const canvas = document.createElement('canvas');
   canvas.width = 128;
   canvas.height = 128;
   const g = canvas.getContext('2d');
-  g.fillStyle = '#f4ead2';
+  g.fillStyle = '#efe4c8';
   g.fillRect(0, 0, 128, 128);
+  g.fillStyle = '#fbf5e6';
+  roundRect(g, 8, 8, 112, 112, 18);
+  g.fill();
   g.strokeStyle = s.color;
-  g.lineWidth = 6;
-  g.strokeRect(5, 5, 118, 118);
+  g.lineWidth = 7;
+  g.stroke();
   g.textAlign = 'center';
   g.textBaseline = 'middle';
-  g.font = `66px ${EMOJI_FONT}`;
-  g.fillStyle = '#222';
-  g.fillText(s.icon, 64, 58);
-  g.font = '700 20px "Palatino Linotype", Georgia, serif';
+  g.font = `76px ${EMOJI_FONT}`;
+  g.fillText(s.icon, 64, 60);
+  g.font = `700 15px ${SERIF}`;
   g.fillStyle = s.color;
   g.fillText(s.name.toUpperCase(), 64, 108);
   return canvasTexture(canvas);
 }
 
-/**
- * Mặt bàn tròn chia sáu ô như cái đĩa: ô nào đang trúng (winners) sáng vàng.
- * Vẽ lại vào đúng canvas cũ để khỏi tạo texture mới mỗi ván.
- */
-export function drawTableTop(canvas, winners = new Set()) {
-  const size = canvas.width;
-  const c = size / 2;
+const CELL = 256;
+export const MAT_COLS = 3;
+export const MAT_ROWS = 2;
+
+/** Vẽ tấm bạt: nền đỏ, khung vàng, sáu ô theo thứ tự mặt (hàng trên Nai Bầu Gà, hàng dưới Cá Cua Tôm). Ô trúng sáng vàng. */
+export function drawMat(canvas, winners = new Set()) {
   const g = canvas.getContext('2d');
-  g.clearRect(0, 0, size, size);
-  g.save();
-  g.beginPath();
-  g.arc(c, c, c - 2, 0, Math.PI * 2);
-  g.clip();
-  g.fillStyle = '#6e1f18';
-  g.fillRect(0, 0, size, size);
-  const slice = (Math.PI * 2) / BAUCUA_SYMBOLS.length;
+  const w = canvas.width;
+  const h = canvas.height;
+  const bg = g.createLinearGradient(0, 0, 0, h);
+  bg.addColorStop(0, '#a3241a');
+  bg.addColorStop(1, '#7c1711');
+  g.fillStyle = bg;
+  g.fillRect(0, 0, w, h);
+  // Sợi vải mờ cho đỡ phẳng.
+  g.globalAlpha = 0.08;
+  g.fillStyle = '#000';
+  for (let y = 0; y < h; y += 6) g.fillRect(0, y, w, 2);
+  g.globalAlpha = 1;
+  g.strokeStyle = '#e9c46a';
+  g.lineWidth = 10;
+  g.strokeRect(8, 8, w - 16, h - 16);
+
   BAUCUA_SYMBOLS.forEach((s, i) => {
-    const a0 = i * slice - Math.PI / 2 - slice / 2;
-    g.beginPath();
-    g.moveTo(c, c);
-    g.arc(c, c, c, a0, a0 + slice);
-    g.closePath();
+    const x = (i % MAT_COLS) * CELL;
+    const y = Math.floor(i / MAT_COLS) * CELL;
     const win = winners.has(i);
-    g.fillStyle = win ? 'rgba(255, 214, 120, .5)' : i % 2 ? 'rgba(0, 0, 0, .14)' : 'rgba(255, 255, 255, .05)';
+    g.fillStyle = win ? '#ffe7a3' : '#f6ecd4';
+    roundRect(g, x + 22, y + 22, CELL - 44, CELL - 44, 22);
     g.fill();
-    g.strokeStyle = 'rgba(232, 195, 120, .75)';
-    g.lineWidth = 3;
+    g.lineWidth = win ? 12 : 6;
+    g.strokeStyle = win ? '#ffb703' : '#c99a3c';
     g.stroke();
-    const mid = a0 + slice / 2;
-    const x = c + Math.cos(mid) * size * 0.31;
-    const y = c + Math.sin(mid) * size * 0.31;
-    g.save();
-    g.translate(x, y);
-    g.rotate(mid + Math.PI / 2);
+    g.fillStyle = s.color;
+    g.globalAlpha = 0.18;
+    g.beginPath();
+    g.arc(x + CELL / 2, y + CELL / 2 - 14, 76, 0, Math.PI * 2);
+    g.fill();
+    g.globalAlpha = 1;
     g.textAlign = 'center';
     g.textBaseline = 'middle';
-    g.font = `${size * 0.13}px ${EMOJI_FONT}`;
-    g.fillStyle = '#fff';
-    g.fillText(s.icon, 0, -size * 0.015);
-    g.font = `700 ${size * 0.04}px "Palatino Linotype", Georgia, serif`;
-    g.fillStyle = win ? '#fff3c4' : '#e8c378';
-    g.fillText(s.name, 0, size * 0.075);
-    g.restore();
+    g.font = `118px ${EMOJI_FONT}`;
+    g.fillText(s.icon, x + CELL / 2, y + CELL / 2 - 14);
+    g.font = `700 34px ${SERIF}`;
+    g.fillStyle = '#7c1711';
+    g.fillText(s.name.toUpperCase(), x + CELL / 2, y + CELL - 48);
   });
-  g.restore();
-  g.strokeStyle = '#e8c378';
-  g.lineWidth = 6;
-  g.beginPath();
-  g.arc(c, c, c - 5, 0, Math.PI * 2);
-  g.stroke();
 }
 
-/** Canvas + texture mặt bàn; gọi drawTableTop(canvas, winners) rồi texture.needsUpdate = true để đổi ô sáng. */
-export function createTableTop() {
+/** Canvas + texture tấm bạt; gọi drawMat(canvas, winners) rồi texture.needsUpdate = true để đổi ô sáng. */
+export function createMat() {
   const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 512;
-  drawTableTop(canvas);
+  canvas.width = CELL * MAT_COLS;
+  canvas.height = CELL * MAT_ROWS;
+  drawMat(canvas);
   return { canvas, texture: canvasTexture(canvas) };
 }

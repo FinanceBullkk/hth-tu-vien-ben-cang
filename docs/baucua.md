@@ -11,9 +11,17 @@ Bàn chung ở góc chợ sau Sạp Kim Bảo (`BAUCUA_ZONE` trong `shared/layou
 
 ## Vòng đời một ván
 
-`idle` -> có người đặt cược đầu tiên -> `betting` (20 giây) -> `rolling` (3,5 giây xóc) -> `result` (8 giây) -> `idle`.
+`idle` -> có người đặt cược đầu tiên -> `betting` (8 giây) -> `rolling` (2 giây xóc) -> `result` (3 giây) -> `idle`.
 Đặt cược lúc `idle` hoặc `result` mở ván mới ngay. Bàn không chạy khi không ai cược, nên không tốn băng thông.
 Mọi mốc thời gian và giới hạn nằm trong `BAUCUA` ở `shared/baucua.js`.
+
+## Hình ảnh
+
+- Bàn tròn: tấm bạt 3×2 (Nai Bầu Gà / Cá Cua Tôm) trải nửa phía khách, đĩa sứ và bát úp nửa phía nhà cái.
+- Chú Tư nhà cái (NPC, `BAUCUA_ZONE.dealer`, là vật cản) hô theo pha, hai tay nhấc đĩa xóc khi `rolling`.
+- Mở bát: bát nhấc lên nghiêng về phía khách, ô trúng trên bạt sáng vàng; người đang chơi thấy ba viên to giữa màn hình
+  (`ui/baucua-reveal.js`) kèm lãi/lỗ của mình, nghe tiếng lắc xúc xắc khi xóc.
+- Bảng cược (`ui/baucua-panel.js`) vẽ như tấm bạt đỏ: chip tròn 1/5/10, chồng chip trên ô mình đã cược, thanh thời gian chạy lùi.
 
 ## TEU và bảng tuần
 

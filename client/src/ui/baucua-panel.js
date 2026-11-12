@@ -1,50 +1,60 @@
-// Bảng đặt cược bầu cua, dock ở đáy màn hình: sáu ô mặt, chọn mệnh giá, xoá cược, ví TEU và kết quả.
-// Chỉ vẽ và nhận bấm; luật và số liệu do activity lấy từ server rồi đẩy vào render().
+// Bảng đặt cược bầu cua dock ở đáy màn hình, vẽ như tấm bạt đỏ ngoài chợ Tết: sáu ô con vật, chip tròn xếp chồng
+// lên ô mình đã cược, thanh thời gian chạy lùi. Chỉ vẽ và nhận bấm; luật và số liệu do activity lấy từ server.
 import { BAUCUA, BAUCUA_SYMBOLS, matchCounts } from '../../../shared/baucua.js';
 import { $, h } from './dom.js';
 
 const PHASE_TEXT = {
-  idle: 'Bàn đang nghỉ — đặt một cược để mở ván mới',
-  betting: 'Đặt cược',
-  rolling: 'Đang xóc đĩa…',
+  idle: 'Bàn nghỉ · đặt để mở ván',
+  betting: 'Nhận cược',
+  rolling: 'Đang xóc…',
   result: 'Mở bát',
 };
+const MAX_DISCS = 4;
+const chipTier = (amount) => (amount >= 10 ? 'gold' : amount >= 5 ? 'red' : 'ivory');
 
 export class BauCuaPanel {
   constructor({ onBet, onChip, onClear, onExit }) {
-    this.status = h('b', { class: 'baucua-phase' }, PHASE_TEXT.idle);
+    this.phase = h('b', { class: 'baucua-phase' }, PHASE_TEXT.idle);
     this.clock = h('span', { class: 'baucua-clock' });
-    this.dice = h('div', { class: 'baucua-dice', 'aria-live': 'polite' });
+    this.bar = h('i');
     this.msg = h('p', { class: 'baucua-msg', role: 'status' });
 
     this.tiles = BAUCUA_SYMBOLS.map((s, i) => {
-      const mine = h('span', { class: 'baucua-mine' });
+      const discs = Array.from({ length: MAX_DISCS }, () => h('i'));
+      const amount = h('em');
+      const stack = h('span', { class: 'baucua-stack', hidden: true }, discs, amount);
       const pool = h('small', { class: 'baucua-pool' });
       const badge = h('i', { class: 'baucua-badge', hidden: true });
       const el = h('button', {
         type: 'button', class: 'baucua-tile', style: `--tile:${s.color}`,
         'aria-label': `Cược ${s.name}, phím ${i + 1}`, onClick: () => onBet(i),
-      }, badge, h('span', { class: 'baucua-icon' }, s.icon), h('b', {}, s.name), mine, pool, h('kbd', {}, String(i + 1)));
-      return { el, mine, pool, badge };
+      },
+      badge,
+      h('span', { class: 'baucua-face' }, s.icon),
+      h('b', { class: 'baucua-name' }, s.name),
+      stack, pool, h('kbd', {}, String(i + 1)));
+      return { el, discs, amount, stack, pool, badge };
     });
 
     this.chips = BAUCUA.chips.map((amount) => h('button', {
-      type: 'button', class: 'baucua-chip', onClick: () => onChip(amount),
-    }, String(amount)));
-    this.clearBtn = h('button', { type: 'button', class: 'btn ghost small', onClick: onClear }, 'Xoá cược');
+      type: 'button', class: `baucua-chip ${chipTier(amount)}`, 'aria-label': `Chip ${amount} TEU`, onClick: () => onChip(amount),
+    }, h('span', {}, String(amount))));
+    this.clearBtn = h('button', { type: 'button', class: 'baucua-clear', onClick: onClear }, 'Rút cược');
     this.teu = h('b', {}, '0');
+    this.stake = h('span', { class: 'baucua-stake' });
 
-    this.root = h('section', { class: 'baucua-hud ink-panel', hidden: true, 'aria-label': 'Bầu cua' },
+    this.root = h('section', { class: 'baucua-hud', hidden: true, 'aria-label': 'Bầu cua' },
       h('header', { class: 'baucua-head' },
-        h('h2', { class: 'ink-title' }, 'Bầu cua', h('span', { class: 'seal' }, '骰')),
-        h('div', { class: 'baucua-state' }, this.status, this.clock),
-        h('button', { type: 'button', class: 'btn ghost small', onClick: onExit }, 'Rời bàn')),
-      this.dice,
-      h('div', { class: 'baucua-board' }, this.tiles.map((t) => t.el)),
+        h('h2', { class: 'baucua-title' }, 'Bầu cua', h('span', { class: 'seal' }, '骰')),
+        h('div', { class: 'baucua-state' }, this.phase, this.clock),
+        h('button', { type: 'button', class: 'baucua-exit', onClick: onExit, 'aria-label': 'Rời bàn' }, 'Rời bàn')),
+      h('div', { class: 'baucua-timer', 'aria-hidden': 'true' }, this.bar),
+      h('div', { class: 'baucua-mat' }, this.tiles.map((t) => t.el)),
       h('footer', { class: 'baucua-foot' },
-        h('div', { class: 'baucua-chips', role: 'group', 'aria-label': 'Mệnh giá TEU' }, this.chips),
+        h('div', { class: 'baucua-chips', role: 'group', 'aria-label': 'Chọn mệnh giá' }, this.chips),
+        this.stake,
         this.clearBtn,
-        h('span', { class: 'teu-chip' }, 'TEU ', this.teu)),
+        h('span', { class: 'baucua-wallet' }, h('small', {}, 'TEU'), this.teu)),
       this.msg);
     $('rhythmLayer').append(this.root);
   }
@@ -62,39 +72,53 @@ export class BauCuaPanel {
     this.msg.dataset.tone = tone;
   }
 
-  /** Đếm ngược theo giờ server; chỉ hiện khi đang đặt cược. */
+  /** Đếm ngược theo giờ server: số giây và thanh thời gian chạy lùi khi đang nhận cược. */
   tick(nowMs, state) {
-    const left = state?.phase === 'betting' ? Math.max(0, Math.ceil((state.endsAt - nowMs) / 1000)) : null;
-    const text = left === null ? '' : `${left}s`;
+    const betting = state?.phase === 'betting';
+    const leftMs = betting ? Math.max(0, state.endsAt - nowMs) : 0;
+    const text = betting ? `${Math.ceil(leftMs / 1000)}s` : '';
     if (this.clock.textContent !== text) this.clock.textContent = text;
-    this.clock.classList.toggle('urgent', left !== null && left <= 5);
+    this.root.classList.toggle('urgent', betting && leftMs <= 3000);
+    this.bar.style.transform = `scaleX(${betting ? leftMs / BAUCUA.betMs : 0})`;
   }
 
   /** state: bàn chung; mine: cược của mình (6 số); chip: mệnh giá đang chọn; teu: số dư. */
   render({ state, mine, chip, teu }) {
     const phase = state?.phase ?? 'idle';
-    this.status.textContent = PHASE_TEXT[phase];
+    this.root.dataset.phase = phase;
+    this.phase.textContent = PHASE_TEXT[phase];
     const settled = (phase === 'result' || phase === 'idle') && state?.dice;
     const hits = settled ? matchCounts(state.dice) : null;
-    this.dice.textContent = settled ? state.dice.map((d) => BAUCUA_SYMBOLS[d].icon).join('  ') : '';
-    this.dice.hidden = !settled;
 
     this.tiles.forEach((tile, i) => {
       const pool = state?.totals?.[i] ?? 0;
-      tile.mine.textContent = mine[i] > 0 ? `${mine[i]}` : '';
-      tile.pool.textContent = pool > 0 ? `bàn ${pool}` : '';
+      const amount = mine[i];
+      tile.stack.hidden = amount <= 0;
+      tile.amount.textContent = amount > 0 ? String(amount) : '';
+      const discs = Math.min(MAX_DISCS, Math.ceil(amount / 5));
+      tile.discs.forEach((d, k) => {
+        d.hidden = k >= discs;
+        d.className = chipTier(amount);
+      });
+      tile.pool.textContent = pool > amount ? `cả bàn ${pool}` : '';
       tile.el.disabled = phase === 'rolling';
-      tile.el.classList.toggle('placed', mine[i] > 0);
+      tile.el.classList.toggle('placed', amount > 0);
       const n = hits?.[i] ?? 0;
       tile.el.classList.toggle('hit', n > 0);
+      tile.el.classList.toggle('miss', Boolean(hits) && n === 0);
       tile.badge.hidden = n === 0;
       tile.badge.textContent = n > 0 ? `×${n}` : '';
     });
     this.chips.forEach((el, i) => {
-      el.classList.toggle('on', BAUCUA.chips[i] === chip);
-      el.setAttribute('aria-pressed', String(BAUCUA.chips[i] === chip));
+      const on = BAUCUA.chips[i] === chip;
+      el.classList.toggle('on', on);
+      el.setAttribute('aria-pressed', String(on));
     });
-    this.clearBtn.disabled = phase !== 'betting' || !mine.some((v) => v > 0);
+    const total = mine.reduce((s, v) => s + v, 0);
+    // Ván đã mở bát thì chip trên ô là của ván vừa xong (đã chấm), không còn "đang cược".
+    this.root.classList.toggle('settled', Boolean(settled));
+    this.stake.textContent = total <= 0 ? '' : settled ? `Ván vừa rồi cược ${total}` : `Đang cược ${total}`;
+    this.clearBtn.disabled = phase !== 'betting' || total === 0;
     this.teu.textContent = String(teu);
   }
 }
