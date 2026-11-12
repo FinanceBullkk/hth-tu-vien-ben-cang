@@ -57,11 +57,10 @@ export const EFFECT_NAMES = ['Không', 'Sen kim', 'Lưu ly', 'Tinh hà', 'Hỏa 
 
 export const EMOJIS = ['🙏', '🌸', '😊', '❤️', '👋', '🍵'];
 
-export const WISH_PLACES = ['tree', 'pond', 'container'];
+export const WISH_PLACES = ['tree', 'pond'];
 export const PLACE_LABELS = {
   tree: 'Dải lụa trên cây bồ đề',
   pond: 'Đèn hoa đăng trên hồ sen',
-  container: 'Thẻ giấy dán lên container',
 };
 
 // Mã trạng thái chuyển động và hoạt động (gửi dạng số cho gọn).

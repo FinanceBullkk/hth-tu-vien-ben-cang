@@ -108,7 +108,7 @@ function main() {
     me: new LocalPlayer(scene, profile, isTouch),
     modalBusy: () => modalOpen(),
     isBusy: () => modalOpen() || Boolean(app.activities.current && app.activities.current !== app.activities.meditation),
-    chatBlocked: () => app.activities.current === app.activities.lotus,
+    chatBlocked: () => false,
   };
   app.remotes._p = new THREE.Vector3();
   app.bloom = bloomPass;
@@ -214,6 +214,7 @@ function main() {
       hud.playMusic();
       hud.show();
       hud.startRadio(snap.radio);
+      app.voice.start();
       app.follow.intro = false;
       me.avatar.nameEl.hidden = false;
       trimShadowCasters(me.avatar); // Ngoại hình đã chốt ở màn chào.
@@ -256,7 +257,10 @@ function main() {
     return r ? { x: r.avatar.root.position.x, z: r.avatar.root.position.z } : null;
   };
 
-  net.on('chat', ({ sid, text }) => avatarOf(sid)?.say(text));
+  net.on('chat', ({ sid, text }) => {
+    avatarOf(sid)?.say(text);
+    app.chat.receive(sid === mySid ? app.myName : remotes.map.get(sid)?.name ?? 'Người chơi', text);
+  });
   net.on('cultivation:update', ({ sid, tier }) => avatarOf(sid)?.setCultivation(tier));
   net.on('emoji', ({ sid, i }) => avatarOf(sid)?.say(EMOJIS[i] ?? '', 2500));
   net.on('wave', ({ from, to, name }) => {
@@ -284,11 +288,9 @@ function main() {
   });
   net.on('meditation:sync', (data) => {
     app.activities.meditation.onSync(data);
-    app.activities.lotus.onSync(data);
   });
   net.on('cultivation:progress', ({ sid, qi }) => avatarOf(sid)?.setQi(qi));
   net.on('meditation:scene', (data) => world.meditation.apply(data));
-  net.on('rhythm:bloom', (data) => world.meditation.bloom(data));
 
   // ---------- Câu cá ----------
   net.on('fish:bobber', ({ sid, bx, bz }) => {
@@ -368,11 +370,11 @@ function main() {
     }
     if (app.activities.onKey(e.code, true)) return true;
     if (modalOpen() || app.activities.current) return false;
-    if (e.code === 'KeyE' || e.code === 'Enter') {
+    if (e.code === 'KeyE') {
       hud.runAction();
       return true;
     }
-    if (e.code === 'KeyT') {
+    if (e.code === 'Enter' || e.code === 'KeyT') {
       app.chat.show();
       return true;
     }
@@ -404,8 +406,8 @@ function main() {
       world.abbot.advise();
       return;
     }
-    if (world.monk.atRay(raycaster.ray)) {
-      app.activities.riddle.start();
+    if (world.zoeyy.atRay(raycaster.ray)) {
+      world.zoeyy.advise();
       return;
     }
     const cat = world.animals.catAtRay(raycaster.ray);
@@ -475,6 +477,7 @@ function main() {
     world.wishes.setViewer(me.x, me.z, camera);
     world.update(dt, nowMs);
     world.abbot.update(dt, me.x, me.z, camera);
+    world.zoeyy.update(dt, me.x, me.z, camera);
     world.monk.update(dt, me.x, me.z, camera);
     world.pitchCourt.update(dt, camera);
     app.follow.update(dt, me.x, me.y, me.z, look);

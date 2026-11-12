@@ -110,8 +110,9 @@ function addBeads(rig) {
 }
 
 export class Abbot {
-  constructor(scene) {
-    this.avatar = new Avatar({ name: ABBOT_NAME });
+  constructor(scene, name = ABBOT_NAME, position = ABBOT) {
+    this.position = position;
+    this.avatar = new Avatar({ name });
     this.avatar.nameEl.classList.add('abbot');
     this.avatar.label.position.y = 1.86;
     this.avatar.rig.scale.set(1.2, 1.06, 1.14); // Dáng đậm người.
@@ -121,9 +122,9 @@ export class Abbot {
     addGlasses(this.avatar.head);
     addBeads(this.avatar.rig);
 
-    this.y = floorHeight(ABBOT.x, ABBOT.z);
-    this.avatar.root.position.set(ABBOT.x, this.y, ABBOT.z);
-    this.avatar.root.rotation.y = ABBOT.rot;
+    this.y = floorHeight(position.x, position.z);
+    this.avatar.root.position.set(position.x, this.y, position.z);
+    this.avatar.root.rotation.y = position.rot;
     scene.add(this.avatar.root);
 
     this.bowT = 0;
@@ -143,13 +144,13 @@ export class Abbot {
   }
 
   atRay(ray) {
-    const p = this._p.set(ABBOT.x, this.y + 0.8, ABBOT.z);
+    const p = this._p.set(this.position.x, this.y + 0.8, this.position.z);
     return ray.distanceSqToPoint(p) < 0.5 && ray.origin.distanceTo(p) < TAP_RANGE;
   }
 
   update(dt, playerX, playerZ, camera) {
-    const dx = playerX - ABBOT.x;
-    const dz = playerZ - ABBOT.z;
+    const dx = playerX - this.position.x;
+    const dz = playerZ - this.position.z;
     const dist = Math.hypot(dx, dz);
 
     // Chào một lần khi người chơi bước lại gần, không chào lại ngay nếu họ đi quanh quẩn.
@@ -163,7 +164,7 @@ export class Abbot {
     }
     this.near = near;
 
-    const targetRot = dist < FACE_RADIUS ? Math.atan2(dx, dz) : ABBOT.rot;
+    const targetRot = dist < FACE_RADIUS ? Math.atan2(dx, dz) : this.position.rot;
     const { root, rig, armL, armR } = this.avatar;
     root.rotation.y = lerpAngle(root.rotation.y, targetRot, Math.min(1, dt * 3));
 

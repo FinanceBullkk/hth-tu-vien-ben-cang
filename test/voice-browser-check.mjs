@@ -54,6 +54,10 @@ try {
     await page.locator('#nameInput').fill(name);
     await page.locator('#enterBtn').click();
     await page.waitForFunction(() => window.__hth?.net.ready);
+    await page.waitForFunction(() => window.__hth.voice.active || !window.__hth.voice.starting);
+    assert.equal(await page.evaluate(() => window.__hth.voice.active), true, 'voice phải tự bật sau khi vào game');
+    assert.equal(await page.evaluate(() => window.__hth.voice.mode), 'ptt');
+    assert.equal(await page.evaluate(() => window.__testCapture.stream.getAudioTracks()[0].enabled), false);
     await page.evaluate(() => {
       const net = window.__hth.net, call = net.call.bind(net);
       net.call = async (...args) => {
@@ -72,9 +76,9 @@ try {
     if (!(await page.locator('#voicePanel').evaluate((el) => el.open))) await page.getByLabel('Điều khiển mic', { exact: true }).click();
   };
   for (const page of [a, b]) {
-    assert.equal(await page.getByRole('button', { name: 'Bật voice', exact: true }).isVisible(), false);
+    assert.equal(await page.getByRole('button', { name: 'Tắt voice', exact: true }).isVisible(), false);
     await openVoice(page);
-    assert.equal(await page.getByRole('button', { name: 'Bật voice', exact: true }).isVisible(), true);
+    assert.equal(await page.getByRole('button', { name: 'Tắt voice', exact: true }).isVisible(), true);
     await page.getByLabel('Điều khiển mic', { exact: true }).press('Escape');
     assert.equal(await page.locator('#voicePanel').evaluate((el) => el.open), false);
     await openVoice(page);
@@ -94,6 +98,7 @@ try {
   assert.equal(await a.evaluate(() => window.__testCapture.stream.getAudioTracks()[0].readyState), 'ended');
   console.log('PASS: local mic test records, plays, discards and cancels without joining voice');
   for (const page of [a, b]) {
+    await page.evaluate(() => window.__hth.voice.stop());
     assert.equal(await page.evaluate(() => window.__hth.voice.active), false);
     await page.getByRole('button', { name: 'Bật voice', exact: true }).click();
     await page.waitForFunction(() => window.__hth.voice.active || !window.__hth.voice.starting);
@@ -202,19 +207,6 @@ try {
   console.log('PASS: Lee Sin entry, aura effects 1/2/8/9, meditation qi, melody start/audio/instrument/exit preserved');
   assert.deepEqual(errors, []);
   console.log('PASS: open mic/text-input mute, touch cancel, denied/late permission, disconnect cleanup; no browser exceptions');
-} catch (error) {
-  for (const browser of browsers) for (const context of browser.contexts()) for (const page of context.pages()) {
-    console.error('Voice diagnostics:', await page.evaluate(() => {
-      const app = window.__hth;
-      return { ready: app?.net.ready, active: app?.voice.active, admission: window.__voiceJoinResult,
-        position: app?.me && { x: app.me.x, z: app.me.z },
-        peers: [...(app?.voice.peers.values() || [])].map((p) => ({
-          connection: p.pc.connectionState, ice: p.pc.iceConnectionState,
-          gathering: p.pc.iceGatheringState, signaling: p.pc.signalingState,
-        })) };
-    }).catch(() => 'Page unavailable'));
-  }
-  throw error;
 } finally {
   await Promise.all(browsers.map((browser) => browser.close()));
   if (proc && proc.exitCode === null) { const stopped = once(proc, 'exit'); proc.kill(); await stopped; }

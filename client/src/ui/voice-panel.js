@@ -12,16 +12,29 @@ export function voicePanel(voice) {
   const controls = h('div', { class: 'voice-controls', hidden: true }, mode, talk, deafen,
     h('label', {}, 'Tiếng ', volume));
   const slash = h('span', { class: 'voice-slash' });
-  const trigger = h('summary', { class: 'icon-btn voice-trigger', 'aria-label': 'Điều khiển mic', title: 'Mic tắt · Bấm để mở điều khiển' },
+  const mic = h('button', { type: 'button', class: 'voice-mic', 'aria-label': 'Bật mic', 'aria-pressed': 'false', title: 'Bật mic' },
     h('span', { class: 'voice-glyph', 'aria-hidden': 'true' }, slash));
+  const speakers = h('div', { class: 'voice-speakers', role: 'status', 'aria-live': 'polite', hidden: true });
+  const trigger = h('summary', { class: 'voice-trigger', 'aria-label': 'Cài đặt voice', title: 'Cài đặt voice' }, '⋯');
   const settings = h('div', { class: 'voice-settings' }, toggle, test, controls, voice.micTest.audio, status);
-  const panel = h('details', { id: 'voicePanel', 'aria-label': 'Trò chuyện bằng mic' }, trigger, settings);
+  const details = h('details', { class: 'voice-details' }, trigger, settings);
+  const panel = h('div', { id: 'voicePanel', 'aria-label': 'Trò chuyện bằng mic' }, speakers, mic, details);
   // Keep the off switch accessible while a minigame hides the main HUD.
   document.body.append(panel);
   panel.hidden = true;
-  document.addEventListener('pointerdown', (e) => { if (!panel.contains(e.target)) panel.open = false; });
+  document.addEventListener('pointerdown', (e) => { if (!panel.contains(e.target)) details.open = false; });
   panel.addEventListener('keydown', (e) => {
-    if (e.code === 'Escape' && panel.open) { e.stopPropagation(); panel.open = false; trigger.focus(); }
+    if (e.code === 'Escape' && details.open) { e.stopPropagation(); details.open = false; trigger.focus(); }
+  });
+  mic.addEventListener('click', async () => {
+    if (voice.starting || voice.micTest.busy) return;
+    if (!voice.active) await voice.start();
+    if (!voice.active) return;
+    voice.micMuted = !voice.micMuted;
+    voice.mode = 'open';
+    mode.value = 'open';
+    voice.holding = false;
+    voice.update();
   });
   toggle.addEventListener('click', () => voice.active || voice.starting ? voice.stop() : voice.start());
   test.addEventListener('click', () => voice.micTest.start());
@@ -48,11 +61,17 @@ export function voicePanel(voice) {
   talk.addEventListener('blur', () => { voice.holding = false; voice.update(); });
   return {
     panel,
-    render(message) {
+    render(message, speaking = []) {
       panel.classList.toggle('voice-on', voice.active);
       panel.classList.toggle('voice-transmitting', voice.transmitting);
-      slash.hidden = voice.transmitting || voice.micTest.busy;
-      trigger.title = `${message} · Bấm để mở/đóng điều khiển mic`;
+      slash.hidden = voice.active && !voice.micMuted && !voice.deafened || voice.micTest.busy;
+      mic.disabled = voice.starting || voice.micTest.busy;
+      mic.setAttribute('aria-pressed', String(voice.active && !voice.micMuted));
+      mic.setAttribute('aria-label', voice.active && !voice.micMuted ? 'Tắt mic' : 'Bật mic');
+      mic.title = voice.active && !voice.micMuted ? 'Tắt mic' : 'Bật mic';
+      const speakerText = speaking.length ? `Đang nói: ${speaking.join(', ')}` : '';
+      if (speakers.textContent !== speakerText) speakers.textContent = speakerText;
+      speakers.hidden = !speakerText;
       toggle.disabled = voice.micTest.busy;
       test.textContent = voice.micTest.busy ? 'Hủy thử mic' : 'Thử mic';
       test.disabled = voice.starting;

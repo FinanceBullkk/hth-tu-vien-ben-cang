@@ -1,6 +1,5 @@
-// Tích khí khi thiền tại chỗ; giữ chiếu và hoa sen riêng cho Nhịp sen.
+// Tích Chân khí khi ngồi yên; giữ chiếu và đồng bộ người cùng thiền.
 import { MAT_COUNT, MATS, dist2d } from '../shared/layout.js';
-import { rhythmSummary } from '../shared/rhythm.js';
 import { QI_GAIN_RATE, QI_INTERVAL_MS } from '../shared/cultivation.js';
 
 export class Meditation {
@@ -21,10 +20,7 @@ export class Meditation {
   scene() {
     return { epoch: this.epoch, seats: this.mats.flatMap((p, mat) => {
       if (!p) return [];
-      const game = p.rhythm;
-      const judged = game?.kind === 'meditate' ? game.notes.flat().filter((g) => g != null) : [];
-      const score = rhythmSummary(judged);
-      return [{ mat, startAt: p.medStartAt, bloom: judged.length ? (score.perfect + score.good) * 5 / judged.length : 0 }];
+      return [{ mat, startAt: p.medStartAt, bloom: 0 }];
     }) };
   }
 

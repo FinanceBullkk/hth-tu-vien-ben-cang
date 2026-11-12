@@ -211,7 +211,7 @@ export class AudioEngine {
     return buf;
   }
 
-  /** Gảy đàn cổ cầm cho Nhịp sen: idx 0..4 chọn quãng ngũ cung. */
+  /** Gảy đàn cổ cầm: idx 0..4 chọn quãng ngũ cung. */
   pluck(idx, volume = 1) {
     if (!this.ctx) return;
     const t = this.ctx.currentTime + 0.005;

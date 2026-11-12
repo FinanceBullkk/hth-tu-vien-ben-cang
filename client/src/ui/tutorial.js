@@ -12,7 +12,7 @@ export function showTutorial(store, isTouch) {
     : [
       ['Đi lại', 'Dùng WASD hoặc phím mũi tên để đi. Bấm vào cảnh để khóa trỏ, rê chuột để xoay góc nhìn. Esc hiện lại trỏ.'],
       ['Chơi gì?', 'Bấm nút Chơi gì? ở góc trên, chọn một trò là game đưa bạn tới ngay.'],
-      ['Tự dạo chơi', 'Đi tới gần chỗ nào có nút to hiện giữa màn hình, bấm nút hoặc phím E là chơi. Phím T để chat.'],
+      ['Tự dạo chơi', 'Đi tới gần chỗ nào có nút to hiện giữa màn hình, bấm nút hoặc phím E là chơi. Nhấn Enter để chat.'],
     ];
   let i = 0;
   const title = h('h3');
