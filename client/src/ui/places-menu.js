@@ -1,7 +1,11 @@
 // Menu "Chơi gì?": người không quen game khỏi phải tự đi tìm, chọn một trò là được đưa tới và bắt đầu.
 import { PLACES } from '../../../shared/layout.js';
 import { h, store } from './dom.js';
+import { inkIcon } from './ink-icons.js';
 import { openModal } from './modal.js';
+
+// Icon nét cho từng chỗ chơi (thay emoji trong PLACES để bảng đồng bộ với HUD).
+const PLACE_ICONS = { melody: 'music', fish: 'fish', bell: 'bell', mat: 'lotus', pitch: 'pot', tea: 'sticks', tree: 'tree' };
 
 const SEEN_KEY = 'placesMenuSeen';
 const FADE_MS = 240;
@@ -35,16 +39,16 @@ export function openPlacesMenu(app) {
   // "Ngồi thiền" (key 'mat') cũng là thiền tại chỗ nên gộp làm một ô "Thiền tại chỗ".
   const tile = (icon, name, desc, onPick) => h('li', {},
     h('button', { type: 'button', class: 'place-tile', title: desc, onClick: () => { modal.close(); onPick(); } },
-      h('span', { class: 'place-icon', 'aria-hidden': 'true' }, icon),
+      inkIcon(icon),
       h('b', {}, name)));
   const modal = openModal({
     title: 'Chơi gì?',
     content: h('ul', { class: 'place-grid-menu' },
-      tile('🪷', 'Thiền tại chỗ', 'Ngồi ngay đây, tích Chân khí và tăng tầng', () => {
+      tile('lotus', 'Thiền tại chỗ', 'Ngồi ngay đây, tích Chân khí và tăng tầng', () => {
         if (app.activities.current) app.activities.exit();
         app.activities.meditation.start();
       }),
-      PLACES.filter((place) => place.key !== 'mat').map((place) => tile(place.icon, place.name, place.desc, () => travel(app, place)))),
+      PLACES.filter((place) => place.key !== 'mat').map((place) => tile(PLACE_ICONS[place.key] ?? 'compass', place.name, place.desc, () => travel(app, place)))),
   });
 }
 
