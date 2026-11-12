@@ -18,8 +18,8 @@
 
   <div id="hud" hidden>
     <div id="presence">
-      <button id="onlineBtn" type="button" aria-label="Xem ai đang online">
-        Đang có <b id="onlineCount">0</b> người trên tu viện
+      <button id="onlineBtn" type="button" aria-label="Xem ai đang online" title="Người đang trên tu viện">
+        <span class="presence-icon" data-icon="users"></span><b id="onlineCount">0</b>
       </button>
       <p class="visits">Hôm nay có <b id="visitsToday">0</b> lượt lên tu viện</p>
       <ul id="onlineList" hidden></ul>
@@ -28,11 +28,11 @@
     <div id="toasts" aria-live="polite"></div>
 
     <nav id="menu">
-      <button id="playBtn" class="icon-btn" type="button"><span aria-hidden="true">🧭</span><em>Chơi gì?</em></button>
-      <button id="bookBtn" class="icon-btn" type="button"><span aria-hidden="true">📖</span><em>Sổ an</em></button>
-      <button id="boardBtn" class="icon-btn" type="button"><span aria-hidden="true">🌸</span><em>Bảng ước</em></button>
-      <button id="shareBtn" class="icon-btn" type="button"><span aria-hidden="true">📷</span><em>Chia sẻ</em></button>
-      <button id="musicBtn" class="icon-btn" type="button" aria-controls="musicPanel" aria-expanded="false" aria-label="Mở nhạc nền"><span aria-hidden="true">♫</span><em>Nhạc</em></button>
+      <button id="playBtn" class="icon-btn" type="button"><span data-icon="compass"></span><em>Chơi gì?</em></button>
+      <button id="bookBtn" class="icon-btn" type="button"><span data-icon="book"></span><em>Sổ an</em></button>
+      <button id="boardBtn" class="icon-btn" type="button"><span data-icon="wish"></span><em>Bảng ước</em></button>
+      <button id="shareBtn" class="icon-btn" type="button"><span data-icon="camera"></span><em>Chia sẻ</em></button>
+      <button id="musicBtn" class="icon-btn" type="button" aria-controls="musicPanel" aria-expanded="false" aria-label="Mở nhạc nền"><span data-icon="music"></span><em>Nhạc</em></button>
       <button id="muteBtn" class="icon-btn" type="button"></button>
     </nav>
 
@@ -61,7 +61,8 @@
     </button>
 
     <div id="emojiBar" aria-label="Biểu cảm nhanh"></div>
-    <button id="chatBtn" class="icon-btn" type="button" aria-label="Mở ô chat"><span aria-hidden="true">💬</span><em>Chat</em><kbd class="key-hint">Enter</kbd></button>
+    <button id="emojiToggle" class="icon-btn" type="button" aria-label="Mở biểu cảm nhanh" aria-controls="emojiBar" aria-expanded="false"><span data-icon="smile"></span><em>Biểu cảm</em></button>
+    <button id="chatBtn" class="icon-btn" type="button" aria-label="Mở ô chat"><span data-icon="chat"></span><em>Chat · Enter</em></button>
     <section id="chatHistory" aria-label="Lịch sử chat phiên này">
       <ol id="chatMessages" role="log" aria-live="polite" aria-relevant="additions"></ol>
     </section>
@@ -69,8 +70,6 @@
       <input id="chatInput" type="text" placeholder="Nói gì đó với cả nhà…" enterkeyhint="send" aria-label="Nội dung chat">
       <button class="btn primary" type="submit">Gửi</button>
     </form>
-
-    <p id="keysHint">WASD đi · Bấm cảnh, rê chuột xoay · Esc hiện trỏ · E hành động · Enter chat</p>
 
     <div id="stick" aria-hidden="true"><div class="stick-knob"></div></div>
   </div>

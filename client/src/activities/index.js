@@ -13,6 +13,9 @@ import { PkActivity } from './pk.js';
 
 const KIND_CODE = { bell: 2, write: 3, shake: 4, fish: 5, pitch: 6 };
 
+// Lớp CSS báo đang trong một hoạt động: khung chiến đấu (thanh máu, thanh chiêu) tự cất đi để không che bảng hoạt động.
+const markInActivity = (on) => document.body.classList.toggle('in-activity', on);
+
 export class Activities {
   constructor(app) {
     this.app = app;
@@ -34,6 +37,7 @@ export class Activities {
   enter(activity, kind) {
     if (this.current) return false;
     this.current = activity;
+    markInActivity(true);
     const { app } = this;
     app.me.locked = activity.lockMove !== false;
     app.hud.setAction('', null);
@@ -49,6 +53,7 @@ export class Activities {
     const activity = this.current;
     if (!activity) return;
     this.current = null;
+    markInActivity(false);
     activity.cancel();
     const { app } = this;
     app.me.locked = false;
@@ -62,6 +67,7 @@ export class Activities {
     const activity = this.current;
     if (!activity) return;
     this.current = null;
+    markInActivity(false);
     activity.cancel();
     this.app.me.locked = false;
     this.app.me.avatar.setActivity(0);

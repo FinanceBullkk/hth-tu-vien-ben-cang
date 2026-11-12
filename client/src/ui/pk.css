@@ -1,77 +1,109 @@
-/* Bốn chiêu tỉ võ tự do trên chuột, bàn phím và cảm ứng. */
-.pk-hud { position: fixed; inset: 0; pointer-events: none; z-index: 45; }
+/* Bốn chiêu tỉ võ tự do trên chuột, bàn phím và cảm ứng.
+   Thứ tự lớp chung: cảnh 0-1, khung chiến đấu 2, HUD 3, tầng hoạt động 5, voice 7, hộp thoại 8,
+   màn chào 10, sân đàn 12. Khung chiến đấu nằm DƯỚI HUD và hộp thoại để không che menu, bảng hay hộp thoại. */
+.pk-hud { position: fixed; inset: 0; pointer-events: none; z-index: 2; }
 .pk-hud [hidden] { display: none !important; }
-/* Nút hành động (ví dụ Ngồi thiền tại chỗ) nằm trên thanh bốn chiêu, không bị che. */
-:root:has(.pk-hud:not([hidden]) .pk-skills:not([hidden])) #actionBtn { bottom: calc(104px + var(--safe-b)); }
+/* Đang câu cá, thiền, đánh chuông, tấu nhạc… thì cất thanh máu và thanh chiêu để bảng hoạt động thoáng. */
+.in-activity .pk-hud, .rhythm-playing .pk-hud, .melody-playing .pk-hud { display: none; }
+/* Nút hành động (ví dụ Ngồi thiền tại chỗ) nằm trên thanh máu + thanh chiêu, không bị che. */
+:root:has(.pk-hud:not([hidden])) #actionBtn { bottom: calc(112px + var(--safe-b)); }
+:root:has(.pk-hud:not([hidden])) #wishReader { bottom: calc(166px + var(--safe-b)); }
 
+/* Thanh chiêu kiểu MMO/MOBA: khung kim loại tối viền đồng, hai hoa thị ở hai đầu, ô chiêu vuông viền đồng,
+   số phím ở góc, hồi chiêu là vệt tối quét tròn như kim đồng hồ kèm số giây. Tên chiêu nằm trong tooltip. */
 .pk-skills {
   position: fixed;
   left: 50%;
-  bottom: 14px;
+  bottom: calc(31px + var(--safe-b));
   transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  width: min(360px, calc(100vw - 24px));
-  padding: 9px;
+  gap: 6px;
+  width: auto;
+  padding: 7px 10px;
   box-sizing: border-box;
-  border: 1px solid #bc965b;
-  border-radius: 16px;
-  background: linear-gradient(160deg, #493323 0%, #251d18 100%);
-  box-shadow: 0 9px 26px #1c120d99, inset 0 1px #e7c48c55;
+  border: 1px solid rgba(216, 178, 112, .6);
+  border-radius: 4px 4px 0 0;
+  background: linear-gradient(180deg, #2a2019 0%, #15100c 55%, #0f0b08 100%);
+  box-shadow: 0 0 0 1px #070504, 0 10px 26px #0009, inset 0 1px 0 rgba(255, 226, 170, .18);
   pointer-events: auto;
 }
+.pk-skills::before, .pk-skills::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border: 1px solid rgba(216, 178, 112, .8);
+  background: #1a130e;
+  transform: translateY(-50%) rotate(45deg);
+  pointer-events: none;
+}
+.pk-skills::before { left: -6px; }
+.pk-skills::after { right: -6px; }
 
 .vlcm-slot-btn {
   position: relative;
-  flex: 1;
-  min-width: 0;
-  height: 66px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 2px;
-  padding: 4px 2px 3px;
-  border: 1px solid #826849;
-  border-radius: 10px;
-  background: #1e1b19;
-  color: #f8e7ca;
+  flex: none;
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 2px solid #7a5a2e;
+  border-radius: 3px;
+  background: #0e0a08;
+  box-shadow: inset 0 0 0 1px #000, 0 0 0 1px #000;
   cursor: pointer;
   overflow: hidden;
-  transition: border-color .12s, background .12s, transform .12s;
+  transition: border-color .12s, box-shadow .12s, transform .08s;
+}
+/* Lớp bóng sáng mờ phía trên icon cho cảm giác ô chiêu có mặt kính. */
+.vlcm-slot-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .16), transparent 42%);
+  pointer-events: none;
 }
 .vlcm-slot-btn:hover:not(:disabled),
-.vlcm-slot-btn:focus-visible { border-color: #f0c77e; background: #3b2b21; outline: 2px solid #f0c77e; outline-offset: 1px; }
+.vlcm-slot-btn:focus-visible { border-color: #f0c77e; box-shadow: inset 0 0 0 1px #000, 0 0 0 1px #000, 0 0 12px rgba(240, 199, 126, .6); outline: none; }
 .vlcm-slot-btn:active:not(:disabled),
-.vlcm-slot-btn.key-pressed { transform: translateY(2px); background: #624128; }
-.vlcm-slot-btn:disabled { opacity: .55; cursor: not-allowed; }
-.vlcm-slot-icon { width: 39px; height: 39px; object-fit: cover; border-radius: 6px; pointer-events: none; }
+.vlcm-slot-btn.key-pressed { transform: scale(.93); }
+.vlcm-slot-btn:disabled { cursor: not-allowed; }
+.vlcm-slot-icon { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 .vlcm-slot-hotkey {
   position: absolute;
-  top: 4px;
-  left: 5px;
-  padding: 1px 3px;
-  border-radius: 3px;
-  background: #201914dd;
-  color: #ffe3a6;
-  font: 700 10px system-ui, sans-serif;
+  right: 1px;
+  bottom: 1px;
+  z-index: 3;
+  min-width: 14px;
+  padding: 0 3px;
+  border: 1px solid rgba(216, 178, 112, .65);
+  border-radius: 2px;
+  background: rgba(10, 8, 6, .88);
+  color: #f6d99a;
+  font: 700 10px/13px var(--sans);
+  text-align: center;
   pointer-events: none;
 }
 .vlcm-slot-hotkey.alt-key { font-size: 9px; }
-.vlcm-slot-label { font: 600 10px system-ui, sans-serif; white-space: nowrap; pointer-events: none; }
+.vlcm-slot-label { display: none; }
+/* --cd: phần hồi chiêu còn lại (1 → 0), do pk-panel.js đặt; vệt tối co dần theo chiều kim đồng hồ. */
 .vlcm-cd-curtain {
   position: absolute;
   inset: 0;
+  z-index: 2;
   display: grid;
   place-items: center;
-  background: #170f0bc9;
-  color: #ffe0a1;
+  background: conic-gradient(transparent calc((1 - var(--cd, 1)) * 360deg), rgba(8, 6, 5, .8) 0);
+  color: #fff;
   pointer-events: none;
 }
-.vlcm-cd-timer { font: 700 18px system-ui, sans-serif; }
-.vlcm-slot-flash { position: absolute; inset: 0; opacity: 0; pointer-events: none; background: #fff2bcaa; }
+.vlcm-cd-timer { font: 800 15px var(--sans); text-shadow: 0 1px 3px #000, 0 0 6px #000; }
+.vlcm-slot-flash { position: absolute; inset: 0; z-index: 2; opacity: 0; pointer-events: none; background: #fff2bcaa; }
 .vlcm-slot-flash.active { animation: pk-flash .22s ease-out; }
 @keyframes pk-flash { from { opacity: .7; } to { opacity: 0; } }
 .vlcm-sr-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -98,108 +130,67 @@
 .vlcm-tooltip-type { color: #c9e0ca; }
 .vlcm-tooltip-stats { margin: 4px 0; color: #ffd89a; }
 
-.pk-aux-btn {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  right: 0;
-  padding: 6px 12px;
-  border: 1px solid #bc965b;
-  border-radius: 7px;
-  background: #34251d;
-  color: #fff0d2;
-  font: 700 12px system-ui, sans-serif;
-  cursor: pointer;
-  pointer-events: auto;
-}
-.pk-aux-btn:hover { background: #624128; }
-@media (max-width: 390px) {
-  .pk-skills { gap: 5px; padding: 6px; }
-  .vlcm-slot-btn { height: 62px; }
-  .vlcm-slot-icon { width: 35px; height: 35px; }
-  .vlcm-slot-label { font-size: 9px; }
-}
-
+/* Thanh máu nằm ngay dưới hàng chiêu, liền khung (kiểu thanh máu dưới ô chiêu của MOBA).
+   Chỉ có vạch máu và số; tên đã có trên đầu nhân vật. Trên điện thoại lên hàng hai dưới menu (cuối file). */
 .pk-top-hud {
   position: fixed;
-  top: 14px;
-  left: 0;
-  right: 0;
-  margin: 0 auto;
-  width: min(94vw, 340px);
-  z-index: 45;
-  display: grid;
-  grid-template-columns: 1fr;
-  align-items: center;
-  gap: 14px;
-  padding: 8px 18px;
+  left: 50%;
+  bottom: calc(14px + var(--safe-b));
+  transform: translateX(-50%);
+  width: 256px;
+  box-sizing: border-box;
+  padding: 3px 4px 4px;
+  border: 1px solid rgba(216, 178, 112, .6);
+  border-top-color: rgba(216, 178, 112, .2);
+  border-radius: 0 0 4px 4px;
+  background: #0f0b08;
+  box-shadow: 0 0 0 1px #070504, 0 8px 18px #0008;
+  color: #f3e6cf;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(24, 32, 32, 0.96) 0%, rgba(12, 16, 16, 0.94) 100%);
-  border: 2px solid #4d8278;
-  border-radius: 8px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.95), inset 0 1px 0 rgba(135, 188, 172, 0.4), 0 0 20px rgba(68, 126, 104, 0.4);
-  color: #fff;
-  font-family: "Cinzel", "Georgia", "Times New Roman", serif;
   user-select: none;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
-.pk-top-hud[hidden] {
-  display: none !important;
-}
-
-.pk-health {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.pk-health.right {
-  text-align: right;
-}
+.pk-health { display: flex; flex-direction: column; gap: 4px; }
 
 .pk-fighter-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.6px;
-  color: #f7e7c4;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+  gap: 7px;
+  min-width: 0;
+  padding-right: 92px; /* chừa chỗ cho trạng thái BẢO HỘ / SÁT KHÍ ở góc phải */
+  font: 700 13.5px/1.2 var(--serif);
+  letter-spacing: .03em;
+  color: #f6d99a;
+  text-shadow: 0 1px 3px #000;
 }
-
-.pk-health.right .pk-fighter-meta {
-  justify-content: flex-end;
-}
+.pk-fighter-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .pk-fighter-badge {
-  font-size: 10px;
-  font-weight: 800;
-  padding: 2px 7px;
+  flex: none;
+  padding: 1px 5px;
+  border: 1px solid rgba(224, 164, 88, .7);
   border-radius: 2px;
-  background: linear-gradient(180deg, rgba(77, 130, 120, 0.45) 0%, rgba(18, 24, 24, 0.85) 100%);
-  border: 1px solid #719c81;
-  color: #ffd700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
+  background: rgba(168, 67, 42, .85);
+  color: #ffe9d2;
+  font: 700 9.5px/1.3 var(--sans);
+  letter-spacing: .08em;
 }
 
 .pk-bar-wrap {
   position: relative;
-  height: 20px;
-  background: #090e0e;
-  border: 1.5px solid #366c5e;
-  border-radius: 3px;
+  height: 10px;
+  background: #0d0a08;
+  border: 1px solid rgba(216, 178, 112, .45);
+  border-radius: 2px;
   overflow: hidden;
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.95);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, .9);
 }
 
 .pk-bar-wrap::after {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: repeating-linear-gradient(90deg, transparent, transparent 19%, rgba(0, 0, 0, 0.65) 20%);
+  background-image: repeating-linear-gradient(90deg, transparent, transparent 19%, rgba(0, 0, 0, .55) 20%);
   pointer-events: none;
   z-index: 3;
 }
@@ -208,26 +199,22 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  background: #ffea79;
-  opacity: 0.9;
-  transition: width 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+  left: 0;
+  background: #f4d9a8;
+  opacity: .85;
+  transition: width .45s cubic-bezier(.25, 1, .5, 1);
   z-index: 1;
 }
-
-.pk-health.right .pk-bar-buffer { right: 0; }
-.pk-health:not(.right) .pk-bar-buffer { left: 0; }
 
 .pk-bar-fill {
   position: absolute;
   top: 0;
   bottom: 0;
-  background: linear-gradient(90deg, #990000 0%, #d50000 65%, #ff3d00 100%);
-  transition: width 0.15s ease-out;
+  left: 0;
+  background: linear-gradient(90deg, #7f2214 0%, #b5392b 65%, #d9573a 100%);
+  transition: width .15s ease-out;
   z-index: 2;
 }
-
-.pk-health.right .pk-bar-fill { right: 0; }
-.pk-health:not(.right) .pk-bar-fill { left: 0; }
 
 .pk-hp-text {
   position: absolute;
@@ -235,47 +222,31 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
+  font: 800 9px/1 var(--sans);
+  letter-spacing: .04em;
   color: #fff;
-  text-shadow: 0 1px 3px #000, 0 0 5px #000;
+  text-shadow: 0 1px 2px #000, 0 0 4px #000;
+  font-variant-numeric: tabular-nums;
   z-index: 4;
 }
 
-.pk-timer-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-}
+.pk-fighter-meta { display: none !important; }
 
-.pk-vs-crest {
-  font-size: 20px;
-  line-height: 1;
-  filter: drop-shadow(0 2px 6px rgba(113, 156, 129, 0.7));
-}
-
-.pk-timer {
-  font-family: "Impact", "Arial Black", sans-serif;
-  font-size: 22px;
-  font-weight: 900;
-  color: #ffeb3b;
-  text-shadow: 0 2px 6px #000;
-}
-
+/* BẢO HỘ / SÁT KHÍ: nhãn nhỏ nổi ngay trên thanh máu, chỉ hiện khi có trạng thái. */
 .pk-status {
-  grid-column: 1 / -1;
+  position: absolute;
+  bottom: 0;
+  left: calc(100% + 8px);
   margin: 0;
-  text-align: center;
-  font-size: 12px;
-  font-weight: 700;
-  color: #cce4dc;
-  letter-spacing: 0.6px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(26, 20, 16, .88);
+  font: 700 11px/1.3 var(--sans);
+  letter-spacing: .05em;
+  color: #f6d99a;
   text-shadow: 0 1px 3px #000;
 }
+.pk-status:empty { display: none; }
 
 /* ==========================================================================
    8. TÂM NGẮM & BANNER THÔNG BÁO
@@ -319,8 +290,44 @@
   transform: translate(-50%, -50%) scale(1);
 }
 
-.pk-invite-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 14px;
+
+/* Điện thoại kiểu MOBA di động: nút đánh thường tròn to ở góc phải dưới, ba chiêu nhỏ xếp vòng cung quanh nó;
+   cần ảo bên trái, thanh máu lên hàng thứ hai dưới menu. */
+.touch .pk-skills {
+  left: auto;
+  right: calc(10px + env(safe-area-inset-right, 0px));
+  bottom: calc(12px + var(--safe-b));
+  transform: none;
+  display: block;
+  width: 146px;
+  height: 146px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  pointer-events: none;
 }
+.touch .pk-skills::before, .touch .pk-skills::after { display: none; }
+.touch .vlcm-slot-btn { position: absolute; width: 52px; height: 52px; border-radius: 50%; pointer-events: auto; box-shadow: inset 0 0 0 1px #000, 0 0 0 1px #000, 0 4px 10px #0008; }
+.touch .vlcm-slot-1 { right: 0; bottom: 0; width: 78px; height: 78px; border-width: 3px; }
+.touch .vlcm-slot-3 { right: 90px; bottom: 2px; }
+.touch .vlcm-slot-4 { right: 72px; bottom: 66px; }
+.touch .vlcm-slot-5 { right: 6px; bottom: 92px; }
+.touch .vlcm-slot-hotkey { display: none; }
+.touch .vlcm-tooltip-card { display: none; }
+:root:has(.pk-hud:not([hidden])) .touch #actionBtn { bottom: calc(168px + var(--safe-b)); }
+:root:has(.pk-hud:not([hidden])) .touch #wishReader { bottom: calc(232px + var(--safe-b)); }
+.touch .pk-top-hud {
+  left: calc(8px + env(safe-area-inset-left, 0px));
+  top: calc(54px + var(--safe-t));
+  bottom: auto;
+  transform: none;
+  width: min(220px, calc(100vw - 150px));
+  border-top-color: rgba(216, 178, 112, .6);
+  border-radius: 4px;
+}
+/* Đang gõ chat trên điện thoại: ô chat rộng ra đáy màn hình nên cất bốn chiêu đi. */
+.touch.chatting .pk-skills { display: none; }
+/* Điện thoại: nhãn BẢO HỘ / SÁT KHÍ nằm ngay dưới thanh máu (bên phải là nút mic). */
+.touch .pk-status { left: 0; bottom: auto; top: calc(100% + 4px); }

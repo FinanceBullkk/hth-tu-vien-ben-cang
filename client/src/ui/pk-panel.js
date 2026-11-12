@@ -255,10 +255,14 @@ export class PkPanel {
       const onCd = cd > 0;
       slot.btn.disabled = onCd;
       if (onCd) {
+        // Tổng thời gian hồi = lần đầu thấy chiêu đang hồi; --cd (1 → 0) điều khiển vệt tối quét tròn trong CSS.
+        slot.cdTotal = Math.max(slot.cdTotal ?? 0, cd);
+        slot.cdCurtain.style.setProperty('--cd', (cd / slot.cdTotal).toFixed(3));
         slot.cdCurtain.hidden = false;
         slot.cdTimer.textContent = (cd / 1000).toFixed(1);
         slot.btn.dataset.cooldown = `${(cd / 1000).toFixed(1)}s`;
       } else {
+        slot.cdTotal = 0;
         slot.cdCurtain.hidden = true;
         slot.cdTimer.textContent = '';
         slot.btn.dataset.cooldown = '';

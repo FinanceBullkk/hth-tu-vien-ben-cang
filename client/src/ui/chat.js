@@ -15,9 +15,15 @@ export class Chat {
 
     for (let i = 0; i < EMOJIS.length; i++) {
       const b = h('button', { type: 'button', class: 'emoji-btn', 'aria-label': `Biểu cảm ${EMOJIS[i]}` }, EMOJIS[i]);
-      b.addEventListener('click', () => this.sendEmoji(i));
+      b.addEventListener('click', () => {
+        this.sendEmoji(i);
+        this.setEmojiOpen(false);
+      });
       this.emojiBar.append(b);
     }
+    // Điện thoại: hàng biểu cảm gom vào một nút, chạm mới mở (CSS chỉ hiện nút này khi .touch).
+    this.emojiToggle = $('emojiToggle');
+    this.emojiToggle.addEventListener('click', () => this.setEmojiOpen(!document.body.classList.contains('emoji-open')));
 
     this.toggleBtn.addEventListener('click', () => {
       if (this.open) this.close();
@@ -35,7 +41,14 @@ export class Chat {
     });
   }
 
+  setEmojiOpen(open) {
+    document.body.classList.toggle('emoji-open', open);
+    this.emojiToggle.setAttribute('aria-expanded', String(open));
+    this.emojiToggle.setAttribute('aria-label', open ? 'Đóng biểu cảm nhanh' : 'Mở biểu cảm nhanh');
+  }
+
   show() {
+    this.setEmojiOpen(false);
     if (this.app.chatBlocked()) {
       this.app.hud.toast('Đang thiền thì mình giữ yên lặng nhé.');
       return;
