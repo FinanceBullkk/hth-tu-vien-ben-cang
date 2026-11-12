@@ -1,4 +1,5 @@
-// Nhận thao tác: WASD/mũi tên, rê chuột xoay khi khóa trỏ, lăn zoom; điện thoại dùng cần ảo.
+// Nhận thao tác: WASD/mũi tên, rê chuột xoay khi khóa trỏ, lăn zoom; điện thoại dùng cần ảo, chụm hai ngón để zoom.
+import { TouchPinchZoom } from './touch-pinch-zoom.js';
 
 const MOVE_KEYS = {
   KeyW: [0, 1], ArrowUp: [0, 1], KeyS: [0, -1], ArrowDown: [0, -1],
@@ -15,7 +16,8 @@ export class Input {
     this.keys = new Set();
     this.yawDelta = 0;
     this.pitchDelta = 0;
-    this.zoomDelta = 0;
+    this.zoomDelta = 0; // Log tỉ lệ khoảng cách: dương là lùi camera ra.
+    this.pinch = new TouchPinchZoom();
     this.stickX = 0;
     this.stickY = 0;
     this.stickId = null;
@@ -41,6 +43,7 @@ export class Input {
     window.addEventListener('blur', () => {
       this.keys.clear();
       this.#stickEnd();
+      this.pinch.clear();
       this.camId = null;
     });
 
@@ -50,7 +53,10 @@ export class Input {
     window.addEventListener('pointercancel', (e) => this.#up(e));
     canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
-      this.zoomDelta += Math.sign(e.deltaY) * 0.7;
+      if (!this.enabled) return;
+      // Một nấc chuột (~100px) đổi ~13% khoảng cách; trackpad gửi nhiều bước nhỏ nên zoom mịn.
+      const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
+      this.zoomDelta += Math.max(-0.4, Math.min(0.4, e.deltaY * unit * 0.0012));
     }, { passive: false });
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   }
@@ -97,7 +103,13 @@ export class Input {
       return;
     }
     if (e.button !== 0 && !isTouch) return;
-    if (this.camId === null) {
+    if (this.pinch.down(e)) {
+      // Ngón thứ hai chạm: chuyển sang chụm zoom, bỏ kéo xoay và không tính là chạm.
+      this.camId = null;
+      this.downAt.moved = true;
+      return;
+    }
+    if (this.camId === null && !this.pinch.active) {
       this.camId = e.pointerId;
       this.camLast.x = e.clientX;
       this.camLast.y = e.clientY;
@@ -121,6 +133,11 @@ export class Input {
       this.#stickUpdate(e);
       return;
     }
+    const pinchZoom = this.pinch.move(e);
+    if (this.pinch.active && this.pinch.has(e.pointerId)) {
+      this.zoomDelta += pinchZoom;
+      return;
+    }
     if (e.pointerId !== this.camId) return;
     const dx = e.clientX - this.camLast.x;
     const dy = e.clientY - this.camLast.y;
@@ -141,6 +158,7 @@ export class Input {
       return;
     }
     this.lockClick = false;
+    this.pinch.up(e);
     if (e.pointerId === this.stickId) {
       this.#stickEnd();
       return;
