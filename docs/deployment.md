@@ -1,6 +1,32 @@
 # Deployment
 
-## Current release: 2026-11-13 bầu cua redesign and shorter rounds, 00:50 UTC+7
+## Current release: 2026-11-13 xì dách table and centre-court gambling tables, 01:38 UTC+7
+
+Deploy run [43281849549](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43281849549)
+released main `4aa0cfa` (PR #46) as `hth:261113-0138-4aa0cfa`, replacing
+`hth:261113-0050-e680ae5`. Server and client change: a shared xì dách table
+(southern rules, up to 5 players vs the NPC dealer Bà Năm, real TEU; rules and
+simulation numbers in `docs/xidach.md`) and both gambling tables moved to the
+forecourt in front of the meditation hall, mirrored on either side of the main
+axis (`BAUCUA_ZONE` west, `XIDACH_ZONE` east). New table `xidach_pending` holds
+unsettled stakes (2× the bet); on start any left by a crash are refunded. New
+socket events `xidach:bet|clear|hit|stand|state|hand|payout`; hello snapshot
+gains `xidach`. The weekly TEU board counts net `baucua:*` and `xidach:*` rows.
+Public bundle: `index-tOJ6KqXD.js`, confirmed served at
+`https://game.hthlogistics.top/` with `/api/health` ok.
+
+Local suite 205/205 and Vite build passed on Node 24; Docker tests 205/205.
+Candidate passed with DB `quick_check` ok (50 players, 23 wishes, 48 fish).
+Checked in a browser on a temporary DB at 1280×720 and 375 (touch); not yet
+checked with two real players after the cutover.
+
+Rollback container `hth-rollback-261113-0138-4aa0cfa` preserves
+`hth:261113-0050-e680ae5`. Private backup is in the data volume at
+`backups/cutover-261113-0138-4aa0cfa/`. Rolling back leaves `xidach_pending`
+unused and puts the bầu cua table back behind Sạp Kim Bảo; refund any rows
+still in `xidach_pending` first if a round was open.
+
+## Previous release: 2026-11-13 bầu cua redesign and shorter rounds, 00:50 UTC+7
 
 Deploy run [43273600242](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43273600242)
 released main `e680ae5` (PR #44) as `hth:261113-0050-e680ae5`, replacing
