@@ -1,6 +1,27 @@
 # Deployment
 
-## Current release: 2026-11-12 Bầu cua tôm cá shared table, 23:27 UTC+7
+## Current release: 2026-11-13 bầu cua redesign and shorter rounds, 00:50 UTC+7
+
+Deploy run [43273600242](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43273600242)
+released main `e680ae5` (PR #44) as `hth:261113-0050-e680ae5`, replacing
+`hth:261112-2327-065aefc`. Bầu cua rounds are now 8 s betting + 2 s roll + 3 s
+result (were 20 + 3.5 + 8). Client redesign: red-tarp betting panel with chip
+stacks and a countdown bar, a 3×2 mat plus porcelain plate and bowl on the 3D
+table, a dealer NPC (`BAUCUA_ZONE.dealer`, a new collision circle) that shakes
+the plate, and a centre-screen dice reveal with the player's net result and
+sounds. No data or protocol change. Public bundle: `index-COvgsc70.js`,
+confirmed served at `https://game.hthlogistics.top/` with `/api/health` ok.
+
+Local suite 189/189 and Vite build passed on Node 24; Docker tests 189/189.
+Candidate passed with DB `quick_check` ok (50 players, 23 wishes, 48 fish).
+Checked in a browser on a temporary DB at 1280×720 and 375 (touch); not yet
+checked with two real players after the cutover.
+
+Rollback container `hth-rollback-261113-0050-e680ae5` preserves
+`hth:261112-2327-065aefc`. Private backup is in the data volume at
+`backups/cutover-261113-0050-e680ae5/`.
+
+## Previous release: 2026-11-12 Bầu cua tôm cá shared table, 23:27 UTC+7
 
 Deploy run [43258810166](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43258810166)
 released main `065aefc` (PR #42) as `hth:261112-2327-065aefc`, replacing
