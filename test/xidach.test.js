@@ -166,6 +166,9 @@ test('một ván đủ pha: chia, giấu bài, rút/dằn, nhà cái rút, chấ
   assert.deepEqual(act(a, 'hit').cards, [C[10], C[6], C[4]]);
   assert.equal(act(a, 'stand').ok, true);
   assert.equal(act(b, 'stand').ok, true);
+  // Cả phòng được báo ai rút, ai dằn (để nhân vật diễn), nhưng không kèm lá nào.
+  const acts = events.filter(([name]) => name === 'xidach:act').map(([, d]) => d);
+  assert.deepEqual(acts, [{ sid: a.sid, action: 'hit', count: 3 }, { sid: a.sid, action: 'stand', count: 3 }, { sid: b.sid, action: 'stand', count: 2 }]);
   game.sweep(Date.now());
   assert.equal(game.phase, 'dealer', 'mọi người dằn xong thì cái lật ngay');
   assert.deepEqual(events.at(-1)[1].dealer, [C[9], s2(C[7])]);

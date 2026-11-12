@@ -4,7 +4,9 @@
 import { XIDACH_ZONE, dist2d } from '../../../shared/layout.js';
 import { KIND_LABEL, XIDACH } from '../../../shared/xidach.js';
 import { XiDachPanel } from '../ui/xidach-panel.js';
+import { actEffect, resultEffects } from './xidach-effects.js';
 
+const EFFECT_DISTANCE = 20; // Đứng trong tầm này mới nghe tiếng bài và thấy hiệu ứng chấm bài.
 const LEAVE_MARGIN = 0.9;
 const ACTION_GAP_MS = 180; // Giữ nhịp trên server (150 ms).
 const CHIP_KEYS = { Digit1: 0, Digit2: 1, Digit3: 2, Numpad1: 0, Numpad2: 1, Numpad3: 2 };
@@ -26,10 +28,24 @@ export class XiDachActivity {
       onExit: () => app.activities.exit(),
     });
     app.wallet.onChange(() => this.#render());
+    // Tiếng lá bài rơi xuống bàn và tiếng lật bài, chỉ khi đứng gần.
+    this.table.onLand = () => this.#near() && app.audio.tick();
+    this.table.onFlip = () => this.#near() && app.audio.pop();
   }
 
   get table() {
     return this.app.world.xidachTable;
+  }
+
+  #near() {
+    const { me } = this.app;
+    return dist2d(me.x, me.z, XIDACH_ZONE.x, XIDACH_ZONE.z) < EFFECT_DISTANCE;
+  }
+
+  /** Tin công khai: một khách vừa rút hay dằn. Nhân vật của họ diễn, ô ghế trên bảng nháy lên. */
+  onAct(act) {
+    actEffect(this.app, act);
+    if (act.sid !== this.app.sid) this.panel.flashSeat(act.sid, act.action);
   }
 
   start() {
@@ -95,6 +111,7 @@ export class XiDachActivity {
     this.state = state;
     this.table.setState(state);
     this.#render();
+    if (settled && this.#near()) resultEffects(this.app, state); // Ai đứng gần cũng thấy ai thắng ai thua.
     if (settled && this.app.activities.current === this) this.#showResult();
   }
 
@@ -103,8 +120,7 @@ export class XiDachActivity {
     if (round !== this.round) return;
     const seat = this.state?.seats?.find((s) => s.sid === this.app.sid);
     this.mine = { round, seat: seat?.seat, bet: seat?.bet ?? 0, ...this.mine, cards, stood };
-    this.table.setMine(this.mine);
-    this.app.audio.pop();
+    this.table.setMine(this.mine); // Tiếng lá rơi do bàn 3D phát khi lá bay tới chỗ.
     this.#render();
   }
 

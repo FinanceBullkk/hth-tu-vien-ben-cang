@@ -1,7 +1,9 @@
 // Bảng chơi xì dách dock đáy màn hình: hàng bài nhà cái, các ghế khách khác, tay bài của mình, nút cược / rút / dằn.
 // Dùng chung khung đỏ viền vàng với bầu cua (baucua.css), mặt dạ xanh riêng (xidach.css). Chỉ vẽ và nhận bấm.
-import { KIND_LABEL, RANKS, RED_SUITS, SUITS, XIDACH, handKind, handTotal, rankOf, suitOf } from '../../../shared/xidach.js';
+// Hàng bài và ô ghế được giữ lại giữa các lần vẽ: lá mới mới bay vào, ô ghế nháy lên khi người đó rút/dằn.
+import { KIND_LABEL, XIDACH, handKind, handTotal } from '../../../shared/xidach.js';
 import { $, h } from './dom.js';
+import { handLabel, syncHand } from './xidach-cards.js';
 
 const PHASE_TEXT = {
   idle: 'Bàn nghỉ · cược để mở ván',
@@ -11,23 +13,14 @@ const PHASE_TEXT = {
   result: 'Chấm bài',
 };
 const chipTier = (amount) => (amount >= 10 ? 'gold' : amount >= 5 ? 'red' : 'ivory');
+const money = (net) => (net > 0 ? `+${net}` : net < 0 ? `−${-net}` : 'hoà');
 
-/** Một lá bài DOM; id âm là lá úp. */
-export function cardEl(card, small = false) {
-  if (!(card >= 0)) return h('span', { class: `xd-card back${small ? ' small' : ''}`, 'aria-label': 'Lá úp' });
-  const red = RED_SUITS.has(suitOf(card));
-  return h('span', { class: `xd-card${red ? ' red' : ''}${small ? ' small' : ''}`, 'aria-label': `${RANKS[rankOf(card)]}${SUITS[suitOf(card)]}` },
-    h('b', {}, RANKS[rankOf(card)]), h('i', {}, SUITS[suitOf(card)]));
-}
-
-/** Nhãn điểm của một tay: "Xì dách", "Quắc", "Non 13", hay chỉ số điểm. */
-export function handLabel(cards) {
-  if (!cards?.length) return '';
-  const kind = handKind(cards);
-  const total = handTotal(cards);
-  if (kind === 'normal') return String(total);
-  if (kind === 'non' || kind === 'quac') return `${KIND_LABEL[kind]} ${total}`;
-  return KIND_LABEL[kind];
+/** Trạng thái chữ của một ghế khách khác theo pha. */
+function seatStatus(seat, phase) {
+  if (seat.cards) return `${handLabel(seat.cards)}${seat.net != null ? ` · ${money(seat.net)}` : ''}`;
+  if (phase === 'betting') return `cược ${seat.bet}`;
+  if (phase === 'playing') return seat.stood ? `đã dằn · ${seat.count} lá` : `đang rút · ${seat.count} lá`;
+  return `${seat.count} lá · chờ chấm`;
 }
 
 export class XiDachPanel {
@@ -38,9 +31,11 @@ export class XiDachPanel {
     this.dealerCards = h('div', { class: 'xd-hand' });
     this.dealerTotal = h('em', { class: 'xd-total' });
     this.seats = h('div', { class: 'xd-seats' });
+    this.seatEls = new Map(); // sid -> { el, hand, info }
     this.myCards = h('div', { class: 'xd-hand big' });
     this.myTotal = h('em', { class: 'xd-total' });
     this.myBet = h('small', { class: 'xd-bet' });
+    this.turn = h('span', { class: 'xd-turn', hidden: true }, 'Lượt của bạn');
     this.banner = h('div', { class: 'xd-banner', hidden: true });
     this.msg = h('p', { class: 'baucua-msg', role: 'status' });
 
@@ -63,7 +58,7 @@ export class XiDachPanel {
       h('div', { class: 'xd-felt' },
         h('div', { class: 'xd-row' }, h('span', { class: 'xd-who' }, 'Nhà cái'), this.dealerCards, this.dealerTotal),
         this.seats,
-        h('div', { class: 'xd-row me' }, h('span', { class: 'xd-who' }, 'Bạn', this.myBet), this.myCards, this.myTotal),
+        h('div', { class: 'xd-row me' }, h('span', { class: 'xd-who' }, 'Bạn', this.myBet, this.turn), this.myCards, this.myTotal),
         this.banner),
       h('footer', { class: 'baucua-foot' }, this.betBox, this.actions, h('span', { class: 'baucua-wallet' }, h('small', {}, 'TEU'), this.teu)),
       this.msg);
@@ -94,6 +89,16 @@ export class XiDachPanel {
     this.banner.hidden = true;
   }
 
+  /** Một khách khác vừa rút/dằn: ô của họ nháy lên. */
+  flashSeat(sid, action) {
+    const seat = this.seatEls.get(sid);
+    if (!seat) return;
+    seat.el.dataset.act = action;
+    seat.el.classList.remove('flash');
+    void seat.el.offsetWidth; // Chạy lại hoạt ảnh khi rút liên tiếp.
+    seat.el.classList.add('flash');
+  }
+
   tick(nowMs, state) {
     const timed = state?.phase === 'betting' || state?.phase === 'playing';
     const span = state?.phase === 'playing' ? XIDACH.turnMs : XIDACH.betMs;
@@ -104,31 +109,52 @@ export class XiDachPanel {
     this.bar.style.transform = `scaleX(${timed ? leftMs / span : 0})`;
   }
 
+  /** Ô ghế của khách khác: giữ lại theo sid để lá cũ không vẽ lại và hoạt ảnh nháy không bị cắt. */
+  #renderSeats(others, phase) {
+    const alive = new Set();
+    for (const s of others) {
+      alive.add(s.sid);
+      let seat = this.seatEls.get(s.sid);
+      if (!seat) {
+        seat = { name: h('b'), hand: h('span', { class: 'xd-hand' }), info: h('small') };
+        seat.el = h('div', { class: 'xd-seat' }, seat.name, seat.hand, seat.info);
+        this.seatEls.set(s.sid, seat);
+      }
+      seat.name.textContent = s.name;
+      syncHand(seat.hand, s.cards ?? Array(s.count).fill(-1), true);
+      seat.info.textContent = seatStatus(s, phase);
+      seat.el.classList.toggle('live', phase === 'playing' && !s.stood);
+      seat.el.classList.toggle('win', s.net > 0);
+      seat.el.classList.toggle('lose', s.net < 0);
+      this.seats.append(seat.el); // Giữ đúng thứ tự ghế; append nút có sẵn chỉ dời chỗ.
+    }
+    for (const [sid, seat] of this.seatEls) {
+      if (alive.has(sid)) continue;
+      seat.el.remove();
+      this.seatEls.delete(sid);
+    }
+    this.seats.hidden = others.length === 0;
+  }
+
   /** state: bàn chung; mine: { bet, cards, stood } của mình hoặc null; mySid để bỏ ghế của mình khỏi hàng ghế khác. */
   render({ state, mine, mySid, teu }) {
     const phase = state?.phase ?? 'idle';
     this.root.dataset.phase = phase;
     this.phase.textContent = PHASE_TEXT[phase];
 
-    const dealer = state?.dealer ?? [];
-    this.dealerCards.replaceChildren(...dealer.map((c) => cardEl(c)));
+    syncHand(this.dealerCards, state?.dealer ?? []);
     this.dealerTotal.textContent = state?.dealerTotal != null ? (KIND_LABEL[state.dealerKind] || String(state.dealerTotal)) : '';
-
-    const others = (state?.seats ?? []).filter((s) => s.sid !== mySid);
-    this.seats.replaceChildren(...others.map((s) => h('div', { class: `xd-seat${s.net > 0 ? ' win' : s.net < 0 ? ' lose' : ''}` },
-      h('b', {}, s.name),
-      h('span', { class: 'xd-hand' }, ...(s.cards ?? Array(s.count).fill(-1)).map((c) => cardEl(c, true))),
-      h('small', {}, s.cards ? `${handLabel(s.cards)}${s.net != null ? ` · ${s.net > 0 ? '+' : ''}${s.net}` : ''}` : s.stood ? 'đã dằn' : `cược ${s.bet}`))));
-    this.seats.hidden = others.length === 0;
+    this.#renderSeats((state?.seats ?? []).filter((s) => s.sid !== mySid), phase);
 
     const cards = mine?.cards ?? [];
-    this.myCards.replaceChildren(...cards.map((c) => cardEl(c)));
+    syncHand(this.myCards, cards);
     this.myTotal.textContent = handLabel(cards);
     this.myTotal.dataset.kind = cards.length ? handKind(cards) : '';
     this.myBet.textContent = mine?.bet ? ` · cược ${mine.bet} (giữ ${mine.bet * XIDACH.holdMult})` : '';
 
     const canBet = phase === 'idle' || phase === 'result' || (phase === 'betting' && (mine?.bet ?? 0) < XIDACH.maxBet);
     const myTurn = phase === 'playing' && mine && !mine.stood && cards.length > 0;
+    this.turn.hidden = !myTurn;
     this.betBox.hidden = !(phase === 'idle' || phase === 'betting' || phase === 'result');
     this.chips.forEach((el) => { el.disabled = !canBet; });
     this.clearBtn.disabled = !(phase === 'betting' && mine?.bet);
