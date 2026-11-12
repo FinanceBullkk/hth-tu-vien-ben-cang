@@ -81,33 +81,22 @@ test('roof ceiling is the roof inside a zone and rises smoothly outside it', () 
   assert.equal(roofCeiling(1000, 1000), Infinity);
 });
 
-test('camera swings behind a running player only after the look input rests', () => withMatchMedia(() => {
-  const run = (follow, vx, vz, frames, look = STILL) => {
+test('camera never turns by itself while the player walks without touching the mouse', () => withMatchMedia(() => {
+  // Đi theo khung camera như LocalPlayer: (mx, my) là phím/cần ảo, hướng đi phụ thuộc yaw.
+  for (const [mx, my] of [[-1, 0], [1, 0], [0.7, 0.7], [-0.7, 0.7], [0, 1], [0, -1]]) {
+    const follow = orbitCamera(SPAWN);
+    follow.yaw = 0.4;
     let x = SPAWN.x;
-    let z = SPAWN.z;
-    for (let i = 0; i < frames; i++) {
-      x += vx / 60;
-      z += vz / 60;
-      follow.update(1 / 60, x, 0, z, look);
+    let z = SPAWN.z - 10;
+    for (let i = 0; i < 600; i++) {
+      const sin = Math.sin(follow.yaw);
+      const cos = Math.cos(follow.yaw);
+      x += (mx * cos - my * sin) * 4.3 / 60;
+      z += (-mx * sin - my * cos) * 4.3 / 60;
+      follow.update(1 / 60, x, 0, z, STILL);
     }
-  };
-  // Chạy về phía -z: sau lưng là yaw = 0.
-  const follow = orbitCamera(SPAWN);
-  follow.yaw = 1.2;
-  run(follow, 0, -4.3, 60);
-  assert.ok(Math.abs(follow.yaw - 1.2) < 1e-9, 'no swing before the delay');
-  run(follow, 0, -4.3, 240);
-  assert.ok(Math.abs(follow.yaw) < 0.4, `swung behind, yaw ${follow.yaw}`);
-
-  const toward = orbitCamera(SPAWN);
-  run(toward, 0, 4.3, 300);
-  assert.equal(toward.yaw, 0, 'running toward the camera does not spin it');
-
-  const locked = orbitCamera(SPAWN);
-  locked.autoFollow = false;
-  locked.yaw = 1.2;
-  run(locked, 0, -4.3, 300);
-  assert.equal(locked.yaw, 1.2, 'pointer-lock players keep their own yaw');
+    assert.equal(follow.yaw, 0.4, `camera turned by itself for input ${mx},${my}`);
+  }
 }));
 
 test('pinch spreads zoom in and pinches zoom out', () => {

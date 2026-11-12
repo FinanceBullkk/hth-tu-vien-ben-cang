@@ -7,15 +7,13 @@ const MIN_PITCH = -1.3;
 const MAX_PITCH = 1.25;
 // Chuyển cảnh mượt khi rời màn chào hay góc máy minigame về sau lưng, tính bằng giây.
 const BLEND_TIME = 0.7;
-// Không xoay tay quá lâu mà vẫn chạy thì camera từ từ vòng về sau lưng (cần ảo, bàn phím).
-const AUTO_FOLLOW_DELAY = 1.6;
-const AUTO_FOLLOW_RATE = 1.1;
+// Không có chế độ tự vòng camera về sau lưng: đi lại theo khung camera nên yaw tự đổi
+// sẽ kéo hướng đi đổi theo, giữ A/D hay đi chéo là camera quay vòng mãi. Chỉ người chơi xoay yaw.
 // Mái hạ dần trong khoảng này quanh mép mái, để bước vào hiên camera không rơi thẳng xuống.
 const ROOF_MARGIN = 2.5;
 const ROOF_SLOPE = 5;
 
 const damp = (rate, dt) => 1 - Math.exp(-dt * rate);
-const wrapAngle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 const smoothstep = (t) => t * t * (3 - 2 * t);
 
 /** Độ cao trần camera khi người chơi đứng ở (x, z): mái gần nhất, cao dần ra ngoài mép mái. */
@@ -55,14 +53,10 @@ export class FollowCamera {
     this._desired = new THREE.Vector3();
     this._aim = new THREE.Vector3();
     this.combat = false;
-    this.autoFollow = true;
-    this.idleLook = 0;
     this.mode = null;
     this.blend = 0;
     this.blendPos = new THREE.Vector3();
     this.blendLook = new THREE.Vector3();
-    this.lastX = null;
-    this.lastZ = null;
     camera.position.copy(this.pos);
   }
 
@@ -79,17 +73,11 @@ export class FollowCamera {
 
   update(dt, px, py, pz, look) {
     this.time += dt;
-    const manual = look.yaw !== 0 || look.pitch !== 0;
-    this.idleLook = manual ? 0 : this.idleLook + dt;
     this.yaw += look.yaw;
     this.targetPitch = Math.max(MIN_PITCH, Math.min(MAX_PITCH, this.targetPitch + look.pitch));
     this.pitch += (this.targetPitch - this.pitch) * damp(20, dt);
     // Zoom theo tỉ lệ: mỗi nấc lăn đổi cùng một phần trăm dù đang gần hay xa.
     if (look.zoom) this.distance = Math.max(this.minDist, Math.min(this.maxDist, this.distance * Math.exp(look.zoom)));
-    const vx = this.lastX === null || dt <= 0 ? 0 : (px - this.lastX) / dt;
-    const vz = this.lastZ === null || dt <= 0 ? 0 : (pz - this.lastZ) / dt;
-    this.lastX = px;
-    this.lastZ = pz;
 
     const mode = this.intro ? 'intro' : this.shot ? 'shot' : 'orbit';
     if (mode === 'orbit' && this.mode && this.mode !== 'orbit' && !this.reducedMotion) {
@@ -122,7 +110,6 @@ export class FollowCamera {
     // Nhịp sen đặt nhân vật và hoa lên nửa trên, tránh bảng phím phía dưới.
     this.target.set(px, py + (this.meditating ? -0.5 : 1.2), pz);
     this.look.lerp(this.target, damp(24, dt));
-    this.#autoFollow(dt, vx, vz);
 
     const pitch = this.meditating ? 0.25 : this.pitch;
     const distance = this.meditating ? 5.2 : this.combat ? 5.5 : isInsideHall(px, pz) ? Math.min(this.distance, 3) : this.distance;
@@ -179,17 +166,5 @@ export class FollowCamera {
     this.camera.position.copy(this.pos);
     this.camera.lookAt(this.look);
     this.camera.getWorldDirection(this.forward);
-  }
-
-  /** Đang chạy mà lâu không xoay tay: kéo yaw dần về sau hướng chạy. */
-  #autoFollow(dt, vx, vz) {
-    if (!this.autoFollow || this.combat || this.meditating || this.idleLook < AUTO_FOLLOW_DELAY) return;
-    const speed = Math.hypot(vx, vz);
-    // Đứng yên, hoặc bị dịch chỗ (dịch chuyển tức thời) thì bỏ qua.
-    if (speed < 1 || speed > 12) return;
-    const diff = wrapAngle(Math.atan2(-vx, -vz) - this.yaw);
-    // Chạy về phía camera thì để yên, không thì camera quay vòng theo người.
-    if (Math.abs(diff) > 2) return;
-    this.yaw += diff * damp(AUTO_FOLLOW_RATE * Math.min(1, speed / 4.3), dt);
   }
 }
