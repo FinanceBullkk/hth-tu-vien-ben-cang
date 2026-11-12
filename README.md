@@ -96,13 +96,25 @@ Tới sân cạnh bãi container, bấm **Chơi đầu hồ** rồi chọn đố
 
 ## Bầu cua
 
-Bàn bầu cua ở góc chợ sau Sạp Kim Bảo. Bấm **Chơi gì?** rồi chọn **Bầu cua**, hoặc đứng quanh bàn bấm **E**. Cả sân chơi chung một bàn: ai đặt cược đầu tiên thì mở ván, có 8 giây cho mọi người đặt, rồi Chú Tư nhà cái xóc đĩa 2 giây và mở bát cho cả bàn. Ba viên xúc xắc hiện to giữa màn hình kèm số TEU thắng/thua; ván mới mở ngay khi có người cược tiếp.
+Bàn bầu cua ở sân trước thiền đường, phía tây trục chính (bàn xì dách đối xứng phía đông). Bấm **Chơi gì?** rồi chọn **Bầu cua**, hoặc đứng quanh bàn bấm **E**. Cả sân chơi chung một bàn: ai đặt cược đầu tiên thì mở ván, có 8 giây cho mọi người đặt, rồi Chú Tư nhà cái xóc đĩa 2 giây và mở bát cho cả bàn. Ba viên xúc xắc hiện to giữa màn hình kèm số TEU thắng/thua; ván mới mở ngay khi có người cược tiếp.
 
 - **Đặt cược:** chọn chip 1, 5 hoặc 10 TEU rồi bấm ô Nai, Bầu, Gà, Cá, Cua, Tôm (hoặc phím **1–6**). Tối đa 30 TEU một mặt và 50 TEU một ván. Còn đang đếm ngược thì **Xoá cược** hoàn lại đủ.
 - **Trả thưởng:** ra `n` viên trùng mặt bạn cược thì nhận lại tiền cược cộng `n` lần tiền cược. Không trùng là mất. Nhà cái lợi khoảng 8%, nên chơi lâu thì TEU có xu hướng hao dần.
 - **Bảng tuần:** bầu cua tính lãi/lỗ ròng cả tuần: thắng cộng, thua trừ. Cược nhiều không tự đẩy ai lên hạng.
 - Đi ra xa bàn là tự thôi chơi; cược đã đặt vẫn được chấm và trả vào ví. Server có khởi động lại giữa ván thì tiền cược được hoàn.
 - Chi tiết và giao thức xem `docs/baucua.md`.
+
+## Xì dách
+
+Bàn xì dách ở sân trước thiền đường, phía đông trục chính. Bấm **Chơi gì?** rồi chọn **Xì dách**, hoặc đứng quanh bàn bấm **E**. Tối đa 5 người cùng đấu với Bà Năm nhà cái, luật miền Nam.
+
+- **Cược:** bấm chip +1/+5/+10 (hoặc phím **1–3**) trong 8 giây nhận cược, tối đa 20 TEU một tay. Server giữ **gấp đôi** tiền cược phòng nhà cái ăn x2, chấm xong hoàn phần dư.
+- **Rút / dằn:** sau khi chia 2 lá, mọi người cùng rút (**R**) hoặc dằn (**F**) trong 15 giây. Dưới 16 là non, không được dằn; hết giờ mà vẫn non thì thua.
+- **Át:** 2 lá tính 11, 10 hoặc 1; 3 lá tính 10 hoặc 1; từ 4 lá chỉ tính 1.
+- **Bài đặc biệt:** xì bàn (đôi Át) > xì dách (Át + 10/J/Q/K) > ngũ linh (5 lá không quá 21). Thắng bằng bài đặc biệt ăn x2; nhà cái thắng bằng bài đặc biệt cũng thu x2.
+- **Hoà:** bằng điểm, cùng loại bài đặc biệt, hoặc cả hai cùng quắc.
+- **Nhà cái:** rút khi dưới 17 và rút tiếp khi 17–18 có Át đang tính 10/11. Nhà cái lợi chút ít nên chơi lâu TEU vẫn hao; bảng tuần tính lãi/lỗ ròng như bầu cua.
+- Bài người khác úp tới lúc chấm. Chi tiết, con số mô phỏng và giao thức xem `docs/xidach.md`.
 
 ## Câu cá
 
@@ -229,6 +241,8 @@ server/
   riddle.js      Đố thuật ngữ với Mặc Vũ
   pitch.js       Đầu hồ đấu với NPC
   baucua.js      Bầu cua: bàn chung, đặt cược TEU, xóc và trả thưởng
+  xidach.js      Xì dách: bàn chung đấu nhà cái NPC, chia/rút/dằn, chấm (xidach-view.js: những gì được phát chung)
+  table-stake-store.js  Giữ/trả/hoàn TEU của các bàn đỏ đen, hoàn cược treo khi khởi động lại
   voice.js       Ghép cặp và chuyển tín hiệu voice theo khoảng cách
   admin.js       API và trang admin (giao diện ở admin-ui/)
   filter.js      Lọc từ có phân biệt dấu

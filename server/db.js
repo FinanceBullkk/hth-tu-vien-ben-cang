@@ -4,7 +4,7 @@ import path from 'node:path';
 import Database from 'better-sqlite3';
 import { pkTitleMask } from '../shared/pk.js';
 import { cultivationProgress, QI_INTERVAL_MS } from '../shared/cultivation.js';
-import { BAUCUA_REASON, BauCuaStore } from './baucua-store.js';
+import { TABLE_GAMES, TableStakeStore } from './table-stake-store.js';
 import { ShopStore } from './shop-store.js';
 
 const SCHEMA = `
@@ -148,7 +148,8 @@ export class Db {
     this.#migrate();
     this.#prepare();
     this.shop = new ShopStore(this.db);
-    this.baucua = new BauCuaStore(this.db);
+    this.baucua = new TableStakeStore(this.db, 'baucua');
+    this.xidach = new TableStakeStore(this.db, 'xidach');
     /** Gán từ Room: báo số dư TEU mới để đẩy ví cho người chơi. */
     this.onTeu = null;
   }
@@ -205,13 +206,13 @@ export class Db {
       bellEventPlayer: p('INSERT OR IGNORE INTO bell_event_players (event_id,player_id) VALUES (?,?)'),
       bellEventsOf: p('SELECT COUNT(*) c FROM bell_event_players WHERE player_id=?'),
       // TEU: mỗi lần cộng/trừ đều ghi log; bảng tuần cộng phần kiếm được (số dương), tiêu ở sạp không bị trừ hạng.
-      // Riêng bầu cua (lý do "baucua:...") tính đủ cả cược, hoàn và thắng, tức lãi/lỗ ròng cả tuần:
+      // Riêng các bàn đỏ đen (lý do "baucua:...", "xidach:...") tính đủ cả cược, hoàn và thắng, tức lãi/lỗ ròng cả tuần:
       // nếu chỉ cộng ván thắng thì cứ cược nhiều là lên hạng dù TEU đang hao.
       teuInsert: p('INSERT INTO teu_log (player_id,amount,reason,local_date,created_at) VALUES (@pid,@amount,@reason,@date,@now)'),
       teuBump: p('UPDATE players SET teu=teu+@amount WHERE id=@pid'),
       teuWeekTop: p(`SELECT t.player_id, pl.name, SUM(t.amount) teu FROM teu_log t
         JOIN players pl ON pl.id = t.player_id
-        WHERE t.local_date >= @since AND (t.amount > 0 OR t.reason LIKE '${BAUCUA_REASON}%')
+        WHERE t.local_date >= @since AND (t.amount > 0 ${TABLE_GAMES.map((g) => `OR t.reason LIKE '${g}:%'`).join(' ')})
         GROUP BY t.player_id HAVING teu > 0 ORDER BY teu DESC, pl.name LIMIT 10`),
       // Cá: log từng con + tổng hợp bộ sưu tập.
       fishLogInsert: p(`INSERT INTO fish_log (player_id,fish_id,weight,grade,local_date,created_at)

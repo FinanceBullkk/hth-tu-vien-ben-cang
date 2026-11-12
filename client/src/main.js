@@ -41,6 +41,7 @@ import './ui/melody.css';
 import './ui/cultivation.css';
 import './ui/shop.css';
 import './ui/baucua.css';
+import './ui/xidach.css';
 
 const isTouch = matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch', isTouch);
@@ -205,6 +206,7 @@ function main() {
     app.activities.bellEvent.apply(snap.bellEvent);
     app.wallet.apply({ teu: snap.teu, owned: snap.owned });
     app.activities.baucua.setSnapshot(snap.baucua);
+    app.activities.xidach.setSnapshot(snap.xidach);
     // Server gỡ món chưa sở hữu (mua ở máy khác, hết hạn giữ đồ cũ...): mặc đúng bộ server chốt.
     const look = lookOf(snap.me);
     if (Object.entries(look).some(([slot, v]) => profile[slot] !== v)) {
@@ -353,6 +355,11 @@ function main() {
   // ---------- Bầu cua ----------
   net.on('baucua:state', (state) => app.activities.baucua.applyState(state));
   net.on('baucua:payout', (result) => app.activities.baucua.onPayout(result));
+
+  // ---------- Xì dách ----------
+  net.on('xidach:state', (state) => app.activities.xidach.applyState(state));
+  net.on('xidach:hand', (hand) => app.activities.xidach.onHand(hand));
+  net.on('xidach:payout', (result) => app.activities.xidach.onPayout(result));
 
   let blessToastAt = 0;
   net.on('wish:new', (wish) => {
@@ -548,6 +555,7 @@ function main() {
     world.monk.update(dt, me.x, me.z, camera);
     world.shopStall.update(dt, me.x, me.z, camera);
     world.baucuaTable.update(dt, camera, nowMs);
+    world.xidachTable.update(dt, camera, nowMs);
     world.pitchCourt.update(dt, camera);
     app.follow.update(dt, me.x, me.y, me.z, look);
     world.sky.follow(camera);
