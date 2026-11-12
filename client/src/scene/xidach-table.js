@@ -9,10 +9,12 @@ import { h } from '../ui/dom.js';
 import { DEAL_GAP_S, flipAnim, flyAnim, stepCard } from './card-motion.js';
 import { cardBackMaterial, cardFaceMaterial } from './card-textures.js';
 import { TableDealer, pickLine } from './table-dealer.js';
+import { XiDachTableFx } from './xidach-table-fx.js';
 
 const TOP_Y = 0.8;
 const CARD = { w: 0.12, h: 0.17, gap: 0.075 };
 const SEAT_RADIUS = 0.56; // Quạt bài của khách cách tâm bàn chừng này, về phía tây (phía khách).
+const CHIP_RADIUS = 0.78; // Chồng chip cược của khách, sát mép bàn.
 const SEAT_ANGLES = [-56, -28, 0, 28, 56].map((d) => (d * Math.PI) / 180);
 const DEALER_X = 0.5;
 const SHOE = { x: DEALER_X + 0.12, y: TOP_Y + 0.06, z: -0.42 }; // Chồng bài cạnh tay nhà cái.
@@ -47,6 +49,10 @@ export class XiDachTable {
     this.dealerCards = this.#cardRow(DEALER_X, 0, -Math.PI / 2);
     this.seatCards = SEAT_ANGLES.map((a) => this.#cardRow(-Math.cos(a) * SEAT_RADIUS, Math.sin(a) * SEAT_RADIUS, a - Math.PI / 2));
     this.#buildLabel();
+    // Chip cược bày sát mép bàn phía khách, ngoài quạt bài; khay chip của cái ở phía nhà cái.
+    const at = (r) => SEAT_ANGLES.map((a) => new THREE.Vector3(-Math.cos(a) * r, 0, Math.sin(a) * r));
+    this.fx = new XiDachTableFx(this.group, { seats: at(SEAT_RADIUS), chipSpots: at(CHIP_RADIUS), dealer: new THREE.Vector3(DEALER_X, TOP_Y, 0.36), top: TOP_Y });
+    this.fx.onChipLand = () => this.onLand?.();
     scene.add(this.group);
     this.dealer = new TableDealer(scene, { spot: XIDACH_ZONE.dealer, ...DEALER });
 
@@ -163,12 +169,15 @@ export class XiDachTable {
 
   setState(state) {
     const changed = state.phase !== this.phase;
-    const first = !this.state;
+    const prev = this.state;
     this.state = state;
     this.phase = state.phase;
     if (state.phase === 'idle' || state.phase === 'betting') this.mine = this.mine?.round === state.round ? this.mine : null;
-    if (changed && !first) this.#announce(state);
+    if (changed && prev) this.#announce(state);
+    // Mỗi lần xét một nhà, nhà cái nhấc tay lật bài nhà đó.
+    if (prev && state.checking && state.checking !== prev.checking) this.dealer.flourish(0.5);
     this.#render();
+    this.fx.setState(state, prev);
     this.labelClock = 0;
   }
 
@@ -185,24 +194,27 @@ export class XiDachTable {
     else if (state.phase === 'dealer') {
       dealer.say(pickLine(LINES.dealer), 1800);
       dealer.flourish();
-    } else if (state.phase === 'result') {
+    } else if (state.phase === 'checking') {
       const kind = KIND_LABEL[state.dealerKind];
-      dealer.say(kind ? `Cái ${kind}!` : `Cái ${state.dealerTotal} điểm.`, 2800);
+      dealer.say(kind ? `Cái ${kind}! Xét hết!` : `Cái ${state.dealerTotal}, đi xét nè!`, 2800);
     }
   }
 
   #labelText(now) {
     const s = this.state;
     const left = () => Math.max(0, Math.ceil((s.endsAt - now) / 1000));
+    const dealerHand = () => (KIND_LABEL[s.dealerKind] ? `cái ${KIND_LABEL[s.dealerKind]}` : `cái ${s.dealerTotal} điểm`);
     if (!s || s.phase === 'idle') return 'bấm E để chơi';
     if (s.phase === 'betting') return `nhận cược · ${left()}s · ${s.seats.length}/${XIDACH.seats}`;
-    if (s.phase === 'playing') return `rút hay dằn · ${left()}s`;
-    if (s.phase === 'dealer') return `cái ${s.dealerTotal} điểm…`;
-    return KIND_LABEL[s.dealerKind] ? `cái ${KIND_LABEL[s.dealerKind]}` : `cái ${s.dealerTotal} điểm`;
+    if (s.phase === 'playing') return `lượt ${s.seats.find((x) => x.sid === s.turn)?.name ?? '…'} · ${left()}s`;
+    if (s.phase === 'dealer') return `${dealerHand()}…`;
+    if (s.phase === 'checking') return `${dealerHand()} · đang xét`;
+    return dealerHand();
   }
 
   update(dt, camera, nowMs) {
     this.#animate(dt);
+    this.fx.update(dt, nowMs);
     const dealing = this.phase === 'playing' || this.phase === 'dealer';
     this.dealer.update(dt, camera, dealing ? 'deal' : 'idle');
     this.labelClock -= dt;

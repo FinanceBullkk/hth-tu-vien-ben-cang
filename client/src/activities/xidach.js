@@ -4,7 +4,7 @@
 import { XIDACH_ZONE, dist2d } from '../../../shared/layout.js';
 import { KIND_LABEL, XIDACH } from '../../../shared/xidach.js';
 import { XiDachPanel } from '../ui/xidach-panel.js';
-import { actEffect, resultEffects } from './xidach-effects.js';
+import { actEffect, checkEffect, newlyChecked } from './xidach-effects.js';
 
 const EFFECT_DISTANCE = 20; // Đứng trong tầm này mới nghe tiếng bài và thấy hiệu ứng chấm bài.
 const LEAVE_MARGIN = 0.9;
@@ -26,6 +26,10 @@ export class XiDachActivity {
       onHit: () => this.hit(),
       onStand: () => this.stand(),
       onExit: () => app.activities.exit(),
+      onPeek: () => {
+        this.#syncTableMine();
+        this.#render();
+      },
     });
     app.wallet.onChange(() => this.#render());
     // Tiếng lá bài rơi xuống bàn và tiếng lật bài, chỉ khi đứng gần.
@@ -68,7 +72,7 @@ export class XiDachActivity {
       app.activities.exit();
       return;
     }
-    this.panel.tick(app.net.now(), this.state);
+    this.panel.tick(app.net.now(), this.state, app.sid);
   }
 
   onKey(code, isDown) {
@@ -94,13 +98,16 @@ export class XiDachActivity {
     this.state = snap;
     this.mine = snap.mine ? { round: snap.round, ...snap.mine } : null;
     this.table.setState(snap);
-    this.table.setMine(this.mine);
+    this.#render();
+    this.#syncTableMine();
     this.#render();
   }
 
   applyState(state) {
     if (!state) return;
-    const settled = state.phase === 'result' && this.state?.phase !== 'result';
+    const { app } = this;
+    const prev = this.state;
+    const playing = app.activities.current === this;
     if (state.round !== this.round) {
       this.round = state.round;
       this.mine = null;
@@ -111,8 +118,15 @@ export class XiDachActivity {
     this.state = state;
     this.table.setState(state);
     this.#render();
-    if (settled && this.#near()) resultEffects(this.app, state); // Ai đứng gần cũng thấy ai thắng ai thua.
-    if (settled && this.app.activities.current === this) this.#showResult();
+    // Nhà cái xét tới nhà nào: ai đứng gần cũng thấy người đó thắng hay thua; nhà của mình thì hiện chữ lớn.
+    for (const seat of newlyChecked(prev, state)) {
+      if (this.#near()) checkEffect(app, seat);
+      if (seat.sid === app.sid && playing) this.#showResult();
+    }
+    if (playing && state.phase === 'playing' && state.turn === app.sid && prev?.turn !== app.sid) {
+      app.audio.chime(0.05);
+      this.panel.setMessage('Tới lượt bạn: nặn bài, rồi Rút (R) hoặc Dằn (F).');
+    }
   }
 
   /** Bài riêng của mình: lúc chia và (qua ack) mỗi lần rút. */
@@ -120,8 +134,14 @@ export class XiDachActivity {
     if (round !== this.round) return;
     const seat = this.state?.seats?.find((s) => s.sid === this.app.sid);
     this.mine = { round, seat: seat?.seat, bet: seat?.bet ?? 0, ...this.mine, cards, stood };
-    this.table.setMine(this.mine); // Tiếng lá rơi do bàn 3D phát khi lá bay tới chỗ.
     this.#render();
+    this.#syncTableMine(); // Tiếng lá rơi do bàn 3D phát khi lá bay tới chỗ.
+  }
+
+  /** Bàn 3D chỉ ngửa những lá mình đã nặn; lá chưa nặn vẫn úp như bài người khác. */
+  #syncTableMine() {
+    const { mine, panel } = this;
+    this.table.setMine(mine ? { ...mine, cards: mine.cards.map((c) => (panel.opened.has(c) ? c : -1)) } : null);
   }
 
   #gap() {
@@ -142,10 +162,10 @@ export class XiDachActivity {
     }
     this.applyState(res.state); // Có thể vừa mở ván mới.
     this.mine = { round: res.state.round, seat: res.seat, bet: res.bet, cards: this.mine?.cards ?? [], stood: false };
-    this.table.setMine(this.mine);
     this.panel.setMessage('');
     app.wallet.apply({ teu: res.teu });
     this.#render();
+    this.#syncTableMine();
   }
 
   async clear() {
