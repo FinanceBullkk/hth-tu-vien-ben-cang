@@ -50,13 +50,20 @@ export const SHOP = {
   shelf: { minX: -13.3, maxX: -10.7, minZ: 23.6, maxZ: 24 },
 };
 export const GATE_MONK = { x: 3.2, z: 28.4, rot: 0, radius: 0.35, actionRadius: 2.6 };
-// Bàn bầu cua ở góc chợ sau Sạp Kim Bảo. Bàn là vật cản tròn; ai đứng trong radius quanh bàn thì bấm E để chơi,
-// đứng đâu quanh bàn cũng được. seat là chỗ đứng menu "Chơi gì?" đưa tới (phía đông bàn, sát mép bàn).
-// Nhà cái đứng phía tây bàn, quay mặt sang đông về phía khách; đĩa xóc ở phía nhà cái, tấm bạt ở phía khách.
+// Hai bàn đỏ đen ở sân trước thiền đường, đối xứng hai bên trục chính: bầu cua phía tây, xì dách phía đông.
+// Bàn là vật cản tròn; ai đứng trong radius quanh bàn thì bấm E để chơi, đứng đâu quanh bàn cũng được.
+// Nhà cái đứng ở mép bàn xa trục, quay mặt về phía trục; seat là chỗ menu "Chơi gì?" đưa tới (mép bàn phía trục).
+// Bầu cua: đĩa xóc ở phía nhà cái, tấm bạt ở phía khách.
 export const BAUCUA_ZONE = {
-  x: -13.2, z: 27.4, radius: 2.6, tableRadius: 0.95,
-  seat: { x: -11.7, z: 27.4, rot: -Math.PI / 2 },
-  dealer: { x: -14.55, z: 27.4, rot: Math.PI / 2, radius: 0.35 },
+  x: -5.5, z: 0, radius: 2.6, tableRadius: 0.95,
+  seat: { x: -4.05, z: 0, rot: -Math.PI / 2 },
+  dealer: { x: -6.85, z: 0, rot: Math.PI / 2, radius: 0.35 },
+};
+// Xì dách: tối đa 5 khách, bài từng người chia ra trước chỗ họ theo hình cung phía trục; bài nhà cái ở phía nhà cái.
+export const XIDACH_ZONE = {
+  x: 5.5, z: 0, radius: 2.6, tableRadius: 0.95,
+  seat: { x: 4.05, z: 0, rot: Math.PI / 2 },
+  dealer: { x: 6.85, z: 0, rot: -Math.PI / 2, radius: 0.35 },
 };
 // Hồ câu góc đông nam sân: ba vòng tròn ghép thành bờ cong tự nhiên, đi vòng quanh được.
 // Cả ba vòng nằm trong CIRCLES nên va chạm dùng chung cơ chế sẵn có. Tâm (x, z) nằm trong vòng giữa.
@@ -93,6 +100,7 @@ export const PLACES = [
   { key: 'mat', icon: '🪷', name: 'Ngồi thiền', desc: 'Ngồi yên, thở chậm và tích Chân khí', x: 0, z: -15.6 },
   { key: 'pitch', icon: '🏺', name: 'Đầu hồ', desc: 'Ném tên vào bình, so tài cùng cao thủ', x: 23.4, z: 3 },
   { key: 'baucua', icon: '🎲', name: 'Bầu cua', desc: 'Đặt TEU, xóc đĩa cùng cả sân', x: BAUCUA_ZONE.seat.x, z: BAUCUA_ZONE.seat.z },
+  { key: 'xidach', icon: '🃏', name: 'Xì dách', desc: 'Rút bài đấu nhà cái, luật miền Nam', x: XIDACH_ZONE.seat.x, z: XIDACH_ZONE.seat.z },
   { key: 'tea', icon: '🍵', name: 'Rút xăm', desc: 'Lắc ống xăm xin lời chúc hôm nay', x: TEA.x, z: TEA.z - 2.4 },
   { key: 'tree', icon: '🌳', name: 'Treo lời ước', desc: 'Viết điều mong muốn lên cây bồ đề', x: TREE.x + 3, z: TREE.z },
 ];
@@ -192,6 +200,8 @@ export const CIRCLES = [
   { x: SHOP.x, z: SHOP.z, r: SHOP.radius },
   { x: BAUCUA_ZONE.x, z: BAUCUA_ZONE.z, r: BAUCUA_ZONE.tableRadius },
   { x: BAUCUA_ZONE.dealer.x, z: BAUCUA_ZONE.dealer.z, r: BAUCUA_ZONE.dealer.radius },
+  { x: XIDACH_ZONE.x, z: XIDACH_ZONE.z, r: XIDACH_ZONE.tableRadius },
+  { x: XIDACH_ZONE.dealer.x, z: XIDACH_ZONE.dealer.z, r: XIDACH_ZONE.dealer.radius },
   { x: PITCH_ZONE.jar.x, z: PITCH_ZONE.jar.z, r: PITCH_ZONE.jar.r },
   { x: PITCH_ZONE.opponent.x, z: PITCH_ZONE.opponent.z, r: 0.35 },
   ...PITCH_ZONE.pots.map((p) => ({ x: p.x, z: p.z, r: 0.28 })),

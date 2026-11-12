@@ -1,6 +1,7 @@
 # Bầu cua tôm cá
 
-Bàn chung ở góc chợ sau Sạp Kim Bảo (`BAUCUA_ZONE` trong `shared/layout.js`). Cược bằng TEU thật.
+Bàn chung ở sân trước thiền đường, phía tây trục chính (`BAUCUA_ZONE` trong `shared/layout.js`); bàn xì dách
+đối xứng phía đông (`docs/xidach.md`). Cược bằng TEU thật.
 
 ## Luật
 
@@ -18,7 +19,8 @@ Mọi mốc thời gian và giới hạn nằm trong `BAUCUA` ở `shared/baucua
 ## Hình ảnh
 
 - Bàn tròn: tấm bạt 3×2 (Nai Bầu Gà / Cá Cua Tôm) trải nửa phía khách, đĩa sứ và bát úp nửa phía nhà cái.
-- Chú Tư nhà cái (NPC, `BAUCUA_ZONE.dealer`, là vật cản) hô theo pha, hai tay nhấc đĩa xóc khi `rolling`.
+- Chú Tư nhà cái (NPC `scene/table-dealer.js` dùng chung với xì dách, đứng ở `BAUCUA_ZONE.dealer`, là vật cản)
+  hô theo pha, hai tay nhấc đĩa xóc khi `rolling`.
 - Mở bát: bát nhấc lên nghiêng về phía khách, ô trúng trên bạt sáng vàng; người đang chơi thấy ba viên to giữa màn hình
   (`ui/baucua-reveal.js`) kèm lãi/lỗ của mình, nghe tiếng lắc xúc xắc khi xóc.
 - Bảng cược (`ui/baucua-panel.js`) vẽ như tấm bạt đỏ: chip tròn 1/5/10, chồng chip trên ô mình đã cược, thanh thời gian chạy lùi.
@@ -29,10 +31,10 @@ Mọi mốc thời gian và giới hạn nằm trong `BAUCUA` ở `shared/baucua
   Rút cược khi còn đang đặt thì hoàn đủ (`baucua:return`).
 - Sau ván, server trả thưởng theo `playerId`, kể cả người đã rời bàn hay mất kết nối: phần cược hoàn lại ghi `baucua:return`,
   phần lãi ghi `baucua:win`, rồi xoá dòng giữ. Mọi dòng của một ván ghi cùng ngày bắt đầu ván.
-- Bảng TEU tuần: các hoạt động khác chỉ cộng phần kiếm được, tiêu ở sạp không trừ hạng. Riêng bầu cua tính **lãi/lỗ ròng
-  cả tuần** (mọi dòng `baucua:*`), thắng cộng, thua trừ. Chỉ cộng ván thắng thì cứ cược nhiều là lên hạng dù TEU đang hao.
-  Người có tổng tuần không dương thì không hiện trên bảng.
-- Tắt server giữa ván: `BauCua.stop()` hoàn ngay. Server sập đột ngột: lần khởi động sau, `BauCuaStore.recover()` hoàn mọi
+- Bảng TEU tuần: các hoạt động khác chỉ cộng phần kiếm được, tiêu ở sạp không trừ hạng. Riêng các bàn đỏ đen tính
+  **lãi/lỗ ròng cả tuần** (mọi dòng `baucua:*`, `xidach:*`), thắng cộng, thua trừ. Chỉ cộng ván thắng thì cứ cược nhiều
+  là lên hạng dù TEU đang hao. Người có tổng tuần không dương thì không hiện trên bảng.
+- Tắt server giữa ván: `BauCua.stop()` hoàn ngay. Server sập đột ngột: lần khởi động sau, `TableStakeStore.recover()` hoàn mọi
   dòng còn trong `baucua_pending`, nên không ai mất cược.
 
 ## Giao thức
@@ -50,6 +52,6 @@ Server chỉ nhận cược khi người chơi đang ở hoạt động `baucua`
 ## Mã
 
 - `shared/baucua.js`: mặt, hằng số, `settle()`.
-- `server/baucua.js`: bàn và vòng đời ván; `server/baucua-store.js`: trừ/trả TEU trong transaction.
+- `server/baucua.js`: bàn và vòng đời ván; `server/table-stake-store.js`: giữ/trả/hoàn TEU trong transaction (dùng chung với xì dách).
 - `client/src/activities/baucua.js`, `ui/baucua-panel.js`, `ui/baucua.css`, `scene/baucua-table.js`, `scene/baucua-textures.js`.
 - `test/baucua.test.js`: luật chấm, pha ván với đồng hồ giả, dữ liệu giả mạo, ngắt kết nối, và một lượt qua socket thật.

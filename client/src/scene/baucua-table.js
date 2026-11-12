@@ -1,4 +1,4 @@
-// Bàn bầu cua ở góc chợ: bàn tròn, tấm bạt 3×2 trải phía khách, đĩa sứ và bát úp phía nhà cái.
+// Bàn bầu cua ở sân trước thiền đường: bàn tròn, tấm bạt 3×2 trải phía khách, đĩa sứ và bát úp phía nhà cái.
 // Đặt cược: bát úp kín trên đĩa. Xóc: nhà cái nhấc cả đĩa lên rung. Mở: bát nhấc lên nghiêng về phía khách,
 // ba viên lộ mặt và ô trúng trên bạt sáng vàng. Cảnh chỉ vẽ theo trạng thái server gửi.
 import * as THREE from 'three';
@@ -6,8 +6,15 @@ import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { BAUCUA_SYMBOLS } from '../../../shared/baucua.js';
 import { BAUCUA_ZONE, floorHeight } from '../../../shared/layout.js';
 import { h } from '../ui/dom.js';
-import { BauCuaDealer } from './baucua-dealer.js';
 import { createMat, diceFaceTexture, drawMat } from './baucua-textures.js';
+import { TableDealer, pickLine } from './table-dealer.js';
+
+// Chú Tư: áo đỏ, nón lá, áo dài cách tân cho ra dáng nhà cái chợ Tết.
+const DEALER = { name: 'Chú Tư nhà cái', look: { color: 0, hair: 2, hat: 4, attire: 7 } };
+const LINES = {
+  betting: ['Đặt đi bà con, tám giây thôi!', 'Bầu cua cá cọp đây!', 'Ai cua ai tôm, đặt lẹ nào!'],
+  rolling: ['Xóc nè… xóc nè!', 'Dừng tay! Xóc đây!'],
+};
 
 const TOP_Y = 0.8; // Mặt bàn cao hơn nền chừng này.
 const DICE_SIZE = 0.16;
@@ -42,7 +49,7 @@ export class BauCuaTable {
     this.#buildDish();
     this.#buildLabel();
     scene.add(this.group);
-    this.dealer = new BauCuaDealer(scene);
+    this.dealer = new TableDealer(scene, { spot: BAUCUA_ZONE.dealer, ...DEALER });
 
     this.phase = 'idle';
     this.state = null;
@@ -149,8 +156,19 @@ export class BauCuaTable {
     if (!this.ready) {
       this.ready = true;
       this.open = showResult ? 1 : 0;
-    } else if (changed) this.dealer.onPhase(state.phase, state.dice);
+    } else if (changed) this.#announce(state);
     this.labelClock = 0;
+  }
+
+  /** Nhà cái hô theo pha; mở bát thì nhấc tay. */
+  #announce(state) {
+    const { dealer } = this;
+    if (state.phase === 'betting') dealer.say(pickLine(LINES.betting), 3000);
+    else if (state.phase === 'rolling') dealer.say(pickLine(LINES.rolling), 1800);
+    else if (state.phase === 'result' && state.dice) {
+      dealer.say(`Mở! ${state.dice.map((d) => BAUCUA_SYMBOLS[d].icon).join(' ')}`, 2800);
+      dealer.flourish();
+    }
   }
 
   #labelText(now) {
@@ -186,7 +204,7 @@ export class BauCuaTable {
     const showDice = o > 0.2 && this.state?.dice;
     for (const die of this.dice) die.visible = Boolean(showDice);
 
-    this.dealer.update(dt, camera, rolling);
+    this.dealer.update(dt, camera, rolling ? 'shake' : 'idle');
     this.labelClock -= dt;
     if (this.labelClock <= 0) {
       this.labelClock = 0.25;

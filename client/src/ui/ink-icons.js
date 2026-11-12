@@ -24,6 +24,7 @@ const PATHS = {
   robe: '<path d="M12 4.5a1.6 1.6 0 1 1 1.6 1.6c-.9 0-1.6.5-1.6 1.4"/><path d="M12 7.5 3.5 13.5c-.7.5-.3 1.5.5 1.5h16c.8 0 1.2-1 .5-1.5z"/><path d="M6.5 15v4.5h11V15"/>',
   coin: '<circle cx="12" cy="12" r="8.5"/><rect x="9.5" y="9.5" width="5" height="5"/>',
   dice: `<rect x="4.5" y="4.5" width="15" height="15" rx="3"/>${DOT(9, 9)}${DOT(15, 9)}${DOT(12, 12)}${DOT(9, 15)}${DOT(15, 15)}`,
+  cards: '<rect x="4" y="6" width="10" height="14" rx="1.5" transform="rotate(-12 9 13)"/><rect x="10" y="4" width="10" height="14" rx="1.5" transform="rotate(10 15 11)"/>',
   tree: '<path d="M12 21v-6"/><path d="M12 15c-4.5 0-7-2.5-7-5.5S8 4 12 4s7 2.5 7 5.5-2.5 5.5-7 5.5z"/><path d="m12 15-3-3M12 13l3-3"/>',
 };
 

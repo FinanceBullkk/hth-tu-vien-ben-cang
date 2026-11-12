@@ -1,7 +1,8 @@
 // Điều phối hoạt động: phát hiện điểm gần người chơi, bật/tắt hoạt động, khoá di chuyển.
-import { ABBOT, BAUCUA_ZONE, BELL, LAKE, PITCH_ZONE, POND, SHOP, TEA, TREE, ZOEYY, dist2d, isInsideHall, lakeDistance } from '../../../shared/layout.js';
+import { ABBOT, BAUCUA_ZONE, BELL, LAKE, PITCH_ZONE, POND, SHOP, TEA, TREE, XIDACH_ZONE, ZOEYY, dist2d, isInsideHall, lakeDistance } from '../../../shared/layout.js';
 import { openShop } from '../ui/shop-panel.js';
 import { BauCuaActivity } from './baucua.js';
+import { XiDachActivity } from './xidach.js';
 import { BellEvent } from './bell-event.js';
 import { FishingActivity } from './fishing.js';
 import { FortuneActivity } from './fortune.js';
@@ -13,7 +14,7 @@ import { MELODY_ZONE } from '../../../shared/layout.js';
 import { MelodyActivity } from './melody.js';
 import { PkActivity } from './pk.js';
 
-const KIND_CODE = { bell: 2, write: 3, shake: 4, fish: 5, pitch: 6, baucua: 9 };
+const KIND_CODE = { bell: 2, write: 3, shake: 4, fish: 5, pitch: 6, baucua: 9, xidach: 10 };
 
 // Lớp CSS báo đang trong một hoạt động: khung chiến đấu (thanh máu, thanh chiêu) tự cất đi để không che bảng hoạt động.
 const markInActivity = (on) => document.body.classList.toggle('in-activity', on);
@@ -30,6 +31,7 @@ export class Activities {
     this.fishing = new FishingActivity(app);
     this.pitch = new PitchActivity(app);
     this.baucua = new BauCuaActivity(app);
+    this.xidach = new XiDachActivity(app);
     this.melody = new MelodyActivity(app);
     this.pk = new PkActivity(app);
     this.pk.bind();
@@ -91,9 +93,12 @@ export class Activities {
     if (dist2d(x, z, ABBOT.x, ABBOT.z) < ABBOT.actionRadius) {
       return { key: 'abbot', label: 'Xin thầy một lời', run: () => this.app.world.abbot.advise() };
     }
-    // Bàn bầu cua nằm sau sạp, vùng hai bên chồng lên nhau một chút: xét bàn trước để đứng cạnh bàn không bị nhận nhầm là sạp.
+    // Hai bàn đỏ đen ở sân trước thiền đường, hai bên trục chính.
     if (dist2d(x, z, BAUCUA_ZONE.x, BAUCUA_ZONE.z) < BAUCUA_ZONE.radius) {
       return { key: 'baucua', label: 'Chơi bầu cua', run: () => this.baucua.start() };
+    }
+    if (dist2d(x, z, XIDACH_ZONE.x, XIDACH_ZONE.z) < XIDACH_ZONE.radius) {
+      return { key: 'xidach', label: 'Chơi xì dách', run: () => this.xidach.start() };
     }
     if (dist2d(x, z, SHOP.x, SHOP.z) < SHOP.actionRadius) {
       return { key: 'shop', label: 'Ghé Sạp Kim Bảo', run: () => openShop(this.app, 'shop') };
