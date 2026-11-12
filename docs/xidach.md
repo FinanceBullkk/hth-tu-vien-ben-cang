@@ -51,9 +51,20 @@ Server tắt giữa ván thì hoàn ngay; sập đột ngột thì lần khởi 
 | `xidach:hit` / `xidach:stand` | client -> server | ack `{ ok, cards, stood }`; dằn dưới 16 bị từ chối |
 | `xidach:state` | server -> cả phòng | `server/xidach-view.js`: bài nhà cái (lá úp là -1), ghế khách chỉ có số lá tới lúc chấm |
 | `xidach:hand` | server -> khách | `{ round, cards, stood }` bài của chính mình |
+| `xidach:act` | server -> cả phòng | `{ sid, action: 'hit'\|'stand', count }` ai vừa rút/dằn; không kèm lá, quắc vẫn báo là "hit" |
 | `xidach:payout` | server -> khách | `{ round, outcome, mult, bet, net, kind, teu }` |
 
 Hello trả thêm `snapshot.xidach` (kèm `mine` là ghế, tiền cược và bài của người đó) để vào lại giữa ván vẫn chơi tiếp.
+
+## Hiệu ứng
+
+- Bàn 3D (`scene/card-motion.js`): mỗi lá bay từ chồng bài của nhà cái tới đúng chỗ theo vòng cung, các lá cùng lượt cách
+  nhau 0,13 giây; lá úp lật ra (lá thứ hai của nhà cái, bài khách lúc chấm) bằng một vòng lật quanh sống lá. Có tiếng lá rơi, tiếng lật.
+- Nhân vật: đứng ở bàn thì hai tay cầm quạt bài; rút thì với tay ra chồng bài; bong bóng "Rút!" / "Dằn! (3 lá)" cho cả phòng thấy.
+- Lúc chấm (`activities/xidach-effects.js`): bong bóng kết quả trên đầu từng khách ("Xì dách! +20", "Quắc · −10", "19 điểm · hoà"),
+  người thắng có tiền vàng bay lên.
+- Bảng chơi: ô ghế khách khác hiện "đang rút · 3 lá" (chấm xanh nhấp nháy) hay "đã dằn", nháy xanh khi họ rút, đỏ khi họ dằn;
+  nhãn "Lượt của bạn"; lá mới mới bay vào, lá úp lật ra có hoạt ảnh lật.
 
 ## Mã
 

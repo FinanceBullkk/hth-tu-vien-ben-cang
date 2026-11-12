@@ -6,6 +6,7 @@ import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { XIDACH_ZONE, floorHeight } from '../../../shared/layout.js';
 import { KIND_LABEL, XIDACH } from '../../../shared/xidach.js';
 import { h } from '../ui/dom.js';
+import { DEAL_GAP_S, flipAnim, flyAnim, stepCard } from './card-motion.js';
 import { cardBackMaterial, cardFaceMaterial } from './card-textures.js';
 import { TableDealer, pickLine } from './table-dealer.js';
 
@@ -14,6 +15,8 @@ const CARD = { w: 0.12, h: 0.17, gap: 0.075 };
 const SEAT_RADIUS = 0.56; // Quạt bài của khách cách tâm bàn chừng này, về phía tây (phía khách).
 const SEAT_ANGLES = [-56, -28, 0, 28, 56].map((d) => (d * Math.PI) / 180);
 const DEALER_X = 0.5;
+const SHOE = { x: DEALER_X + 0.12, y: TOP_Y + 0.06, z: -0.42 }; // Chồng bài cạnh tay nhà cái.
+const cardMaterial = (card) => (card >= 0 ? cardFaceMaterial(card) : cardBackMaterial());
 const LABEL_SHOW_DISTANCE = 22;
 const DEALER = { name: 'Bà Năm nhà cái', look: { color: 7, hair: 1, hat: 7, attire: 6 } };
 const LINES = {
@@ -64,8 +67,8 @@ export class XiDachTable {
     rim.rotation.x = Math.PI / 2;
     const stem = mesh(new THREE.CylinderGeometry(0.13, 0.2, TOP_Y - 0.08, 10), dark, 0, (TOP_Y - 0.08) / 2, 0);
     const foot = mesh(new THREE.CylinderGeometry(0.45, 0.5, 0.06, 16), dark, 0, 0.03, 0);
-    // Chồng bài của nhà cái.
-    const shoe = mesh(new THREE.BoxGeometry(CARD.h, 0.05, CARD.w), cardBackMaterial(), DEALER_X + 0.12, TOP_Y + 0.03, -0.42);
+    // Chồng bài của nhà cái: mọi lá được chia đều bay ra từ đây.
+    const shoe = mesh(new THREE.BoxGeometry(CARD.h, 0.05, CARD.w), cardBackMaterial(), SHOE.x, SHOE.y - 0.03, SHOE.z);
     this.group.add(top, felt, line, rim, stem, foot, shoe);
   }
 
@@ -76,14 +79,21 @@ export class XiDachTable {
     holder.rotation.y = yaw;
     const cards = Array.from({ length: XIDACH.maxCards }, (_, i) => {
       const card = new THREE.Mesh(this.cardGeometry, cardBackMaterial());
+      card.rotation.order = 'XYZ'; // Lật quanh trục dọc của lá (y cục bộ) sau khi đã nằm ngửa.
       card.rotation.x = -Math.PI / 2;
       card.position.set((i - 2) * CARD.gap, i * 0.0015, 0);
       card.visible = false;
       card.receiveShadow = true;
+      card.userData = { shown: false, card: undefined, anim: null };
       holder.add(card);
       return card;
     });
     this.group.add(holder);
+    // Vị trí chồng bài tính trong khung của hàng này, để lá bay từ chồng bài ra đúng chỗ.
+    cards.shoe = () => {
+      this.group.updateMatrixWorld(true);
+      return holder.worldToLocal(this.group.localToWorld(new THREE.Vector3(SHOE.x, SHOE.y, SHOE.z)));
+    };
     return cards;
   }
 
@@ -94,20 +104,52 @@ export class XiDachTable {
     this.group.add(this.label);
   }
 
-  /** Bày một hàng bài: cards là mảng id (âm = úp) hoặc chỉ số lá (count) khi chưa biết mặt. */
+  /**
+   * Bày một hàng bài: cards là mảng id (âm = úp), count là số lá khi chưa biết mặt.
+   * Lá mới xuất hiện thì bay từ chồng bài tới chỗ; lá úp thành ngửa thì lật; các lá xếp lại đều quanh tâm hàng.
+   */
   #lay(row, cards, count = cards?.length ?? 0) {
     const n = Math.min(count, row.length);
     const start = -(n - 1) / 2;
     row.forEach((mesh, i) => {
-      mesh.visible = i < n;
-      if (i >= n) return;
-      mesh.position.x = (start + i) * CARD.gap;
-      const card = cards?.[i];
-      mesh.material = card >= 0 ? cardFaceMaterial(card) : cardBackMaterial();
+      const ud = mesh.userData;
+      if (i >= n) {
+        mesh.visible = false;
+        Object.assign(ud, { shown: false, card: undefined, anim: null });
+        return;
+      }
+      const tx = (start + i) * CARD.gap;
+      const ty = i * 0.0015;
+      const want = cards?.[i] >= 0 ? cards[i] : -1;
+      if (!ud.shown) {
+        const from = row.shoe();
+        ud.shown = true;
+        ud.card = want;
+        mesh.material = cardMaterial(want);
+        mesh.rotation.y = 0;
+        mesh.visible = false; // Hiện khi tới lượt bay.
+        ud.anim = flyAnim(from, tx, ty, this.queue++ * DEAL_GAP_S);
+        return;
+      }
+      if (ud.anim?.kind === 'fly') Object.assign(ud.anim, { tx, ty });
+      else mesh.position.set(tx, ty, 0);
+      if (ud.card === want) return;
+      if (ud.card === -1 && want >= 0) ud.anim = flipAnim(want, ty, this.queue++ * DEAL_GAP_S * 0.6);
+      else mesh.material = cardMaterial(want);
+      ud.card = want;
     });
   }
 
+  /** Chạy hoạt ảnh bay và lật của mọi lá đang chuyển động. */
+  #animate(dt) {
+    const hooks = { material: cardMaterial, onLand: () => this.onLand?.(), onFlip: () => this.onFlip?.() };
+    for (const row of [this.dealerCards, ...this.seatCards]) {
+      for (const mesh of row) if (mesh.userData.anim) stepCard(mesh, dt, hooks);
+    }
+  }
+
   #render() {
+    this.queue = 0; // Lá mới trong cùng một lần vẽ được chia lần lượt, cách nhau DEAL_GAP_S.
     const s = this.state;
     this.#lay(this.dealerCards, s?.dealer ?? []);
     const bySeat = new Map((s?.seats ?? []).map((x) => [x.seat, x]));
@@ -160,6 +202,7 @@ export class XiDachTable {
   }
 
   update(dt, camera, nowMs) {
+    this.#animate(dt);
     const dealing = this.phase === 'playing' || this.phase === 'dealer';
     this.dealer.update(dt, camera, dealing ? 'deal' : 'idle');
     this.labelClock -= dt;

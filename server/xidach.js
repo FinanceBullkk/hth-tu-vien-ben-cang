@@ -137,6 +137,7 @@ export class XiDach {
     // Đủ 5 lá hoặc quắc thì tự dằn; quắc vẫn giấu với người khác tới lúc chấm như ngoài đời.
     if (s.cards.length >= XIDACH.maxCards || handTotal(s.cards) > 21) s.stood = true;
     this.dirty = true;
+    this.#announce(s, 'hit');
     return { ok: true, cards: [...s.cards], stood: s.stood };
   }
 
@@ -150,7 +151,16 @@ export class XiDach {
     p.lastXidach = now;
     s.stood = true;
     this.dirty = true;
+    this.#announce(s, 'stand');
     return { ok: true, cards: [...s.cards], stood: true };
+  }
+
+  /**
+   * Báo cả phòng một khách vừa rút hay dằn, để nhân vật của họ diễn và hàng ghế nháy lên.
+   * Chỉ có sid, hành động và số lá: không lộ bài, không lộ quắc (quắc tự dằn nhưng vẫn báo là "rút").
+   */
+  #announce(s, action) {
+    this.io.emit('xidach:act', { sid: s.sid, action, count: s.cards.length });
   }
 
   #deal(now) {

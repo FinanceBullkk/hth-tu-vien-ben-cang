@@ -325,6 +325,7 @@ export class Avatar {
     this.walkAmt = 0;
     this.sitAmt = 0;
     this.waveT = 0;
+    this.reachT = 0;
     this.slashT = 0;
     this.flinchT = 0;
     this.inCombat = false;
@@ -443,6 +444,11 @@ export class Avatar {
     this.waveT = 1.8;
   }
 
+  /** Với tay ra trước một nhịp (rút bài ở bàn xì dách). */
+  reach() {
+    this.reachT = 0.45;
+  }
+
   slash() {
     this.slashT = 0.32;
   }
@@ -552,6 +558,25 @@ export class Avatar {
       // Một tay giơ mũi tên ngang vai, tay kia buông, người hơi lắc lư.
       armRx = -1.75 + Math.sin(t * 1.7) * 0.1;
       armLx = -0.25;
+    } else if (this.activity === ACTIVITY.xidach) {
+      // Hai tay cầm quạt bài trước ngực, khẽ nghiêng như đang nhìn bài.
+      armLx = -1.15 + Math.sin(t * 1.3) * 0.04;
+      armRx = -1.0;
+      armLz = -0.35;
+      armRz = 0.3;
+    } else if (this.activity === ACTIVITY.baucua) {
+      // Hai tay chống lên mép bàn, chờ mở bát.
+      armLx = -0.7;
+      armRx = -0.7;
+      armLz = -0.12;
+      armRz = 0.12;
+    }
+    if (this.reachT > 0) {
+      // Rút bài: tay phải duỗi thẳng tới chồng bài rồi rút về.
+      this.reachT -= dt;
+      const r = Math.sin(Math.max(0, this.reachT / 0.45) * Math.PI);
+      armRx = armRx * (1 - r) - 1.55 * r;
+      armRz = armRz * (1 - r);
     }
     if (this.sitAmt > 0.01) {
       armLx = armLx * (1 - this.sitAmt) - 0.55 * this.sitAmt;

@@ -34,6 +34,7 @@ import { nudgePlacesMenu, openPlacesMenu } from './ui/places-menu.js';
 import { showTutorial } from './ui/tutorial.js';
 import { Welcome } from './ui/welcome.js';
 import { WishReader } from './ui/wishReader.js';
+import { floater } from './ui/floater.js';
 import './ui/voice.css';
 import './ui/pitch.css';
 import './ui/fishing.css';
@@ -277,6 +278,7 @@ function main() {
   });
 
   const avatarOf = (sid) => (sid === mySid ? me.avatar : remotes.map.get(sid)?.avatar);
+  app.avatarOf = avatarOf; // Hiệu ứng bàn bài cần tìm nhân vật theo sid.
   // Vị trí đứng của một người chơi (mình hoặc người khác), cho hiệu ứng câu cá/đầu hồ.
   const remotePos = (sid) => {
     if (sid === mySid) return { x: me.x, z: me.z };
@@ -359,6 +361,7 @@ function main() {
   // ---------- Xì dách ----------
   net.on('xidach:state', (state) => app.activities.xidach.applyState(state));
   net.on('xidach:hand', (hand) => app.activities.xidach.onHand(hand));
+  net.on('xidach:act', (act) => app.activities.xidach.onAct(act));
   net.on('xidach:payout', (result) => app.activities.xidach.onPayout(result));
 
   let blessToastAt = 0;
@@ -581,18 +584,6 @@ function main() {
     app.frameMs += (performance.now() - t - app.frameMs) * 0.1;
   };
   frame();
-}
-
-/** Chữ/tim nhỏ bay lên tại một điểm trong cảnh, tự biến mất. */
-function floater(app, position, text, delay = 0) {
-  const vec = position.clone().setY(position.y + 0.8);
-  vec.project(app.camera);
-  const el = h('div', { class: 'floater' }, text);
-  el.style.left = `${(vec.x * 0.5 + 0.5) * window.innerWidth}px`;
-  el.style.top = `${(-vec.y * 0.5 + 0.5) * window.innerHeight}px`;
-  el.style.animationDelay = `${delay}s`;
-  $('hud').append(el);
-  setTimeout(() => el.remove(), 1600 + delay * 1000);
 }
 
 try {
