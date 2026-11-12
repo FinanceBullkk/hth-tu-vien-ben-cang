@@ -15,9 +15,9 @@ export class RiddleActivity {
     if (!app.activities.enter(this, 'write')) return;
     const generation = ++this.generation;
     this.state = 'loading';
-    this.body = h('div', { class: 'riddle-stage' }, h('p', { class: 'muted' }, 'Sư chú đang lật sổ câu đố…'));
+    this.body = h('div', { class: 'riddle-stage' }, h('p', { class: 'muted' }, 'Mặc Vũ đang lật sổ câu đố…'));
     this.modal = openModal({
-      title: 'Đố của sư chú',
+      title: 'Đố của Mặc Vũ',
       content: this.body,
       onClose: () => {
         if (app.activities.current === this) app.activities.exit();
@@ -55,7 +55,7 @@ export class RiddleActivity {
     const other = h('button', { class: 'btn ghost', type: 'button' }, 'Xin câu khác');
     other.addEventListener('click', () => {
       this.state = 'loading';
-      this.body.replaceChildren(h('p', { class: 'muted' }, 'Sư chú lật sang câu khác…'));
+      this.body.replaceChildren(h('p', { class: 'muted' }, 'Mặc Vũ lật sang câu khác…'));
       this.#draw(this.generation);
     });
     this.body.replaceChildren(
@@ -85,7 +85,7 @@ export class RiddleActivity {
     if (res.correct) {
       this.state = 'done';
       this.app.audio.chime(0.09);
-      this.app.hud.setBanner(`+${res.teu} TEU`, 'Sư chú gật đầu: "Tâm thông mả lắm"', { ms: 5000 });
+      this.app.hud.setBanner(`+${res.teu} TEU`, 'Mặc Vũ gật đầu: "Tâm thông lắm"', { ms: 5000 });
       this.body.replaceChildren(
         h('p', { class: 'riddle-question' }, this.riddle.q),
         h('div', { class: 'fish-card' },
@@ -93,7 +93,7 @@ export class RiddleActivity {
           h('span', { class: 'teu-chip' }, `+${res.teu} TEU`)),
         h('div', { class: 'row-center' }, h('button', {
           class: 'btn primary', type: 'button',
-          onClick: () => { this.state = 'loading'; this.body.replaceChildren(h('p', { class: 'muted' }, 'Sư chú lật sang câu khác…')); this.#draw(this.generation); },
+          onClick: () => { this.state = 'loading'; this.body.replaceChildren(h('p', { class: 'muted' }, 'Mặc Vũ lật sang câu khác…')); this.#draw(this.generation); },
         }, 'Xin câu nữa')),
       );
       return;

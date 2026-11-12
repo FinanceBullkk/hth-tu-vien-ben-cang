@@ -40,9 +40,10 @@ export class LocalPlayer {
   placeAt(x, z, rot) {
     this.x = x;
     this.z = z;
-    this.rot = rot;
+    if (Number.isFinite(rot)) this.rot = rot;
     this.avatar.root.position.x = x;
     this.avatar.root.position.z = z;
+    if (Number.isFinite(rot)) this.avatar.root.rotation.y = rot;
   }
 
   update(dt, input, yaw, net) {
@@ -62,14 +63,15 @@ export class LocalPlayer {
         resolveCollision(nx, nz, PLAYER_RADIUS, this._out);
         this.x = this._out.x;
         this.z = this._out.z;
-        // Giữ nút xoay camera khi đi: nhân vật hướng theo ống kính, A/D thành bước ngang (kiểu MMO).
-        const target = input.rotating
-          ? Math.atan2(-Math.sin(yaw), -Math.cos(yaw))
-          : Math.atan2(wx, wz);
-        let d = target - this.rot;
-        d = Math.atan2(Math.sin(d), Math.cos(d));
-        this.rot += d * Math.min(1, dt * 12);
+        const target = Math.atan2(wx, wz);
+        const turn = Math.atan2(Math.sin(target - this.rot), Math.cos(target - this.rot));
+        this.rot += turn * (1 - Math.exp(-dt * 12));
         moving = true;
+      }
+      if (input.pointerLocked && !moving) {
+        const facing = yaw + Math.PI;
+        const turn = Math.atan2(Math.sin(facing - this.rot), Math.cos(facing - this.rot));
+        this.rot += turn * (1 - Math.exp(-dt * 20));
       }
     }
     this.moving = moving;
@@ -78,9 +80,7 @@ export class LocalPlayer {
     this.y += (floorY - this.y) * Math.min(1, dt * 12);
     const root = this.avatar.root;
     root.position.set(this.x, this.y, this.z);
-    let rd = this.rot - root.rotation.y;
-    rd = Math.atan2(Math.sin(rd), Math.cos(rd));
-    root.rotation.y += rd * Math.min(1, dt * 14);
+    root.rotation.y = this.rot;
     this.avatar.update(dt, moving, 0);
 
     this.sendTimer += dt;

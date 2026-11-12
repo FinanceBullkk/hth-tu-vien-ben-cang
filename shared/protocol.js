@@ -16,7 +16,7 @@ export const LIMITS = {
 // Nhịp đồng bộ vị trí. Hai bên cùng nhịp để mỗi gói phát đi đều có mẫu mới, tốc độ không dao động.
 export const MOTION = { sendHz: 20, tickMs: 50, stampMaxAgeMs: 1000 };
 
-export const AVATAR = { colors: 10, hairs: 6, hats: 11, attires: 8, weapons: 4, effects: 10 };
+export const AVATAR = { colors: 10, hairs: 6, hats: 11, attires: 8, weapons: 4, effects: 13 };
 
 // Màu áo: 4 màu đầu là màu cơ bản ai cũng có; phần sau là màu quý mở bằng TEU,
 // bitmask theo thứ tự trong PREMIUM_COLORS. Hai màu quý đầu giữ nguyên vị trí
@@ -53,20 +53,19 @@ export const ATTIRE_NAMES = [
   'Hán phục vân kiêm', 'Hàn phục đan thanh', 'Hòa phục hồng diệp', 'Áo dài quốc hương',
 ];
 export const WEAPON_NAMES = ['Không', 'Kiếm', 'Phất trần', 'Băng quyền'];
-export const EFFECT_NAMES = ['Không', 'Sen kim', 'Lưu ly', 'Tinh hà', 'Hỏa diễm', 'Đào hoa', 'Bích ngọc', 'Nguyệt bạch', 'Hắc ám', 'Long quyền'];
+export const EFFECT_NAMES = ['Không', 'Sen kim', 'Lưu ly', 'Tinh hà', 'Hỏa diễm', 'Đào hoa', 'Bích ngọc', 'Nguyệt bạch', 'Hắc ám', 'Long quyền', 'Xích diễm', 'Kim long', 'Kiếm vũ'];
 
 export const EMOJIS = ['🙏', '🌸', '😊', '❤️', '👋', '🍵'];
 
-export const WISH_PLACES = ['tree', 'pond', 'container'];
+export const WISH_PLACES = ['tree', 'pond'];
 export const PLACE_LABELS = {
   tree: 'Dải lụa trên cây bồ đề',
   pond: 'Đèn hoa đăng trên hồ sen',
-  container: 'Thẻ giấy dán lên container',
 };
 
 // Mã trạng thái chuyển động và hoạt động (gửi dạng số cho gọn).
 export const ANIM = { idle: 0, walk: 1 };
-export const ACTIVITY = { none: 0, meditate: 1, bell: 2, write: 3, shake: 4, fish: 5, pitch: 6, melody: 7 };
+export const ACTIVITY = { none: 0, meditate: 1, bell: 2, write: 3, shake: 4, fish: 5, pitch: 6, melody: 7, pk: 8 };
 export const ACTIVITY_BY_NAME = { meditate: 1, bell: 2, write: 3, shake: 4, fish: 5, pitch: 6 };
 export const ACTIVITY_LABEL = {
   7: 'đang tấu nhạc',
@@ -76,6 +75,7 @@ export const ACTIVITY_LABEL = {
   4: 'đang rút quẻ',
   5: 'đang câu cá',
   6: 'đang chơi đầu hồ',
+  8: 'đang luận kiếm',
 };
 
 // Đố thuật ngữ: nhà sư ở cổng đưa câu đố, trả lời đúng nhận TEU theo bậc.

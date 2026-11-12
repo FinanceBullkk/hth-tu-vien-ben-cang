@@ -24,10 +24,10 @@ export class Riddle {
 
   draw(player) {
     const list = this.list();
-    if (!list.length) return { ok: false, error: 'Sư chú hôm nay chưa mang câu đố ra cổng.' };
+    if (!list.length) return { ok: false, error: 'Mặc Vũ hôm nay chưa mang câu đố ra cổng.' };
     const now = Date.now();
     if (player.riddle && now - player.riddle.askedAt < RIDDLE.intervalMs) {
-      return { ok: false, wait: RIDDLE.intervalMs - (now - player.riddle.askedAt), error: 'Từ từ thôi, sư chú đang trầm ngâm.' };
+      return { ok: false, wait: RIDDLE.intervalMs - (now - player.riddle.askedAt), error: 'Từ từ thôi, Mặc Vũ đang trầm ngâm.' };
     }
     const date = localDate(now, this.config.timezone);
     if (this.db.riddleAttemptsToday(player.pid, date) >= RIDDLE.attemptsPerDay) {

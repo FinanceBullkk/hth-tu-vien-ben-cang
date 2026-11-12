@@ -22,6 +22,63 @@ function glowDot() {
   return dotTexture;
 }
 
+// ===== V10.1 Ngọc Liên Bảo Tọa — dựng hình trước (Phase 1 blockout) =====
+// Một cánh sen parametric: bản cánh rộng thân, gốc thuôn cắm vào đài, mặt thìa lõm,
+// mép vểnh, dọc cánh vồng nhẹ và đầu cánh vòm mềm vểnh lên — không nhọn như lưỡi
+// kiếm, không phẳng như mảnh kính. v: 0 gốc → 1 đầu cánh; across: −1..1.
+function buildLotusPetal(lSeg, wSeg) {
+  // CHIỀU Z CÁNH: với cặp quay (rotation.x=lean, rotation.y=π−a) thì +z_local chỉ XUỐNG
+  // → mặt thìa lõm phải về −z_local (lõm hướng trời), đầu cánh vểnh lên cũng −z_local.
+  const W = .26, CUP = .08, EDGE = .045, BEND = .07, FLICK = .12, TUCK = .05;
+  const pos = [], uv = [], idx = [];
+  for (let j = 0; j <= lSeg; j++) {
+    const v = j / lSeg;
+    const halfW = W * Math.pow(Math.sin(Math.PI * v), .45) * (.3 + .7 * Math.min(1, v / .22));
+    const bow = -(BEND * Math.sin(Math.PI * Math.pow(v, 1.1))
+      + FLICK * Math.pow(Math.max(0, (v - .68) / .32), 2))
+      + TUCK * (1 - Math.min(1, v / .12));
+    for (let k = 0; k <= wSeg; k++) {
+      const u = k / wSeg, across = u * 2 - 1;
+      const dish = (CUP * (1 - across * across) - EDGE * Math.pow(Math.abs(across), 3)) * (halfW / W);
+      pos.push(across * halfW, v, bow + dish);
+      uv.push(u, v);
+    }
+  }
+  for (let j = 0; j < lSeg; j++) for (let k = 0; k < wSeg; k++) {
+    const n = j * (wSeg + 1) + k;
+    idx.push(n, n + 1, n + wSeg + 1, n + 1, n + wSeg + 2, n + wSeg + 1);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx); g.computeVertexNormals();
+  return g;
+}
+
+// Cấu hình ba tầng sen — gốc cánh chung mép đài (.42/.5/.58 ≈ vành bowl .55), xa hơn bán
+// kính drape áo (~.4) để không xuyên thân; đỉnh cánh trước không vượt hông người ngồi:
+//   ngoài: xòe rộng tạo silhouette; giữa: so le (7 nguyên tố) hướng lên; trong: thấp ôm chân.
+// lean = góc ngả tính từ phương thẳng đứng (rad).
+const LOTUS_TIERS = [
+  { n: 8, r: .58, y: .1, len: 1.05, lean: .98, stag: 0 },
+  { n: 7, r: .5, y: .12, len: .8, lean: .84, stag: Math.PI / 7 },
+  { n: 5, r: .42, y: .1, len: .38, lean: .84, stag: .3 },
+];
+
+// ===== V10.2 bộ điều khiển trạng thái (chỉ hệ 1) =====
+// Summon → Idle ↔ Enhanced → Breakthrough (one-shot, gọi Kim Cương Pháp Tướng) → về
+// trạng thái trước; Dissolve trình tự khi avatar bắt đầu mờ dần. Mọi envelope là HÀM
+// THUẦN của thời gian trạng thái (không tích lũy dt) — tua/step lại ra đúng khung, đổi
+// state giữa chừng không sinh đối tượng mồ côi. Vòng xoay thêm lúc Đột phá dùng pha
+// cộng f(brk) với f(0)=0, f(1)=2π·N (N vòng nguyên) — không bao giờ giật vị trí vòng.
+const STATE_DUR = { summon: 2.2, breakthrough: 5, dissolve: 1.8 };
+const STATE_NAMES = ['summon', 'idle', 'enhanced', 'breakthrough', 'dissolve'];
+const clamp01 = x => Math.max(0, Math.min(1, x));
+const sstep = (a, b, x) => { const k = clamp01((x - a) / (b - a)); return k * k * (3 - 2 * k); };
+const bell = (c, w, x) => Math.exp(-((x - c) * (x - c)) / (w * w));
+// Tiến trình chuẩn hoá 0→1, ra vào có đạo hàm 0 (gia tốc mềm).
+const rise01 = brk => brk - Math.sin(brk * Math.PI * 2) / (Math.PI * 2);
+
 // Qi ribbons taper like brush strokes; the transparent center keeps the player readable.
 export function createAuraSignature(effect, lowQuality) {
   const group = new THREE.Group(); group.name = 'aura-signature';
@@ -72,33 +129,40 @@ export function createAuraSignature(effect, lowQuality) {
     transparent: true, opacity: 0.62, depthWrite: false, side: THREE.DoubleSide,
     blending: THREE.AdditiveBlending, toneMapped: false });
   materials.push(uprightMat);
+  // V10: toàn bộ lớp hoa văn (nội tâm + vành phù văn + mực + chấm sáng + lõi) nằm trong
+  // MỘT group billboard riêng — hoa văn luôn đọc được ở mọi góc; pháp giới 3D (vòng khắc,
+  // thiên luân, dải khí) ở ngoài group, giữ vị trí thế giới cho chiều sâu thật.
+  const ornamental = new THREE.Group(); ornamental.name = 'aura-emblem';
+  ornamental.scale.setScalar(effect === 1 ? .95 : 1); group.add(ornamental);
   const upright = new THREE.Mesh(plane, uprightMat);
-  upright.name = 'aura-emblem';
+  upright.name = 'aura-emblem-core';
   upright.visible = effect !== 8 && effect !== 6 && effect !== 4;
   upright.scale.setScalar(effect === 4 ? 1.35 : 1.16);
-  upright.position.set(0, effect === 1 ? 2.05 : 1.45, effect === 1 ? -.9 : -.55); group.add(upright);
-  // P0 hybrid nửa camera-facing: mandala luôn quay mặt về camera theo trục ngang, neo
-  // SÁT trục nhân vật (lùi .22 m) — hết cảm giác "cổng phép" tách rời; thân người đã ghi
-  // depth nên vẫn che phần tâm khi nhìn nghiêng/sau. onBeforeRender nhận camera mà không
-  // phải đổi API update() dùng chung.
+  upright.position.set(0, effect === 1 ? 1.62 : 1.45, effect === 1 ? 0 : -.55); ornamental.add(upright);
+  // V10.3 bỏ billboard theo camera (feedback chủ dự án: đĩa luôn trượt ra phía sau theo
+  // camera nên trông giả) — mandala neo CỐ ĐỊNH sau lưng nhân vật trong local (z −.3) và
+  // quay theo yaw nhân vật qua root cha, như một vật thể thật: nhìn ngang thấy cạnh đĩa,
+  // đi ra sau thấy mặt kia. Cả vành pháp giới + vòng quan là con ornamental nên giữ nguyên
+  // bố cục quanh đĩa ở mọi góc; hệ 2–8 vốn đã cố định như vậy (z −.55) — KHÔNG đụng tới.
+  if (effect === 1) ornamental.position.z = -.3;
   upright.frustumCulled = false;
-  const bill = { anchor: new THREE.Vector3(), dir: new THREE.Vector3() };
+  // bill: HẰNG SỐ neo local cho dòng khí, hạt rơi và pháp tướng (manifestation đọc
+  // view.ax/az/yaw mỗi khung) — đĩa không còn di chuyển nên không cần ghi lại mỗi khung.
+  const bill = { ax: 0, az: -.3, yaw: 0 };
+  // camYaw: phương camera quy về local, đo live trong onBeforeRender (callback phải nằm
+  // trên MESH được render — Group không được renderer gọi). Chỉ guard cánh sen dùng:
+  // cánh vẫn nhường ống kính dù đĩa không còn xoay theo camera.
+  let camYaw = 0;
   if (effect === 1) {
+    const vA = new THREE.Vector3(), vD = new THREE.Vector3();
     upright.onBeforeRender = (renderer, scene, camera) => {
-      if (!upright.parent) return;
-      const { anchor, dir } = bill;
-      anchor.setFromMatrixPosition(upright.parent.matrixWorld);
-      dir.subVectors(anchor, camera.position); dir.y = 0;
-      if (dir.lengthSq() < 1e-6) return;
-      dir.normalize();
-      anchor.addScaledVector(dir, .22);
-      upright.parent.worldToLocal(anchor);
-      upright.position.x = anchor.x; upright.position.z = anchor.z;
-      const me = upright.parent.matrixWorld.elements;
-      upright.rotation.y = Math.atan2(-dir.x, -dir.z) - Math.atan2(me[8], me[10]);
-      // Renderer đã tính matrixWorld TRƯỚC khi onBeforeRender chạy — không ép cập nhật thì
-      // khung này vẫn vẽ bằng hướng cũ (trễ 1 khung: nhìn nghiêng thành vệt khi camera nhảy).
-      upright.updateMatrixWorld(true);
+      if (!ornamental.parent) return;
+      vA.setFromMatrixPosition(ornamental.parent.matrixWorld);
+      vD.subVectors(vA, camera.position); vD.y = 0;
+      if (vD.lengthSq() < 1e-6) return;
+      vD.normalize();
+      const me = ornamental.parent.matrixWorld.elements;
+      camYaw = Math.atan2(-vD.x, -vD.z) - Math.atan2(me[8], me[10]);
     };
   }
   // Vành formation ngoài là lớp riêng — quay ngược chiều lớp nội tâm trong update().
@@ -116,6 +180,7 @@ export function createAuraSignature(effect, lowQuality) {
     rimInkMat.uniforms.color.value.multiplyScalar(.55); rimInkMat.uniforms.opacity.value = .45;
     materials.push(rimInkMat);
     const rimInk = new THREE.Mesh(plane, rimInkMat);
+    rimInk.name = 'aura-emblem-rim-ink';
     rimInk.position.z = -0.004; rimInk.renderOrder = 1; rimInk.frustumCulled = false;
     upright.add(rimInk);
   }
@@ -127,6 +192,7 @@ export function createAuraSignature(effect, lowQuality) {
   else inkMat.color.multiplyScalar(0.55);
   materials.push(inkMat);
   const ink = new THREE.Mesh(plane, inkMat); ink.position.z = -0.004;
+  ink.name = 'aura-emblem-ink';
   ink.renderOrder = 1; upright.renderOrder = 2;
   upright.add(ink);
   // Điểm giao phát sáng theo nhịp: lớp phủ additive trên mandala chính, opacity pulse 8 s.
@@ -138,6 +204,37 @@ export function createAuraSignature(effect, lowQuality) {
     glowMesh = new THREE.Mesh(plane, glowMat);
     glowMesh.name = 'aura-emblem-glow'; glowMesh.renderOrder = 3;
     upright.add(glowMesh);
+  }
+  // V10.2: quét phù văn tuần tự trên vành mandala lúc Đột phá — một đầu sóng sáng chạy
+  // một vòng, đuôi mờ dần kèm vạch khắc nhấp nháy theo; ẩn hoàn toàn ngoài state đó.
+  let sweepMat = null, sweepMesh = null;
+  if (effect === 1) {
+    sweepMat = new THREE.ShaderMaterial({
+      uniforms: { tint: { value: core }, sweep: { value: 0 }, on: { value: 0 }, fade: { value: 1 } },
+      transparent: true, depthWrite: false, side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending, toneMapped: false,
+      vertexShader: emblemVert,
+      fragmentShader: `uniform vec3 tint; uniform float sweep, on, fade; varying vec2 vUv;
+        void main(){
+          vec2 p = vUv * 2. - 1.;
+          float r = length(p), ang = atan(p.y, p.x);
+          float band = smoothstep(.5, .58, r) * smoothstep(1., .92, r);
+          float lead = sweep * 6.2831853;
+          float d = mod(lead - ang, 6.2831853);
+          // Đầu quét MỎNG và không trắng lị: đầu quét cô đặc trên cung gần-tiếp tuyến
+          // tụ thành vệt chéo trắng (bẫy "giọt sáng lạc") — hạ đỉnh, trải rộng.
+          float head = exp(-d * d * 55.);
+          float trail = exp(-d * 2.6);
+          float tick = pow(.5 + .5 * cos(ang * 48.), 6.);
+          vec3 hue = mix(tint, vec3(1., .97, .86), head * .5);
+          float a = (head * .4 + trail * .26 + trail * tick * .45) * band * on * fade;
+          gl_FragColor = vec4(hue * (1. + head * .35), a);
+        }`,
+    });
+    materials.push(sweepMat);
+    sweepMesh = new THREE.Mesh(plane, sweepMat);
+    sweepMesh.name = 'aura-emblem-sweep'; sweepMesh.visible = false; sweepMesh.frustumCulled = false;
+    upright.add(sweepMesh);
   }
   const count = lowQuality ? 2 : 3, segments = lowQuality ? 36 : 64;
   const ribbonMat = new THREE.ShaderMaterial({
@@ -167,9 +264,10 @@ export function createAuraSignature(effect, lowQuality) {
     geo.setAttribute('position', new THREE.BufferAttribute(positions, 3).setUsage(THREE.DynamicDrawUsage));
     geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); geo.setIndex(indices); geometries.push(geo);
     const mesh = new THREE.Mesh(geo, ribbonMat); mesh.frustumCulled = false; group.add(mesh);
+    if (effect === 1) mesh.name = 'aura-halo';   // V10: dải khí thuộc lớp pháp giới khi isolate
     ribbons.push({ geo, positions });
   }
-  const manifestation = createAuraManifestation(effect, lowQuality, color, accent, core);
+  const manifestation = createAuraManifestation(effect, lowQuality, color, accent, core, effect === 1 ? bill : null);
   group.add(manifestation.group);
   const flow = createAuraFlow(effect, lowQuality, color, accent, core);
   group.add(flow.group);
@@ -190,82 +288,123 @@ export function createAuraSignature(effect, lowQuality) {
   // gân sáng tách lõi khỏi viền, hai dòng khí nối trận chân → cánh → pháp luân.
   const dummy = new THREE.Object3D();
   const dummyColor = new THREE.Color();
-  let petalMesh = null, petalMat = null, veinMesh = null, veinMat = null, haloA = null, haloB = null, haloC = null, haloMat = null, coreOrb = null, coreMat = null;
+  let lotus = null, lotusMats = null, lotusPetalMat = null, lotusDishMat = null, haloA = null, haloB = null, haloC = null, haloMat = null, coreOrb = null, coreMat = null;
   let ringMain = null, ringMainMat = null, ringSub1 = null, ringSub2 = null, ringSubMat1 = null, ringSubMat2 = null;
   let motes = null, moteMat = null, moteSeeds = null;
   let streams = null, streamMat = null;
   if (effect === 1) {
-    // Cánh sen mềm: thân đầy, đầu tròn, cong lõm dịu — hết cảm giác tinh thể.
-    const shape = new THREE.Shape();
-    shape.moveTo(0, 0);
-    shape.bezierCurveTo(-0.23, 0.12, -0.25, 0.6, -0.09, 0.94);
-    shape.quadraticCurveTo(0, 1.12, 0.09, 0.94);
-    shape.bezierCurveTo(0.25, 0.6, 0.23, 0.12, 0, 0);
-    const petalGeo = new THREE.ShapeGeometry(shape, lowQuality ? 6 : 12);
-    const pp = petalGeo.attributes.position, pcol = new Float32Array(pp.count * 3);
-    const rootC = new THREE.Color('#a4791a'), midC = new THREE.Color('#e8bb54'), tipC = new THREE.Color('#7fdcb4');
-    for (let i = 0; i < pp.count; i++) {
-      const y = pp.getY(i), x = pp.getX(i);
-      // Cong 3D dịu: đầu cánh cuộn nhẹ, mặt cánh lõm thoáng — cánh đọc là cánh hoa, không phải mảnh kính.
-      pp.setZ(i, -(y * y) * .14 - Math.abs(x) * .16);
-      const c = y < .55 ? rootC.clone().lerp(midC, y / .55) : midC.clone().lerp(tipC, (y - .55) / .45);
-      pcol[i * 3] = c.r; pcol[i * 3 + 1] = c.g; pcol[i * 3 + 2] = c.b;
-    }
-    petalGeo.setAttribute('color', new THREE.BufferAttribute(pcol, 3));
+    // ===== V10.1 Ngọc Liên Bảo Tọa — Phase 2 material (geometry đã duyệt) =====
+    // Tòa sen từ đài sen thật + 20 cánh parametric. LOTUS_GRAY=true quay lại blockout
+    // xám (debug hình khối); Phase 2: gradient vàng ấm → ngọc bích, gân khí chạy dọc
+    // cánh, viền phát quang tinh tế, đài vàng pulse cùng nhịp 8 s.
+    const LOTUS_GRAY = false;
+    const petalGeo = buildLotusPetal(lowQuality ? 8 : 12, lowQuality ? 4 : 6);
     geometries.push(petalGeo);
-    petalMat = new THREE.ShaderMaterial({
-      uniforms: { opacity: { value: .8 } },
-      vertexColors: true, transparent: true, side: THREE.DoubleSide, depthWrite: false, toneMapped: false,
-      vertexShader: `varying vec3 vC; varying vec2 vP;
+    const dishGeo = new THREE.LatheGeometry([
+      new THREE.Vector2(0, .04), new THREE.Vector2(.2, .045), new THREE.Vector2(.34, .07),
+      new THREE.Vector2(.46, .1), new THREE.Vector2(.55, .125), new THREE.Vector2(.575, .1),
+      new THREE.Vector2(.55, .06), new THREE.Vector2(.44, .02), new THREE.Vector2(0, 0),
+    ], lowQuality ? 24 : 40);
+    geometries.push(dishGeo);
+    lotusMats = [];
+    const lotusVert = `varying vec2 vUv; varying vec3 vTint;
+      void main(){
+        vUv = uv;
+        #ifdef USE_INSTANCING_COLOR
+          vTint = instanceColor;
+        #else
+          vTint = vec3(1.);
+        #endif
+        gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.);
+      }`;
+    if (LOTUS_GRAY) {
+      const gray = k => { const m = new THREE.MeshStandardMaterial({ color: 0xb9bfc2,
+        roughness: .62, metalness: .04, side: THREE.DoubleSide, transparent: true, opacity: .96 });
+        materials.push(m); lotusMats.push({ m, base: .96, k }); return m; };
+      const dish = new THREE.Mesh(dishGeo, gray('dish'));
+      dish.name = 'aura-lotus-dish'; dish.position.y = .02; group.add(dish);
+      lotus = LOTUS_TIERS.map((cfg, tier) => {
+        const mesh = new THREE.InstancedMesh(petalGeo, gray('lotus'), cfg.n);
+        mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        mesh.frustumCulled = false; mesh.name = 'aura-petals'; group.add(mesh);
+        return { mesh, cfg, tier };
+      });
+    } else {
+      // Cánh sen: gradient gốc vàng ấm → đầu ngọc, gân chính + gân phụ có dòng khí chạy,
+      // viền sáng mảnh; đầu cánh trong nhẹ đọc được chồng lớp; mặt sau tối hơn cho dày.
+      lotusPetalMat = new THREE.ShaderMaterial({
+        uniforms: { fade: { value: 1 }, time: { value: 0 }, glow: { value: 0 } },
+        vertexShader: lotusVert,
+        fragmentShader: `uniform float fade, time, glow; varying vec2 vUv; varying vec3 vTint;
         void main(){
-          vC = color;
-          #ifdef USE_INSTANCING_COLOR
-            vC *= instanceColor;
-          #endif
-          vP = position.xy;
-          gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.);
+          float u = vUv.x, v = vUv.y;
+          // Palette Sen Kim: gốc vàng ấm ~30% chiều cánh, thân và đầu ngọc bích chủ đạo.
+          vec3 goldC = vec3(.98, .74, .22), jadeC = vec3(.36, .84, .70), tipC = vec3(.60, .95, .84);
+          vec3 base = mix(goldC, jadeC, smoothstep(.1, .48, v));
+          base = mix(base, tipC, smoothstep(.55, 1., v) * .65);
+          vec3 col = base * vTint * mix(.88, 1.15, smoothstep(0., .5, v));
+          // Gân: sống giữa đậm + hai gân phụ; dòng khí vàng chạy root → tip theo nhịp.
+          float mid = 1. - abs(u * 2. - 1.);
+          float spine = pow(mid, 6.);
+          float side = pow(max(0., 1. - abs(abs(u * 2. - 1.) - .45) / .16), 2.) * .5;
+          float qi = pow(.5 + .5 * sin(v * 9. - time * 1.6), 6.) * .35;
+          col += vec3(1., .92, .55) * (spine * .55 + side * .3) * (.55 + qi);
+          // Viền phát quang mảnh, mặt sau tối hơn — cánh có thể tích, không tinh thể.
+          col += vec3(.9, 1., .92) * pow(abs(u * 2. - 1.), 5.) * .22;
+          if (!gl_FrontFacing) col *= .82;
+          float alpha = mix(1., .82, smoothstep(.55, 1., v));
+          gl_FragColor = vec4(col * (1. + glow * .3), alpha * fade);
         }`,
-      fragmentShader: `uniform float opacity; varying vec3 vC; varying vec2 vP;
+        transparent: true, depthWrite: true, side: THREE.DoubleSide, toneMapped: false,
+      });
+      materials.push(lotusPetalMat);
+      lotusMats.push({ m: lotusPetalMat, base: 1, k: 'lotus' });
+      // Đài sen vàng ấm: vành sáng hơn, lõi pulse nhẹ theo chu kỳ 8 s của công pháp.
+      lotusDishMat = new THREE.ShaderMaterial({
+        uniforms: { fade: { value: 1 }, time: { value: 0 } },
+        vertexShader: `varying vec2 vUv; void main(){ vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`,
+        fragmentShader: `uniform float fade, time; varying vec2 vUv;
         void main(){
-          float h = clamp(vP.y / 1.12, 0., 1.);
-          float across = clamp(1. - pow(abs(vP.x) / .26, 2.), .3, 1.);
-          // Gốc cánh đặc hòa vào trận, đầu cánh trong dần — cánh đọc là cánh hoa nhuận.
-          float alpha = mix(.96, .48, h) * across;
-          vec3 deep = vC * mix(.8, 1.08, smoothstep(0., .55, h));
-          if (!gl_FrontFacing) deep *= .84;
-          gl_FragColor = vec4(deep, alpha * opacity);
+          vec3 deepC = vec3(.55, .38, .09), lightC = vec3(.95, .81, .49);
+          vec3 col = mix(deepC, lightC, smoothstep(.1, .5, vUv.y));
+          float pulse = pow(.5 + .5 * sin(time * .785398), 3.);
+          col += lightC * pulse * (1. - vUv.y) * .22;
+          gl_FragColor = vec4(col, fade);
         }`,
+        transparent: true, side: THREE.DoubleSide, toneMapped: false,
+      });
+      materials.push(lotusDishMat);
+      lotusMats.push({ m: lotusDishMat, base: 1, k: 'dish' });
+      const dish = new THREE.Mesh(dishGeo, lotusDishMat);
+      dish.name = 'aura-lotus-dish'; dish.position.y = .02; group.add(dish);
+      // Tint gần trắng ấm để không chèn màu gốc vàng — tầng trong ấm hơn, ngoài nhạt dần.
+      const tints = [new THREE.Color('#ffe9b8'), new THREE.Color('#fff3d6'), new THREE.Color('#ffffff')];
+      lotus = LOTUS_TIERS.map((cfg, tier) => {
+        const mesh = new THREE.InstancedMesh(petalGeo, lotusPetalMat, cfg.n);
+        mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        for (let i = 0; i < cfg.n; i++) mesh.setColorAt(i, tints[Math.min(2, tier)]);
+        mesh.instanceColor.needsUpdate = true;
+        mesh.frustumCulled = false; mesh.name = 'aura-petals'; group.add(mesh);
+        return { mesh, cfg, tier };
+      });
+    }
+    // Cung ôm thân + vòng quan: ShaderMaterial nhẹ với fade theo hướng nhìn — khi camera
+    // đi tới phương cạnh-mặt, vòng nghiêng nén thành đường chéo mà additive+bloom cộng
+    // thành vệt chói (bẫy "chữ X" từng trả giá ở V9). Dùng pháp tuyến MẶT vòng ((0,0,1)
+    // object space), không phải normal ống — normal ống không về 0 khi cạnh-mặt.
+    haloMat = new THREE.ShaderMaterial({
+      uniforms: { tint: { value: new THREE.Color('#ffd76b') }, opacity: { value: .45 }, fade: { value: 1 } },
+      transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, toneMapped: false,
+      vertexShader: `varying float vFacing;
+        void main(){
+          vec4 mv = modelViewMatrix * vec4(position, 1.);
+          vFacing = abs(dot(normalize(normalMatrix * vec3(0., 0., 1.)), normalize(-mv.xyz)));
+          gl_Position = projectionMatrix * mv;
+        }`,
+      fragmentShader: `uniform vec3 tint; uniform float opacity,fade; varying float vFacing;
+        void main(){ gl_FragColor = vec4(tint, opacity * fade * smoothstep(.05, .42, vFacing)); }`,
     });
-    materials.push(petalMat);
-    // Hai tầng cánh trong (vàng kim) — tầng cánh ngoài cao là đóa sen của manifestation.
-    const tiers = lowQuality ? 1 : 2, per = 8;
-    petalMesh = new THREE.InstancedMesh(petalGeo, petalMat, tiers * per);
-    petalMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    const tints = [new THREE.Color('#d9a429'), new THREE.Color('#f2cf7c')];
-    for (let i = 0; i < tiers * per; i++) petalMesh.setColorAt(i, tints[Math.min(tiers - 1, Math.floor(i / per))]);
-    petalMesh.instanceColor.needsUpdate = true;
-    petalMesh.frustumCulled = false; petalMesh.name = 'aura-petals'; group.add(petalMesh);
-    // Gân sáng additive giữa cánh: tách lõi khỏi viền, không hòa vào một vùng sáng.
-    veinMat = new THREE.ShaderMaterial({
-      uniforms: { opacity: { value: .5 } },
-      vertexColors: true, transparent: true, side: THREE.DoubleSide, depthWrite: false,
-      blending: THREE.AdditiveBlending, toneMapped: false,
-      vertexShader: petalMat.vertexShader,
-      fragmentShader: `uniform float opacity; varying vec3 vC; varying vec2 vP;
-        void main(){
-          float h = clamp(vP.y / 1.12, 0., 1.);
-          float spine = clamp((1. - abs(vP.x) / .26) * 1.4, 0., 1.);
-          gl_FragColor = vec4(vC * 1.25, mix(.9, .3, h) * spine * opacity);
-        }`,
-    });
-    materials.push(veinMat);
-    veinMesh = new THREE.InstancedMesh(petalGeo, veinMat, tiers * per);
-    veinMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    for (let i = 0; i < tiers * per; i++) veinMesh.setColorAt(i, tints[Math.min(tiers - 1, Math.floor(i / per))]);
-    veinMesh.instanceColor.needsUpdate = true;
-    veinMesh.frustumCulled = false; veinMesh.name = 'aura-petals'; group.add(veinMesh);
-    haloMat = new THREE.MeshBasicMaterial({ color: '#ffd76b', transparent: true, opacity: 0.45,
-      depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false });
     materials.push(haloMat);
     // Two open body tiers and one crown reuse the three existing halo draw calls.
     const haloSegments = lowQuality ? 40 : 80;
@@ -274,8 +413,9 @@ export function createAuraSignature(effect, lowQuality) {
     haloC = new THREE.Mesh(new THREE.TorusGeometry(.72, .007, 5, haloSegments), haloMat);
     geometries.push(haloA.geometry, haloB.geometry, haloC.geometry);
     for (const [h, rx] of [[haloA, .32], [haloB, -.26], [haloC, .58]]) {
-      h.position.set(0, 2.02, -.55); h.rotation.x = rx; h.frustumCulled = false;
-      h.name = 'aura-halo'; group.add(h);
+      // haloC (vòng quan) là child của ornamental → đi theo đĩa cố định, local z .06 sau đĩa.
+      h.position.set(0, 1.62, h === haloC ? -.06 : -.3); h.rotation.x = rx; h.frustumCulled = false;
+      h.name = 'aura-halo'; (h === haloC ? ornamental : group).add(h);
     }
     haloA.name = 'aura-heart-lower'; haloB.name = 'aura-heart-upper';
     haloC.name = 'aura-halo-crown';
@@ -285,32 +425,50 @@ export function createAuraSignature(effect, lowQuality) {
       uniforms: { tint: { value: new THREE.Color('#ffd76b') }, core: { value: new THREE.Color('#fff0bf') },
         time: { value: 0 }, fade: { value: 1 }, opacity: { value: .55 } },
       transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, toneMapped: false,
-      vertexShader: emblemVert,
-      fragmentShader: `uniform vec3 tint,core; uniform float time,fade,opacity; varying vec2 vUv;
+      // V10.3 vòng cố định sau lưng: khi camera đi tới phương cạnh-mặt, cả vòng nén thành
+      // một đường thẳng mà additive+bloom cộng thành vệt chéo chữ X. Fade theo độ mở của
+      // mặt vòng với hướng nhìn — mờ dần liên tục, không pop, không đụng vẻ mặt-đối-diện.
+      // CHÚ Ý: phải dùng pháp tuyến MẶT vòng (hằng (0,0,1) trong object space của torus),
+      // không phải normal của ống — pháp tuyến ống quay quanh chân ống nên lúc cạnh-mặt
+      // vẫn có fragment hướng thẳng camera, facing không bao giờ về 0 (bẫy đã nghiệm).
+      vertexShader: `varying vec2 vUv; varying float vFacing;
+        void main(){
+          vUv = uv;
+          vec4 mv = modelViewMatrix * vec4(position, 1.);
+          vFacing = abs(dot(normalize(normalMatrix * vec3(0., 0., 1.)), normalize(-mv.xyz)));
+          gl_Position = projectionMatrix * mv;
+        }`,
+      fragmentShader: `uniform vec3 tint,core; uniform float time,fade,opacity; varying vec2 vUv; varying float vFacing;
         void main(){
           float a = vUv.x * 6.2831853;
           float chase = pow(.5 + .5*cos(a*3. - time*1.3), 8.);
           float engrave = .6 + .4 * smoothstep(.3, .7, abs(fract(vUv.x*36.) - .5));
           float rails = smoothstep(0., .18, vUv.y) * smoothstep(1., .82, vUv.y);
           vec3 hue = tint * (.5 + .5*engrave) + core * chase * .6;
-          gl_FragColor = vec4(hue * (1. + chase*.7), (.45 + .55*rails) * (.45 + chase*.55) * opacity * fade);
+          float edgeFade = smoothstep(.05, .42, vFacing);
+          gl_FragColor = vec4(hue * (1. + chase*.7), (.45 + .55*rails) * (.45 + chase*.55) * opacity * fade * edgeFade);
         }`,
     });
     materials.push(ringMainMat);
+    // V10: các vòng pháp giới là child của ornamental — luôn ôm đĩa như vành quỹ đạo ở
+    // mọi góc camera (ellipse không bao giờ dẹt thành đoạn thẳng chéo qua đĩa = hết chữ X);
+    // V10.3 đĩa cố định sau lưng nên các vòng cũng thế — cạnh thật 3D khi nhìn ngang.
+    // Chiều sâu thế giới vẫn do cánh sen, trận chân, dải khí và hạt khí đảm nhiệm.
     ringMain = new THREE.Mesh(new THREE.TorusGeometry(1.26, .02, 8, lowQuality ? 64 : 128), ringMainMat);
-    ringMain.position.set(0, 2.05, -.5); ringMain.rotation.x = .42; ringMain.frustumCulled = false;
-    ringMain.name = 'aura-halo'; group.add(ringMain);
+    ringMain.position.set(0, 1.62, -.06); ringMain.rotation.x = .42; ringMain.frustumCulled = false;
+    ringMain.name = 'aura-halo'; ornamental.add(ringMain);
     geometries.push(ringMain.geometry);
-    ringSubMat1 = ringMainMat.clone(); ringSubMat1.uniforms.opacity.value = .3;
+    ringSubMat1 = ringMainMat.clone(); ringSubMat1.uniforms.opacity.value = .22;
     materials.push(ringSubMat1);
-    ringSub1 = new THREE.Mesh(new THREE.TorusGeometry(1.08, .007, 6, lowQuality ? 48 : 96), ringSubMat1);
-    ringSub1.position.set(0, 2.05, -.5); ringSub1.rotation.x = -.5; ringSub1.frustumCulled = false;
-    ringSub1.name = 'aura-halo'; group.add(ringSub1);
-    ringSubMat2 = ringMainMat.clone(); ringSubMat2.uniforms.opacity.value = .26;
+    ringSub1 = new THREE.Mesh(new THREE.TorusGeometry(1.08, .006, 6, lowQuality ? 48 : 96), ringSubMat1);
+    // Thiên luân phụ tilt khác trục, xoay ngược khác tốc — ellipse đan xen quanh đĩa.
+    ringSub1.position.set(0, 1.62, -.06); ringSub1.rotation.set(-.38, .7, 0); ringSub1.frustumCulled = false;
+    ringSub1.name = 'aura-halo'; ornamental.add(ringSub1);
+    ringSubMat2 = ringMainMat.clone(); ringSubMat2.uniforms.opacity.value = .18;
     materials.push(ringSubMat2);
-    ringSub2 = new THREE.Mesh(new THREE.TorusGeometry(1.16, .006, 6, lowQuality ? 48 : 96), ringSubMat2);
-    ringSub2.position.set(0, 2.05, -.5); ringSub2.rotation.set(.75, 0, .3); ringSub2.frustumCulled = false;
-    ringSub2.name = 'aura-halo'; group.add(ringSub2);
+    ringSub2 = new THREE.Mesh(new THREE.TorusGeometry(1.16, .005, 6, lowQuality ? 48 : 96), ringSubMat2);
+    ringSub2.position.set(0, 1.62, -.06); ringSub2.rotation.set(.34, -.9, .3); ringSub2.frustumCulled = false;
+    ringSub2.name = 'aura-halo'; ornamental.add(ringSub2);
     geometries.push(ringSub1.geometry, ringSub2.geometry);
     // Lõi năng lượng: đốm sáng 3D tại tâm mandala, thở theo pulse — mỏ neo thị giác.
     coreMat = new THREE.SpriteMaterial({ map: glowDot(), color: '#fff2c0', transparent: true,
@@ -337,8 +495,9 @@ export function createAuraSignature(effect, lowQuality) {
       fragmentShader: `uniform vec3 tint; uniform float opacity,time,fade; varying vec2 vUv;
         void main(){
           float edge=pow(max(0.,sin(vUv.y*3.14159265)),1.5);
-          float body=.3+.3*pow(1.-vUv.x,2.);
-          float pulse=pow(.5+.5*cos(time*.78539816-.6-vUv.x*1.5),12.);
+          float body=.22+.26*pow(1.-vUv.x,2.);
+          // Gói sáng chạy trận → pháp luân đúng pha Vận khí (đỉnh trên ở beat ~.58).
+          float pulse=pow(.5+.5*cos(time*.78539816-2.15-vUv.x*1.5),16.);
           vec3 hue=mix(tint,vec3(1.,.96,.8),pulse*.85);
           gl_FragColor=vec4(hue,(edge*body*.55+pulse*.75)*opacity*fade);
         }`,
@@ -373,14 +532,75 @@ export function createAuraSignature(effect, lowQuality) {
     materials.push(moteMat);
     motes = new THREE.Points(mGeo, moteMat); motes.frustumCulled = false; motes.name = 'aura-motes'; group.add(motes);
   }
+  // Trạng thái + hệ số lớp (chỉ hệ 1 dùng; hệ khác mặc định 1). update() ghi, setOpacity() đọc.
+  let stName = 'summon', stT0 = -1, stPrev = 'idle', stReturn = 'idle', stPin = null, stArmed = false, lastT = 0;
+  let sealK = 1, lotusK = 1, dishK = 1, ringK = 1, flowK = 1;
+  const formFxObj = { form: 0, diss: 0, ring: 0 };   // tái dùng — không cấp phát mỗi khung
   const update = t => {
     seal.rotation.z = [2, 4, 6, 8].includes(effect) ? -t * 0.065 : Math.sin(t * .45) * .045;
     sigilMat.uniforms.time.value = t;
-    // Eight-second breath travels upward; each tier peaks after the one below it.
+    lastT = t;
+    // Đồng hồ trạng thái: update(0) lúc khởi tạo chỉ dựng hình, chưa mở ngoắc đồng hồ —
+    // anchor ở lần update thật đầu tiên để trong game (avatar.time ngẫu nhiên 0–10) summon
+    // vẫn chạy đủ từ lúc đeo.
+    let stLocal = 0, brk = -1, enhK = 0, summonP = 1, dissP = 0;
+    let gathK = 0, bsK = 0, stillK = 1, ctK = 1, spinMain = 0, spinSub1 = 0, spinSub2 = 0;
+    let formFx = 0, dissFx = 0, ringFx = 0;
+    if (effect === 1) {
+      // curName: tên trạng thái dùng cho envelope — khi ghim QA thì lấy từ pin, không
+      // ghi đè stName của máy trạng thái (bỏ ghim phải về đúng trạng thái đang chạy).
+      // Gán curName SAU khối chuyển trạng thái để khung chuyển đã dùng trạng thái mới.
+      let curName;
+      if (stPin) { curName = stPin.name; stLocal = stPin.T; }
+      else {
+        if (stT0 < 0) { if (stArmed) stT0 = t; else stArmed = true; }
+        if (stT0 >= 0) stLocal = t - stT0;
+        if (stName === 'summon' && stLocal >= STATE_DUR.summon) {
+          stPrev = 'summon'; stName = 'idle'; stT0 = t; stLocal = 0;
+        } else if (stName === 'breakthrough' && stLocal >= STATE_DUR.breakthrough) {
+          stPrev = 'breakthrough'; stName = stReturn; stT0 = t; stLocal = 0;
+        }
+        curName = stName;
+      }
+      if (curName === 'summon') summonP = clamp01(stLocal / STATE_DUR.summon);
+      else if (curName === 'dissolve') dissP = clamp01(stLocal / STATE_DUR.dissolve);
+      else if (curName === 'enhanced') enhK = sstep(0, .9, stLocal);
+      else if (curName === 'breakthrough') { brk = clamp01(stLocal / STATE_DUR.breakthrough); enhK = stReturn === 'enhanced' ? 1 : 0; }
+      else if (curName === 'idle' && stPrev === 'enhanced') enhK = 1 - sstep(0, .9, stLocal);
+      // Trình tự hiện/tan theo master brief: trận chân → sen → pháp giới → khí hội tụ;
+      // tan thì khí tan trước, vòng pháp giới theo sau, cánh thu về đài, trận chân mất cuối.
+      sealK = sstep(0, .28, summonP) * (1 - sstep(.66, .95, dissP));
+      lotusK = sstep(.14, .52, summonP) * (1 - sstep(.3, .68, dissP));
+      dishK = sstep(.1, .4, summonP) * (1 - sstep(.52, .82, dissP));
+      ringK = sstep(.32, .72, summonP) * (1 - sstep(.18, .5, dissP));
+      flowK = sstep(.5, .95, summonP) * (1 - sstep(0, .3, dissP));
+      if (brk >= 0) {
+        gathK = sstep(0, .22, brk) * (1 - sstep(.3, .45, brk));            // A tụ khí
+        bsK = bell(.42, .07, brk);                                          // nổ vàng
+        stillK = 1 - .6 * bell(.3, .05, brk);                               // khoảnh khắc lặng
+        ctK = 1 - .16 * bell(.28, .09, brk);                                // co cấu hình
+        formFx = sstep(.4, .58, brk) * (1 - sstep(.84, .96, brk));          // pháp tướng
+        dissFx = sstep(.8, .96, brk);                                       // pháp tướng thiêu lên
+        ringFx = clamp01(bell(.5, .1, brk) * 1.15 + bell(.68, .12, brk) * .8);
+        spinMain = Math.PI * 2 * 3 * rise01(brk);   // +3 vòng nguyên — về đúng vị trí, không giật
+        spinSub1 = -Math.PI * 2 * 2 * rise01(brk);
+        spinSub2 = Math.PI * 2 * 2 * rise01(brk);
+      }
+    }
+    if (effect === 1) seal.scale.setScalar(.55 + .45 * sstep(.05, .5, summonP) * (1 - .25 * dissP));
+    // V10 chu kỳ công pháp 8 s, ba pha liền mạch (mọi đường đều cos mũ — loop kín không giật):
+    //   A Hấp khí  (đỉnh beat ~.15): sen khép, khí hội tụ về đan điền, vòng trận thu vào tâm.
+    //   B Vận khí  (beats ~.3–.6): ánh sáng dâng từ trận → hoa → quan, dòng khí chạy mạnh,
+    //              các vòng xoay nhanh hơn theo nhịp.
+    //   C Thổ khí  (beats ~.65–.9): sen mở, sóng linh lực tỏa mềm, aura về trạng thái đầu.
     const phase = t * Math.PI / 4;
-    groundPulse = Math.pow(.5 + .5 * Math.cos(phase - .6), 4);
-    lotusPulse = Math.pow(.5 + .5 * Math.cos(phase - 1.3), 4);
-    crownPulse = Math.pow(.5 + .5 * Math.cos(phase - 2.1), 4);
+    const inhale = effect === 1 ? Math.pow(.5 + .5 * Math.cos(phase - .94), 4) : 0;   // A — đỉnh beat .15
+    groundPulse = effect === 1 ? Math.pow(.5 + .5 * Math.cos(phase - 2.39), 4)          // B — trận .38
+      : Math.pow(.5 + .5 * Math.cos(phase - .6), 4);
+    lotusPulse = effect === 1 ? Math.pow(.5 + .5 * Math.cos(phase - 3.02), 4)           // B — hoa .48
+      : Math.pow(.5 + .5 * Math.cos(phase - 1.3), 4);
+    crownPulse = effect === 1 ? Math.pow(.5 + .5 * Math.cos(phase - 3.65), 4)           // B→C — quan .58
+      : Math.pow(.5 + .5 * Math.cos(phase - 2.1), 4);
     const pulse = effect === 1 ? crownPulse : Math.pow(0.5 + 0.5 * Math.sin(t * 0.85), 3);
     radiance = 0.8 + pulse * 0.2;
     ribbonMat.uniforms.time.value = t;
@@ -389,80 +609,115 @@ export function createAuraSignature(effect, lowQuality) {
       : Math.sin(t * 0.35) * 0.035;
     if (rimMesh) rimMesh.rotation.z = t * 0.075;        // vành phù văn ngoài quay ngược chiều
     if (glowMesh) glowMesh.rotation.z = -t * 0.12;      // chấm sáng chạy quanh hoa văn
-    upright.scale.setScalar((effect === 4 ? 1.35 : effect === 1 ? 1.0 : 1.16) * (1 + pulse * 0.065));
-    upright.position.y = (effect === 1 ? 2.05 : 1.45) + Math.sin(t * 0.7) * 0.045;
+    upright.scale.setScalar((effect === 4 ? 1.35 : effect === 1 ? 1.0 : 1.16)
+      * (1 + pulse * 0.065) * (effect === 1 ? (.7 + .3 * ringK) * ctK : 1));   // triệu tập phóng to dần, đột phá co lại
+    upright.position.y = (effect === 1 ? 1.62 : 1.45) + Math.sin(t * 0.7) * 0.045;
     const beat = (t % 8) / 8;
-    waveOpacity = Math.exp(-Math.pow((beat - 0.26) / 0.11, 2)) * (effect === 1 ? .6 : .85);
-    // Nhịp thở 8 s chung: nở (.0–.55) rồi tán — cánh sen, đốm sáng, dòng khí cùng một hơi thở.
+    waveOpacity = Math.exp(-Math.pow((beat - (effect === 1 ? .74 : .26)) / .11, 2)) * (effect === 1 ? .6 : .85)
+      + (effect === 1 ? bsK * .55 : 0);   // Đột phá: sóng ấn phụt thêm ở nhịp nổ vàng
+    // Nhịp thở 8 s chung: giữa pha B (vận khí) cánh và dòng khí dâng mạnh nhất.
     const breath = effect === 1 ? lotusPulse : Math.exp(-Math.pow((beat - 0.26) / 0.16, 2));
-    // Hít vào (pha ~.70): sen khép, khí hội tụ về đan điền; thở ra: mở và dâng lên pháp luân.
-    const inhale = effect === 1 ? Math.pow(.5 + .5 * Math.cos(phase - 4.4), 4) : 0;
     if (effect === 1) {
       uprightMat.uniforms.time.value = t;
       if (rimMat) rimMat.uniforms.time.value = t;
       if (inkMat) inkMat.uniforms.time.value = t;
       if (rimInkMat) rimInkMat.uniforms.time.value = t;
     }
-    if (glowMat) glowMat.opacity = (.1 + .5 * crownPulse + .12 * pulse) * glowFade;
-    if (streamMat) streamMat.uniforms.opacity.value = .28 + .42 * breath;
+    if (glowMat) glowMat.opacity = ((.1 + .5 * crownPulse + .12 * pulse) * (1 + .4 * enhK) * stillK
+      + ringFx * .25) * glowFade;
+    if (streamMat) streamMat.uniforms.opacity.value = (.22 + .3 * breath + .12 * enhK
+      + (brk >= 0 ? .3 * bell(.5, .15, brk) : 0)) * stillK;
     waves.forEach((ring, i) => {
-      const spread = Math.max(0, Math.min(1, (beat - 0.16 - i * 0.045) / 0.22));
-      ring.scale.setScalar(0.34 + spread * (1.2 + i * 0.32));
+      // V10: sóng ấn tỏa rộng ở pha Thổ khí (beat ~.74); pha Hấp khí vòng thu vào tâm.
+      const burst = effect === 1 ? .64 : .16;
+      const spread = Math.max(0, Math.min(1, (beat - burst - i * 0.045) / 0.22));
+      ring.scale.setScalar((1 - inhale * .35) * (0.34 + spread * (1.2 + i * 0.32)) * (1 + bsK * 1.1));
     });
-    if (effect === 1 && petalMesh) {
-      // Đài sen xuyên tâm: cánh sau cao nhất, cánh trước thấp (không che người);
-      // ba tầng nở khác độ mở; nghiêng ngoài qua trục YXZ nên mọi góc đều thấy cánh cong.
-      dummy.rotation.order = 'YXZ';
-      const tiers = petalMesh.count / 8;
-      for (let i = 0; i < petalMesh.count; i++) {
-        const tier = Math.floor(i / 8), k = i % 8;
-        const bloom = .5 + .5 * Math.sin((beat - .18 - tier * .05 - k * .012) * Math.PI * 2);
-        const a = k * Math.PI / 4 + tier * Math.PI / 8 + t * (tier % 2 ? .1 : -.13);
-        const back = Math.cos(a);                       // 1 = sau lưng, -1 = trực diện
-        const frontness = 1 - (back * .5 + .5);
-        const open = tier ? .34 : .58;                  // tầng trong đứng, tầng ngoài xòe
-        const r = (tier ? .44 : .6) + (bloom - .5) * .06;   // gốc cánh chung một đài trên trận
-        dummy.position.set(Math.sin(a) * r, .08 + tier * .3 * (1 - frontness * .4) + (bloom - .5) * .08, -Math.cos(a) * r * .9);
-        dummy.rotation.set(open * (1 - frontness * .3) + (bloom - .5) * .32 + breath * .1 - inhale * .22, a, 0);
-        dummy.scale.set(1.05, (.8 + tier * .14) * (1 - frontness * .38) * (.84 + (bloom - .5) * .3 + breath * .08), 1);
-        dummy.updateMatrix();
-        petalMesh.setMatrixAt(i, dummy.matrix);
-        // Gân sáng cùng khung nhưng lùi vào giữa cánh — lõi tách khỏi viền.
-        dummy.scale.multiplyScalar(.5);
-        dummy.position.y += .035;
-        dummy.updateMatrix();
-        veinMesh.setMatrixAt(i, dummy.matrix);
+    if (effect === 1 && lotus) {
+      // Gân cánh + đài pulse theo cùng chu kỳ công pháp; glow theo bậc sáng radiance.
+      // Enhanced cộng sáng dần; Đột phá cho cánh sen phụt theo nhịp nổ vàng.
+      if (lotusPetalMat) {
+        lotusPetalMat.uniforms.time.value = t;
+        lotusPetalMat.uniforms.glow.value = (radiance - .8) * 2.5 + .35 * enhK + bsK * .8;
       }
-      petalMesh.instanceMatrix.needsUpdate = true;
-      veinMesh.instanceMatrix.needsUpdate = true;
-      haloA.rotation.set(Math.PI / 2 + .06 * Math.sin(phase), 0, t * .16);
-      haloB.rotation.set(Math.PI / 2 - .08 * Math.sin(phase - .7), 0, -t * .11 + Math.PI);
+      if (lotusDishMat) lotusDishMat.uniforms.time.value = t;
+      // V10.1 tòa sen: gốc cánh chung đài (.5/.42/.3), so le theo số nguyên tố 8/7/5,
+      // cánh KHÔNG xoay drift (chỉ trôi rất chậm) — mở/khép nhẹ theo nhịp công pháp.
+      // Guard kép giữ khoảng trống trước mặt người VÀ trước ống kính: cánh lọt guard
+      // bị hạ thấp (droop) + thu ngắn — đỉnh trước không vượt hông người ngồi.
+      dummy.rotation.order = 'YXZ';
+      for (const { mesh, cfg, tier } of lotus) {
+        for (let i = 0; i < cfg.n; i++) {
+          // Cánh mở ở pha Thổ khí (đỉnh beat .70, trễ dần từng cánh) — khép ở pha Hấp.
+          const bloom = .5 + .5 * Math.sin((beat - .45 - i * .014) * Math.PI * 2);
+          const a = i * Math.PI * 2 / cfg.n + cfg.stag + t * .02;
+          const frontness = 1 - (Math.cos(a) * .5 + .5);          // 1 = trước mặt người
+          const camFront = 1 - (-Math.cos(a + camYaw) * .5 + .5); // 1 = chắn giữa người và camera
+          const guard = Math.max(frontness, camFront * .9);
+          // V10.2: triệu tập — cánh mọc dần từ đài (tầng ngoài trước, lệch từng cánh);
+          // tan — cánh thu ngắn về đài theo trình tự ngược (tầng trong trước).
+          const grow = sstep(tier * .12 + i * .025, tier * .12 + i * .025 + .3, summonP)
+            * (1 - sstep(.3 + (2 - tier) * .06 + i * .015, .62 + (2 - tier) * .06 + i * .015, dissP));
+          // Guard dịu: cánh trước ống kính hạ thấp một chút chứ không bẹp xuống đất
+          // (lần chụp đầu droop .3/.4 làm cánh trước biến mất thành vũng xám).
+          const lean = cfg.lean + guard * .12 + (bloom - .5) * .18 * (1 + .5 * enhK) + breath * .06 - inhale * .18;
+          const len = cfg.len * Math.max(.001, grow) * (1 - guard * .28) * (.96 + (bloom - .5) * .1 + breath * .04);
+          dummy.position.set(Math.sin(a) * cfg.r, cfg.y, -Math.cos(a) * cfg.r * .9);
+          // Cặp quay đúng cho gốc cánh (sin a, −cos a): rotation.y = π−a đưa trục +z_local
+          // về hướng ra-ngoài, khi đó rotation.x = +lean mới nghiêng TIP ra ngoài VÀ giữ
+          // mặt lõm hướng trời (rotation.y=a cũ làm mặt cánh lộn ngược thành ô/lá nằm).
+          dummy.rotation.set(lean, Math.PI - a, 0);
+          dummy.scale.set(len, len, len);
+          dummy.updateMatrix();
+          mesh.setMatrixAt(i, dummy.matrix);
+        }
+        mesh.instanceMatrix.needsUpdate = true;
+      }
+      // V10: hai dải cung ôm thân trả lại tilt thật (V9 đẩy nằm ngang → cạnh-mặt thành vệt).
+      haloA.rotation.set(.52 + .06 * Math.sin(phase), 0, t * .16);
+      haloB.rotation.set(-.44 + .08 * Math.sin(phase - .7), 0, -t * .11 + Math.PI);
       haloC.rotation.z = -t * .2;
       haloA.position.set(0, .95 + lotusPulse * .035, 0);
       haloB.position.set(0, 1.3 + crownPulse * .035, 0);
       haloC.rotation.x = .58 + Math.sin(t * .27 + 1.4) * .2;
-      const haloS = 1 + waveOpacity * .07;
+      const haloS = (1 + waveOpacity * .07) * ctK * (1 + .05 * enhK);
       haloA.scale.setScalar(haloS); haloB.scale.setScalar(haloS); haloC.scale.setScalar(haloS * (1 + pulse * .12));
-      if (coreOrb) coreOrb.scale.setScalar(.22 + .16 * pulse + waveOpacity * .06 + inhale * .1);
-      // Pháp giới 3D: vòng chính xoay chậm mang khắc vạch, thiên luân phụ xoay ngược khác tốc.
+      if (coreOrb) coreOrb.scale.setScalar(.22 + .16 * pulse + waveOpacity * .06 + inhale * .1 + bsK * .5);
+      // Pháp giới 3D: vòng chính xoay chậm mang khắc vạch, thiên luân phụ xoay ngược khác
+      // tốc; tốc độ luận theo nhịp vận khí (hàm liên tục của t — loop kín, không giật).
+      // Đột phá: cộng pha rise01 — vòng quay nhanh thêm N vòng nguyên rồi về đúng vị trí.
       if (ringMainMat) {
         ringMainMat.uniforms.time.value = t;
-        ringMain.rotation.z = t * .2;
+        ringMain.rotation.z = t * .2 * (1 + .35 * crownPulse) + spinMain;
+        ringMain.scale.setScalar(ctK * (1 + .07 * enhK));
         ringSubMat1.uniforms.time.value = t * 1.3;
-        ringSub1.rotation.z = -t * .3;
+        ringSub1.rotation.z = -t * .3 * (1 + .3 * lotusPulse) + spinSub1;
         ringSubMat2.uniforms.time.value = t * .8;
-        ringSub2.rotation.z = t * .16;
+        ringSub2.rotation.z = t * .16 * (1 + .25 * groundPulse) + spinSub2;
       }
-      // Hai dòng khí: vòng cung từ mép trận lên pháp luân, uốn theo nhịp thở.
+      // V10.2: quét phù văn tuần tự trên vành mandala — chỉ sáng giữa Đột phá.
+      if (sweepMesh) {
+        const on = brk >= 0 ? sstep(.44, .5, brk) * (1 - sstep(.78, .88, brk)) : 0;
+        sweepMesh.visible = on > .003;
+        if (sweepMesh.visible) {
+          sweepMat.uniforms.sweep.value = sstep(.46, .82, brk);
+          sweepMat.uniforms.on.value = on;
+        }
+      }
+      // Hai dòng khí: từ mép trận lên ĐÍNH BÁM MẶT pháp giới (billboard) — hết hở tail
+      // phía sau mandala khi camera xoay (V10).
       streams.forEach(({ m, side }, k) => {
         const arr = m.geometry.attributes.position.array;
         const seg = 26;
+        const tx = bill.ax + side * .52 * Math.cos(bill.yaw);
+        const tz = bill.az - side * .52 * Math.sin(bill.yaw);
         for (let i = 0; i <= seg; i++) {
           const u = i / seg;
           const sway = Math.sin(t * .7 + k * 2.1 + u * 2.6) * .1 * u;
-          const x = side * (1.02 - u * .52 + sway);
-          const y = .12 + u * 1.92 + Math.sin(u * Math.PI) * .1;
-          const z = .12 - u * .78;
+          const k2 = u * u;                       // lên cao càng bám sát mặt pháp giới
+          const x = side * 1.02 + (tx - side * 1.02) * k2 + sway * (1 - k2 * .7);
+          const y = .12 + u * 1.5 + Math.sin(u * Math.PI) * .1;
+          const z = .12 + (tz - .12) * k2;
           const w = .022 * Math.sin(u * Math.PI) + .004;
           arr[i * 6] = x - w; arr[i * 6 + 1] = y; arr[i * 6 + 2] = z;
           arr[i * 6 + 3] = x + w; arr[i * 6 + 4] = y + .01; arr[i * 6 + 5] = z + .012;
@@ -477,17 +732,19 @@ export function createAuraSignature(effect, lowQuality) {
       for (let i = 0; i < moteSeeds.length; i++) {
         const m = moteSeeds[i], y = (t * m.sp + m.ph) % 1;
         if (m.up) {
-          const r = m.r + y * .55 - inhale * .25, a = m.a + y * 2.4;
+          const r = m.r + y * .55 - inhale * .25 - gathK * .3, a = m.a + y * 2.4;
           mp[i * 3] = Math.cos(a) * r;
           mp[i * 3 + 1] = .05 + y * 1.5;
           mp[i * 3 + 2] = Math.sin(a) * r;
           const c = dummyColor.copy(lo).lerp(hi, y).multiplyScalar(Math.sin(y * Math.PI));
           mc[i * 3] = c.r; mc[i * 3 + 1] = c.g; mc[i * 3 + 2] = c.b;
         } else {
-          const r = m.r - y * .3, a = m.a + y * .5;
-          mp[i * 3] = Math.sin(a) * r * m.side;
-          mp[i * 3 + 1] = 2.05 - y * 1.7;
-          mp[i * 3 + 2] = -.55 - Math.cos(a) * .05;
+          // Hạt rơi từ pháp luân: rải TRÊN MẶT billboard, hơi trồi sau đĩa .05.
+          const r = m.r - y * .3 - gathK * .2 + bsK * .45, a = m.a + y * .5;
+          const px = Math.sin(a) * r * m.side, pz = -Math.cos(a) * .05;
+          mp[i * 3] = bill.ax + px * Math.cos(bill.yaw) + pz * Math.sin(bill.yaw);
+          mp[i * 3 + 1] = 1.62 - y * 1.5;
+          mp[i * 3 + 2] = bill.az - px * Math.sin(bill.yaw) + pz * Math.cos(bill.yaw);
           const c = dummyColor.copy(hi).lerp(lo, y).multiplyScalar(Math.sin(y * Math.PI));
           mc[i * 3] = c.r; mc[i * 3 + 1] = c.g; mc[i * 3 + 2] = c.b;
         }
@@ -501,8 +758,13 @@ export function createAuraSignature(effect, lowQuality) {
         const a = u * Math.PI * 1.65 + phase + t * 0.33;
         let x, y, z, width = 0.1;
         if (effect === 1) {
-          const r = 0.65 + Math.sin(u * Math.PI) * 0.5;
-          x = Math.cos(a) * r; z = Math.sin(a) * r; y = 0.12 + u * 1.18; width = 0.065;
+          // V10: dải khí cong ôm quanh pháp giới (tâm 1.62, lùi .3) — hết dải sáng dài
+          // quấn ngang thân tạo vệt khi nhìn nghiêng.
+          const r = 1.24 + k * .07 + Math.sin(u * Math.PI) * .1;
+          x = Math.cos(a) * r;
+          z = -.3 + Math.sin(a) * r * .55;
+          y = 1.62 + Math.sin(a * 2 + k * 2.1) * .22 + (u - .5) * .3;
+          width = .04;
         } else if (effect === 2) {
           x = Math.cos(a) * 1.04; z = Math.sin(a) * 1.04;
           y = 0.4 + u * 0.85 + Math.sin(a * 2 - t * 0.4) * 0.22; width = 0.2;
@@ -535,29 +797,47 @@ export function createAuraSignature(effect, lowQuality) {
       }
       geo.attributes.position.needsUpdate = true;
     });
-    manifestation.update(t);
+    formFxObj.form = formFx; formFxObj.diss = dissFx; formFxObj.ring = ringFx;
+    manifestation.update(t, effect === 1 ? formFxObj : null);
     flow.update(t);
   };
   update(0);
   return { group, update,
-    setOpacity(f) { glowFade = f; sigilMat.uniforms.fade.value = (effect === 8 ? 0.5 : effect === 1 ? .48 + .14 * groundPulse : .7) * f;
-      if (effect === 1) uprightMat.uniforms.opacity.value = .55 * radiance * f;
+    /** V10.2: đổi trạng thái aura hệ 1 (summon/idle/enhanced/breakthrough/dissolve). */
+    setState(name) {
+      if (effect !== 1 || !STATE_NAMES.includes(name) || name === stName) return;
+      if (name === 'breakthrough') stReturn = stName === 'enhanced' ? 'enhanced' : 'idle';
+      stPrev = stName; stName = name; stT0 = lastT; stPin = null;
+    },
+    /** Game gọi khi avatar bắt đầu mờ dần (beginFade) — Dissolve trình tự thay vì tắt cụm. */
+    onFadeStart() { if (effect === 1 && (stName === 'idle' || stName === 'enhanced')) this.setState('dissolve'); },
+    /** QA/preview: ghim trạng thái + tiến trình để chụp khung tái lập; T == null thì bỏ ghim. */
+    qaState(name, T) { if (effect !== 1) return; if (T == null) this.setState(name); else stPin = { name, T }; },
+    // V10.2: f (fade avatar từ game) nhân thêm hệ số lớp trạng thái — mỗi lớp theo trình
+    // tự hiện/tan của Summon/Dissolve thay vì cả aura bật/tắt cùng lúc.
+    setOpacity(f) { glowFade = f; sigilMat.uniforms.fade.value = (effect === 8 ? 0.5 : effect === 1 ? .48 + .14 * groundPulse : .7) * f * sealK;
+      if (effect === 1) uprightMat.uniforms.opacity.value = .55 * radiance * f * ringK;
       else uprightMat.opacity = 0.2 * radiance * f;
-      if (effect === 1) inkMat.uniforms.opacity.value = .65 * f;
+      if (effect === 1) inkMat.uniforms.opacity.value = .65 * f * ringK;
       else inkMat.opacity = .06 * f;
-      ribbonMat.uniforms.opacity.value = (effect === 4 ? .18 : effect === 1 ? .45 : .7) * radiance * f;
-      waveMat.opacity = waveOpacity * f * (effect === 8 ? .25 : 1);
-      if (petalMat) petalMat.uniforms.opacity.value = .8 * (.75 + .25 * radiance) * f;
-      if (veinMat) veinMat.uniforms.opacity.value = .5 * f;
-      if (haloMat) haloMat.opacity = (.22 + .14 * lotusPulse) * f;
-      if (coreMat) coreMat.opacity = .85 * f;
-      if (moteMat) moteMat.opacity = .9 * f;
-      if (streamMat) streamMat.uniforms.fade.value = f;
-      if (rimMat) rimMat.uniforms.opacity.value = .58 * radiance * f;
-      if (rimInkMat) rimInkMat.uniforms.opacity.value = .6 * f;
-      if (ringMainMat) ringMainMat.uniforms.opacity.value = .55 * radiance * f;
-      if (ringSubMat1) ringSubMat1.uniforms.opacity.value = .3 * f;
-      if (ringSubMat2) ringSubMat2.uniforms.opacity.value = .26 * f;
+      ribbonMat.uniforms.opacity.value = (effect === 4 ? .18 : effect === 1 ? .32 : .7) * radiance * f * (effect === 1 ? ringK : 1);
+      waveMat.opacity = waveOpacity * f * (effect === 8 ? .25 : 1) * (effect === 1 ? sealK : 1);
+      // Cánh/đài sen: ShaderMaterial dùng uniform fade; Material thường dùng .opacity.
+      if (lotusMats) for (const { m, base, k } of lotusMats) {
+        const kk = k === 'dish' ? dishK : lotusK;
+        if (m.uniforms?.fade) m.uniforms.fade.value = base * f * kk;
+        else m.opacity = base * f * kk;
+      }
+      if (haloMat) haloMat.uniforms.opacity.value = (.16 + .1 * lotusPulse) * f * ringK;
+      if (coreMat) coreMat.opacity = .85 * f * ringK;
+      if (moteMat) moteMat.opacity = .9 * f * flowK;
+      if (streamMat) streamMat.uniforms.fade.value = f * flowK;
+      if (rimMat) rimMat.uniforms.opacity.value = .58 * radiance * f * ringK;
+      if (rimInkMat) rimInkMat.uniforms.opacity.value = .6 * f * ringK;
+      if (ringMainMat) ringMainMat.uniforms.opacity.value = .55 * radiance * f * ringK;
+      if (ringSubMat1) ringSubMat1.uniforms.opacity.value = .22 * f * ringK;
+      if (ringSubMat2) ringSubMat2.uniforms.opacity.value = .18 * f * ringK;
+      if (sweepMat) sweepMat.uniforms.fade.value = f * ringK;
       manifestation.setOpacity(f); flow.setOpacity(f); },
     dispose() { flow.dispose(); manifestation.dispose(); geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); },
   };

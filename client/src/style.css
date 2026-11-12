@@ -48,10 +48,12 @@ kbd { font: inherit; }
 @media (prefers-reduced-motion: reduce) { #app::after { background: radial-gradient(ellipse 130% 105% at 50% 42%, transparent 58%, rgba(12, 9, 7, .3) 100%); } }
 
 /* Nhãn tên trên đầu */
-.tag { display: flex; flex-direction: column; align-items: center; gap: 3px; transform-origin: center bottom; pointer-events: none; }
-.tag-name { padding: 2px 13px; border: 1px solid var(--tag-accent, #e9d6ab); border-radius: 2px 9px; background: linear-gradient(110deg, rgba(24, 29, 31, .94), rgba(48, 37, 29, .9)); color: #fff5df; font-size: 13px; font-weight: 600; white-space: nowrap; box-shadow: inset 0 0 0 2px #ffffff0a, 0 2px 4px #0006; }
-.tag-name.me { border-bottom-width: 2px; background: linear-gradient(110deg, #50342bed, #292521ed); }
-.tag-title { position: relative; padding: 3px 27px 5px; color: var(--tag-accent); font: 700 16px/1.4 var(--serif); white-space: nowrap; text-shadow: 0 1px 2px #151315, 1px 0 2px #151315, -1px 0 2px #151315; background: radial-gradient(ellipse, #141920dc 15%, #14192080 55%, transparent 72%); }
+.tag { display: flex; flex-direction: column; align-items: center; gap: 3px; pointer-events: none; }
+/* Nhãn tên nền gần trong suốt: pháp luân/hào quang đọc xuyên qua được, chữ bám
+   bằng viền + bóng tối 4 hướng thay vì khối nền đặc đè lên hiệu ứng. */
+.tag-name { padding: 1px 10px; border: 1px solid var(--tag-accent, #e9d6ab); border-radius: 2px 9px; background: rgba(20, 22, 26, .38); color: #fff5df; font-size: 13px; font-weight: 600; white-space: nowrap; text-shadow: 0 1px 2px #151315, 1px 0 1px #151315, -1px 0 1px #151315, 0 -1px 1px #151315; }
+.tag-name.me { border-bottom-width: 2px; background: rgba(43, 33, 28, .52); }
+.tag-title { position: relative; padding: 3px 27px 5px; color: var(--tag-accent); font: 700 16px/1.4 var(--serif); white-space: nowrap; text-shadow: 0 1px 2px #151315, 1px 0 2px #151315, -1px 0 2px #151315, 0 0 6px #15131599; background: radial-gradient(ellipse, #14192055 15%, #1419202b 55%, transparent 72%); }
 .tag-title::before, .tag-title::after { content: ''; position: absolute; top: 50%; width: 20px; height: 7px; border-block: 1px solid currentColor; opacity: .85; }
 .tag-title::before { left: 0; border-radius: 80% 0; transform: rotate(-22deg); }
 .tag-title::after { right: 0; border-radius: 0 80%; transform: rotate(22deg); }
@@ -192,14 +194,28 @@ kbd { font: inherit; }
 .emoji-btn { width: 38px; height: 38px; padding: 0; border: 0; border-radius: 8px; background: none; font-size: 21px; touch-action: manipulation; }
 .emoji-btn:hover { background: rgba(255, 255, 255, .14); }
 #chatBtn { position: absolute; right: 12px; bottom: calc(68px + var(--safe-b)); }
-#chatForm { position: absolute; left: 50%; bottom: calc(14px + var(--safe-b)); transform: translateX(-50%); display: flex; gap: 7px; width: min(520px, calc(100vw - 24px)); z-index: 2; }
-#chatInput { flex: 1; min-width: 0; padding: 10px 13px; border: 2px solid var(--gold); border-radius: 11px; background: #fffaf0; }
+#chatHistory { position: absolute; left: 12px; bottom: calc(48px + var(--safe-b)); width: min(390px, calc(100vw - 24px)); height: min(220px, 34dvh); display: flex; flex-direction: column; background: linear-gradient(180deg, #0b294b91, #081c36d9); border: 1px solid #55a7cf66; box-shadow: 0 8px 22px #0007, inset 0 1px #c4ecff2e; color: #f4f7f8; z-index: 2; }
+#chatMessages { overflow-y: auto; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; scrollbar-color: #6da9c8a8 transparent; scrollbar-width: thin; }
+#chatMessages li:first-child { margin-top: auto; }
+#chatMessages li { display: block; padding: 3px 7px; overflow-wrap: anywhere; font: 600 13px/1.35 var(--sans); text-shadow: 0 1px 2px #000b; background: #0b264159; }
+#chatMessages li:nth-child(even) { background: #082039aa; }
+#chatMessages time { margin-right: 5px; color: #b7d4e1; font-size: 11px; font-variant-numeric: tabular-nums; }
+#chatMessages .chat-channel { margin-right: 3px; color: #d6e5ec; }
+#chatMessages strong { margin-right: 5px; color: #92e3fa; font-weight: 800; }
+#chatMessages .chat-text { color: #fff; }
+#chatForm { position: absolute; left: 12px; bottom: calc(8px + var(--safe-b)); display: flex; gap: 0; width: min(390px, calc(100vw - 24px)); height: 40px; z-index: 2; box-shadow: 0 4px 14px #0007; }
+#chatInput { flex: 1; min-width: 0; padding: 7px 10px; border: 1px solid #64b5da; border-right: 0; border-radius: 0; outline: 0; background: #071d35ed; color: #fff; font: 16px var(--sans); }
+#chatInput::placeholder { color: #b6d0dd; opacity: 1; }
+#chatInput:focus-visible { outline: 2px solid #c4ecff; outline-offset: -2px; }
+#chatForm button { min-width: 52px; padding: 0 9px; border: 1px solid #64b5da; border-radius: 0; background: #164469; color: #fff; font: 700 13px var(--sans); }
+#chatForm button:hover { background: #22628c; }
 #keysHint { position: absolute; left: 12px; bottom: calc(14px + var(--safe-b)); margin: 0; padding: 4px 10px; border-radius: 8px; background: rgba(33, 20, 14, .5); color: #f3e4cb; font-size: 12px; pointer-events: none !important; }
 
 #stick { position: absolute; left: 18px; bottom: calc(24px + var(--safe-b)); width: 124px; height: 124px; border-radius: 50%; background: rgba(33, 20, 14, .32); border: 2px solid rgba(255, 223, 170, .4); pointer-events: none !important; display: none; }
 .stick-knob { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; background: rgba(255, 223, 170, .72); }
 
 .tutorial { position: absolute; left: 12px; bottom: calc(102px + var(--safe-b)); width: min(340px, calc(100vw - 24px)); padding: 13px 16px; border-radius: 13px; background: var(--paper); color: var(--ink); box-shadow: 0 10px 30px rgba(0, 0, 0, .4); }
+#hud:has(.tutorial) #chatHistory { display: none; }
 .touch .tutorial { left: 50%; bottom: auto; top: calc(90px + var(--safe-t)); transform: translateX(-50%); }
 .tutorial h3 { margin: 2px 0 2px; font: 700 19px var(--serif); color: #5a1f14; }
 .tutorial p { margin: 0 0 9px; }
@@ -357,12 +373,16 @@ kbd { font: inherit; }
 .touch #stick { display: block; }
 .touch #actionBtn { left: auto; right: 14px; bottom: calc(24px + var(--safe-b)); transform: none; max-width: 46vw; min-height: 70px; padding: 8px 14px; font-size: 16px; border-radius: 18px; text-align: center; }
 .touch #chatBtn { right: 14px; bottom: calc(108px + var(--safe-b)); width: 46px; padding: 0; justify-content: center; }
+.touch #chatHistory { left: 8px; bottom: calc(145px + var(--safe-b)); width: min(300px, calc(100vw - 80px)); height: min(170px, 26dvh); }
+.touch #chatForm { left: 8px; bottom: calc(8px + var(--safe-b)); width: min(300px, calc(100vw - 80px)); }
+.touch.chatting #chatHistory { bottom: calc(52px + var(--safe-b)); }
 .touch #chatBtn em { display: none; }
 /* Cột phải: nút hành động, chat, rồi hàng emoji nằm hẳn trên đỉnh cần ảo. */
 .touch #emojiBar { right: 14px; bottom: calc(156px + var(--safe-b)); padding: 2px; gap: 0; }
 .touch .emoji-btn { width: 33px; height: 40px; font-size: 18px; }
 .touch #wishReader { bottom: calc(210px + var(--safe-b)); }
 .chatting #stick, .chatting #actionBtn, .chatting #emojiBar, .chatting #chatBtn, .chatting #wishReader { display: none !important; }
+.chatting #keysHint { display: none !important; }
 .meditating #hud { display: none; }
 
 @media (max-width: 760px), (max-height: 500px) {

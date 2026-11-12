@@ -61,13 +61,16 @@
     </button>
 
     <div id="emojiBar" aria-label="Biểu cảm nhanh"></div>
-    <button id="chatBtn" class="icon-btn" type="button" aria-label="Mở ô chat"><span aria-hidden="true">💬</span><em>Chat</em><kbd class="key-hint">T</kbd></button>
+    <button id="chatBtn" class="icon-btn" type="button" aria-label="Mở ô chat"><span aria-hidden="true">💬</span><em>Chat</em><kbd class="key-hint">Enter</kbd></button>
+    <section id="chatHistory" aria-label="Lịch sử chat phiên này">
+      <ol id="chatMessages" role="log" aria-live="polite" aria-relevant="additions"></ol>
+    </section>
     <form id="chatForm" autocomplete="off" hidden>
       <input id="chatInput" type="text" placeholder="Nói gì đó với cả nhà…" enterkeyhint="send" aria-label="Nội dung chat">
       <button class="btn primary" type="submit">Gửi</button>
     </form>
 
-    <p id="keysHint">WASD đi · Kéo chuột xoay · E hành động · T chat</p>
+    <p id="keysHint">WASD đi · Bấm cảnh, rê chuột xoay · Esc hiện trỏ · E hành động · Enter chat</p>
 
     <div id="stick" aria-hidden="true"><div class="stick-knob"></div></div>
   </div>

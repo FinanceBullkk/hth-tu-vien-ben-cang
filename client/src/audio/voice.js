@@ -11,6 +11,7 @@ export class ProximityVoice {
     this.starting = false;
     this.mode = 'ptt';
     this.holding = false;
+    this.micMuted = true;
     this.deafened = false;
     this.generation = 0;
     this.pendingSignals = [];
@@ -100,6 +101,7 @@ export class ProximityVoice {
     this.starting = false;
     this.pendingSignals.length = 0;
     this.holding = false;
+    this.micMuted = true;
     for (const track of this.stream?.getTracks() || []) track.stop();
     this.stream = null;
     for (const peer of this.peers.values()) peer.close();
@@ -122,13 +124,14 @@ export class ProximityVoice {
     const activity = this.app.activities?.current;
     this.blocked = Boolean(document.hidden || !document.hasFocus() || activity?.isRhythm ||
       this.app.modalBusy() || document.activeElement?.matches('input:not([type="range"]), textarea, [contenteditable]'));
-    this.transmitting = this.active && !this.blocked && !this.deafened && (this.mode === 'open' || this.holding);
+    this.transmitting = this.active && !this.blocked && !this.deafened && !this.micMuted && (this.mode === 'open' || this.holding);
     for (const track of this.stream?.getAudioTracks() || []) track.enabled = this.transmitting;
     for (const peer of this.peers.values()) peer.update();
     const connected = [...this.peers.values()].filter((p) => p.pc.connectionState === 'connected');
     const speaking = connected.filter((p) => p.speaking).map((p) => p.name);
     const state = !this.active ? 'Voice tắt · nghe người trong 18 m' : this.deafened ? 'Đã tắt nghe và mic' :
-      this.blocked ? 'Mic tạm tắt khi chơi nhịp, nhập chữ hoặc rời game' : this.transmitting ? 'Mic đang mở' : 'Mic tắt · giữ V hoặc nút để nói';
-    this.ui?.render(this.micTest.message || `${state}${this.active ? ` · ${connected.length}/${this.peers.size} kết nối gần` : ''}${speaking.length ? ` · Đang nói: ${speaking.join(', ')}` : ''}`);
+      this.micMuted ? 'Mic tắt · bấm biểu tượng mic để bật' : this.blocked ? 'Mic tạm tắt khi chơi nhịp, nhập chữ hoặc rời game' :
+        this.transmitting ? 'Mic đang mở' : 'Giữ V hoặc nút để nói';
+    this.ui?.render(this.micTest.message || `${state}${this.active ? ` · ${connected.length}/${this.peers.size} kết nối gần` : ''}`, speaking);
   }
 }

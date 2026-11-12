@@ -9,9 +9,10 @@ export const AURA_TITLES = [
   { title: 'Bích Ngọc Thanh Phong', color: '#7ee8a0' },
   { title: 'Nguyệt Bạch Tri Âm', color: '#f6f7ff' },
   { title: 'Huyền Dạ Du Hành', color: '#d2afff' },
-  { title: '', color: '#ffad60' },
-  { title: '', color: '#ffe4a0' },
-  { title: '', color: '#a9f0e9' },
+  { title: '', color: '#ffad60' }, // Long quyền (bản prod), không kèm danh hiệu
+  { title: 'Xích Diễm Lưu Vân', color: '#ffad60' },
+  { title: 'Kim Long Nguyệt Ảnh', color: '#ffe4a0' },
+  { title: 'Thanh Phong Kiếm Vũ', color: '#a9f0e9' },
 ];
 
 export function applyAvatarTitle(tag, title, effect) {

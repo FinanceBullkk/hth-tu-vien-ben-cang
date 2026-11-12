@@ -315,6 +315,9 @@ export class Avatar {
     applyAvatarTitle(this.tagEl, this.titleEl, effect);
     this.tagEl.append(this.bubbleEl, this.titleEl, this.nameEl, this.statusEl);
     this.label = new CSS2DObject(this.tagEl);
+    // Neo đáy nhãn vào điểm trên đầu: nhãn luôn mọc lên trời, không trùm xuống
+    // che người khi nhìn từ xa — CSS2D mặc định căn giữa nên nửa dưới đè lên đầu.
+    this.label.center.set(0.5, 1);
     this.label.position.y = 1.72;
     this.root.add(this.label);
 
@@ -322,6 +325,9 @@ export class Avatar {
     this.walkAmt = 0;
     this.sitAmt = 0;
     this.waveT = 0;
+    this.slashT = 0;
+    this.flinchT = 0;
+    this.inCombat = false;
     this.activity = ACTIVITY.none;
     this.bubbleTimer = 0;
     this.fading = 0;
@@ -401,9 +407,7 @@ export class Avatar {
   setActivity(code) {
     if (code === this.activity) return;
     this.activity = code;
-    const label = ACTIVITY_LABEL[code];
-    this.statusEl.hidden = !label;
-    this.statusEl.textContent = label || '';
+    this.renderStatus();
     if (code === ACTIVITY.melody && !this.instrument) {
       this.instrument = createInstrument();
       this.rig.add(this.instrument.group);
@@ -417,6 +421,17 @@ export class Avatar {
     }
   }
 
+  setCombatStatus(label) {
+    this.combatStatus = label;
+    this.renderStatus();
+  }
+
+  renderStatus() {
+    const label = [ACTIVITY_LABEL[this.activity], this.combatStatus].filter(Boolean).join(' · ');
+    this.statusEl.hidden = !label;
+    this.statusEl.textContent = label || '';
+  }
+
   say(text, ms = 5000) {
     this.bubbleEl.textContent = text;
     this.bubbleEl.hidden = false;
@@ -426,6 +441,59 @@ export class Avatar {
 
   wave() {
     this.waveT = 1.8;
+  }
+
+  slash() {
+    this.slashT = 0.32;
+  }
+
+  flinch() {
+    this.flinchT = 0.22;
+  }
+
+  setCombat(inCombat) {
+    if (this.inCombat === inCombat) return;
+    this.inCombat = inCombat;
+    if (inCombat) {
+      if (!this.combatSword) {
+        const g = new THREE.Group();
+        const blade = new THREE.Mesh(
+          new THREE.BoxGeometry(0.045, 0.65, 0.014),
+          new THREE.MeshLambertMaterial({
+            color: 0xe8f4ff,
+            emissive: 0x5a9be6,
+            emissiveIntensity: 0.45,
+            flatShading: true,
+          })
+        );
+        blade.position.y = 0.32;
+        const guard = new THREE.Mesh(
+          new THREE.BoxGeometry(0.12, 0.024, 0.035),
+          new THREE.MeshLambertMaterial({ color: 0xdfb14e, flatShading: true })
+        );
+        guard.position.y = 0.02;
+        const grip = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.016, 0.018, 0.14, 6),
+          new THREE.MeshLambertMaterial({ color: 0x6e2c22, flatShading: true })
+        );
+        grip.position.y = -0.06;
+        g.add(blade, guard, grip);
+        g.position.set(0, -0.22, 0.06);
+        g.rotation.set(-Math.PI / 2 + 0.35, 0, 0);
+        this.combatSword = g;
+      }
+      this.armR.add(this.combatSword);
+      this.combatSword.visible = true;
+      if (this.weaponFx?.group) this.weaponFx.group.visible = false;
+    } else {
+      if (this.combatSword) {
+        this.combatSword.visible = false;
+        this.armR.remove(this.combatSword);
+      }
+      if (this.weaponFx?.group && this.activity !== ACTIVITY.melody) {
+        this.weaponFx.group.visible = true;
+      }
+    }
   }
 
   /** Bắt đầu mờ dần khi người chơi rời đi. */
@@ -496,10 +564,36 @@ export class Avatar {
       armRx = -1.05; armRz = 0.3 + Math.sin(t * 3) * 0.2;
       this.instrument?.update(t);
     }
+    if (this.inCombat && !moving && this.slashT <= 0 && this.activity !== ACTIVITY.melody) {
+      armRx = -0.75;
+      armRz = 0.25;
+      armLx = -0.45;
+      armLz = -0.2;
+    }
     if (this.waveT > 0 && this.activity !== ACTIVITY.melody) {
       this.waveT -= dt;
       armRx = 0;
       armRz = 2.5 + Math.sin(t * 14) * 0.35;
+    }
+    if (this.slashT > 0 && this.activity !== ACTIVITY.melody) {
+      this.slashT -= dt;
+      const progress = 1 - Math.max(0, this.slashT / 0.32);
+      const p = Math.sin(progress * Math.PI);
+      armRx = -2.2 + progress * 1.8;
+      armRz = -0.6 + progress * 1.4;
+      this.body.rotation.y = p * 0.45;
+      this.body.rotation.x = p * 0.2;
+    } else {
+      this.body.rotation.y = 0;
+      this.body.rotation.x = 0;
+    }
+    if (this.flinchT > 0) {
+      this.flinchT -= dt;
+      const f = Math.sin((this.flinchT / 0.22) * Math.PI);
+      this.body.rotation.x = -f * 0.35;
+      this.rig.position.z = -f * 0.15;
+    } else if (this.slashT <= 0) {
+      this.rig.position.z = 0;
     }
     this.armL.rotation.set(armLx, 0, armLz);
     this.armR.rotation.set(armRx, 0, armRz);
@@ -527,7 +621,15 @@ export class Avatar {
       this.bubbleTimer -= dt;
       if (this.bubbleTimer <= 0) this.bubbleEl.hidden = true;
     }
-    this.label.visible = cameraDist < 48;
+    // Nhãn mờ dần theo khoảng cách (đậm nguyên đến 16 đơn vị, tan hẳn ở 48) để
+    // nhìn người ở xa thì tên không đè lên hào quang phía trên đầu; nhãn cũng
+    // tan theo khi người chơi rời đi.
+    const tagAlpha = Math.min(
+      this.fading > 0 ? this.fading : 1,
+      Math.max(0, Math.min(1, (48 - cameraDist) / 32)),
+    );
+    this.label.visible = tagAlpha > 0;
+    this.tagEl.style.opacity = tagAlpha < 1 ? String(tagAlpha) : '';
 
     if (this.fading > 0) {
       this.fading = Math.max(0, this.fading - dt / 0.9);
@@ -535,7 +637,6 @@ export class Avatar {
         if (o.isMesh && o !== this.halo && o.parent !== this.cultivationAura?.group && o.material.transparent && !o.material.isShaderMaterial) o.material.opacity = this.fading;
       });
       if (this.aura.points) this.aura.points.material.opacity = this.fading * 0.9;
-      this.tagEl.style.opacity = String(this.fading);
     }
   }
 
@@ -550,5 +651,13 @@ export class Avatar {
       if (o.isMesh && o !== this.halo && o.material.transparent) o.material.dispose();
     });
     if (this.aura.points) this.aura.dispose();
+    if (this.combatSword) {
+      this.armR.remove(this.combatSword);
+      this.combatSword.traverse((o) => {
+        o.geometry?.dispose();
+        o.material?.dispose();
+      });
+      this.combatSword = null;
+    }
   }
 }

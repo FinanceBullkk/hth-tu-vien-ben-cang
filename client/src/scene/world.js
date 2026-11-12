@@ -1,6 +1,7 @@
 // Ghép toàn bộ cảnh và điều phối cập nhật mỗi khung: trời, cảng, hạt, con vật, rồng phượng, chuông.
 import * as THREE from 'three';
 import { Abbot } from './abbot.js';
+import { ZOEYY } from '../../../shared/layout.js';
 import { Animals } from './animals.js';
 import { Celestial } from './celestial.js';
 import { FishingScene } from './fishing.js';
@@ -17,6 +18,7 @@ import { createWuxiaProps } from './wuxia-props.js';
 import { ShadowPacer, renderPixelRatio } from './render-quality.js';
 
 import { createMelodyStage } from './melody-stage.js';
+import { PkVfx } from './pk-vfx.js';
 
 export class World {
   constructor(scene, lowQuality) {
@@ -35,6 +37,7 @@ export class World {
     this.animals = new Animals(scene, lowQuality);
     this.celestial = new Celestial(scene, lowQuality);
     this.abbot = new Abbot(scene);
+    this.zoeyy = new Abbot(scene, 'Zoeyy Gay', ZOEYY);
     this.monk = new GateMonk(scene);
     this.wishes = new Wishes3D(scene);
     // Dải lụa thắt lên cành xong thì cánh hoa rơi nhẹ một nhịp.
@@ -44,6 +47,7 @@ export class World {
     this.pitchCourt = new PitchPotCourt(scene);
     this.fishing = new FishingScene(scene);
     this.melodyStage = createMelodyStage(scene);
+    this.pkVfx = new PkVfx(scene);
     this.bellPull = 0;
 
     this.bellSwing = 0;
@@ -82,6 +86,7 @@ export class World {
     this.meditation.update(nowMs);
     this.wuxia.update(dt, night);
     this.fishing.update(dt, nowMs);
+    this.pkVfx.update(dt);
 
     this.lanternBoost = Math.max(0, this.lanternBoost - dt * 0.12);
     const flick = 0.94 + Math.sin(this.time * 9.1) * 0.04 + Math.sin(this.time * 17.3) * 0.02;

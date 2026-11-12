@@ -1,5 +1,5 @@
-// Rút quẻ vận đơn: chạm giữ để lắc ống xăm (điện thoại có HTTPS thì lắc máy), thẻ mở ra như một B/L.
-import { renderBillOfLading } from '../share/share.js';
+// Rút xăm: chạm giữ để lắc ống xăm; kết quả là thẻ lời chúc, không dùng mẫu logistics.
+import { renderFortuneCard } from '../share/share.js';
 import { downloadBlob, h } from '../ui/dom.js';
 import { openModal } from '../ui/modal.js';
 
@@ -54,7 +54,7 @@ export class FortuneActivity {
       this.holdBtn,
       h('p', { class: 'muted small center' }, 'Mỗi người 1 quẻ một ngày. Mang tính giải trí.'));
     this.modal = openModal({
-      title: 'Rút quẻ vận đơn',
+      title: 'Rút xăm',
       content: this.body,
       onClose: () => {
         if (app.activities.current === this) app.activities.exit();
@@ -113,25 +113,18 @@ export class FortuneActivity {
 
   showCard(f) {
     const { app } = this;
-    const row = (label, value) => h('div', { class: 'bl-row' }, h('span', { class: 'bl-label' }, label), h('span', { class: 'bl-value' }, value));
-    const download = h('button', { class: 'btn primary', type: 'button' }, 'Tải ảnh vận đơn');
+    const download = h('button', { class: 'btn primary', type: 'button' }, 'Tải thẻ lời chúc');
     download.addEventListener('click', async () => {
-      const canvas = renderBillOfLading(f);
+      const canvas = renderFortuneCard(f);
       const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
       canvas.width = 0;
-      if (blob) downloadBlob(blob, `van-don-${f.bl}.png`);
+      if (blob) downloadBlob(blob, `the-loi-chuc-${f.date}.png`);
     });
     this.body.replaceChildren(
       f.already ? h('p', { class: 'muted small center' }, 'Quẻ hôm nay của bạn đây. Mai quay lại nhé.') : '',
       h('article', { class: 'bl-card' },
-        h('header', { class: 'bl-head' }, h('b', {}, 'BILL OF LADING'), h('span', {}, `Số B/L: ${f.bl}`)),
-        row('Shipper', 'Tu viện HTH'),
-        row('Consignee', f.consignee),
-        row('Port of Loading', 'Bình an'),
-        row('Port of Discharge', 'Nhà bạn'),
-        h('div', { class: 'bl-goods' }, h('span', { class: 'bl-label' }, 'Description of Goods'), h('p', {}, f.text)),
-        row('Gross Weight', '0 kg, nhẹ như không'),
-        row('Freight', 'Prepaid — bằng một nụ cười'),
+        h('header', { class: 'bl-head' }, h('b', {}, 'LỜI CHÚC HÔM NAY')),
+        h('div', { class: 'bl-goods' }, h('p', {}, f.text)),
         h('footer', { class: 'bl-foot' }, `Ngày ${f.date} · Mang tính giải trí`)),
       h('div', { class: 'row-center' }, download),
     );

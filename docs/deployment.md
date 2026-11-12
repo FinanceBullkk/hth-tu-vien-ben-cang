@@ -1,5 +1,39 @@
 # Deployment
 
+## Current release: 2026-11-09 camera orbit fix, 15:06 UTC+7
+
+Public image `hth:camera-orbit-1109` adds camera wall collision and 360-degree
+orbit fixes from commit `2470949` on `fix/camera-orbit-1109`. Mouse hover rotates
+the camera again after meditation ends, even without pointer lock. Built from
+the previous production source `D:/hth-chat-voice-release-1109` with only
+`client/src/player/camera.js`, `client/src/player/controls.js`, and the new
+camera orbit test overlaid. Release source: `D:/hth-camera-orbit-release-1109`.
+
+Branch Docker tests passed 142/142; release Docker tests passed; candidate
+health/page passed. Local and public health/page and Socket.IO polling returned
+200; public bundle `index-BUq_NKI_.js` matched candidate. SQLite quick_check:
+ok. Volume, network, localhost port and runtime hardening retained. Browser
+gameplay after cutover was not directly checked.
+
+Rollback container `hth-pre-camera-orbit-1109-1506` uses
+`hth:chat-voice-1109`, stopped with `restart=no`. Private online backup:
+`backups/cutover-camera-orbit-1109-1506/` in production volume; its DB
+quick_check passed. Restore image only unless DB restoration is required.
+
+## Previous release: 2026-11-09 chat HUD and mic control, 14:31 UTC+7
+
+Public image `hth:chat-voice-1109` adds lower-left chat history, Enter-to-chat,
+direct mic toggle, and nearby speaker names. Release source:
+`D:/hth-chat-voice-release-1109`, built from the running `hth:zoeyy-1109`
+image source with only chat/voice client files overlaid from commit `56d8843`.
+Clean-branch tests: 141/141; Docker release tests: 138/138; candidate
+WebRTC and chat browser checks passed. Public health, page and Socket.IO
+returned 200, bundle `index-B42r7Iof.js` matched local, SQLite quick_check
+was ok with 45 players retained. Existing runtime flags and data volume kept.
+Rollback: stopped `hth-pre-chat-voice-1109-1431` (`hth:zoeyy-1109`);
+private backup: `backups/cutover-chat-voice-1109-1431/` in production volume.
+
+
 ## Current target
 
 Cloudflare named Tunnel on the production host `pc-chinh` (Windows, Tailscale

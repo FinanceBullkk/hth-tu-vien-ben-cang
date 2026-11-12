@@ -16,6 +16,7 @@ import { FollowCamera } from './player/camera.js';
 import { Input } from './player/controls.js';
 import { LocalPlayer } from './player/local.js';
 import { setAuraNight } from './player/avatar-effect.js';
+import './ui/pk.css';
 import { trimShadowCasters } from './player/avatar-lod.js';
 import { World, createRenderer } from './scene/world.js';
 import { AdaptiveQuality, renderPixelRatio } from './scene/render-quality.js';
@@ -108,7 +109,7 @@ function main() {
     me: new LocalPlayer(scene, profile, isTouch),
     modalBusy: () => modalOpen(),
     isBusy: () => modalOpen() || Boolean(app.activities.current && app.activities.current !== app.activities.meditation),
-    chatBlocked: () => app.activities.current === app.activities.lotus,
+    chatBlocked: () => false,
   };
   app.remotes._p = new THREE.Vector3();
   app.bloom = bloomPass;
@@ -201,6 +202,7 @@ function main() {
       const p = snap.players.find((pl) => pl.sid === f.sid);
       if (p) world.fishing.setRod(f.sid, { x: p.x, z: p.z, on: true, bx: f.bx, bz: f.bz });
     }
+    app.activities.pk.setSnapshot(snap.me, snap.players);
     world.fishing.shadows.setTaken(snap.fishShadowsTaken);
     hud.setPresence(snap.online, snap.visitsToday);
 
@@ -211,9 +213,11 @@ function main() {
     if (!entered) {
       entered = true;
       welcome.hide();
+      app.activities.pk.panel.root.hidden = false;
       hud.playMusic();
       hud.show();
       hud.startRadio(snap.radio);
+      app.voice.start();
       app.follow.intro = false;
       me.avatar.nameEl.hidden = false;
       trimShadowCasters(me.avatar); // Ngoại hình đã chốt ở màn chào.
@@ -237,7 +241,8 @@ function main() {
   });
 
   net.on('player:join', (p) => {
-    remotes.add(p, net.now());
+    const remote = remotes.add(p, net.now());
+    remote.avatar.setCombatStatus(p.combat?.protectedUntil ? 'Bảo hộ' : p.combat?.satKhiUntil ? 'Sát khí' : '');
     hud.toast(`${p.name} vừa lên tu viện`);
     app.audio.chime(0.07);
   });
@@ -256,7 +261,10 @@ function main() {
     return r ? { x: r.avatar.root.position.x, z: r.avatar.root.position.z } : null;
   };
 
-  net.on('chat', ({ sid, text }) => avatarOf(sid)?.say(text));
+  net.on('chat', ({ sid, text }) => {
+    avatarOf(sid)?.say(text);
+    app.chat.receive(sid === mySid ? app.myName : remotes.map.get(sid)?.name ?? 'Người chơi', text);
+  });
   net.on('cultivation:update', ({ sid, tier }) => avatarOf(sid)?.setCultivation(tier));
   net.on('emoji', ({ sid, i }) => avatarOf(sid)?.say(EMOJIS[i] ?? '', 2500));
   net.on('wave', ({ from, to, name }) => {
@@ -284,11 +292,9 @@ function main() {
   });
   net.on('meditation:sync', (data) => {
     app.activities.meditation.onSync(data);
-    app.activities.lotus.onSync(data);
   });
   net.on('cultivation:progress', ({ sid, qi }) => avatarOf(sid)?.setQi(qi));
   net.on('meditation:scene', (data) => world.meditation.apply(data));
-  net.on('rhythm:bloom', (data) => world.meditation.bloom(data));
 
   // ---------- Câu cá ----------
   net.on('fish:bobber', ({ sid, bx, bz }) => {
@@ -355,6 +361,10 @@ function main() {
     if (e.repeat && ['Space', 'KeyE', 'Enter'].includes(e.code)) return true;
     if (e.repeat && app.activities.current?.isRhythm && e.code.startsWith('Arrow')) return true;
     if (e.code === 'Escape') {
+      if (app.input.pointerLocked) {
+        document.exitPointerLock();
+        return true;
+      }
       if (closeTopModal()) return true;
       if (app.activities.current) {
         app.activities.exit();
@@ -364,11 +374,18 @@ function main() {
     }
     if (app.activities.onKey(e.code, true)) return true;
     if (modalOpen() || app.activities.current) return false;
-    if (e.code === 'KeyE' || e.code === 'Enter') {
+    if (e.code === 'Space') {
+      // Space ngồi thiền ngay tại chỗ; đứng cạnh chiếu trống thì ngồi lên chiếu.
+      const zone = app.activities.zoneAt(app.me.x, app.me.z);
+      if (zone?.key.startsWith('mat')) zone.run();
+      else app.activities.meditation.start();
+      return true;
+    }
+    if (e.code === 'KeyE') {
       hud.runAction();
       return true;
     }
-    if (e.code === 'KeyT') {
+    if (e.code === 'Enter' || e.code === 'KeyT') {
       app.chat.show();
       return true;
     }
@@ -381,26 +398,40 @@ function main() {
   app.input.onKeyUp = (e) => {
     if (entered) app.activities.onKey(e.code, false);
   };
+  app.input.canLock = () => !modalOpen() && (!app.activities.current || app.activities.current === app.activities.pk);
 
   // Chạm/bấm vào cảnh: vẫy tay với đồng nghiệp, vuốt mèo, đọc lời ước.
   const raycaster = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
   const heartAt = new THREE.Vector3();
-  app.input.onTap = (x, y) => {
-    if (!entered || app.isBusy()) return;
+  app.input.onTap = (x, y, event) => {
+    if (!entered || app.modalBusy()) return;
+    if (app.activities.current) return;
+    if (app.input.pointerLocked) { app.activities.pk.use('strike'); return; }
     ndc.set((x / window.innerWidth) * 2 - 1, -(y / window.innerHeight) * 2 + 1);
     raycaster.setFromCamera(ndc, camera);
     const person = remotes.atRay(raycaster.ray);
     if (person) {
-      net.call('wave', { to: person.sid });
+      if (event?.altKey || event?.pointerType === 'touch') {
+        const waveBtn = h('button', { class: 'btn', type: 'button' }, '👋 Vẫy tay');
+        const modal = openModal({ title: person.name, content: waveBtn });
+        waveBtn.onclick = () => {
+          app.net.call('wave', { to: person.sid });
+          heartAt.set(person.x, person.y + 1, person.z);
+          floater(app, heartAt, '👋');
+          modal.close();
+        };
+        return;
+      }
+      app.activities.pk.use('strike', { x, y });
       return;
     }
     if (world.abbot.atRay(raycaster.ray)) {
       world.abbot.advise();
       return;
     }
-    if (world.monk.atRay(raycaster.ray)) {
-      app.activities.riddle.start();
+    if (world.zoeyy.atRay(raycaster.ray)) {
+      world.zoeyy.advise();
       return;
     }
     const cat = world.animals.catAtRay(raycaster.ray);
@@ -417,6 +448,7 @@ function main() {
       ?? world.wishes.pickScreen(x, y, camera, window.innerWidth, window.innerHeight);
     raycaster.far = Infinity;
     if (wish) app.reader.pin(wish);
+    else app.activities.pk.use('strike', { x, y });
   };
 
   // ---------- Khung hình ----------
@@ -460,20 +492,19 @@ function main() {
     const nowMs = net.now();
 
     const look = app.input.consumeLook();
-    // Đang mở hộp thoại hoặc đang làm hoạt động thì nhân vật đứng yên.
-    me.locked = !entered || app.isBusy() || Boolean(app.activities.current?.lockMove);
-    // Mở hộp thoại hay gõ chat là cần con trỏ: thoát xoay tự do để bấm được UI.
-    const ae = document.activeElement;
-    if (me.locked || (ae instanceof HTMLElement && (ae.isContentEditable || ['INPUT', 'TEXTAREA'].includes(ae.tagName)))) {
-      app.input.endFreeLook();
+    if (app.input.pointerLocked && (modalOpen() || (app.activities.current && app.activities.current !== app.activities.pk))) {
+      document.exitPointerLock();
     }
-    me.update(dt, app.input, app.follow.yaw, net);
+    // Đang mở hộp thoại hoặc đang làm hoạt động thì nhân vật đứng yên.
+    me.locked = !entered || (app.isBusy() && app.activities.current?.lockMove !== false) || Boolean(app.activities.current?.lockMove);
+    me.update(dt, app.input, app.follow.yaw + look.yaw, net);
     remotes.update(dt, nowMs, camera);
     app.activities.update(dt);
     app.reader.update(dt);
     world.wishes.setViewer(me.x, me.z, camera);
     world.update(dt, nowMs);
     world.abbot.update(dt, me.x, me.z, camera);
+    world.zoeyy.update(dt, me.x, me.z, camera);
     world.monk.update(dt, me.x, me.z, camera);
     world.pitchCourt.update(dt, camera);
     app.follow.update(dt, me.x, me.y, me.z, look);

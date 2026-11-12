@@ -26,7 +26,7 @@ const SIT_INTERVAL_MS = 1000; // Ngồi xuống phát tin cho cả phòng nên p
 const round2 = (n) => Math.round(n * 100) / 100;
 
 export class Room {
-  constructor({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch, melody }) {
+  constructor({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch, melody, pk }) {
     this.io = io;
     this.broadcast = io.to(PLAYERS_ROOM);
     this.db = db;
@@ -40,7 +40,10 @@ export class Room {
     this.fishing = fishing;
     this.pitch = pitch;
     this.melody = melody;
+    this.pk = pk;
+    if (this.pk) this.pk.onKnockout = (player) => this.onActionStop(player);
     this.players = new Map(); // sid -> player
+    this.pk?.bind(this.players);
     this.voice = new Voice(this.players);
     this.byPid = new Map();
     this.kicked = new Map(); // pid -> hết hạn chặn
@@ -88,6 +91,7 @@ export class Room {
       rot: p.rot,
       anim: p.anim,
       activity: p.activity,
+      combat: this.pk?.state(p),
     };
   }
 
@@ -119,6 +123,7 @@ export class Room {
       this.fishing.sweep(this.players);
       this.pitch.sweep(this.players);
       this.melody?.sweep();
+      this.pk?.sweep();
     }
   }
 
@@ -217,6 +222,8 @@ export class Room {
     on('wish:delete', (p, data) => this.wishes.remove(p, data));
     on('fortune:draw', (p) => this.wishes.drawFortune(p));
     on('cosmetic:unlock', (p, data) => this.onUnlock(p, data));
+    on('pk:attack', (p, data) => this.pk.attack(p, data));
+    on('pk:skill', (p, data) => this.pk.skill(p, data));
 
     socket.on('disconnect', () => this.onDisconnect(socket));
   }
@@ -365,6 +372,7 @@ export class Room {
   onMove(p, data) {
     if (p.melody) return undefined;
     if (!Array.isArray(data) || data.length < 4) return undefined;
+
     // Chặn gửi quá dày: quá giới hạn trong cửa sổ 1 giây thì bỏ gói.
     const now = Date.now();
     if (now - p.moveWindow > 1000) {
@@ -397,7 +405,6 @@ export class Room {
 
   onChat(p, data) {
     const now = Date.now();
-    if (p.rhythm?.kind === 'meditate') return { ok: false, error: 'Đang chơi Nhịp sen thì mình giữ yên lặng nhé.' };
     if (now - p.lastChat < LIMITS.chatIntervalMs) return { ok: false, error: 'Từ từ thôi, đợi 2 giây nhé.' };
     const text = cleanText(data?.text, LIMITS.chatMax);
     if (!text) return { ok: false };

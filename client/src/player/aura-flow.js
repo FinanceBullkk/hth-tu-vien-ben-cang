@@ -6,6 +6,8 @@ export function createAuraFlow(effect, lowQuality, tint, accent, core) {
   const uniforms = { time: { value: 0 }, fade: { value: 1 }, tint: { value: tint },
     fire: { value: effect === 4 ? 1 : 0 },
     accent: { value: accent }, core: { value: core },
+    // V10 Sen Kim: hạ cường độ sương xoắn — hết dải sáng dài chéo qua thân ở góc nghiêng.
+    boost: { value: effect === 1 ? .5 : 1 },
     twist: { value: [1.6, 2.8, .65, 1.2, 1.9, .35, .8, -1.7][effect - 1] },
     rise: { value: [1.1, 1.45, 1.8, 2.25, 1.25, .9, 2, 1.6][effect - 1] } };
   const field = `uniform float time,twist,rise,fire; attribute float phase;
@@ -54,7 +56,7 @@ export function createAuraFlow(effect, lowQuality, tint, accent, core) {
         vClearance=p.xy-body.xy*(p.z/body.z);
         gl_Position=projectionMatrix*p;
       }`,
-    fragmentShader: `uniform float time,fade,fire; uniform vec3 tint,accent,core;
+    fragmentShader: `uniform float time,fade,fire,boost; uniform vec3 tint,accent,core;
       varying vec2 vUv,vClearance; varying float vPhase;
       void main(){
         float edge=pow(max(0.,sin(vUv.y*3.141593)),3.);
@@ -79,10 +81,11 @@ export function createAuraFlow(effect, lowQuality, tint, accent, core) {
           gl_FragColor=vec4(hue,flame*life*surge*fade*.48*clear*fray);
           return;
         }
-        gl_FragColor=vec4(hue,edge*life*(.09+packet*.5+filament*.18)*silk*fade);
+        gl_FragColor=vec4(hue,edge*life*(.09+packet*.5+filament*.18)*silk*fade*boost);
       }`,
   });
   const streams = new THREE.Mesh(geometry, material);
+  streams.name = 'aura-streams';   // V10: đặt tên để toggle Cánh khí che được sương flow
   streams.frustumCulled = false; group.add(streams);
   const sparkGeo = new THREE.BufferGeometry(), sparks = effect === 4 ? (lowQuality ? 16 : 24) : lowQuality ? 32 : 64;
   sparkGeo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(sparks * 3), 3));
@@ -97,12 +100,13 @@ export function createAuraFlow(effect, lowQuality, tint, accent, core) {
         vec4 p=modelViewMatrix*vec4(flow(u),1.);
         gl_Position=projectionMatrix*p; gl_PointSize=clamp(24./max(1.,-p.z),1.,7.);
       }`,
-    fragmentShader: `uniform vec3 core,accent; uniform float fade; varying float life;
+    fragmentShader: `uniform vec3 core,accent; uniform float fade,boost; varying float life;
       void main(){float r=length(gl_PointCoord-.5)*2.;
-        gl_FragColor=vec4(mix(core,accent,r),pow(max(0.,1.-r),2.)*life*fade*.85);
+        gl_FragColor=vec4(mix(core,accent,r),pow(max(0.,1.-r),2.)*life*fade*.85*boost);
       }`,
   });
-  const motes = new THREE.Points(sparkGeo, sparkMat); motes.frustumCulled = false; group.add(motes);
+  const motes = new THREE.Points(sparkGeo, sparkMat); motes.name = 'aura-motes';
+  motes.frustumCulled = false; group.add(motes);
   return { group, update(t) { uniforms.time.value = t; },
     setOpacity(f) { uniforms.fade.value = f; },
     dispose() { geometry.dispose(); material.dispose(); sparkGeo.dispose(); sparkMat.dispose(); } };

@@ -78,7 +78,8 @@ export class Welcome {
     };
     const attireRow = chipRow('Trang phục', ATTIRE_NAMES.slice(0, AVATAR.attires), 'Kiểu trang phục', (i) => this.setAttire(i));
     const weaponRow = chipRow('Vũ khí', WEAPON_NAMES.slice(0, AVATAR.weapons), 'Vũ khí mang theo', (i) => this.setWeapon(i));
-    const effectRow = chipRow('Hiệu ứng', EFFECT_NAMES.slice(0, AVATAR.effects), 'Hiệu ứng hào quang', (i) => this.setEffect(i));
+    const effectRow = chipRow('Aura & danh hiệu', EFFECT_NAMES.slice(0, AVATAR.effects), 'Hiệu ứng hào quang', (i) => this.setEffect(i));
+    effectRow.append(h('small', {}, 'Danh hiệu trang trí đi cùng aura đã chọn, hiện phía trên tên nhân vật.'));
     // V9: đè "giảm chuyển động" của hệ điều hành — ai muốn xem aura full tốc tự bật.
     const fullFxBox = h('input', { type: 'checkbox' });
     fullFxBox.checked = store.get('fullFx') === '1';

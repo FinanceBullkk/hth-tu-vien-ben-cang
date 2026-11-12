@@ -194,7 +194,8 @@ export function auraEmblem(effect) {
     c.globalAlpha = .24;
     stroke(() => c.arc(0, 0, 118, 0, Math.PI * 2), 1.1);
     // Đan xen tầng phụ: hai lục lăng lớn xoay 30° + vảy cung nối giữa các cánh hero.
-    c.globalAlpha = .17;
+    // V10: hạ mạnh nét dài cắt ngang — hết "nét vàng giao nhau không chủ đích".
+    c.globalAlpha = .1;
     for (const rot of [0, Math.PI / 6]) {
       c.save(); c.rotate(rot); c.beginPath();
       for (let i = 0; i <= 6; i++) {
@@ -204,24 +205,24 @@ export function auraEmblem(effect) {
       }
       c.stroke(); c.restore();
     }
-    c.globalAlpha = .22;
+    c.globalAlpha = .15;
     for (let i = 0; i < 8; i++) {
       c.save(); c.rotate(i * Math.PI / 4 + Math.PI / 8);
       stroke(() => c.arc(0, -218, 74, Math.PI * .18, Math.PI * .82), 1);
       c.restore();
     }
     c.globalAlpha = 1;
-    // Energy core: chữ 禅 + 8 tia ngắn — vùng sáng mạnh duy nhất, pulse ở shader.
+    // Energy core: chữ 禅 + 8 tia ngắn — focal point duy nhất của mandala, pulse ở shader.
     stroke(() => c.arc(0, 0, 92, 0, Math.PI * 2), 2);
     c.lineWidth = 1.8;
-    c.globalAlpha = .55;
+    c.globalAlpha = .65;
     for (let i = 0; i < 8; i++) {
       c.save(); c.rotate(i * Math.PI / 4);
       stroke(() => { c.moveTo(0, -34); c.lineTo(0, -72); }, 1.8);
       c.restore();
     }
     c.globalAlpha = 1;
-    c.font = '104px "KaiTi", "STKaiti", "SimSun", serif';
+    c.font = '118px "KaiTi", "STKaiti", "SimSun", serif';
     c.textAlign = 'center'; c.textBaseline = 'middle';
     c.save(); c.globalAlpha = .95; c.fillText('禅', 0, 6); c.restore();
   } else if (effect === 4) {

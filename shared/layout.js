@@ -41,6 +41,7 @@ export const NONBO = [
 ];
 // Thầy trụ trì đứng ở hiên thiền đường, bên phải cửa, dưới một chiếc đèn lồng.
 export const ABBOT = { x: 5.2, z: -12.4, rot: 0, radius: 0.35, actionRadius: 2.6 };
+export const ZOEYY = { x: -5.2, z: -12.4, rot: 0, radius: 0.35, actionRadius: 2.6 };
 // Sư chú giữ cổng: đứng trong sân cạnh tam quan, đưa câu đố cho người vào.
 export const GATE_MONK = { x: 3.2, z: 28.4, rot: 0, radius: 0.35, actionRadius: 2.6 };
 // Hồ câu góc đông nam sân: ba vòng tròn ghép thành bờ cong tự nhiên, đi vòng quanh được.
@@ -74,11 +75,10 @@ export const PITCH_ZONE = {
 export const PLACES = [
   { key: 'melody', icon: '♫', name: 'Tấu nhạc', desc: 'Độc tấu đàn nhị · sáu phím theo nhạc', x: 8, z: 21.5 },
   { key: 'fish', icon: '🎣', name: 'Câu cá', desc: 'Thả câu ở hồ, gom đủ các loài cá', x: 19, z: 16.7 },
-  { key: 'bell', icon: '🔔', name: 'Thỉnh chuông', desc: 'Bấm theo nhịp để chuông ngân', x: BELL.x, z: BELL.z + 3.2 },
-  { key: 'mat', icon: '🪷', name: 'Ngồi thiền', desc: 'Ngồi ngay tại chỗ, tích Chân khí và mở hào quang', x: 0, z: -15.6 },
-  { key: 'pitch', icon: '🏺', name: 'Đầu hồ', desc: 'Ném tên vào bình, đấu với sư trong chùa', x: 23.4, z: 3 },
-  { key: 'riddle', icon: '📜', name: 'Câu đố của sư chú', desc: 'Đoán vui về nghề logistics', x: 3.2, z: 26.6 },
-  { key: 'tea', icon: '🍵', name: 'Rút quẻ vận đơn', desc: 'Lắc ống quẻ xin lời chúc hôm nay', x: TEA.x, z: TEA.z - 2.4 },
+  { key: 'bell', icon: '🔔', name: 'Audition chuông', desc: 'Nhập chuỗi mũi tên, chốt đúng nhịp', x: BELL.x, z: BELL.z + 3.2 },
+  { key: 'mat', icon: '🪷', name: 'Ngồi thiền', desc: 'Ngồi yên, thở chậm và tích Chân khí', x: 0, z: -15.6 },
+  { key: 'pitch', icon: '🏺', name: 'Đầu hồ', desc: 'Ném tên vào bình, so tài cùng cao thủ', x: 23.4, z: 3 },
+  { key: 'tea', icon: '🍵', name: 'Rút xăm', desc: 'Lắc ống xăm xin lời chúc hôm nay', x: TEA.x, z: TEA.z - 2.4 },
   { key: 'tree', icon: '🌳', name: 'Treo lời ước', desc: 'Viết điều mong muốn lên cây bồ đề', x: TREE.x + 3, z: TREE.z },
 ];
 
@@ -168,6 +168,7 @@ export const CIRCLES = [
   // Hiên thiền đường
   ...[-7, -3.4, 3.4, 7].map((x) => ({ x, z: h.z + h.halfD + 1.8, r: 0.28 })),
   { x: ABBOT.x, z: ABBOT.z, r: ABBOT.radius },
+  { x: ZOEYY.x, z: ZOEYY.z, r: ZOEYY.radius },
   // Sư chú giữ cổng; chum lớn, đối thủ và hai bình ở sân đầu hồ
   { x: GATE_MONK.x, z: GATE_MONK.z, r: GATE_MONK.radius },
   { x: PITCH_ZONE.jar.x, z: PITCH_ZONE.jar.z, r: PITCH_ZONE.jar.r },

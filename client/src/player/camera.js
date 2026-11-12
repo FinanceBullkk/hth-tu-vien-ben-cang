@@ -1,6 +1,6 @@
 // Camera theo sau lưng: bám mượt, không xuyên tường, không vượt mái khi đứng trong nhà.
 import * as THREE from 'three';
-import { CIRCLES, ROOF_ZONES, cameraSegmentT, inBox } from '../../../shared/layout.js';
+import { ROOF_ZONES, cameraSegmentT, inBox, isInsideHall } from '../../../shared/layout.js';
 
 // Cho ngước lên bầu trời (âm: camera hạ dưới vai) và nhìn từ trên cao xuống sâu, kiểu Trove/WWM.
 const MIN_PITCH = -1.3;
@@ -11,6 +11,7 @@ export class FollowCamera {
     this.camera = camera;
     this.yaw = 0;
     this.pitch = 0.3;
+    this.targetPitch = 0.3;
     this.distance = 7.5;
     this.meditating = false;
     this.shot = null; // { pos, look }: góc máy cố định do minigame đặt.
@@ -27,6 +28,7 @@ export class FollowCamera {
     this.time = 0;
     this.forward = new THREE.Vector3();
     this._desired = new THREE.Vector3();
+    this.combat = false;
     camera.position.copy(this.pos);
   }
 
@@ -35,10 +37,17 @@ export class FollowCamera {
     this.shakeAmt = Math.max(this.shakeAmt, amount);
   }
 
+  setCombat(on) {
+    this.combat = Boolean(on);
+    this.camera.fov = on ? 62 : 58;
+    this.camera.updateProjectionMatrix();
+  }
+
   update(dt, px, py, pz, look) {
     this.time += dt;
     this.yaw += look.yaw;
-    this.pitch = Math.max(MIN_PITCH, Math.min(MAX_PITCH, this.pitch + look.pitch));
+    this.targetPitch = Math.max(MIN_PITCH, Math.min(MAX_PITCH, this.targetPitch + look.pitch));
+    this.pitch += (this.targetPitch - this.pitch) * (1 - Math.exp(-dt * 20));
     this.distance = Math.max(this.minDist, Math.min(this.maxDist, this.distance + look.zoom));
 
     if (this.intro) {
@@ -70,10 +79,10 @@ export class FollowCamera {
 
     // Nhịp sen đặt nhân vật và hoa lên nửa trên, tránh bảng phím phía dưới.
     this.target.set(px, py + (this.meditating ? -0.5 : 1.2), pz);
-    this.look.lerp(this.target, 1 - Math.exp(-dt * 11));
+    this.look.lerp(this.target, 1 - Math.exp(-dt * 24));
 
     const pitch = this.meditating ? 0.25 : this.pitch;
-    const distance = this.meditating ? 5.2 : this.distance;
+    const distance = this.meditating ? 5.2 : this.combat ? 5.5 : isInsideHall(px, pz) ? Math.min(this.distance, 3) : this.distance;
     const cosP = Math.cos(pitch);
     const dirX = Math.sin(this.yaw) * cosP;
     const dirZ = Math.cos(this.yaw) * cosP;
@@ -82,11 +91,12 @@ export class FollowCamera {
     // Rút ngắn khoảng cách nếu có tường chắn giữa người chơi và camera.
     const far = distance + 0.5;
     const t = cameraSegmentT(this.target.x, this.target.z, this.target.x + dirX * far, this.target.z + dirZ * far);
-    const allowed = Math.max(1.4, t * far - 0.5);
+    const allowed = Math.max(0.3, t * far - 0.5);
     const wanted = Math.min(distance, allowed);
-    // Co vào nhanh để khỏi thấy xuyên tường, giãn ra chậm cho êm.
-    const rate = wanted < this.currentDist ? 18 : 3.5;
-    this.currentDist += (wanted - this.currentDist) * (1 - Math.exp(-dt * rate));
+    // Co ngay khi có tường; nội suy lúc co khiến camera xuyên tường rồi bật sang phía khác.
+    this.currentDist = wanted < this.currentDist
+      ? wanted
+      : this.currentDist + (wanted - this.currentDist) * (1 - Math.exp(-dt * 3.5));
 
     let camY = this.look.y + dirY * this.currentDist;
     for (const zone of ROOF_ZONES) {
@@ -98,19 +108,6 @@ export class FollowCamera {
     camY = Math.max(0.55, camY);
 
     this.pos.set(this.look.x + dirX * this.currentDist, camY, this.look.z + dirZ * this.currentDist);
-    // Không để ống kính dí sát cột hay đèn lồng, kẻo một vật nhỏ che kín màn hình.
-    for (const c of CIRCLES) {
-      if (c.r > 1) continue;
-      const dx = this.pos.x - c.x;
-      const dz = this.pos.z - c.z;
-      const min = c.r + 0.75;
-      const d2 = dx * dx + dz * dz;
-      if (d2 < min * min) {
-        const d = Math.sqrt(d2) || 1e-3;
-        this.pos.x = c.x + (dx / d) * min;
-        this.pos.z = c.z + (dz / d) * min;
-      }
-    }
     this.camera.position.copy(this.pos);
 
     if (this.shakeAmt > 0.0005) {
