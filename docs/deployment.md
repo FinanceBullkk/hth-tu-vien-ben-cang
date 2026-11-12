@@ -1,6 +1,36 @@
 # Deployment
 
-## Current release: 2026-11-12 shader warm-up and pinning, 11:13 UTC+7
+## Current release: 2026-11-12 camera no longer turns by itself, 13:21 UTC+7
+
+Deploy run [43167585850](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43167585850)
+released main `b53e4e2` (PR #32) as `hth:261112-1321-b53e4e2`, replacing
+`hth:261112-1314-27d85dd`. Client-only fix: removes the auto-follow camera from
+PR #31, which kept turning the camera when walking sideways or diagonally
+without the mouse (movement is camera-relative, so each turn changed the run
+direction and the camera turned again). Public bundle: `index-Cn7nGZ3t.js`.
+
+Local suite 163/163 and Vite build passed on Node 24; Docker tests 163/163.
+Candidate passed with DB `quick_check` ok (50 players, 23 wishes, 42 fish).
+Not yet played on production by hand after the cutover.
+
+Rollback container `hth-rollback-261112-1321-b53e4e2` preserves
+`hth:261112-1314-27d85dd`. Private backup is in the data volume at
+`backups/cutover-261112-1321-b53e4e2/`.
+
+## Previous release: 2026-11-12 smoother camera, 13:14 UTC+7
+
+Deploy runs [43166563663](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43166563663)
+(`hth:261112-1313-27d85dd`) and, a minute later,
+[43166584707](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43166584707)
+released main `27d85dd` (PR #31) as `hth:261112-1314-27d85dd`, replacing
+`hth:261112-1113-07d52bb`. Client-only change: zoom glides by ratio, leaving the
+welcome screen or a minigame shot blends back behind the player, under roofs the
+camera pulls in along the view ray, phones pinch to zoom; it also added a camera
+auto-follow that turned out to spin the camera and was removed in PR #32.
+Public bundle: `index-DSttCzf4.js`. Candidate DB `quick_check` ok (50 players,
+23 wishes, 42 fish).
+
+## Previous release: 2026-11-12 shader warm-up and pinning, 11:13 UTC+7
 
 Deploy run [43153303297](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43153303297)
 released main `07d52bb` (PR #29) as `hth:261112-1113-07d52bb`, replacing
