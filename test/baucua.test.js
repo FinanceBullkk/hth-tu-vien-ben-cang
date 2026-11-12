@@ -81,7 +81,7 @@ const A = 'a'.repeat(32);
 const B = 'b'.repeat(32);
 const C = 'c'.repeat(32);
 
-test('một ván đủ pha: đặt cược, xóc, chia tiền, nghỉ; thắng lên bảng tuần bằng phần lãi ròng', () => {
+test('một ván đủ pha: đặt cược, xóc, chia tiền, nghỉ; bảng tuần tính lãi/lỗ ròng', () => {
   const { db, game, events, payouts, wallets, player, bet } = fixture();
   const a = player(A, 100);
   const b = player(B, 50);
@@ -117,10 +117,11 @@ test('một ván đủ pha: đặt cược, xóc, chia tiền, nghỉ; thắng l
   assert.deepEqual([byPid[C].stake, byPid[C].payout, byPid[C].net], [10, 0, -10]);
   assert.deepEqual(wallets.map(([pid]) => pid).sort(), [A, B], 'người thua không bị đẩy ví vì không có gì đổi');
   assert.equal(game.bets.size, 0);
+  assert.deepEqual([A, B, C].map((pid) => db.baucua.held(pid)), [0, 0, 0], 'chấm xong thì không còn tiền treo');
 
-  // Bảng tuần: chỉ phần lãi ròng, không tính tiền cược hoàn lại. A = 100 (cấp) + 15 lãi; B = 50 + 10; C = 50.
+  // Bảng tuần tính bầu cua theo lãi/lỗ ròng: A = 100 (cấp) + 15; B = 50 + 10; C = 50 - 10.
   const board = Object.fromEntries(db.weekly(EPOCH).teu.map((r) => [r.name, r.teu]));
-  assert.deepEqual(board, { 'Khách a': 115, 'Khách b': 60, 'Khách c': 50 });
+  assert.deepEqual(board, { 'Khách a': 115, 'Khách b': 60, 'Khách c': 40 });
 
   // Tin phát chung không chứa playerId.
   assert.equal(JSON.stringify(events).includes(A), false);
@@ -273,9 +274,74 @@ test('tắt server giữa ván hoàn cược; sau khi đã chia tiền thì khô
   done.db.close();
 });
 
+test('hết giờ đặt mà server chưa kịp quét: cược và rút cược đều bị chặn', () => {
+  const { db, game, player, bet } = fixture();
+  const a = player(A, 100);
+  bet(a, CUA, 10);
+  game.endsAt = Date.now() - 1; // Đồng hồ đã về 0, sweep 500 ms chưa chạy tới.
+  assert.equal(game.phase, 'betting');
+  assert.match(bet(a, CA, 5).error, /Hết giờ/);
+  assert.equal(game.clear(a).ok, false);
+  assert.equal(db.shop.teu(A), 90);
+  db.close();
+});
+
+test('bảng tuần không mua được hạng bằng cách cược liên tục: thua bao nhiêu trừ bấy nhiêu', () => {
+  // Bốn ván: thua, thua, thua, rồi thắng ba viên cùng mặt.
+  const { db, game, player, bet } = fixture({ dice: [NAI, NAI, NAI, BAU, BAU, BAU, GA, GA, GA, CUA, CUA, CUA] });
+  const a = player(A, 100);
+  const loser = player(B, 30);
+  for (let round = 0; round < 4; round++) {
+    bet(a, CUA, 10);
+    if (round < 3) bet(loser, CUA, 10);
+    game.sweep(game.endsAt);
+    game.sweep(game.endsAt);
+  }
+  // A: -10 × 3, rồi +30 lãi (10 × 4 − 10) → TEU 100. B thua sạch 30.
+  assert.deepEqual([db.shop.teu(A), db.shop.teu(B)], [100, 0]);
+  const board = Object.fromEntries(db.weekly(EPOCH).teu.map((r) => [r.name, r.teu]));
+  assert.deepEqual(board, { 'Khách a': 100 }, 'A hoà vốn thì đứng đúng 100; B lỗ hết thì không có trên bảng');
+  db.close();
+});
+
+test('server sập giữa ván: lần khởi động sau hoàn đủ cược treo, chạy lại không hoàn lần hai', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hth-baucua-crash-'));
+  const file = path.join(dir, 'crash.db');
+  const io = { emit() {} };
+  const quiet = console.log;
+  console.log = () => {};
+  try {
+    const db = new Db(file);
+    db.touchPlayer({ id: A, name: 'Khách a', color: 0, hat: 7, now: Date.now(), isVisit: true });
+    db.addTeu(A, 100, 'seed', DATE);
+    const game = new BauCua({ db, io, config });
+    const a = { pid: A, x: BAUCUA_ZONE.seat.x, z: BAUCUA_ZONE.seat.z, activity: ACTIVITY.baucua, lastBaucua: 0 };
+    game.bet(a, { symbol: CUA, amount: 10 });
+    a.lastBaucua = 0;
+    game.bet(a, { symbol: CA, amount: 5 });
+    assert.deepEqual([db.shop.teu(A), db.baucua.held(A)], [85, 15]);
+    db.close(); // Sập: không gọi stop(), không chấm ván.
+
+    const again = new Db(file);
+    new BauCua({ db: again, io, config });
+    assert.deepEqual([again.shop.teu(A), again.baucua.held(A)], [100, 0], 'khởi động lại thì hoàn đủ');
+    assert.equal(again.weekly(EPOCH).teu[0].teu, 100, 'cược rồi hoàn không đổi hạng');
+    again.close();
+
+    const third = new Db(file);
+    new BauCua({ db: third, io, config });
+    assert.equal(third.shop.teu(A), 100, 'không hoàn lần hai');
+    third.close();
+  } finally {
+    console.log = quiet;
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 // ---------- Qua socket thật ----------
 
-const SOCKET_PORT = 3921;
+// Khác dải cổng của server.test.js (3911, 3921–39xx): node --test chạy các file song song.
+const SOCKET_PORT = 4391;
 
 function startServer(dir, env) {
   return new Promise((resolve, reject) => {

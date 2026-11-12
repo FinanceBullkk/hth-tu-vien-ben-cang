@@ -100,8 +100,9 @@ Bàn bầu cua ở góc chợ sau Sạp Kim Bảo. Bấm **Chơi gì?** rồi ch
 
 - **Đặt cược:** chọn chip 1, 5 hoặc 10 TEU rồi bấm ô Nai, Bầu, Gà, Cá, Cua, Tôm (hoặc phím **1–6**). Tối đa 30 TEU một mặt và 50 TEU một ván. Còn đang đếm ngược thì **Xoá cược** hoàn lại đủ.
 - **Trả thưởng:** ra `n` viên trùng mặt bạn cược thì nhận lại tiền cược cộng `n` lần tiền cược. Không trùng là mất. Nhà cái lợi khoảng 8%, nên chơi lâu thì TEU có xu hướng hao dần.
-- **Bảng tuần:** chỉ cộng phần lãi ròng của mỗi ván, không cộng tiền cược được hoàn lại.
-- Đi ra xa bàn là tự thôi chơi; cược đã đặt vẫn được chấm và trả vào ví. Chi tiết và giao thức xem `docs/baucua.md`.
+- **Bảng tuần:** bầu cua tính lãi/lỗ ròng cả tuần: thắng cộng, thua trừ. Cược nhiều không tự đẩy ai lên hạng.
+- Đi ra xa bàn là tự thôi chơi; cược đã đặt vẫn được chấm và trả vào ví. Server có khởi động lại giữa ván thì tiền cược được hoàn.
+- Chi tiết và giao thức xem `docs/baucua.md`.
 
 ## Câu cá
 

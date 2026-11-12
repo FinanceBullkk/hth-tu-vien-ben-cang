@@ -1,6 +1,8 @@
 /* Bầu cua: bảng đặt cược dock đáy màn hình, cảnh 3D phía trên vẫn nhìn thấy bàn. Cùng tông mực tàu + chỉ vàng. */
-#rhythmLayer:has(.baucua-hud:not([hidden])) { background: none; }
-.baucua-hud { width: min(560px, 100%); padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 8px; text-shadow: none; }
+/* Bầu cua không khoá chân: lớp phủ toàn màn hình phải để chuột/chạm lọt qua tới cảnh (xoay camera, cần đi trên điện thoại)
+   và tới HUD (chat, emoji). Chỉ riêng bảng đặt cược nhận bấm. */
+#rhythmLayer:has(.baucua-hud:not([hidden])) { background: none; pointer-events: none; }
+.baucua-hud { pointer-events: auto; width: min(560px, 100%); padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 8px; text-shadow: none; }
 .baucua-hud[hidden] { display: none !important; }
 .baucua-head { display: flex; align-items: center; gap: 12px; }
 .baucua-head .ink-title { font-size: 19px; letter-spacing: .1em; }

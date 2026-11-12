@@ -21,7 +21,6 @@ export const BAUCUA = {
   rollMs: 3_500, // Xóc đĩa; trong lúc này không nhận cược nữa.
   resultMs: 8_000, // Giữ kết quả trên bàn trước khi bàn nghỉ.
   betIntervalMs: 120, // Giãn cách tối thiểu giữa hai lần đặt cược của một người.
-  returnReason: 'baucua:return', // Phần tiền cược trả lại: không tính vào bảng TEU tuần.
 };
 
 export const PHASES = ['idle', 'betting', 'rolling', 'result'];
@@ -57,5 +56,5 @@ export function settle(bets, dice) {
   return { stake, payout, net: payout - stake, profit, returned: payout - profit };
 }
 
-/** Đọc mảng cược từ dữ liệu bất kỳ: luôn trả về mảng 6 số nguyên không âm. */
+/** Mảng cược trống: 6 số 0 theo thứ tự mặt. */
 export const emptyBets = () => new Array(BAUCUA.symbols).fill(0);

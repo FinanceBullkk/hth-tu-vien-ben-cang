@@ -17,12 +17,15 @@ Mọi mốc thời gian và giới hạn nằm trong `BAUCUA` ở `shared/baucua
 
 ## TEU và bảng tuần
 
-- Tiền cược bị trừ ngay khi đặt (`teu_log`, lý do `baucua:bet`, số âm). Rút cược khi còn đang đặt thì hoàn đủ.
-- Sau ván, server trả thưởng theo `playerId`, kể cả người đã rời bàn hay mất kết nối.
-- Bảng TEU tuần chỉ cộng **lãi ròng của cả ván** (`baucua:win`). Phần tiền cược được hoàn lại ghi `baucua:return`
-  và bị loại khỏi bảng (`teuWeekTop` trong `server/db.js`), nên cược qua lại không tự đẩy ai lên bảng.
-- Tắt server giữa ván: `BauCua.stop()` hoàn mọi cược chưa chấm. Server chết đột ngột (không phải SIGTERM) thì ván dở mất cược,
-  vì cược chỉ giữ trong bộ nhớ.
+- Tiền cược bị trừ ngay khi đặt (`teu_log`, lý do `baucua:bet`, số âm) và ghi giữ vào bảng `baucua_pending`.
+  Rút cược khi còn đang đặt thì hoàn đủ (`baucua:return`).
+- Sau ván, server trả thưởng theo `playerId`, kể cả người đã rời bàn hay mất kết nối: phần cược hoàn lại ghi `baucua:return`,
+  phần lãi ghi `baucua:win`, rồi xoá dòng giữ. Mọi dòng của một ván ghi cùng ngày bắt đầu ván.
+- Bảng TEU tuần: các hoạt động khác chỉ cộng phần kiếm được, tiêu ở sạp không trừ hạng. Riêng bầu cua tính **lãi/lỗ ròng
+  cả tuần** (mọi dòng `baucua:*`), thắng cộng, thua trừ. Chỉ cộng ván thắng thì cứ cược nhiều là lên hạng dù TEU đang hao.
+  Người có tổng tuần không dương thì không hiện trên bảng.
+- Tắt server giữa ván: `BauCua.stop()` hoàn ngay. Server sập đột ngột: lần khởi động sau, `BauCuaStore.recover()` hoàn mọi
+  dòng còn trong `baucua_pending`, nên không ai mất cược.
 
 ## Giao thức
 
