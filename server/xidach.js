@@ -1,9 +1,11 @@
 // Xì dách: một bàn chung tối đa 5 khách đấu với nhà cái NPC. Server là nguồn sự thật: xáo bài, chia, kiểm tra rút/dằn,
 // nhà cái rút theo luật cố định trong shared/xidach.js, chấm và trả thưởng. Client chỉ gửi ý định (cược, rút, dằn).
 //
-// Vòng đời một ván: idle -> (có người cược) betting -> chia bài -> playing (mọi người rút/dằn cùng lúc)
-// -> dealer (nhà cái lật và rút từng lá) -> result -> idle. Nhà cái có xì bàn/xì dách thì lật ngay sau khi chia và chấm luôn.
-// Bài của người khác giấu tới lúc chấm; bài của mình gửi riêng qua onHand. Tiền giữ gấp đôi cược, chấm xong hoàn phần dư.
+// Vòng đời một ván: idle -> (có người cược) betting -> chia bài -> playing (lần lượt từng khách theo ghế, mỗi người
+// turnMs; dằn/quắc/đủ 5 lá/hết giờ thì sang người kế) -> dealer (nhà cái lật lá úp, rút từng lá) -> checking (nhà cái
+// xét từng nhà: mỗi checkStepMs lật bài một khách, chấm và trả tiền người đó) -> result -> idle.
+// Nhà cái có xì bàn/xì dách thì lật ngay sau khi chia và đi xét luôn. Luật rút của nhà cái không đổi, chỉ cách chấm là lần lượt.
+// Bài của người khác giấu tới lúc được xét; bài của mình gửi riêng qua onHand. Tiền giữ gấp đôi cược, chấm xong hoàn phần dư.
 import crypto from 'node:crypto';
 import { XIDACH, dealerShouldHit, handKind, handTotal, isNatural, settleHand, shuffledDeck } from '../shared/xidach.js';
 import { XIDACH_ZONE, dist2d } from '../shared/layout.js';
@@ -23,10 +25,13 @@ export class XiDach {
     this.round = 0;
     this.roundDate = '';
     this.endsAt = 0;
-    this.seats = new Map(); // pid -> { pid, sid, name, seat, bet, cards, stood, result }
+    this.seats = new Map(); // pid -> { pid, sid, name, seat, bet, cards, stood, revealed, result }
     this.dealer = [];
     this.deck = [];
     this.revealed = false;
+    this.turn = null; // pid của khách đang tới lượt rút/dằn
+    this.checkQueue = []; // pid các khách nhà cái còn phải xét, theo thứ tự ghế
+    this.checking = null; // pid khách vừa được xét
     this.nextStepAt = 0;
     this.dirty = false;
     /** Gán từ Room: gửi riêng cho một người theo pid. */
@@ -73,9 +78,20 @@ export class XiDach {
     this.round++;
     this.roundDate = this.#date(now);
     this.endsAt = now + XIDACH.betMs;
+    this.#clearTable();
+  }
+
+  #clearTable() {
     this.seats.clear();
     this.dealer = [];
     this.revealed = false;
+    this.turn = null;
+    this.checkQueue = [];
+    this.checking = null;
+  }
+
+  #ordered() {
+    return [...this.seats.values()].sort((a, b) => a.seat - b.seat);
   }
 
   bet(p, data) {
@@ -101,7 +117,7 @@ export class XiDach {
     if (!s) {
       const used = new Set([...this.seats.values()].map((x) => x.seat));
       const free = [...Array(XIDACH.seats).keys()].find((i) => !used.has(i));
-      s = { pid: p.pid, sid: p.sid, name: p.name, seat: free, bet: 0, cards: [], stood: false, result: null };
+      s = { pid: p.pid, sid: p.sid, name: p.name, seat: free, bet: 0, cards: [], stood: false, revealed: false, result: null };
       this.seats.set(p.pid, s);
     }
     s.bet += amount;
@@ -120,10 +136,23 @@ export class XiDach {
 
   #turnSeat(p, now) {
     const s = this.seats.get(p.pid);
-    if (this.phase !== 'playing' || now >= this.endsAt) return { error: 'Chưa tới lượt rút bài.' };
     if (!s) return { error: 'Ván này bạn không cược.' };
+    if (this.phase !== 'playing' || now >= this.endsAt) return { error: 'Chưa tới lượt rút bài.' };
     if (s.stood) return { error: 'Bạn đã dằn bài rồi.' };
+    if (this.turn !== p.pid) return { error: 'Chưa tới lượt bạn, chờ chút nhé.' };
     return { s };
+  }
+
+  /** Sang khách kế tiếp chưa dằn theo thứ tự ghế; hết người thì nhà cái lật bài. */
+  #nextTurn(now) {
+    const next = this.#ordered().find((s) => !s.stood);
+    if (!next) {
+      this.#toDealer(now);
+      return;
+    }
+    this.turn = next.pid;
+    this.endsAt = now + XIDACH.turnMs;
+    this.#broadcast();
   }
 
   hit(p) {
@@ -136,8 +165,9 @@ export class XiDach {
     s.cards.push(this.deck.pop());
     // Đủ 5 lá hoặc quắc thì tự dằn; quắc vẫn giấu với người khác tới lúc chấm như ngoài đời.
     if (s.cards.length >= XIDACH.maxCards || handTotal(s.cards) > 21) s.stood = true;
-    this.dirty = true;
     this.#announce(s, 'hit');
+    if (s.stood) this.#nextTurn(now);
+    else this.dirty = true;
     return { ok: true, cards: [...s.cards], stood: s.stood };
   }
 
@@ -150,8 +180,8 @@ export class XiDach {
     if (handTotal(s.cards) < XIDACH.minStand) return { ok: false, error: `Dưới ${XIDACH.minStand} là non, phải rút thêm.` };
     p.lastXidach = now;
     s.stood = true;
-    this.dirty = true;
     this.#announce(s, 'stand');
+    this.#nextTurn(now);
     return { ok: true, cards: [...s.cards], stood: true };
   }
 
@@ -171,37 +201,51 @@ export class XiDach {
       return;
     }
     this.deck = this.shuffle();
-    const order = [...this.seats.values()].sort((a, b) => a.seat - b.seat);
+    const order = this.#ordered();
     for (let round = 0; round < 2; round++) {
       for (const s of order) s.cards.push(this.deck.pop());
       this.dealer.push(this.deck.pop());
     }
     for (const s of order) {
-      if (isNatural(handKind(s.cards))) s.stood = true; // Xì bàn, xì dách: lật ngửa chờ chấm, không rút.
+      if (isNatural(handKind(s.cards))) s.stood = true; // Xì bàn, xì dách: không rút, chờ được xét.
       this.#sendHand(s);
     }
     if (isNatural(handKind(this.dealer, { dealer: true }))) {
+      // Cái xì bàn/xì dách: lật ngay, không ai được rút, đi xét luôn.
+      for (const s of order) s.stood = true;
       this.revealed = true;
-      this.#settle(now);
+      this.#startChecking(now);
       return;
     }
     this.phase = 'playing';
-    this.endsAt = now + XIDACH.turnMs;
-    if (order.every((s) => s.stood)) this.#toDealer(now);
-    else this.#broadcast();
+    this.#nextTurn(now);
   }
 
-  /** Hết lượt khách: ai chưa dằn coi như dằn (dưới 16 thì là non); nhà cái lật bài. */
+  /** Hết lượt khách: nhà cái lật lá úp rồi rút từng lá theo luật. */
   #toDealer(now) {
     for (const s of this.seats.values()) s.stood = true;
+    this.turn = null;
     this.phase = 'dealer';
     this.revealed = true;
+    this.endsAt = 0;
     this.nextStepAt = now + XIDACH.dealerStepMs;
     this.#broadcast();
   }
 
-  #settle(now) {
-    for (const s of this.seats.values()) {
+  /** Nhà cái đi xét: lần lượt từng nhà theo thứ tự ghế. */
+  #startChecking(now) {
+    this.turn = null;
+    this.phase = 'checking';
+    this.endsAt = 0;
+    this.checkQueue = this.#ordered().map((s) => s.pid);
+    this.nextStepAt = now + XIDACH.checkStepMs;
+    this.#broadcast();
+  }
+
+  /** Xét một nhà: lật bài, chấm, trả tiền ngay cho người đó. Hết nhà thì sang hiện kết quả. */
+  #checkNext(now) {
+    const s = this.seats.get(this.checkQueue.shift());
+    if (s) {
       try {
         const res = settleHand(s.bet, s.cards, this.dealer);
         s.result = res;
@@ -211,28 +255,40 @@ export class XiDach {
       } catch (err) {
         console.error('Lỗi trả thưởng xì dách:', err);
       }
+      s.revealed = true;
+      this.checking = s.pid;
     }
-    this.phase = 'result';
-    this.endsAt = now + XIDACH.resultMs;
+    if (this.checkQueue.length) {
+      this.nextStepAt = now + XIDACH.checkStepMs;
+    } else {
+      this.phase = 'result';
+      this.endsAt = now + XIDACH.resultMs;
+    }
     this.#broadcast();
   }
 
-  /** Quét 2 lần/giây từ Room: chia bài, hết lượt, nhà cái rút từng lá, chấm, nghỉ. */
+  /** Quét 2 lần/giây từ Room: chia bài, hết giờ lượt, nhà cái rút từng lá, xét từng nhà, nghỉ. */
   sweep(now = Date.now()) {
     if (this.phase === 'betting' && now >= this.endsAt) this.#deal(now);
-    else if (this.phase === 'playing' && (now >= this.endsAt || [...this.seats.values()].every((s) => s.stood))) this.#toDealer(now);
-    else if (this.phase === 'dealer' && now >= this.nextStepAt) {
+    else if (this.phase === 'playing' && now >= this.endsAt) {
+      // Hết giờ lượt: coi như dằn (dưới 16 thì là non), báo cả bàn rồi sang người kế.
+      const s = this.seats.get(this.turn);
+      if (s) {
+        s.stood = true;
+        this.#announce(s, 'timeout');
+      }
+      this.#nextTurn(now);
+    } else if (this.phase === 'dealer' && now >= this.nextStepAt) {
       if (dealerShouldHit(this.dealer)) {
         this.dealer.push(this.deck.pop());
         this.nextStepAt = now + XIDACH.dealerStepMs;
         this.#broadcast();
-      } else this.#settle(now);
-    } else if (this.phase === 'result' && now >= this.endsAt) {
+      } else this.#startChecking(now);
+    } else if (this.phase === 'checking' && now >= this.nextStepAt) this.#checkNext(now);
+    else if (this.phase === 'result' && now >= this.endsAt) {
       this.phase = 'idle';
       this.endsAt = 0;
-      this.seats.clear();
-      this.dealer = [];
-      this.revealed = false;
+      this.#clearTable();
       this.#broadcast();
     } else if (this.dirty) this.#broadcast();
   }
@@ -241,6 +297,7 @@ export class XiDach {
   stop() {
     if (this.phase !== 'result') {
       const now = Date.now();
+      // Khách đã được xét thì đã nhận tiền; refund chỉ hoàn phần còn giữ trong DB nên an toàn với cả họ.
       for (const pid of this.seats.keys()) {
         try {
           this.db.xidach.refund(pid, this.roundDate, now);

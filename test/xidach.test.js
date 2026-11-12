@@ -144,7 +144,17 @@ function fixture(deals = []) {
   return { db, game, events, hands, payouts, player, act };
 }
 
-test('một ván đủ pha: chia, giấu bài, rút/dằn, nhà cái rút, chấm và giữ gấp đôi tiền cược', () => {
+/** Quét tới khi xong ván (bỏ qua mọi lượt chờ). Trả về số bước đã quét. */
+function finish(game) {
+  let steps = 0;
+  while (game.phase !== 'result' && steps < 40) {
+    game.sweep(Math.max(game.nextStepAt, game.endsAt));
+    steps++;
+  }
+  return steps;
+}
+
+test('một ván đủ pha: lần lượt từng nhà, nhà cái rút, xét từng nhà và trả tiền ngay người đó', () => {
   // A: 10, 6 rồi rút 4 = 20. B: K, 7 = 17. Cái: 9, 7 = 16 rồi rút 2 = 18.
   const { db, game, events, hands, payouts, player, act } = fixture([C[10], C.K, C[9], C[6], C[7], s2(C[7]), C[4], C[2]]);
   const a = player(A, 100);
@@ -158,31 +168,43 @@ test('một ván đủ pha: chia, giấu bài, rút/dằn, nhà cái rút, chấ
   assert.equal(game.phase, 'playing');
   assert.deepEqual(hands.map(([pid, h]) => [pid, h.cards]), [[A, [C[10], C[6]]], [B, [C.K, C[7]]]], 'bài riêng gửi đúng người');
   const playing = events.at(-1)[1];
+  assert.equal(playing.turn, a.sid, 'ghế đầu tới lượt trước');
   assert.deepEqual(playing.dealer, [C[9], HIDDEN_CARD], 'lá thứ hai của cái úp');
   assert.ok(playing.seats.every((s) => s.cards === null && s.count === 2), 'bài khách khác bị giấu');
   assert.equal(JSON.stringify(events).includes(A), false, 'không lộ playerId');
 
   assert.match(act(b, 'bet', { amount: 1 }).error, /Ván đang chơi/);
+  assert.match(act(b, 'hit').error, /Chưa tới lượt bạn/, 'chưa tới lượt thì không rút được');
   assert.deepEqual(act(a, 'hit').cards, [C[10], C[6], C[4]]);
   assert.equal(act(a, 'stand').ok, true);
+  assert.equal(events.at(-1)[1].turn, b.sid, 'A dằn thì sang lượt B');
   assert.equal(act(b, 'stand').ok, true);
   // Cả phòng được báo ai rút, ai dằn (để nhân vật diễn), nhưng không kèm lá nào.
   const acts = events.filter(([name]) => name === 'xidach:act').map(([, d]) => d);
   assert.deepEqual(acts, [{ sid: a.sid, action: 'hit', count: 3 }, { sid: a.sid, action: 'stand', count: 3 }, { sid: b.sid, action: 'stand', count: 2 }]);
-  game.sweep(Date.now());
-  assert.equal(game.phase, 'dealer', 'mọi người dằn xong thì cái lật ngay');
+  assert.equal(game.phase, 'dealer', 'người cuối dằn thì cái lật ngay');
   assert.deepEqual(events.at(-1)[1].dealer, [C[9], s2(C[7])]);
   game.sweep(game.nextStepAt);
   assert.deepEqual(game.dealer, [C[9], s2(C[7]), C[2]], 'cái 16 phải rút');
   game.sweep(game.nextStepAt);
-  assert.equal(game.phase, 'result');
+  assert.equal(game.phase, 'checking', 'cái đủ điểm thì đi xét');
+  assert.equal(payouts.length, 0, 'chưa xét nhà nào thì chưa trả tiền');
 
+  game.sweep(game.nextStepAt);
+  const first = events.at(-1)[1];
+  assert.equal(first.checking, a.sid);
+  assert.deepEqual(first.seats.map((s) => [s.total, s.net]), [[20, 10], [null, null]], 'xét A thì chỉ lật bài A');
+  assert.deepEqual(payouts.map(([pid]) => pid), [A], 'trả tiền ngay người vừa xét');
+  assert.equal(db.shop.teu(A), 110);
+
+  game.sweep(game.nextStepAt);
+  assert.equal(game.phase, 'result');
   // A thắng 20 vs 18: 80 + 20 hoàn + 10 lãi = 110. B thua 17 vs 18: 40 + 5 hoàn = 45.
   assert.deepEqual([db.shop.teu(A), db.shop.teu(B)], [110, 45]);
   assert.deepEqual([db.xidach.held(A), db.xidach.held(B)], [0, 0]);
   assert.deepEqual(Object.fromEntries(payouts.map(([pid, r]) => [pid, r.net])), { [A]: 10, [B]: -5 });
   const result = events.at(-1)[1];
-  assert.deepEqual(result.seats.map((s) => [s.total, s.net]), [[20, 10], [17, -5]], 'lúc chấm thì lật hết bài');
+  assert.deepEqual(result.seats.map((s) => [s.total, s.net, s.outcome]), [[20, 10, 'win'], [17, -5, 'lose']]);
   const board = Object.fromEntries(db.weekly(EPOCH).teu.map((r) => [r.name, r.teu]));
   assert.deepEqual(board, { 'Khách a': 110, 'Khách b': 45 }, 'bảng tuần tính lãi/lỗ ròng');
 
@@ -191,22 +213,22 @@ test('một ván đủ pha: chia, giấu bài, rút/dằn, nhà cái rút, chấ
   db.close();
 });
 
-test('dưới 16 không được dằn; hết giờ thì coi như dằn và bị non', () => {
+test('dưới 16 không được dằn; hết giờ lượt thì coi như dằn, báo cả bàn và bị non', () => {
   // A: 10, 3 = 13. Cái: 10, 8 = 18.
-  const { db, game, player, act } = fixture([C[10], C.K, C[3], C[8]]);
+  const { db, game, events, player, act } = fixture([C[10], C.K, C[3], C[8]]);
   const a = player(A, 100);
   act(a, 'bet', { amount: 10 });
   game.sweep(game.endsAt);
   assert.match(act(a, 'stand').error, /non/);
-  game.sweep(game.endsAt); // Hết 15 giây không làm gì.
+  game.sweep(game.endsAt); // Hết lượt mà không làm gì.
+  assert.deepEqual(events.filter(([n]) => n === 'xidach:act').map(([, d]) => d.action), ['timeout']);
   assert.equal(game.phase, 'dealer');
-  game.sweep(game.nextStepAt);
-  assert.equal(game.phase, 'result');
+  finish(game);
   assert.equal(db.shop.teu(A), 90, 'non thua đúng tiền cược');
   db.close();
 });
 
-test('cái xì dách lật ngay sau khi chia: khách thường mất x2, khách xì dách hoà', () => {
+test('cái xì dách lật ngay sau khi chia, không ai được rút, đi xét luôn: khách thường mất x2, khách xì dách hoà', () => {
   // A: 10, 9. B: A, K (xì dách). Cái: A, Q (xì dách).
   const { db, game, payouts, player, act } = fixture([C[10], C.A, s2(C.A), C[9], C.K, C.Q]);
   const a = player(A, 100);
@@ -214,27 +236,28 @@ test('cái xì dách lật ngay sau khi chia: khách thường mất x2, khách 
   act(a, 'bet', { amount: 10 });
   act(b, 'bet', { amount: 10 });
   game.sweep(game.endsAt);
-  assert.equal(game.phase, 'result', 'không có lượt rút');
+  assert.equal(game.phase, 'checking', 'không có lượt rút');
+  assert.equal(act(a, 'hit').ok, false);
+  finish(game);
   assert.deepEqual([db.shop.teu(A), db.shop.teu(B)], [80, 100]);
   assert.deepEqual(payouts.map(([, r]) => r.outcome), ['lose', 'push']);
   db.close();
 });
 
-test('khách xì dách tự dằn và ăn x2; khách quắc gặp cái quắc thì hoà', () => {
+test('khách xì dách được bỏ qua lượt và ăn x2; khách quắc gặp cái quắc thì hoà', () => {
   // A: A, K (xì dách). B: 10, 6 rồi rút K = quắc. Cái: 10, 6 rồi rút 9 = quắc.
-  const { db, game, player, act } = fixture([C.A, C[10], s2(C[10]), C.K, C[6], s2(C[6]), s2(C.K), C[9]]);
+  const { db, game, events, player, act } = fixture([C.A, C[10], s2(C[10]), C.K, C[6], s2(C[6]), s2(C.K), C[9]]);
   const a = player(A, 100);
   const b = player(B, 100);
   act(a, 'bet', { amount: 10 });
   act(b, 'bet', { amount: 10 });
   game.sweep(game.endsAt);
+  assert.equal(events.at(-1)[1].turn, b.sid, 'xì dách không cần lượt, B tới lượt luôn');
   assert.equal(act(a, 'hit').ok, false, 'xì dách không rút thêm');
   const bust = act(b, 'hit');
   assert.equal(bust.stood, true, 'quắc thì tự dằn');
-  game.sweep(Date.now());
-  game.sweep(game.nextStepAt);
-  game.sweep(game.nextStepAt);
-  assert.equal(game.phase, 'result');
+  assert.equal(game.phase, 'dealer', 'hết người thì cái lật');
+  finish(game);
   assert.deepEqual([db.shop.teu(A), db.shop.teu(B)], [120, 100]);
   db.close();
 });
@@ -283,8 +306,8 @@ test('khách mất kết nối giữa ván: hết giờ tự dằn, vẫn đư�
   const a = player(A, 100);
   act(a, 'bet', { amount: 10 });
   game.sweep(game.endsAt);
-  game.sweep(game.endsAt); // Người chơi đã rời, không ai bấm gì.
-  game.sweep(game.nextStepAt);
+  game.sweep(game.endsAt); // Người chơi đã rời, không ai bấm gì: hết lượt thì coi như dằn.
+  finish(game);
   assert.deepEqual(payouts.map(([pid, r]) => [pid, r.net]), [[A, 10]]);
   assert.equal(db.shop.teu(A), 110);
   db.close();
