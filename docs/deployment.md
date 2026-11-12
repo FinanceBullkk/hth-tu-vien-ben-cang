@@ -1,6 +1,33 @@
 # Deployment
 
-## Current release: 2026-11-12 Kim Bảo shop, in-game wardrobe and TEU wallet, 16:34 UTC+7
+## Current release: 2026-11-12 Bầu cua tôm cá shared table, 23:27 UTC+7
+
+Deploy run [43258810166](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43258810166)
+released main `065aefc` (PR #42) as `hth:261112-2327-065aefc`, replacing
+`hth:261112-1634-bcf26e6`. Server and client change: a shared bầu cua table in
+the market corner behind Sạp Kim Bảo (`BAUCUA_ZONE`), bets in real TEU (chips
+1/5/10, max 30 per face and 50 per round), server-rolled dice, rounds of 20 s
+betting, 3.5 s roll, 8 s result. New socket events `baucua:bet`, `baucua:clear`,
+`baucua:state`, `baucua:payout`; hello snapshot gains `baucua`. New table
+`baucua_pending` holds unsettled stakes; on start, any stakes left by a crash
+are refunded. The weekly TEU board now counts bầu cua as weekly net win/loss
+(`baucua:*` rows) and hides players whose weekly total is not positive; other
+spending still does not lower rank. Rules and protocol: `docs/baucua.md`.
+Public bundle: `index-BLuXOBX9.js`, confirmed served at
+`https://game.hthlogistics.top/` with `/api/health` ok.
+
+Local suite 189/189 and Vite build passed on Node 24; Docker tests 189/189.
+Candidate passed with DB `quick_check` ok (50 players, 23 wishes, 42 fish).
+Checked in a browser on a temporary DB (full round, desktop and 375 touch, camera
+drag while the betting panel is open) before release; not yet checked with two
+real players after the cutover.
+
+Rollback container `hth-rollback-261112-2327-065aefc` preserves
+`hth:261112-1634-bcf26e6`. Private backup is in the data volume at
+`backups/cutover-261112-2327-065aefc/`. Rolling back leaves `baucua_pending`
+unused; refund any rows still in it before rolling back if a round was open.
+
+## Previous release: 2026-11-12 Kim Bảo shop, in-game wardrobe and TEU wallet, 16:34 UTC+7
 
 Deploy run [43192587763](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43192587763)
 released main `bcf26e6` (PR #40) as `hth:261112-1634-bcf26e6`, replacing
