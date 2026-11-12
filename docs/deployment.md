@@ -1,6 +1,25 @@
 # Deployment
 
-## Current release: 2026-11-12 3D spring-arm camera collision, 13:43 UTC+7
+## Current release: 2026-11-12 camera look-up framing and pointer-lock spikes, 14:14 UTC+7
+
+Deploy run [43173722041](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43173722041)
+released main `d220050` (PR #36) as `hth:261112-1414-d220050`, replacing
+`hth:261112-1343-a21098e`. Client-only fix: looking up from the ground now slides
+the camera along the ground toward the player's feet while aiming at the head,
+then tilts toward the sky (up to 53°) with the head still in frame. Pointer-lock
+mouse input drops the first two events after locking and Chrome's bogus >150 px
+deltas that spun the camera, requests `unadjustedMovement`, and no longer falls
+back to hover-to-rotate after one failed lock. Public bundle: `index-Bf7B5vyc.js`.
+
+Local suite 167/167 and Vite build passed on Node 24; Docker tests 167/167.
+Candidate passed with DB `quick_check` ok (50 players, 23 wishes, 42 fish).
+Not yet played with a real mouse on production after the cutover.
+
+Rollback container `hth-rollback-261112-1414-d220050` preserves
+`hth:261112-1343-a21098e`. Private backup is in the data volume at
+`backups/cutover-261112-1414-d220050/`.
+
+## Previous release: 2026-11-12 3D spring-arm camera collision, 13:43 UTC+7
 
 Deploy run [43170083773](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43170083773)
 released main `a21098e` (PR #34) as `hth:261112-1343-a21098e`, replacing
