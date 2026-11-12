@@ -1,4 +1,5 @@
 // Nhận thao tác: WASD/mũi tên, rê chuột xoay khi khóa trỏ, lăn zoom; điện thoại dùng cần ảo, chụm hai ngón để zoom.
+import { PointerLockLookFilter } from './pointer-lock-look-filter.js';
 import { TouchPinchZoom } from './touch-pinch-zoom.js';
 
 const MOVE_KEYS = {
@@ -31,10 +32,11 @@ export class Input {
     this.onKeyUp = null;
     this.enabled = false;
     this.pointerLocked = false;
-    this.pointerLockFailed = false;
     this.lockClick = false;
+    this.lookFilter = new PointerLockLookFilter();
     document.addEventListener('pointerlockchange', () => {
       this.pointerLocked = document.pointerLockElement === canvas;
+      if (this.pointerLocked) this.lookFilter.locked();
       this.camId = null;
     });
 
@@ -59,6 +61,19 @@ export class Input {
       this.zoomDelta += Math.max(-0.4, Math.min(0.4, e.deltaY * unit * 0.0012));
     }, { passive: false });
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+
+  // Xin khoá con trỏ với chuột thô (bỏ gia tốc của hệ điều hành, ít delta ảo hơn); trình duyệt
+  // không hỗ trợ thì xin kiểu thường. Thất bại (vd. bấm lại quá nhanh sau Esc) thì lần bấm sau thử lại.
+  #requestLock() {
+    if (!this.canvas.requestPointerLock) return;
+    // new Promise để cả lỗi ném đồng bộ (trình duyệt cũ) cũng rơi vào .catch.
+    const request = (options) => new Promise((resolve) => resolve(this.canvas.requestPointerLock(options)));
+    request({ unadjustedMovement: true })
+      .catch((err) => (err?.name === 'NotSupportedError' ? request() : Promise.reject(err)))
+      .catch(() => {
+        this.lockClick = false;
+      });
   }
 
   #typing(e) {
@@ -88,12 +103,7 @@ export class Input {
     const isTouch = e.pointerType === 'touch';
     if (!isTouch && e.button === 0 && !e.altKey && !this.pointerLocked && (this.canLock?.() ?? true)) {
       this.lockClick = true;
-      if (this.canvas.requestPointerLock) {
-        Promise.resolve(this.canvas.requestPointerLock()).catch(() => {
-          this.pointerLockFailed = true;
-          this.lockClick = false;
-        });
-      }
+      this.#requestLock();
     }
     if (!isTouch && this.pointerLocked) return;
     const leftZone = isTouch && e.clientX < window.innerWidth * 0.45 && e.clientY > window.innerHeight * 0.45;
@@ -122,11 +132,13 @@ export class Input {
       this.pointerX = e.clientX;
       this.pointerY = e.clientY;
     }
-    // Khi khóa chuột: rê để xoay. Không khóa được (trình duyệt chặn) thì rê trên cảnh cũng xoay;
-    // còn lại con trỏ tự do để ngắm chiêu PK.
-    if (e.pointerType === 'mouse' && (this.pointerLocked || ((!this.canvas.requestPointerLock || this.pointerLockFailed) && e.target === this.canvas && this.enabled && (this.canLock?.() ?? true)))) {
-      this.yawDelta -= e.movementX * 0.0028;
-      this.pitchDelta += e.movementY * 0.0028 * 0.7;
+    // Khi khóa chuột: rê để xoay, bỏ các delta ảo của trình duyệt. Không khóa được thì giữ chuột
+    // trái kéo để xoay (nhánh camId bên dưới); không bao giờ xoay khi chỉ rê chuột tự do.
+    if (e.pointerType === 'mouse' && this.pointerLocked) {
+      if (this.lookFilter.accept(e.movementX, e.movementY)) {
+        this.yawDelta -= e.movementX * 0.0028;
+        this.pitchDelta += e.movementY * 0.0028 * 0.7;
+      }
       return;
     }
     if (e.pointerId === this.stickId) {
