@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import * as THREE from 'three';
-import { FollowCamera, roofCeiling } from '../client/src/player/camera.js';
+import { FollowCamera } from '../client/src/player/camera.js';
 import { TouchPinchZoom } from '../client/src/player/touch-pinch-zoom.js';
-import { MATS, ROOF_ZONES, SPAWN, cameraSegmentT } from '../shared/layout.js';
+import { CAMERA_COLLIDERS, cameraProbe } from '../shared/camera-colliders.js';
+import { BRIDGE, GALLERIES, MATS, SPAWN, floorHeight } from '../shared/layout.js';
 
 const STILL = { yaw: 0, pitch: 0, zoom: 0 };
 
@@ -20,9 +21,65 @@ function withMatchMedia(fn) {
 function orbitCamera(point) {
   const follow = new FollowCamera(new THREE.PerspectiveCamera());
   follow.intro = false;
-  follow.look.set(point.x, 1.2, point.z);
+  follow.look.set(point.x, floorHeight(point.x, point.z) + 1.2, point.z);
   return follow;
 }
+
+/** Camera không nằm trong vật cản và đường từ đầu nhân vật tới camera không xuyên vật cản nào. */
+function assertClearView(follow, where) {
+  const { pos, look } = follow;
+  for (const b of CAMERA_COLLIDERS) {
+    const inside = pos.x > b.minX && pos.x < b.maxX && pos.y > b.minY && pos.y < b.maxY && pos.z > b.minZ && pos.z < b.maxZ;
+    assert.ok(!inside, `camera inside a collider at ${where}`);
+  }
+  const d = pos.clone().sub(look);
+  const len = d.length();
+  d.divideScalar(len);
+  assert.ok(cameraProbe(look.x, look.y, look.z, d.x, d.y, d.z, len, 0) >= len - 1e-6, `camera behind a wall at ${where}`);
+}
+
+/** Đứng yên ở (x, z), đặt yaw/pitch rồi chạy đủ lâu để camera ổn định. */
+function settle(follow, x, z, yaw, pitch, frames = 120) {
+  const y = floorHeight(x, z);
+  follow.yaw = yaw;
+  follow.pitch = pitch;
+  follow.targetPitch = pitch;
+  for (let i = 0; i < frames; i++) follow.update(1 / 60, x, y, z, STILL);
+}
+
+test('low bridge rails do not pull the camera in while orbiting on the bridge', () => withMatchMedia(() => {
+  const x = (BRIDGE.x1 + BRIDGE.x2) / 2;
+  const follow = orbitCamera({ x, z: BRIDGE.z });
+  // 4 m: vẫn ở trong khoảng hồ sen, không chạm mái hành lang gần đó.
+  follow.distance = follow.zoomDist = follow.currentDist = 4;
+  settle(follow, x, BRIDGE.z, 0, 0.3);
+  for (let degree = 0; degree <= 360; degree += 5) {
+    settle(follow, x, BRIDGE.z, degree * Math.PI / 180, 0.3, 2);
+    assert.ok(follow.currentDist > follow.distance - 0.05, `camera snagged on the rail at ${degree}°: ${follow.currentDist}`);
+  }
+}));
+
+test('the low yard wall only blocks the camera when it is behind the wall', () => withMatchMedia(() => {
+  // Đứng sát tường rào nam trong sân, camera phía nam (yaw 0 = phía +z, sau tường).
+  const high = orbitCamera({ x: -12, z: 27.6 });
+  settle(high, -12, 27.6, 0, 0.6);
+  assert.ok(high.currentDist > high.distance - 0.05, `camera above the wall was pulled in to ${high.currentDist}`);
+  const low = orbitCamera({ x: -12, z: 27.6 });
+  settle(low, -12, 27.6, 0, -0.1);
+  assert.ok(low.currentDist < 3, `camera behind the wall stayed at ${low.currentDist}`);
+  assertClearView(low, 'low behind yard wall');
+}));
+
+test('under a gallery roof the camera stays below the roof and keeps the player centred', () => withMatchMedia(() => {
+  const g = GALLERIES[0];
+  const follow = orbitCamera(g);
+  settle(follow, g.x, g.z, 0, 1.1);
+  assert.ok(follow.pos.y < g.roof, `camera went through the roof: ${follow.pos.y}`);
+  assertClearView(follow, 'under gallery');
+  follow.camera.updateMatrixWorld();
+  const head = new THREE.Vector3(g.x, floorHeight(g.x, g.z) + 1.2, g.z).project(follow.camera);
+  assert.ok(Math.abs(head.x) < 0.05 && Math.abs(head.y) < 0.05, 'player stays in the middle of the frame');
+}));
 
 test('camera orbits 360 degrees without jumping or crossing walls', () => withMatchMedia(() => {
   for (const point of [SPAWN, ...MATS]) {
@@ -34,7 +91,7 @@ test('camera orbits 360 degrees without jumping or crossing walls', () => withMa
       follow.yaw = degree * Math.PI / 180;
       follow.update(1 / 60, point.x, 0, point.z, STILL);
       if (previous) assert.ok(follow.pos.distanceTo(previous) < 0.6, `camera jumped at ${point.x}, ${point.z}, ${degree}°`);
-      assert.ok(cameraSegmentT(point.x, point.z, follow.pos.x, follow.pos.z) > 0.99, `camera crossed wall at ${degree}°`);
+      assertClearView(follow, `${point.x}, ${point.z}, ${degree}°`);
       previous = follow.pos.clone();
     }
   }
@@ -67,19 +124,6 @@ test('leaving a minigame shot blends back behind the player', () => withMatchMed
   }
   assert.ok(Math.hypot(follow.pos.x - SPAWN.x, follow.pos.z - SPAWN.z) < 9, 'camera ends behind the player');
 }));
-
-test('roof ceiling is the roof inside a zone and rises smoothly outside it', () => {
-  const zone = ROOF_ZONES[0];
-  const midZ = (zone.minZ + zone.maxZ) / 2;
-  assert.equal(roofCeiling((zone.minX + zone.maxX) / 2, midZ), zone.y);
-  let previous = roofCeiling(zone.maxX, midZ);
-  for (let step = 1; step <= 20; step++) {
-    const cap = roofCeiling(zone.maxX + step * 0.1, midZ);
-    assert.ok(cap >= previous && cap - previous < 1, `ceiling jumped at ${step}`);
-    previous = cap;
-  }
-  assert.equal(roofCeiling(1000, 1000), Infinity);
-});
 
 test('camera never turns by itself while the player walks without touching the mouse', () => withMatchMedia(() => {
   // Đi theo khung camera như LocalPlayer: (mx, my) là phím/cần ảo, hướng đi phụ thuộc yaw.

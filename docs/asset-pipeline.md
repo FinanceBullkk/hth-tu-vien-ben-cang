@@ -31,6 +31,7 @@ Kiểm tra GLB (COLOR_0, tên node, material): `node tools/blender/inspect_glb.j
 | `client/src/scene/props.js` | GLTFLoader + cache + đổi material theo style game |
 | `client/src/scene/wuxia-props.js` | Đặt prop theo `shared/layout.js`, fallback code, dây đèn, update |
 | `shared/layout.js` | Toạ độ đặt + va chạm (CIRCLES/BOXES/ROOF_ZONES/floorHeight) |
+| `shared/camera-colliders.js` | Hộp 3D chặn camera theo sau (tường, mái, thân tháp) + quét cầu |
 
 ## Quy ước bắt buộc
 
@@ -46,8 +47,11 @@ Kiểm tra GLB (COLOR_0, tên node, material): `node tools/blender/inspect_glb.j
 4. **Luôn có bản code dự phòng.** GLB thiếu/lỗi thì fallback dựng bằng Batch vẫn hiện
    (`wuxia-props.js:fb*`) — game không bao giờ vỡ. Khi thêm asset mới, viết cả fallback.
 5. **Toạ độ đặt + va chạm nằm ở `shared/layout.js`.** Thêm prop mới phải khai báo const,
-   thêm `CIRCLES` (cột/đá/bồn), `BOXES` (lan can, cam:true nếu chặn camera) và `ROOF_ZONES`
-   nếu có mái cao. Bất kỳ thay đổi `floorHeight` nào phải khớp hình học GLB (xem cầu vòm
+   thêm `CIRCLES` (cột/đá/bồn), `BOXES` (lan can) và `ROOF_ZONES` nếu có mái
+   (mái trong `ROOF_ZONES` tự thành tấm chặn camera). Khối to đủ che nhân vật (tường, thân nhà)
+   thì thêm hộp 3D có chiều cao thật vào `shared/camera-colliders.js`; vật thấp/mảnh (lan can,
+   cột, cây) đừng thêm, vì chặn chúng làm camera giật khi xoay. `BOXES.cam` chỉ còn dùng cho
+   góc máy câu cá. Bất kỳ thay đổi `floorHeight` nào phải khớp hình học GLB (xem cầu vòm
    `BRIDGE.peak` vs `bridge.py`).
 6. **Budget polygon.** Mỗi asset ≤ 10k tam giác (in trong `ASSET_OK ... BUDGET_OK`).
    Hiện tại: pagoda 2.2k, bridge 1.9k, tea-pavilion 0.7k, nonbo 0.5k, banner 0.2k,
