@@ -1,6 +1,24 @@
 # Deployment
 
-## Current release: 2026-11-12 camera no longer turns by itself, 13:21 UTC+7
+## Current release: 2026-11-12 3D spring-arm camera collision, 13:43 UTC+7
+
+Deploy run [43170083773](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43170083773)
+released main `a21098e` (PR #34) as `hth:261112-1343-a21098e`, replacing
+`hth:261112-1321-b53e4e2`. Client-only change: the follow camera sphere-casts in
+3D against walls and roofs with their real heights (`shared/camera-colliders.js`)
+instead of a 2D ray that treated every blocker as infinitely tall, so low bridge
+rails and the 2.1 m yard wall no longer snap the camera in while rotating.
+Public bundle: `index-BS4x3CpX.js`.
+
+Local suite 165/165 and Vite build passed on Node 24; Docker tests 165/165.
+Candidate passed with DB `quick_check` ok (50 players, 23 wishes, 42 fish).
+Not yet played with a real mouse on production after the cutover.
+
+Rollback container `hth-rollback-261112-1343-a21098e` preserves
+`hth:261112-1321-b53e4e2`. Private backup is in the data volume at
+`backups/cutover-261112-1343-a21098e/`.
+
+## Previous release: 2026-11-12 camera no longer turns by itself, 13:21 UTC+7
 
 Deploy run [43167585850](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43167585850)
 released main `b53e4e2` (PR #32) as `hth:261112-1321-b53e4e2`, replacing
