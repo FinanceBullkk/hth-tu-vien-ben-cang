@@ -1,6 +1,31 @@
 # Deployment
 
-## Current release: 2026-11-12 ink-style HUD and MMO skill bar, 15:52 UTC+7
+## Current release: 2026-11-12 Kim Bảo shop, in-game wardrobe and TEU wallet, 16:34 UTC+7
+
+Deploy run [43192587763](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43192587763)
+released main `bcf26e6` (PR #40) as `hth:261112-1634-bcf26e6`, replacing
+`hth:261112-1552-1afd543`. Server and client change: premium cosmetics (8 auras,
+5 attires, 2 weapons, 4 hats, 3 hair styles, 6 shirt colours, 15–80 TEU, prices
+in `shared/shop.js`) are now bought with TEU at the Sạp Kim Bảo stall NPC near
+the tea-house path or from the HUD shop button; a wardrobe changes outfits
+in game and broadcasts `player:look`. New table `owned_items`; on first start
+a one-time migration (`PRAGMA user_version` 1) grants each player the paid
+items they were wearing and converts the old `unlocked` colour bitmask.
+Purchases log negative `teu_log` rows; the weekly board counts earnings only
+and no longer returns other players' `player_id`. Public bundle:
+`index-i5pyyceX.js`, confirmed served at `https://game.hthlogistics.top/`.
+
+Local suite 174/174 and Vite build passed on Node 24; Docker tests 174/174.
+Candidate passed with DB `quick_check` ok (50 players, 23 wishes, 42 fish).
+Checked in a browser on a temporary DB at desktop and 375 (touch) before
+release; not yet checked with two real players after the cutover.
+
+Rollback container `hth-rollback-261112-1634-bcf26e6` preserves
+`hth:261112-1552-1afd543`. Private backup is in the data volume at
+`backups/cutover-261112-1634-bcf26e6/`. Rolling back to the old image leaves
+the `owned_items` table unused; the old code ignores it.
+
+## Previous release: 2026-11-12 ink-style HUD and MMO skill bar, 15:52 UTC+7
 
 Deploy run [43186470687](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43186470687)
 released main `1afd543` (PR #38) as `hth:261112-1552-1afd543`, replacing
