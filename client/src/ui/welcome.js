@@ -24,7 +24,7 @@ export class Welcome {
       id: 'nameInput',
       type: 'text',
       maxLength: LIMITS.nameMax,
-      placeholder: 'Tên hiển thị của bạn',
+      placeholder: 'Tên của bạn',
       value: savedName,
       autocomplete: 'nickname',
       enterKeyHint: 'go',
@@ -79,14 +79,13 @@ export class Welcome {
     const attireRow = chipRow('Trang phục', ATTIRE_NAMES.slice(0, AVATAR.attires), 'Kiểu trang phục', (i) => this.setAttire(i));
     const weaponRow = chipRow('Vũ khí', WEAPON_NAMES.slice(0, AVATAR.weapons), 'Vũ khí mang theo', (i) => this.setWeapon(i));
     const effectRow = chipRow('Aura & danh hiệu', EFFECT_NAMES.slice(0, AVATAR.effects), 'Hiệu ứng hào quang', (i) => this.setEffect(i));
-    effectRow.append(h('small', {}, 'Danh hiệu trang trí đi cùng aura đã chọn, hiện phía trên tên nhân vật.'));
     // V9: đè "giảm chuyển động" của hệ điều hành — ai muốn xem aura full tốc tự bật.
     const fullFxBox = h('input', { type: 'checkbox' });
     fullFxBox.checked = store.get('fullFx') === '1';
     fullFxBox.addEventListener('change', () => store.set('fullFx', fullFxBox.checked ? '1' : '0'));
     const fullFxRow = h('label', { class: 'field', style: 'display:flex;gap:8px;align-items:center;cursor:pointer' },
       fullFxBox,
-      h('span', {}, 'Hiệu ứng động đầy đủ (bỏ qua giảm chuyển động của Windows)'));
+      h('span', { title: 'Bỏ qua chế độ giảm chuyển động của Windows' }, 'Hiệu ứng động đầy đủ'));
     this.attireBtns = [...attireRow.querySelectorAll('.chip')];
     this.weaponBtns = [...weaponRow.querySelectorAll('.chip')];
     this.effectBtns = [...effectRow.querySelectorAll('.chip')];
@@ -99,24 +98,23 @@ export class Welcome {
     this.root.replaceChildren(
       h('div', { class: 'welcome-card' },
         h('span', { class: 'card-seal', 'aria-hidden': 'true' }, 'HTH'),
-        h('p', { class: 'welcome-kicker' }, 'Tu viện bên cảng'),
-        h('h1', {}, 'Lên tu viện'),
-        h('p', { class: 'welcome-sub' }, 'Hít thở một chút giữa giờ nghỉ, cùng cả nhà.'),
         this.music.button,
         this.music.audio,
-        h('label', { class: 'field', for: 'nameInput' }, 'Tên của bạn', this.nameInput),
+        h('h1', {}, 'Lên tu viện'),
+        h('label', { class: 'field', for: 'nameInput' }, h('span', { class: 'sr-only' }, 'Tên của bạn'), this.nameInput),
         this.errorEl,
         this.enterBtn,
-        h('button', { class: 'btn ghost', type: 'button', onClick: () => {
-          this.setColor(0);
-          this.setHat(6);
-          this.setAttire(3);
-          this.setWeapon(3);
-          this.setEffect(9);
-        } }, 'Mặc bộ Lee Sin · Long quyền'),
         // Nhập tên là vào được ngay; thay đồ là phần thêm, không bắt người mới phải cuộn qua mới thấy nút Vào.
+        h('div', { class: 'welcome-extras' },
+          h('button', { class: 'chip preset-chip', type: 'button', 'aria-label': 'Mặc bộ Lee Sin · Long quyền', title: 'Mặc bộ Lee Sin · Long quyền', onClick: () => {
+            this.setColor(0);
+            this.setHat(6);
+            this.setAttire(3);
+            this.setWeapon(3);
+            this.setEffect(9);
+          } }, '🐉 Lee Sin')),
         h('details', { class: 'welcome-more' },
-          h('summary', {}, 'Đổi trang phục (không bắt buộc)'),
+          h('summary', {}, 'Đổi trang phục'),
           h('div', { class: 'field' }, h('span', {}, 'Màu áo'), colors),
           h('div', { class: 'field' }, h('span', {}, 'Tóc'), hairs),
           h('div', { class: 'field' }, h('span', {}, 'Mũ'), hats),

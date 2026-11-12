@@ -6,9 +6,10 @@
 /* Đang câu cá, thiền, đánh chuông, tấu nhạc… thì cất thanh máu và thanh chiêu để bảng hoạt động thoáng. */
 .in-activity .pk-hud, .rhythm-playing .pk-hud, .melody-playing .pk-hud { display: none; }
 /* Nút hành động (ví dụ Ngồi thiền tại chỗ) nằm trên thanh máu + thanh chiêu, không bị che. */
-:root:has(.pk-hud:not([hidden])) #actionBtn { bottom: calc(158px + var(--safe-b)); }
-:root:has(.pk-hud:not([hidden])) #wishReader { bottom: calc(222px + var(--safe-b)); }
+:root:has(.pk-hud:not([hidden])) #actionBtn { bottom: calc(122px + var(--safe-b)); }
+:root:has(.pk-hud:not([hidden])) #wishReader { bottom: calc(176px + var(--safe-b)); }
 
+/* Thanh chiêu chỉ có icon + số phím; tên và mô tả chiêu nằm trong tooltip khi rê chuột. */
 .pk-skills {
   position: fixed;
   left: 50%;
@@ -17,9 +18,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  width: min(360px, calc(100vw - 24px));
-  padding: 9px;
+  gap: 6px;
+  width: auto;
+  padding: 6px;
   box-sizing: border-box;
   border: 1px solid rgba(216, 178, 112, .55);
   border-radius: 6px;
@@ -30,15 +31,14 @@
 
 .vlcm-slot-btn {
   position: relative;
-  flex: 1;
-  min-width: 0;
-  height: 66px;
+  flex: none;
+  width: 52px;
+  height: 52px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  gap: 2px;
-  padding: 4px 2px 3px;
+  justify-content: center;
+  padding: 0;
   border: 1px solid rgba(216, 178, 112, .38);
   border-radius: 4px;
   background: #1b1511;
@@ -52,11 +52,11 @@
 .vlcm-slot-btn:active:not(:disabled),
 .vlcm-slot-btn.key-pressed { transform: translateY(2px); background: #624128; }
 .vlcm-slot-btn:disabled { opacity: .55; cursor: not-allowed; }
-.vlcm-slot-icon { width: 39px; height: 39px; object-fit: cover; border-radius: 6px; pointer-events: none; }
+.vlcm-slot-icon { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; pointer-events: none; }
 .vlcm-slot-hotkey {
   position: absolute;
-  top: 4px;
-  left: 5px;
+  top: 2px;
+  left: 2px;
   padding: 1px 3px;
   border-radius: 3px;
   background: #201914dd;
@@ -65,7 +65,7 @@
   pointer-events: none;
 }
 .vlcm-slot-hotkey.alt-key { font-size: 9px; }
-.vlcm-slot-label { font: 600 10px system-ui, sans-serif; white-space: nowrap; pointer-events: none; }
+.vlcm-slot-label { display: none; }
 .vlcm-cd-curtain {
   position: absolute;
   inset: 0;
@@ -103,23 +103,16 @@
 .vlcm-tooltip-type { color: #c9e0ca; }
 .vlcm-tooltip-stats { margin: 4px 0; color: #ffd89a; }
 
-@media (max-width: 390px) {
-  .pk-skills { gap: 5px; padding: 6px; }
-  .vlcm-slot-btn { height: 62px; }
-  .vlcm-slot-icon { width: 35px; height: 35px; }
-  .vlcm-slot-label { font-size: 9px; }
-}
-
 /* Thanh máu mảnh, gắn ngay trên thanh chiêu thành một cụm chiến đấu ở giữa đáy màn hình.
-   Tông mực + chỉ vàng như các bảng khác; trên điện thoại chuyển lên hàng thứ hai dưới menu (xem cuối file). */
+   Chỉ có vạch máu và số; tên đã có trên đầu nhân vật. Trên điện thoại lên hàng hai dưới menu (cuối file). */
 .pk-top-hud {
   position: fixed;
   left: 50%;
-  bottom: calc(104px + var(--safe-b));
+  bottom: calc(86px + var(--safe-b));
   transform: translateX(-50%);
-  width: min(360px, calc(100vw - 24px));
+  width: 240px;
   box-sizing: border-box;
-  padding: 5px 9px 6px;
+  padding: 4px;
   border: 1px solid rgba(216, 178, 112, .55);
   border-radius: 6px;
   background: linear-gradient(180deg, rgba(26, 20, 16, .92), rgba(18, 14, 11, .92));
@@ -209,16 +202,23 @@
   z-index: 4;
 }
 
+.pk-fighter-meta { display: none !important; }
+
+/* BẢO HỘ / SÁT KHÍ: nhãn nhỏ nổi ngay trên thanh máu, chỉ hiện khi có trạng thái. */
 .pk-status {
   position: absolute;
-  top: 6px;
-  right: 9px;
+  bottom: calc(100% + 4px);
+  right: 0;
   margin: 0;
-  font: 700 11px/1.2 var(--sans);
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(26, 20, 16, .88);
+  font: 700 11px/1.3 var(--sans);
   letter-spacing: .05em;
   color: #f6d99a;
   text-shadow: 0 1px 3px #000;
 }
+.pk-status:empty { display: none; }
 
 /* ==========================================================================
    8. TÂM NGẮM & BANNER THÔNG BÁO
@@ -271,14 +271,15 @@
   transform: none;
   width: auto;
   display: grid;
-  grid-template-columns: repeat(2, 60px);
+  grid-template-columns: repeat(2, 56px);
   gap: 6px;
   padding: 6px;
 }
-.touch .vlcm-slot-btn { width: 60px; height: 60px; flex: none; }
-.touch .vlcm-slot-icon { width: 34px; height: 34px; }
-.touch .vlcm-slot-label { font-size: 9px; }
+.touch .vlcm-slot-btn { width: 56px; height: 56px; }
+.touch .vlcm-slot-icon { width: 42px; height: 42px; }
 .touch .vlcm-tooltip-card { display: none; }
+:root:has(.pk-hud:not([hidden])) .touch #actionBtn { bottom: calc(152px + var(--safe-b)); }
+:root:has(.pk-hud:not([hidden])) .touch #wishReader { bottom: calc(216px + var(--safe-b)); }
 .touch .pk-top-hud {
   left: calc(8px + env(safe-area-inset-left, 0px));
   top: calc(54px + var(--safe-t));
@@ -286,7 +287,5 @@
   transform: none;
   width: min(220px, calc(100vw - 150px));
 }
-.touch .pk-fighter-badge { display: none; }
-.touch .pk-fighter-meta { padding-right: 64px; }
 /* Đang gõ chat trên điện thoại: ô chat rộng ra đáy màn hình nên cất bốn chiêu đi. */
 .touch.chatting .pk-skills { display: none; }

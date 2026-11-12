@@ -1,5 +1,5 @@
 /* Desktop: mic nằm ở cột trái, ngay dưới ô số người online. Tông mực + chỉ vàng như HUD; xanh lá chỉ để báo đang bật/đang nói. */
-#voicePanel { position: fixed; z-index: 7; left: 12px; top: calc(76px + var(--safe-t)); display: flex; align-items: center; gap: 6px; color: #f3e6cf; font: 600 12px var(--sans); }
+#voicePanel { position: fixed; z-index: 7; left: 12px; top: calc(58px + var(--safe-t)); display: flex; align-items: center; gap: 6px; color: #f3e6cf; font: 600 12px var(--sans); }
 .voice-mic, .voice-trigger { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1.5px solid rgba(216, 178, 112, .6); border-radius: 50%; background: rgba(26, 20, 16, .9); color: #f0b8a8; box-shadow: 0 3px 12px #0009, inset 0 1px #ffffff20; cursor: pointer; }
 .voice-mic:disabled { opacity: .6; cursor: progress; }
 .voice-trigger { width: 30px; height: 30px; border: 1px solid rgba(216, 178, 112, .5); color: #f6d99a; font-size: 22px; line-height: 1; list-style: none; }

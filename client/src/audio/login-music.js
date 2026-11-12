@@ -7,7 +7,8 @@ export class LoginMusic {
     const saved = store.get('musicVolume');
     const volume = saved === null ? 0.35 : Number(saved);
     this.audio.volume = (Number.isFinite(volume) && volume >= 0 && volume <= 1 ? volume : 0.35) * 0.5;
-    this.button = h('button', { type: 'button', class: 'btn ghost small', 'aria-pressed': 'false' }, 'Phát nhạc nền');
+    // Nút icon nhỏ ở góc thẻ chào; tên nút nằm ở aria-label/title thay vì chữ hiển thị.
+    this.button = h('button', { type: 'button', class: 'welcome-music', 'aria-pressed': 'false', 'aria-label': 'Phát nhạc nền', title: 'Phát nhạc nền' }, '♫');
     this.button.addEventListener('click', (event) => {
       event.stopPropagation();
       this.removeUnlock();
@@ -16,7 +17,9 @@ export class LoginMusic {
     });
     const sync = () => {
       const playing = !this.audio.paused;
-      this.button.textContent = playing ? 'Tạm dừng nhạc nền' : 'Phát nhạc nền';
+      const label = playing ? 'Tạm dừng nhạc nền' : 'Phát nhạc nền';
+      this.button.setAttribute('aria-label', label);
+      this.button.title = label;
       this.button.setAttribute('aria-pressed', String(playing));
     };
     this.audio.addEventListener('play', sync);

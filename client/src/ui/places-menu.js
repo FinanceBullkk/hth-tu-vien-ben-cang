@@ -31,25 +31,20 @@ function travel(app, place) {
 export function openPlacesMenu(app) {
   store.set(SEEN_KEY, '1');
   document.getElementById('playBtn')?.classList.remove('nudge');
+  // Lưới icon: mỗi ô một biểu tượng + tên ngắn, mô tả nằm trong tooltip (title).
+  // "Ngồi thiền" (key 'mat') cũng là thiền tại chỗ nên gộp làm một ô "Thiền tại chỗ".
+  const tile = (icon, name, desc, onPick) => h('li', {},
+    h('button', { type: 'button', class: 'place-tile', title: desc, onClick: () => { modal.close(); onPick(); } },
+      h('span', { class: 'place-icon', 'aria-hidden': 'true' }, icon),
+      h('b', {}, name)));
   const modal = openModal({
-    title: 'Hôm nay chơi gì?',
-    content: h('ul', { class: 'place-list' },
-      h('li', {}, h('button', {
-        type: 'button', class: 'place-row',
-        onClick: () => {
-          modal.close();
-          if (app.activities.current) app.activities.exit();
-          app.activities.meditation.start();
-        },
-      }, h('span', { class: 'place-text' }, h('b', {}, 'Thiền tại chỗ'), h('small', {}, 'Ngồi ngay đây, tích Chân khí và tăng tầng')))),
-      PLACES.map((place) => h('li', {},
-      h('button', {
-        type: 'button',
-        class: 'place-row',
-        onClick: () => { modal.close(); travel(app, place); },
-      },
-      h('span', { class: 'place-icon', 'aria-hidden': 'true' }, place.icon),
-      h('span', { class: 'place-text' }, h('b', {}, place.name), h('small', {}, place.desc)))))),
+    title: 'Chơi gì?',
+    content: h('ul', { class: 'place-grid-menu' },
+      tile('🪷', 'Thiền tại chỗ', 'Ngồi ngay đây, tích Chân khí và tăng tầng', () => {
+        if (app.activities.current) app.activities.exit();
+        app.activities.meditation.start();
+      }),
+      PLACES.filter((place) => place.key !== 'mat').map((place) => tile(place.icon, place.name, place.desc, () => travel(app, place)))),
   });
 }
 

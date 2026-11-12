@@ -56,17 +56,16 @@
 @keyframes fishBreath { to { opacity: .78; } }
 
 /* Menu Chơi gì? */
-.place-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.place-row { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 64px; padding: 10px 14px; border: 1px solid #d9c9ac; border-radius: 10px; background: #fffdf8; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, background-color .15s; }
-.place-row:hover, .place-row:focus-visible { border-color: #b34a30; background: #fff6e8; }
-.place-icon { font-size: 28px; line-height: 1; }
-.place-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.place-text b { font: 700 17px var(--serif); color: #5a1f14; }
-.place-text small { font-size: 13.5px; line-height: 1.35; color: var(--muted); }
+/* Lưới ô icon: biểu tượng lớn + tên ngắn, mô tả trong tooltip. */
+.place-grid-menu { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.place-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 100%; aspect-ratio: 1; padding: 8px 4px; border: 1px solid #d9c9ac; border-radius: 6px; background: linear-gradient(180deg, #fffdf8, #f5ebd4); color: inherit; font: inherit; text-align: center; cursor: pointer; transition: border-color .15s, transform .12s, box-shadow .15s; }
+.place-tile:hover, .place-tile:focus-visible { border-color: var(--gold); transform: translateY(-1px); box-shadow: 0 6px 14px rgba(90, 50, 20, .2); }
+.place-icon { font-size: 30px; line-height: 1; }
+.place-tile b { font: 700 14px/1.2 var(--serif); color: #5a1f14; }
+@media (max-width: 480px) { .place-grid-menu { grid-template-columns: repeat(3, 1fr); } }
 .place-veil { position: fixed; inset: 0; z-index: 30; background: #120c08; opacity: 0; pointer-events: none; transition: opacity .24s ease; }
 .place-veil.on { opacity: 1; }
 #playBtn { background: linear-gradient(180deg, #b34a30, #96371f); border-color: rgba(224, 164, 88, .75); color: #fff6e6; }
-#menu #playBtn em { display: inline; }
 #playBtn.nudge { animation: playNudge 1.1s ease-in-out infinite alternate; }
 @keyframes playNudge { to { box-shadow: 0 0 0 6px rgba(224, 164, 88, .35); } }
 
