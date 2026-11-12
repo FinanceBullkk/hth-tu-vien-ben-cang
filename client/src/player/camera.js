@@ -1,6 +1,8 @@
-// Camera theo sau lưng: bám mượt, không xuyên tường, không vượt mái khi đứng trong nhà.
+// Camera theo sau lưng kiểu spring arm: quỹ đạo yaw/pitch quanh đầu nhân vật, zoom trượt,
+// quét cầu 3D để co lại khi tường/mái chắn (co ngay, giãn ra từ từ). Vật thấp/mảnh không chặn.
 import * as THREE from 'three';
-import { ROOF_ZONES, cameraSegmentT, isInsideHall } from '../../../shared/layout.js';
+import { isInsideHall } from '../../../shared/layout.js';
+import { cameraProbe } from '../../../shared/camera-colliders.js';
 
 // Cho ngước lên bầu trời (âm: camera hạ dưới vai) và nhìn từ trên cao xuống sâu, kiểu Trove/WWM.
 const MIN_PITCH = -1.3;
@@ -9,24 +11,13 @@ const MAX_PITCH = 1.25;
 const BLEND_TIME = 0.7;
 // Không có chế độ tự vòng camera về sau lưng: đi lại theo khung camera nên yaw tự đổi
 // sẽ kéo hướng đi đổi theo, giữ A/D hay đi chéo là camera quay vòng mãi. Chỉ người chơi xoay yaw.
-// Mái hạ dần trong khoảng này quanh mép mái, để bước vào hiên camera không rơi thẳng xuống.
-const ROOF_MARGIN = 2.5;
-const ROOF_SLOPE = 5;
+// Camera không bao giờ co gần hơn chừng này dù bị chắn (tránh chui vào đầu nhân vật).
+const MIN_ARM = 0.6;
+// Tốc độ giãn ra khi hết bị chắn: chậm để không bật qua lại khi quét ngang mép tường.
+const RECOVER_RATE = 5;
 
 const damp = (rate, dt) => 1 - Math.exp(-dt * rate);
 const smoothstep = (t) => t * t * (3 - 2 * t);
-
-/** Độ cao trần camera khi người chơi đứng ở (x, z): mái gần nhất, cao dần ra ngoài mép mái. */
-export function roofCeiling(x, z) {
-  let cap = Infinity;
-  for (const zone of ROOF_ZONES) {
-    const dx = Math.max(zone.minX - x, 0, x - zone.maxX);
-    const dz = Math.max(zone.minZ - z, 0, z - zone.maxZ);
-    if (dx > ROOF_MARGIN || dz > ROOF_MARGIN) continue;
-    cap = Math.min(cap, zone.y + Math.hypot(dx, dz) * ROOF_SLOPE);
-  }
-  return cap;
-}
 
 export class FollowCamera {
   constructor(camera) {
@@ -120,23 +111,18 @@ export class FollowCamera {
     const dirZ = Math.cos(this.yaw) * cosP;
     const dirY = Math.sin(pitch);
 
-    // Rút ngắn khoảng cách nếu có tường chắn giữa người chơi và camera.
-    const far = this.zoomDist + 0.5;
-    const t = cameraSegmentT(this.target.x, this.target.z, this.target.x + dirX * far, this.target.z + dirZ * far);
-    const allowed = Math.max(0.3, t * far - 0.5);
-    const wanted = Math.min(this.zoomDist, allowed);
-    // Co ngay khi có tường; nội suy lúc co khiến camera xuyên tường rồi bật sang phía khác.
-    // Lùi ra chậm khi vừa thoát tường, còn lùi theo zoom thì bám sát vì zoomDist đã mượt.
-    this.currentDist = wanted < this.currentDist
-      ? wanted
-      : this.currentDist + (wanted - this.currentDist) * damp(allowed < this.zoomDist ? 3.5 : 16, dt);
+    // Spring arm: quét cầu 3D từ điểm xoay ra sau, tường/mái chắn thì tay đòn ngắn lại.
+    const safe = Math.max(MIN_ARM, cameraProbe(this.look.x, this.look.y, this.look.z, dirX, dirY, dirZ, this.zoomDist));
+    const blocked = safe < this.zoomDist - 1e-3;
+    // Co ngay để không bao giờ thấy xuyên tường; giãn ra từ từ khi vừa thoát vật chắn,
+    // còn khi không bị chắn thì bám zoomDist (đã mượt sẵn).
+    this.currentDist = safe < this.currentDist
+      ? safe
+      : this.currentDist + (safe - this.currentDist) * damp(blocked ? RECOVER_RATE : 16, dt);
 
-    // Dưới mái: kéo camera lại gần theo đúng tia nhìn để nhân vật vẫn giữa khung,
-    // thay vì chỉ hạ thấp (nhìn chúi từ chỗ thấp thì nhân vật trôi ra khỏi màn hình).
-    const ceiling = roofCeiling(px, pz);
-    let dist = this.currentDist;
-    if (dirY > 0.05) dist = Math.min(dist, Math.max(0.8, (ceiling - this.look.y) / dirY));
-    const camY = Math.max(0.55, Math.min(this.look.y + dirY * dist, ceiling));
+    const dist = this.currentDist;
+    // Mặt đất không co tay đòn: camera trượt sát đất và vẫn giữ độ ngước, nhìn được lên trời.
+    const camY = Math.max(0.55, this.look.y + dirY * dist);
     this.pos.set(this.look.x + dirX * dist, camY, this.look.z + dirZ * dist);
     // Nhìn theo đúng hướng yaw/pitch thay vì lookAt đầu nhân vật: khi camera bị kẹp gần đất,
     // góc máy vẫn giữ độ ngước đã kéo, không bị san phẳng.
