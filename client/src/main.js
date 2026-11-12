@@ -40,6 +40,7 @@ import './ui/fishing.css';
 import './ui/melody.css';
 import './ui/cultivation.css';
 import './ui/shop.css';
+import './ui/baucua.css';
 
 const isTouch = matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch', isTouch);
@@ -203,6 +204,7 @@ function main() {
     app.activities.bell.setWait(snap.bellWait);
     app.activities.bellEvent.apply(snap.bellEvent);
     app.wallet.apply({ teu: snap.teu, owned: snap.owned });
+    app.activities.baucua.setSnapshot(snap.baucua);
     // Server gỡ món chưa sở hữu (mua ở máy khác, hết hạn giữ đồ cũ...): mặc đúng bộ server chốt.
     const look = lookOf(snap.me);
     if (Object.entries(look).some(([slot, v]) => profile[slot] !== v)) {
@@ -347,6 +349,10 @@ function main() {
     if (pos) world.pitchCourt.playTurn(pos.x, pos.z, hit, npcHit);
   });
   net.on('pitch:turn', (turn) => app.activities.pitch.onTurn(turn));
+
+  // ---------- Bầu cua ----------
+  net.on('baucua:state', (state) => app.activities.baucua.applyState(state));
+  net.on('baucua:payout', (result) => app.activities.baucua.onPayout(result));
 
   let blessToastAt = 0;
   net.on('wish:new', (wish) => {
@@ -541,6 +547,7 @@ function main() {
     world.zoeyy.update(dt, me.x, me.z, camera);
     world.monk.update(dt, me.x, me.z, camera);
     world.shopStall.update(dt, me.x, me.z, camera);
+    world.baucuaTable.update(dt, camera, nowMs);
     world.pitchCourt.update(dt, camera);
     app.follow.update(dt, me.x, me.y, me.z, look);
     world.sky.follow(camera);

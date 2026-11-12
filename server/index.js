@@ -18,6 +18,7 @@ import { PitchGame } from './pitch.js';
 import { MelodyGame } from './melody.js';
 import { PkGame } from './pk.js';
 import { Shop } from './shop.js';
+import { BauCua } from './baucua.js';
 import { PLAYERS_ROOM, Room } from './rooms.js';
 import { Riddle } from './riddle.js';
 import { Fishing } from './fishing.js';
@@ -80,7 +81,8 @@ const pitch = new PitchGame({ db, io: players, config });
 const melody = new MelodyGame({ db, config });
 const pk = new PkGame({ db, io: players, config });
 const shop = new Shop({ db, config });
-const room = new Room({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch, melody, pk, shop });
+const baucua = new BauCua({ db, io: players, config });
+const room = new Room({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch, melody, pk, shop, baucua });
 
 // Tài nguyên trang cùng nguồn; WebRTC có đường media riêng và ICE do người vận hành cấu hình.
 app.use((_req, res, next) => {
