@@ -19,7 +19,8 @@ import { setAuraNight } from './player/avatar-effect.js';
 import './ui/pk.css';
 import { trimShadowCasters } from './player/avatar-lod.js';
 import { World, createRenderer } from './scene/world.js';
-import { AdaptiveQuality, renderPixelRatio } from './scene/render-quality.js';
+import { AdaptiveQuality, gpuName, pinShaderPrograms, renderPixelRatio, startQualityLevel } from './scene/render-quality.js';
+import { warmShaders } from './scene/shader-warmup.js';
 import { openShare } from './share/share.js';
 import { openBoard, openBook } from './ui/book.js';
 import { Chat } from './ui/chat.js';
@@ -466,19 +467,27 @@ function main() {
     labelRenderer.setSize(w, h2);
     frameIntro();
   };
-  const quality = new AdaptiveQuality((level) => {
-    if (level === 1) {
-      // Tắt bloom và thu bóng đều không phải biên dịch lại shader, nên hạ bậc không gây khựng.
+  const applyQuality = (level) => {
+    // Tắt bloom và thu bóng đều không phải biên dịch lại shader, nên hạ bậc không gây khựng.
+    if (level <= 1) {
       if (bloomPass) bloomPass.enabled = false;
       world.sky.setShadowSize(1024);
-    } else {
-      renderer.shadowMap.enabled = false;
     }
+    // Tắt hẳn bóng thì phải biên dịch lại; nhớ mức này nên từ lần sau tắt ngay từ đầu.
+    if (level === 0) renderer.shadowMap.enabled = false;
+  };
+  const gpu = gpuName(renderer.getContext());
+  const startLevel = startQualityLevel(store.getJson('quality'), gpu, Date.now());
+  applyQuality(startLevel);
+  const quality = new AdaptiveQuality((level) => {
+    applyQuality(level);
+    store.setJson('quality', { level, gpu, at: Date.now() });
     onResize();
-  });
+  }, startLevel);
   app.quality = quality;
   window.addEventListener('resize', onResize);
   onResize();
+  warmShaders({ renderer, camera, scene, target: composer?.readBuffer ?? null, lowQuality: isTouch });
 
   let lastFrame = performance.now();
   let audioTimer = 0;
@@ -524,6 +533,7 @@ function main() {
 
     if (composer) composer.render();
     else renderer.render(scene, camera);
+    pinShaderPrograms(renderer);
     labelRenderer.render(scene, camera);
     quality.update(rawDt, !document.hidden && document.hasFocus());
     // Thời gian CPU của một khung, xem trong DevTools bằng __hth.frameMs.

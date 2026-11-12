@@ -31,10 +31,57 @@ export class ShadowPacer {
   }
 }
 
+// Mỗi biến thể shader chỉ vài KB trên GPU; trần này chặn trường hợp shader sinh theo từng người.
+const MAX_PINNED_PROGRAMS = 400;
+const pinnedPrograms = new WeakSet();
+
+/**
+ * three xoá program khi vật liệu cuối cùng dùng nó bị dispose. Hiệu ứng PK và hào quang của người
+ * vừa rời đi đều dispose vật liệu, nên lần sau lại biên dịch từ đầu (khựng 10-40 ms mỗi lần).
+ * Ghim program để mỗi biến thể chỉ biên dịch một lần trong phiên. Gọi ngay sau khi vẽ.
+ */
+export function pinShaderPrograms(renderer) {
+  const programs = renderer.info.programs;
+  if (!programs || programs.length === renderer.pinnedSeen) return;
+  renderer.pinnedSeen = programs.length;
+  renderer.pinnedCount ??= 0;
+  for (const program of programs) {
+    if (renderer.pinnedCount >= MAX_PINNED_PROGRAMS) return;
+    if (pinnedPrograms.has(program)) continue;
+    pinnedPrograms.add(program);
+    program.usedTimes++; // Không bao giờ về 0, nên WebGLPrograms.releaseProgram không huỷ nó.
+    renderer.pinnedCount++;
+  }
+}
+
+// Nhớ mức đã hạ một tuần rồi thử lại mức cao, phòng khi máy được nâng cấp hoặc đổi driver.
+const QUALITY_MEMORY_MS = 7 * 24 * 3600 * 1000;
+
+/**
+ * Mức đồ hoạ để bắt đầu: lần trước máy này (cùng GPU) đã phải hạ thì vào thẳng mức đó,
+ * khỏi chịu thêm cả chục giây giật trước khi tự hạ lại.
+ * @param {{level?: number, gpu?: string, at?: number} | null} saved
+ */
+export function startQualityLevel(saved, gpu, now) {
+  if (!saved || saved.gpu !== gpu || !Number.isInteger(saved.level)) return 2;
+  if (!(now - saved.at >= 0 && now - saved.at < QUALITY_MEMORY_MS)) return 2;
+  return Math.min(2, Math.max(0, saved.level));
+}
+
+/** Tên GPU để nhận ra cùng một máy; trình duyệt giấu thì vẫn trả chuỗi ổn định. */
+export function gpuName(gl) {
+  try {
+    const ext = gl.getExtension('WEBGL_debug_renderer_info');
+    return String(gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER));
+  } catch {
+    return 'unknown';
+  }
+}
+
 export class AdaptiveQuality {
-  constructor(onChange) {
+  constructor(onChange, level = 2) {
     this.onChange = onChange;
-    this.level = 2;
+    this.level = level;
     this.elapsed = 0;
     this.reset();
   }
