@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import * as THREE from 'three';
 import { FollowCamera } from '../client/src/player/camera.js';
 import { TouchPinchZoom } from '../client/src/player/touch-pinch-zoom.js';
+import { PointerLockLookFilter } from '../client/src/player/pointer-lock-look-filter.js';
 import { CAMERA_COLLIDERS, cameraProbe } from '../shared/camera-colliders.js';
 import { BRIDGE, GALLERIES, MATS, SPAWN, floorHeight } from '../shared/layout.js';
 
@@ -155,4 +156,44 @@ test('pinch spreads zoom in and pinches zoom out', () => {
   pinch.up(ev(2, 160, 100));
   assert.equal(pinch.active, false);
   assert.equal(pinch.move(ev(1, 120, 100)), 0);
+});
+
+test('pitching from above down to the ground and up to the sky keeps the player in frame', () => withMatchMedia(() => {
+  for (const zoom of [2.2, 7.5, 16]) {
+    const follow = new FollowCamera(new THREE.PerspectiveCamera(58, 16 / 9, 0.15, 2600));
+    follow.intro = false;
+    follow.distance = follow.zoomDist = follow.currentDist = zoom;
+    const x = SPAWN.x;
+    const z = 20;
+    const y = floorHeight(x, z);
+    follow.look.set(x, y + 1.2, z);
+    settle(follow, x, z, 0, 0.6, 60);
+    let previous = follow.pos.clone();
+    // Kéo chuột ngước dần như người chơi, mỗi khung một chút, tới hết cỡ.
+    for (let i = 0; i < 160; i++) {
+      follow.update(1 / 60, x, y, z, { yaw: 0, pitch: -0.012, zoom: 0 });
+      follow.camera.updateMatrixWorld();
+      const head = new THREE.Vector3(x, y + 1.2, z).project(follow.camera);
+      assert.ok(head.y > -0.95 && head.y < 0.95 && Math.abs(head.x) < 0.05, `zoom ${zoom}: player left the frame at pitch ${follow.pitch.toFixed(2)} (ndc ${head.y.toFixed(2)})`);
+      assert.ok(follow.pos.y >= y + 0.29, `zoom ${zoom}: camera under the ground at pitch ${follow.pitch.toFixed(2)}`);
+      assert.ok(Math.hypot(follow.pos.x - x, follow.pos.z - z) > 0.8, `zoom ${zoom}: camera inside the player at pitch ${follow.pitch.toFixed(2)}`);
+      // Trượt sát đất về phía chân là một cú zoom: tính theo tỉ lệ khoảng cách, không theo mét.
+      assert.ok(follow.pos.distanceTo(previous) < 0.07 * zoom, `zoom ${zoom}: camera jumped at pitch ${follow.pitch.toFixed(2)}`);
+      previous = follow.pos.clone();
+    }
+    assert.ok(follow.forward.y > Math.sin(0.85), `zoom ${zoom}: can look up at the sky (forward.y ${follow.forward.y.toFixed(2)})`);
+  }
+}));
+
+test('pointer-lock look filter drops the browser jumps that spin the camera', () => {
+  const filter = new PointerLockLookFilter();
+  assert.equal(filter.accept(5, 2), true);
+  filter.locked();
+  assert.equal(filter.accept(3, 1), false, 'first event after locking is skipped');
+  assert.equal(filter.accept(900, 0), false, 'second event after locking is skipped');
+  assert.equal(filter.accept(12, -4), true);
+  assert.equal(filter.accept(-640, 3), false, 'a sudden huge jump mid-drag is dropped');
+  assert.equal(filter.accept(0, 400), false);
+  assert.equal(filter.accept(NaN, 0), false);
+  assert.equal(filter.accept(-140, 90), true, 'a fast real flick still turns the camera');
 });

@@ -4,9 +4,15 @@ import * as THREE from 'three';
 import { isInsideHall } from '../../../shared/layout.js';
 import { cameraProbe } from '../../../shared/camera-colliders.js';
 
-// Cho ngước lên bầu trời (âm: camera hạ dưới vai) và nhìn từ trên cao xuống sâu, kiểu Trove/WWM.
-const MIN_PITCH = -1.3;
+// Ngước lên trời kiểu Genshin/WWM: pitch âm hạ tay đòn, camera trượt sát đất về phía chân.
+// Tay đòn dừng hạ ở ORBIT_MIN_PITCH; ngước thêm chỉ nghiêng ống kính lên trời (tối đa MAX_SKY_TILT,
+// nhỏ hơn nửa góc nhìn dọc 29° để đầu nhân vật vẫn còn ở mép dưới khung).
+const ORBIT_MIN_PITCH = -0.5;
+const MAX_SKY_TILT = 0.42;
+const MIN_PITCH = ORBIT_MIN_PITCH - MAX_SKY_TILT;
 const MAX_PITCH = 1.25;
+// Camera luôn cao hơn nền chỗ nhân vật đứng chừng này.
+const GROUND_CLEARANCE = 0.3;
 // Chuyển cảnh mượt khi rời màn chào hay góc máy minigame về sau lưng, tính bằng giây.
 const BLEND_TIME = 0.7;
 // Không có chế độ tự vòng camera về sau lưng: đi lại theo khung camera nên yaw tự đổi
@@ -102,7 +108,10 @@ export class FollowCamera {
     this.target.set(px, py + (this.meditating ? -0.5 : 1.2), pz);
     this.look.lerp(this.target, damp(24, dt));
 
-    const pitch = this.meditating ? 0.25 : this.pitch;
+    const viewPitch = this.meditating ? 0.25 : this.pitch;
+    // Tay đòn không hạ quá ORBIT_MIN_PITCH; phần ngước thêm thành độ nghiêng ống kính lên trời.
+    const pitch = Math.max(viewPitch, ORBIT_MIN_PITCH);
+    const skyTilt = pitch - viewPitch;
     const distance = this.meditating ? 5.2 : this.combat ? 5.5 : isInsideHall(px, pz) ? Math.min(this.distance, 3) : this.distance;
     // Lăn chuột, vào nhà hay vào PK đều trượt tới khoảng cách mới, không nhảy cóc.
     this.zoomDist += (distance - this.zoomDist) * damp(10, dt);
@@ -120,13 +129,7 @@ export class FollowCamera {
       ? safe
       : this.currentDist + (safe - this.currentDist) * damp(blocked ? RECOVER_RATE : 16, dt);
 
-    const dist = this.currentDist;
-    // Mặt đất không co tay đòn: camera trượt sát đất và vẫn giữ độ ngước, nhìn được lên trời.
-    const camY = Math.max(0.55, this.look.y + dirY * dist);
-    this.pos.set(this.look.x + dirX * dist, camY, this.look.z + dirZ * dist);
-    // Nhìn theo đúng hướng yaw/pitch thay vì lookAt đầu nhân vật: khi camera bị kẹp gần đất,
-    // góc máy vẫn giữ độ ngước đã kéo, không bị san phẳng.
-    this._aim.set(this.pos.x - dirX * dist, this.pos.y - dirY * dist, this.pos.z - dirZ * dist);
+    this.#placeOnArm(py, pitch, skyTilt);
 
     if (this.blend > 0) {
       this.blend = Math.max(0, this.blend - dt / BLEND_TIME);
@@ -143,6 +146,45 @@ export class FollowCamera {
     }
     this.camera.lookAt(this._aim);
     this.camera.getWorldDirection(this.forward);
+  }
+
+  /**
+   * Đặt camera ở cuối tay đòn và điểm nhìn _aim.
+   * Ngước lên tới lúc tay đòn chạm đất (pitch = contact) thì camera bám mặt đất, tiến đều về phía
+   * chân theo pitch tới ORBIT_MIN_PITCH, vẫn nhìn vào đầu nhân vật. Cách cũ kẹp độ cao mà giữ khoảng
+   * cách: ngước một chút là nhân vật rơi khỏi khung. Tay đòn co đúng theo tia (chỗ chạm hyperbol)
+   * thì lại giật mạnh lúc vừa chạm đất khi zoom xa, nên co theo tỉ lệ giữa hai đầu.
+   */
+  #placeOnArm(py, pitch, skyTilt) {
+    const arm = this.currentDist;
+    const groundY = py + GROUND_CLEARANCE;
+    const h = this.look.y - groundY;
+    const contact = h > 0 && h < arm ? -Math.asin(h / arm) : -Infinity;
+    let horiz;
+    let camY;
+    if (pitch < contact && contact > ORBIT_MIN_PITCH) {
+      const t = (pitch - contact) / (ORBIT_MIN_PITCH - contact);
+      const start = arm * Math.cos(contact);
+      const end = Math.min(start, h / Math.tan(-ORBIT_MIN_PITCH));
+      // Co theo tỉ lệ (hình học): góc ngước tăng đều hơn co tuyến tính (tuyến tính dồn gần hết
+      // độ ngước vào cuối hành trình), mà không giật như co đúng theo tia.
+      horiz = start * Math.pow(end / start, t);
+      camY = groundY;
+    } else {
+      horiz = arm * Math.cos(pitch);
+      camY = Math.max(groundY, this.look.y + Math.sin(pitch) * arm);
+    }
+    const sinYaw = Math.sin(this.yaw);
+    const cosYaw = Math.cos(this.yaw);
+    this.pos.set(this.look.x + sinYaw * horiz, camY, this.look.z + cosYaw * horiz);
+    // Nhìn về phía đầu nhân vật, nâng thêm skyTilt khi đã ngước quá giới hạn tay đòn.
+    const elevation = Math.atan2(this.look.y - camY, horiz) + skyTilt;
+    const reach = Math.max(1, horiz);
+    this._aim.set(
+      this.pos.x - sinYaw * Math.cos(elevation) * reach,
+      this.pos.y + Math.sin(elevation) * reach,
+      this.pos.z - cosYaw * Math.cos(elevation) * reach,
+    );
   }
 
   /** Trôi pos tới _desired và điểm nhìn tới target (màn chào, góc máy minigame). */
