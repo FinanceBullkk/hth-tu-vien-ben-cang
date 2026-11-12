@@ -71,7 +71,19 @@ Trên bản đồ, bấm phím 1 hoặc chuột trái để đánh thường; ph
 
 Khi bị hạ, nhân vật hồi sinh tại cổng với đầy HP và khiên bảo hộ 30 giây. Trong thời gian đó không nhận sát thương. Chủ động đánh thường hoặc dùng kiếm khí sẽ mất khiên ngay và hiện dấu **Sát khí** trong 60 giây; lướt và hộ thể không phá khiên.
 
-Màn vào game có nút **Mặc bộ Lee Sin · Long quyền** để chọn cùng lúc đầu trụi băng mắt, võ tăng bang thân, băng quyền và hào quang Long quyền. Có thể đổi từng món trong **Đổi trang phục**; lựa chọn được nhớ trên trình duyệt khi bấm **Vào**.
+Màn vào game có nút **Mặc bộ Lee Sin · Long quyền** để chọn cùng lúc đầu trụi băng mắt, võ tăng bang thân, băng quyền và hào quang Long quyền (món nào chưa mua thì nút báo thiếu, xem mục Sạp Kim Bảo). Có thể đổi từng món trong **Đổi trang phục**; lựa chọn được nhớ trên trình duyệt khi bấm **Vào**.
+
+## TEU và Sạp Kim Bảo
+
+TEU là điểm chung của tu viện: câu cá, giải đố của sư chú Mặc Vũ, đầu hồ, Audition chuông và tấu nhạc đều được TEU. Số TEU đang có hiện ngay dưới số người online ở góc trái; được cộng thì số nảy lên kèm `+N`. Bảng tuần chỉ tính TEU kiếm được, tiêu bao nhiêu cũng không bị trừ hạng.
+
+- **Sạp Kim Bảo:** quầy mái đỏ của bà chủ Kim Bảo cạnh lối đi tới quán trà. Tới gần bấm **E**, bấm vào bà chủ, hoặc bấm nút cửa hàng trên menu, bấm vào số TEU cũng được.
+- **Thử đồ miễn phí:** bấm một món là nhân vật mặc thử ngay (chỉ máy mình thấy). Đủ TEU thì bấm **Mua**, rồi **Mặc bộ này** để cả tu viện cùng thấy. Đóng bảng khi chưa lưu thì nhân vật về lại bộ đang mặc.
+- **Tủ đồ:** nút tủ đồ trên menu (hoặc thẻ **Tủ đồ** trong sạp) để thay đồ ngay khi đang chơi, không cần ra màn vào game. Tủ chỉ hiện đồ miễn phí và đồ đã mua.
+- **Hàng bán:** hào quang Tinh hà, Nguyệt bạch (30), Hỏa diễm, Hắc ám (40), Xích diễm (50), Long quyền, Kiếm vũ (60), Kim long (80); trang phục 25–35; Phất trần 20, Băng quyền 30; mũ và kiểu tóc 15–35; sáu màu áo quý 25–40 TEU. Giá nằm trong `shared/shop.js`.
+- **Đồ cũ được giữ:** ai đang mặc một món nay phải mua thì được giữ món đó miễn phí; màu áo quý đã mở trước đây vẫn còn. Các món khác vẫn miễn phí như cũ.
+
+Sổ an giờ chia bốn thẻ: **Tổng quan** (số liệu, túi tiền, lối tắt sang sạp), **Tu luyện**, **Sổ cá**, **Kỷ niệm** (lời ước và quẻ đã rút).
 
 ## Đầu hồ
 

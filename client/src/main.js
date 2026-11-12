@@ -22,10 +22,13 @@ import { World, createRenderer } from './scene/world.js';
 import { AdaptiveQuality, gpuName, pinShaderPrograms, renderPixelRatio, startQualityLevel } from './scene/render-quality.js';
 import { warmShaders } from './scene/shader-warmup.js';
 import { openShare } from './share/share.js';
-import { openBoard, openBook } from './ui/book.js';
+import { openBoard } from './ui/board.js';
+import { openBook } from './ui/book.js';
 import { Chat } from './ui/chat.js';
 import { $, h, store } from './ui/dom.js';
 import { Hud } from './ui/hud.js';
+import { applyLook, lookOf, openShop, rememberLook } from './ui/shop-panel.js';
+import { Wallet } from './ui/wallet.js';
 import { closeTopModal, modalOpen, openModal } from './ui/modal.js';
 import { nudgePlacesMenu, openPlacesMenu } from './ui/places-menu.js';
 import { showTutorial } from './ui/tutorial.js';
@@ -36,6 +39,7 @@ import './ui/pitch.css';
 import './ui/fishing.css';
 import './ui/melody.css';
 import './ui/cultivation.css';
+import './ui/shop.css';
 
 const isTouch = matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch', isTouch);
@@ -114,7 +118,9 @@ function main() {
   };
   app.remotes._p = new THREE.Vector3();
   app.bloom = bloomPass;
+  app.profile = profile;
   app.hud = new Hud(app);
+  app.wallet = new Wallet();
   app.chat = new Chat(app);
   app.activities = new Activities(app);
   app.voice = new ProximityVoice(app);
@@ -196,7 +202,13 @@ function main() {
     app.mats = snap.mats;
     app.activities.bell.setWait(snap.bellWait);
     app.activities.bellEvent.apply(snap.bellEvent);
-    if (snap.unlocked != null) store.set('unlocked', String(snap.unlocked));
+    app.wallet.apply({ teu: snap.teu, owned: snap.owned });
+    // Server gỡ món chưa sở hữu (mua ở máy khác, hết hạn giữ đồ cũ...): mặc đúng bộ server chốt.
+    const look = lookOf(snap.me);
+    if (Object.entries(look).some(([slot, v]) => profile[slot] !== v)) {
+      applyLook(me.avatar, look);
+      rememberLook(app, look);
+    }
     world.meditation.apply(snap.meditationScene);
     // Ai đang buông cần quanh hồ thì mình cũng thấy cần và phao của họ.
     for (const f of snap.fishers ?? []) {
@@ -253,6 +265,12 @@ function main() {
     hud.toast(`${name} vừa rời tu viện`);
   });
   net.on('presence', ({ online, visitsToday }) => hud.setPresence(online, visitsToday));
+  net.on('wallet', ({ teu }) => app.wallet.apply({ teu }));
+  // Người khác thay đồ ở tủ đồ; của mình đã mặc sẵn lúc bấm lưu.
+  net.on('player:look', (look) => {
+    const r = look.sid === mySid ? null : remotes.map.get(look.sid);
+    if (r) applyLook(r.avatar, look);
+  });
 
   const avatarOf = (sid) => (sid === mySid ? me.avatar : remotes.map.get(sid)?.avatar);
   // Vị trí đứng của một người chơi (mình hoặc người khác), cho hiệu ứng câu cá/đầu hồ.
@@ -354,6 +372,9 @@ function main() {
   // ---------- Nút và phím ----------
   $('playBtn').addEventListener('click', () => openPlacesMenu(app));
   $('bookBtn').addEventListener('click', () => openBook(app));
+  $('shopBtn').addEventListener('click', () => openShop(app, 'shop'));
+  $('wardrobeBtn').addEventListener('click', () => openShop(app, 'wardrobe'));
+  $('walletBtn').addEventListener('click', () => openShop(app, 'shop'));
   $('boardBtn').addEventListener('click', () => openBoard(app));
   $('shareBtn').addEventListener('click', () => openShare(app));
 
@@ -425,6 +446,10 @@ function main() {
         return;
       }
       app.activities.pk.use('strike', { x, y });
+      return;
+    }
+    if (world.shopStall.atRay(raycaster.ray)) {
+      openShop(app, 'shop');
       return;
     }
     if (world.abbot.atRay(raycaster.ray)) {
@@ -515,6 +540,7 @@ function main() {
     world.abbot.update(dt, me.x, me.z, camera);
     world.zoeyy.update(dt, me.x, me.z, camera);
     world.monk.update(dt, me.x, me.z, camera);
+    world.shopStall.update(dt, me.x, me.z, camera);
     world.pitchCourt.update(dt, camera);
     app.follow.update(dt, me.x, me.y, me.z, look);
     world.sky.follow(camera);

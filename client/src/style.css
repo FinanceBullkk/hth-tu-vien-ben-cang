@@ -533,7 +533,8 @@ body:has(#onlineList:not([hidden])) #voicePanel { visibility: hidden; }
   overflow: hidden;
 }
 .bookx .stat { padding: 10px 6px 8px; border-radius: 0; background: none; border-left: 1px solid rgba(143, 106, 56, .22); }
-.bookx .stat:first-child, .bookx .stat:nth-child(6) { border-left: 0; }
+.bookx .stat:nth-child(5n + 1) { border-left: 0; }
+.bookx .stat:nth-child(n + 6) { border-top: 1px solid rgba(143, 106, 56, .22); }
 .bookx .stat b { font: 700 22px/1.15 var(--serif); color: #8a5a1e; }
 .bookx .stat span { font-size: 11.5px; color: var(--muted); letter-spacing: .02em; }
 /* Sổ cá: hai cột, loài chưa bắt nhạt như mực pha */
@@ -544,44 +545,17 @@ body:has(#onlineList:not([hidden])) #voicePanel { visibility: hidden; }
 .bookx .fish-book li:not(.caught) b { color: var(--muted); font-weight: 500; }
 .bookx .fish-book-stars { position: absolute; right: 0; top: 8px; color: #b9862e; font-size: 12px; letter-spacing: 2px; }
 .bookx .fish-book li small { display: block; margin-top: 1px; font-size: 12px; color: var(--muted); }
-/* Quầy đổi quà: thẻ ấn màu — ô son vuông, tên serif, giá TEU */
-.bookx-shop { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.bookx-shop-note { margin-bottom: 10px; }
-.bookx-card {
-  display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 3px 12px;
-  padding: 11px 13px; text-align: left;
-  border: 1px solid rgba(143, 106, 56, .45); border-radius: 9px;
-  background: linear-gradient(180deg, #fffcf3, #f5ebd4);
-  box-shadow: inset 0 0 0 1px rgba(255, 253, 248, .5);
-  transition: border-color .15s, transform .12s, box-shadow .15s;
-}
-.bookx-card:not(:disabled):hover, .bookx-card:not(:disabled):focus-visible {
-  border-color: var(--gold); transform: translateY(-1px);
-  box-shadow: 0 7px 16px rgba(90, 50, 20, .2), inset 0 0 0 1px rgba(255, 253, 248, .5);
-}
-.bookx-card:not(:disabled):active { transform: translateY(0); }
-.bookx-card:disabled { cursor: default; }
-.bookx-swatch {
-  grid-row: 1 / span 2;
-  width: 36px; height: 36px; border-radius: 7px;
-  background: var(--sw, #8a5a3c);
-  box-shadow: inset 0 0 0 2px rgba(255, 253, 248, .7), inset 0 0 0 3.5px rgba(43, 28, 19, .28), 0 2px 6px rgba(43, 28, 19, .32);
-  display: grid; place-items: center;
-  color: #fffdf6; font: 700 17px/1 var(--serif);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, .55);
-}
-.bookx-card-name { font: 700 15.5px var(--serif); color: #4a1c10; letter-spacing: .02em; }
-.bookx-card-price { font-size: 12.5px; color: var(--muted); }
-.bookx-card.owned {
-  background: linear-gradient(180deg, #f1f7ec, #e5efe0);
-  border-color: rgba(63, 143, 95, .55);
-  box-shadow: none;
-}
-.bookx-card.owned .bookx-card-name { color: var(--jade-ink); }
-.bookx-card.owned .bookx-card-price { color: var(--jade); font-weight: 600; }
-/* Chưa đủ TEU: thẻ nhạt đi, giá kèm ghi chú nhỏ */
-.bookx-card.poor { opacity: .8; }
-.bookx-card.poor .bookx-card-price::after { content: ' · chưa đủ'; font-style: italic; }
+/* Thẻ chia trang của sổ: chip mực, thẻ đang mở gạch chân vàng */
+.bookx-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 6px; }
+.bookx-tabs .chip.on { background: #4a1c10; border-color: #4a1c10; color: #f6d99a; box-shadow: inset 0 -2px 0 var(--gold); }
+.bookx-page > h3:first-child { margin-top: 12px; }
+/* Thanh tiến độ: nét vàng trên rãnh giấy */
+.bookx-meter { height: 7px; margin: 2px 0 6px; border-radius: 4px; background: rgba(143, 106, 56, .18); overflow: hidden; }
+.bookx-meter span { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #b9862e, var(--gold) 60%, #f4d9a8); }
+/* Túi tiền: lối tắt sang Sạp Kim Bảo */
+.bookx-purse { padding: 10px 12px; border: 1px solid rgba(143, 106, 56, .35); border-radius: 8px; background: linear-gradient(180deg, #fffcf3, #f5ebd4); }
+.bookx-purse p { margin: 0 0 8px; }
+.bookx-purse-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 /* Chờ và lỗi */
 .bookx-loading { display: grid; place-items: center; gap: 12px; padding: 30px 0 22px; color: var(--muted); }
 .bookx-loading p, .bookx-error { margin: 0; font: italic 600 15px var(--serif); letter-spacing: .04em; }
@@ -598,7 +572,6 @@ body:has(#onlineList:not([hidden])) #voicePanel { visibility: hidden; }
 .bookx-error { text-align: center; padding: 20px 0; color: #8a3a22; }
 @media (prefers-reduced-motion: reduce) {
   .bookx-seal { animation: none; }
-  .bookx-card { transition: none; }
 }
 @media (max-width: 560px) {
   .bookx .stats { grid-template-columns: repeat(2, 1fr); }
@@ -606,6 +579,5 @@ body:has(#onlineList:not([hidden])) #voicePanel { visibility: hidden; }
   .bookx .stat:nth-child(even) { border-left: 1px solid rgba(143, 106, 56, .22); }
   .bookx .stat:nth-child(-n+2) { border-top: 0; }
   .bookx .fish-book { grid-template-columns: 1fr; }
-  .bookx-shop { grid-template-columns: repeat(2, 1fr); }
   .bookx .modal-head h2::after { display: none; }
 }

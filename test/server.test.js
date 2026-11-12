@@ -30,11 +30,14 @@ fs.writeFileSync(cfg, JSON.stringify(example));
 
 /** Chạy một server riêng với cấu hình và IP giả lập như đang đứng sau Funnel. */
 let extraPort = PORT + 10;
-async function withServer(overrides, fn) {
+async function withServer(overrides, fn, seed) {
   const port = extraPort++;
   const file = path.join(dir, `cfg-${port}.json`);
+  const dbPath = path.join(dir, `db-${port}.db`);
   fs.writeFileSync(file, JSON.stringify({ ...example, ...overrides }));
-  const proc = await startServer({ PORT: String(port), HTH_CONFIG: file, DB_PATH: path.join(dir, `db-${port}.db`), TRUST_PROXY: '1' });
+  // seed(dbPath): ghi sẵn dữ liệu vào DB trước khi server mở, ví dụ cho sẵn TEU.
+  if (seed) await seed(dbPath);
+  const proc = await startServer({ PORT: String(port), HTH_CONFIG: file, DB_PATH: dbPath, TRUST_PROXY: '1' });
   const open = [];
   const connectAs = (ip) => new Promise((resolve, reject) => {
     const s = io(`http://127.0.0.1:${port}`, { transports: ['websocket'], forceNew: true, reconnection: false, extraHeaders: { 'x-forwarded-for': ip } });
@@ -289,24 +292,25 @@ test('vị trí phát 20 lần/giây và kèm tuổi mẫu theo mốc client, m�
 
 test('ngoại hình: nhận đủ bộ skin mới, người khác nhìn thấy, giá trị ngoài phạm vi bị kẹp', async () => {
   const a = await connect();
+  // Toàn món miễn phí; món trả phí có test riêng ở phần cửa hàng.
   const res = await call(a, 'hello', {
-    name: 'Võ Sư', color: 0, hair: 3, hat: 6, attire: 3, weapon: 3, effect: 9, playerId: 'b'.repeat(32),
+    name: 'Võ Sư', color: 2, hair: 2, hat: 5, attire: 2, weapon: 1, effect: 6, playerId: 'b'.repeat(32),
   });
   assert.equal(res.ok, true);
-  assert.equal(res.snapshot.me.hair, 3);
-  assert.equal(res.snapshot.me.hat, 6);
-  assert.equal(res.snapshot.me.attire, 3);
-  assert.equal(res.snapshot.me.weapon, 3);
-  assert.equal(res.snapshot.me.effect, 9);
+  assert.equal(res.snapshot.me.hair, 2);
+  assert.equal(res.snapshot.me.hat, 5);
+  assert.equal(res.snapshot.me.attire, 2);
+  assert.equal(res.snapshot.me.weapon, 1);
+  assert.equal(res.snapshot.me.effect, 6);
 
   // Người vào sau nhìn thấy đúng ngoại hình qua snapshot.
   const b = await join('Khán Giả');
   const row = b.res.snapshot.players.find((p) => p.sid === res.sid);
-  assert.equal(row.hair, 3);
-  assert.equal(row.hat, 6);
-  assert.equal(row.attire, 3);
-  assert.equal(row.weapon, 3);
-  assert.equal(row.effect, 9);
+  assert.equal(row.hair, 2);
+  assert.equal(row.hat, 5);
+  assert.equal(row.attire, 2);
+  assert.equal(row.weapon, 1);
+  assert.equal(row.effect, 6);
 
   // Giá trị rác ngoài phạm vi bị kẹp về mặc định, không vỡ server (kết nối mới vì
   // mỗi kết nối chỉ vào phòng một lần; trùng playerId để nối tiếp người chơi cũ).
@@ -336,21 +340,21 @@ test('slot tóc: chọn riêng, client cũ không gửi hair thì di trú từ i
 
   // Client mới gửi hair: chọn riêng tóc + mũ, vào lại với look mới thì nhận look mới.
   const fresh = await connect();
-  const resNew = await call(fresh, 'hello', { name: 'Tóc Mới', color: 0, hair: 5, hat: 7, playerId: 'd'.repeat(32) });
-  assert.equal(resNew.snapshot.me.hair, 5);
+  const resNew = await call(fresh, 'hello', { name: 'Tóc Mới', color: 0, hair: 1, hat: 7, playerId: 'd'.repeat(32) });
+  assert.equal(resNew.snapshot.me.hair, 1);
   assert.equal(resNew.snapshot.me.hat, 7);
   legacyBun.disconnect();
   legacyHat.disconnect();
   fresh.disconnect();
 });
 
-test('new aura IDs reach own and remote snapshots; malformed IDs reset', async () => {
+test('aura IDs: free auras reach own and remote snapshots; unowned paid and malformed IDs reset', async () => {
   const open = [];
   try {
-    for (const effect of [9, 10, 11, 12, 13, -1, '9', 9.5]) {
+    for (const effect of [1, 2, 5, 6, 9, 11, 13, -1, '6', 9.5]) {
       const s = await connect(); open.push(s);
       const res = await call(s, 'hello', { name: 'Aura Test', color: 0, effect });
-      const expected = [9, 10, 11, 12].includes(Number(effect)) ? Number(effect) : 0;
+      const expected = [1, 2, 5, 6].includes(Number(effect)) ? Number(effect) : 0;
       assert.equal(res.ok, true);
       assert.equal(res.snapshot.me.effect, expected);
       const observer = await join('Aura Observer'); open.push(observer.s);
@@ -926,4 +930,46 @@ test('Tấu nhạc qua socket: giữ sân, chặn hoạt động khác và huỷ
   assert.equal(reclaimed.ok, true);
   await call(a, 'action:stop');
   a.disconnect();
+});
+
+test('cửa hàng qua socket: món chưa mua bị gỡ khi vào, mua bằng TEU, tủ đồ phát cho cả phòng', async () => {
+  const pid = 'f'.repeat(32);
+  const { Db } = await import('../server/db.js');
+  await withServer({}, async ({ connectAs, base }) => {
+    const a = await connectAs('10.0.0.1');
+    const res = await call(a, 'hello', { name: 'Khách Sộp', color: 0, hat: 9, effect: 11, weapon: 3, playerId: pid });
+    assert.equal(res.ok, true);
+    assert.deepEqual([res.snapshot.me.hat, res.snapshot.me.effect, res.snapshot.me.weapon], [7, 0, 0], 'món chưa mua rớt về mặc định');
+    assert.equal(res.snapshot.teu, 70);
+    assert.deepEqual(res.snapshot.owned, []);
+
+    const b = await connectAs('10.0.0.2');
+    assert.equal((await call(b, 'hello', { name: 'Người Xem', color: 0 })).ok, true);
+
+    const poor = await call(a, 'shop:buy', { item: 'effect:11' });
+    assert.equal(poor.ok, false);
+    await new Promise((r) => setTimeout(r, 350)); // Nhịp chống bấm dồn của quầy.
+    const bought = await call(a, 'shop:buy', { item: 'effect:9' });
+    assert.deepEqual([bought.ok, bought.teu], [true, 10]);
+
+    const locked = await call(a, 'look:set', { color: 0, hair: 0, hat: 7, attire: 0, weapon: 3, effect: 9 });
+    assert.equal(locked.ok, false, 'Băng quyền chưa mua thì không mặc được');
+
+    const seen = until(b, 'player:look', (l) => l.sid === res.sid);
+    const worn = await call(a, 'look:set', { color: 0, hair: 0, hat: 7, attire: 0, weapon: 1, effect: 9 });
+    assert.equal(worn.ok, true);
+    assert.equal((await seen).effect, 9);
+
+    // Bảng tuần chỉ cộng TEU kiếm được, không trừ khoản đã tiêu.
+    const weekly = await (await fetch(`${base}/api/weekly`, { headers: { 'x-player-id': pid } })).json();
+    assert.equal(weekly.teu.find((r) => r.name === 'Khách Sộp')?.teu, 70);
+    assert.equal(JSON.stringify(weekly).includes(pid), false, 'bảng tuần không lộ playerId');
+    a.disconnect();
+    b.disconnect();
+  }, (dbPath) => {
+    const db = new Db(dbPath);
+    db.touchPlayer({ id: pid, name: 'Khách Sộp', color: 0, hat: 7, now: Date.now(), isVisit: true });
+    db.addTeu(pid, 70, 'seed', localDate(Date.now(), example.timezone));
+    db.close();
+  });
 });

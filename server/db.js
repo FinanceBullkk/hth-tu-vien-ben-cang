@@ -4,6 +4,7 @@ import path from 'node:path';
 import Database from 'better-sqlite3';
 import { pkTitleMask } from '../shared/pk.js';
 import { cultivationProgress, QI_INTERVAL_MS } from '../shared/cultivation.js';
+import { ShopStore } from './shop-store.js';
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS players (
@@ -145,6 +146,9 @@ export class Db {
     this.db.exec(SCHEMA);
     this.#migrate();
     this.#prepare();
+    this.shop = new ShopStore(this.db);
+    /** Gán từ Room: báo số dư TEU mới để đẩy ví cho người chơi. */
+    this.onTeu = null;
   }
 
   // CREATE TABLE IF NOT EXISTS không thêm cột cho DB cũ: kiểm tra rồi ALTER từng cột cosmetic.
@@ -198,12 +202,12 @@ export class Db {
       bellEventInsert: p('INSERT INTO bell_events (at,participants,on_beat) VALUES (?,?,?)'),
       bellEventPlayer: p('INSERT OR IGNORE INTO bell_event_players (event_id,player_id) VALUES (?,?)'),
       bellEventsOf: p('SELECT COUNT(*) c FROM bell_event_players WHERE player_id=?'),
-      // TEU: mỗi lần cộng đều ghi log để tính bảng tuần.
+      // TEU: mỗi lần cộng/trừ đều ghi log; bảng tuần chỉ cộng phần kiếm được (số dương).
       teuInsert: p('INSERT INTO teu_log (player_id,amount,reason,local_date,created_at) VALUES (@pid,@amount,@reason,@date,@now)'),
       teuBump: p('UPDATE players SET teu=teu+@amount WHERE id=@pid'),
       teuWeekTop: p(`SELECT t.player_id, pl.name, SUM(t.amount) teu FROM teu_log t
         JOIN players pl ON pl.id = t.player_id
-        WHERE t.local_date >= @since GROUP BY t.player_id ORDER BY teu DESC, pl.name LIMIT 10`),
+        WHERE t.local_date >= @since AND t.amount > 0 GROUP BY t.player_id ORDER BY teu DESC, pl.name LIMIT 10`),
       // Cá: log từng con + tổng hợp bộ sưu tập.
       fishLogInsert: p(`INSERT INTO fish_log (player_id,fish_id,weight,grade,local_date,created_at)
         VALUES (@pid,@fishId,@weight,@grade,@date,@now)`),
@@ -229,8 +233,6 @@ export class Db {
         ON CONFLICT(player_id,local_date) DO UPDATE SET attempts=attempts+@att, correct=correct+@cor`),
       riddleDayGet: p('SELECT attempts, correct FROM riddle_daily WHERE player_id=? AND local_date=?'),
       riddleCorrectBump: p('UPDATE players SET riddle_correct=riddle_correct+1 WHERE id=?'),
-      // Mở khoá màu áo quý.
-      unlockBump: p('UPDATE players SET unlocked=unlocked|@mask, teu=teu-@price WHERE id=@pid AND teu>=@price'),
       pkMatchInsert: p(`INSERT OR IGNORE INTO pk_matches (id,winner_id,loser_id,draw,local_date,created_at)
         VALUES (@id,@winner,@loser,@draw,@date,@now)`),
       pkWin: p('UPDATE players SET pk_wins=pk_wins+1, pk_title_mask=@mask WHERE id=@pid'),
@@ -372,6 +374,7 @@ export class Db {
 
   addTeu(playerId, amount, reason, date, now = Date.now()) {
     this.teuTx(playerId, amount, reason, date, now);
+    if (amount > 0) this.onTeu?.(playerId, this.shop.teu(playerId));
   }
 
   fishCatch(playerId, fishId, weight, grade, date, now = Date.now()) {
@@ -409,18 +412,15 @@ export class Db {
     this.s.riddleCorrectBump.run(playerId);
   }
 
-  /** Mở khoá một màu áo quý bằng TEU; trả về true nếu trừ điểm thành công. */
-  unlockPremium(playerId, mask, price) {
-    return this.s.unlockBump.run({ pid: playerId, mask, price }).changes > 0;
-  }
-
   /** Bảng xếp hạng tuần: tính từ thứ Hai của tuần hiện tại theo múi giờ game. */
   weekly(weekStart) {
+    // playerId là bí mật (ai biết là vào được tài khoản): bảng công khai chỉ giữ tên và điểm.
+    const pub = (rows) => rows.map(({ player_id: _secret, ...row }) => row);
     return {
-      teu: this.s.teuWeekTop.all({ since: weekStart }),
-      fish: this.s.fishWeekTop.all({ since: weekStart }),
-      pitch: this.s.pitchWeekTop.all({ since: weekStart }),
-      pk: this.s.pkWeekTop.all({ since: weekStart }),
+      teu: pub(this.s.teuWeekTop.all({ since: weekStart })),
+      fish: pub(this.s.fishWeekTop.all({ since: weekStart })),
+      pitch: pub(this.s.pitchWeekTop.all({ since: weekStart })),
+      pk: pub(this.s.pkWeekTop.all({ since: weekStart })),
     };
   }
 
@@ -437,7 +437,6 @@ export class Db {
       bellEvents: this.s.bellEventsOf.get(playerId).c,
       teu: player.teu ?? 0,
       qi: Math.floor((player.cultivation_ms ?? 0) / QI_INTERVAL_MS),
-      unlocked: player.unlocked ?? 0,
       riddleCorrect: player.riddle_correct ?? 0,
       pitch: { best: pitch.best, plays: pitch.plays },
       pk: this.pkStats(playerId),
