@@ -703,6 +703,18 @@ function createDamageTexture(text, color = '#ff5500', isSpecial = false) {
   return tex;
 }
 
+// Vẽ canvas một lần cho mọi PkVfx (kể cả bản làm nóng shader); không bao giờ dispose.
+let sharedTextures = null;
+function pkTextures() {
+  sharedTextures ??= {
+    bagua: createBaguaTexture(),
+    lotus: createLotusMandalaTexture(),
+    flame: createFlameArrayTexture(),
+    poisonPalm: createPoisonPalmTexture(),
+  };
+  return sharedTextures;
+}
+
 export class PkVfx {
   constructor(scene) {
     this.scene = scene;
@@ -721,10 +733,11 @@ export class PkVfx {
     this.aoeDummy = new THREE.Object3D();
 
     // Bộ texture và geometry dùng chung
-    this.baguaTex = createBaguaTexture();
-    this.lotusTex = createLotusMandalaTexture();
-    this.flameTex = createFlameArrayTexture();
-    this.poisonPalmTex = createPoisonPalmTexture();
+    const textures = pkTextures();
+    this.baguaTex = textures.bagua;
+    this.lotusTex = textures.lotus;
+    this.flameTex = textures.flame;
+    this.poisonPalmTex = textures.poisonPalm;
     this.sparkGeo = new THREE.BoxGeometry(0.045, 0.045, 0.045);
     this.petalGeo = new THREE.PlaneGeometry(0.07, 0.12);
     this.sparkMat = new THREE.MeshBasicMaterial({ color: 0xb8e8cd, blending: THREE.AdditiveBlending });
