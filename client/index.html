@@ -19,7 +19,7 @@
   <div id="hud" hidden>
     <div id="presence">
       <button id="onlineBtn" type="button" aria-label="Xem ai đang online">
-        Đang có <b id="onlineCount">0</b> người trên tu viện
+        <span class="presence-icon" aria-hidden="true">👥</span><span class="presence-long">Đang có </span><b id="onlineCount">0</b><span class="presence-long"> người trên tu viện</span>
       </button>
       <p class="visits">Hôm nay có <b id="visitsToday">0</b> lượt lên tu viện</p>
       <ul id="onlineList" hidden></ul>
@@ -61,6 +61,7 @@
     </button>
 
     <div id="emojiBar" aria-label="Biểu cảm nhanh"></div>
+    <button id="emojiToggle" class="icon-btn" type="button" aria-label="Mở biểu cảm nhanh" aria-controls="emojiBar" aria-expanded="false"><span aria-hidden="true">😊</span></button>
     <button id="chatBtn" class="icon-btn" type="button" aria-label="Mở ô chat"><span aria-hidden="true">💬</span><em>Chat</em><kbd class="key-hint">Enter</kbd></button>
     <section id="chatHistory" aria-label="Lịch sử chat phiên này">
       <ol id="chatMessages" role="log" aria-live="polite" aria-relevant="additions"></ol>
