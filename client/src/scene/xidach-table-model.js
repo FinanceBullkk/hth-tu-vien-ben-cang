@@ -2,7 +2,8 @@
 // mặt dạ in chữ (xidach-felt-texture.js), khay chip của nhà cái có từng chồng chip, hộp bài (shoe) cạnh tay nhà cái,
 // váy bàn và chân đế. Mọi toạ độ trong khung nhóm bàn (tâm bàn ở gốc, nhà cái phía +x).
 import * as THREE from 'three';
-import { chipStackMaterials } from './casino-chip-materials.js';
+import { chipStackGeometry, chipStackMaterials } from './casino-chip-materials.js';
+import { mergeStaticMeshes } from './static-mesh-merge.js';
 import { cardBackMaterial } from './card-textures.js';
 import { paintXiDachFelt } from './xidach-felt-texture.js';
 
@@ -71,7 +72,7 @@ function chipTray({ x, length }, top) {
     for (let i = 0; i < cols; i++) {
       const count = 3 + ((i * 3 + row * 2) % 4);
       const value = TRAY_VALUES[(i + row * 3) % cols];
-      const stack = place(chip, chipStackMaterials(value, count), x + dx, 0, ((i - (cols - 1) / 2) * (length - 0.06)) / (cols - 1));
+      const stack = place(chipStackGeometry(chip, count), chipStackMaterials(value), x + dx, 0, ((i - (cols - 1) / 2) * (length - 0.06)) / (cols - 1));
       stack.scale.y = count * 0.0085;
       stack.position.y = top + 0.012 + stack.scale.y / 2;
       parts.push(stack);
@@ -117,6 +118,8 @@ export function buildXiDachTableModel(o) {
     place(new THREE.CylinderGeometry(0.11, 0.17, top - 0.2, 12), DARK_WOOD, 0, (top - 0.2) / 2, 0),
     place(new THREE.CylinderGeometry(0.42, 0.48, 0.05, 24), DARK_WOOD, 0, 0.025, 0),
   );
+  // Cả bàn đứng yên (lá bài, chip cược nằm ở nhóm khác): khoảng 60 mảnh còn chừng 15 lần vẽ.
+  mergeStaticMeshes(group);
   return group;
 }
 
