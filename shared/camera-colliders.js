@@ -2,12 +2,14 @@
 // quét một quả cầu từ điểm xoay sau đầu nhân vật ra vị trí camera mong muốn, gặp vật cản thì co lại.
 // Chỉ những khối to đủ che nhân vật mới chặn camera. Lan can cầu, cột, cây, đèn đá cố tình không có
 // ở đây: chặn những vật thấp/mảnh đó làm camera sập vào người mỗi lần xoay qua ("vướng").
-import { CASINO, CASINO_WALLS, HALL, PAGODA, ROOF_ZONES, SITE } from './layout.js';
+import { CASINO, CASINO_WALLS, HALL, PAGODA, ROOF_ZONES, SITE, TERRACE } from './layout.js';
 
 /** Bán kính quả cầu quét: camera luôn cách mặt vật cản chừng này, không thấy xuyên qua mép tường. */
 export const CAMERA_RADIUS = 0.3;
 
 const h = HALL;
+// Chân tường thiền đường nằm trên mặt đài.
+const HY = TERRACE.y;
 // Tường rào gạch quanh sân cao ~2.1 m (thân 1.8 m + gờ mái), dày 0.6 m (xem scene/monastery.js).
 const YARD_WALL_TOP = 2.15;
 // Mái nhô ra ngoài vùng ROOF_ZONES một chút (đầu hồi, diềm mái).
@@ -21,16 +23,18 @@ export const CAMERA_COLLIDERS = [
   box(4.6, 31, -1, YARD_WALL_TOP, 29.7, 30.3),
   // Tường Kim Ngân Phường, cao ngang tường rào.
   ...CASINO_WALLS.map((w) => box(w.minX, w.maxX, -1, CASINO.wallTop, w.minZ, w.maxZ)),
-  // Thiền đường: tường bắc, tây, đông và hai mảng tường trước chừa cửa.
-  box(h.x - h.halfW, h.x + h.halfW, -1, h.height, h.z - h.halfD - 0.25, h.z - h.halfD + 0.25),
-  box(h.x - h.halfW - 0.25, h.x - h.halfW + 0.25, -1, h.height, h.z - h.halfD, h.z + h.halfD),
-  box(h.x + h.halfW - 0.25, h.x + h.halfW + 0.25, -1, h.height, h.z - h.halfD, h.z + h.halfD),
-  box(h.x - h.halfW, h.x - h.doorHalf, -1, h.height, h.z + h.halfD - 0.25, h.z + h.halfD + 0.25),
-  box(h.x + h.doorHalf, h.x + h.halfW, -1, h.height, h.z + h.halfD - 0.25, h.z + h.halfD + 0.25),
+  // Thân đài cẩm thạch: đứng dưới sân xoay camera qua đài thì camera không chui vào khối đá.
+  box(h.x - TERRACE.halfW, h.x + TERRACE.halfW, -1, TERRACE.y, TERRACE.backZ, TERRACE.frontZ),
+  // Thiền đường trên đài: tường bắc, tây, đông và hai mảng tường trước chừa cửa.
+  box(h.x - h.halfW, h.x + h.halfW, HY - 1, HY + h.height, h.z - h.halfD - 0.25, h.z - h.halfD + 0.25),
+  box(h.x - h.halfW - 0.25, h.x - h.halfW + 0.25, HY - 1, HY + h.height, h.z - h.halfD, h.z + h.halfD),
+  box(h.x + h.halfW - 0.25, h.x + h.halfW + 0.25, HY - 1, HY + h.height, h.z - h.halfD, h.z + h.halfD),
+  box(h.x - h.halfW, h.x - h.doorHalf, HY - 1, HY + h.height, h.z + h.halfD - 0.25, h.z + h.halfD + 0.25),
+  box(h.x + h.doorHalf, h.x + h.halfW, HY - 1, HY + h.height, h.z + h.halfD - 0.25, h.z + h.halfD + 0.25),
   // Lanh tô trên cửa thiền đường.
-  box(h.x - h.doorHalf, h.x + h.doorHalf, h.height - 1.1, h.height, h.z + h.halfD - 0.25, h.z + h.halfD + 0.25),
-  // Mái hai tầng của thiền đường, gồm cả mái hiên phía trước.
-  box(h.x - h.halfW - 2, h.x + h.halfW + 2, h.height - 0.05, h.height + 5.8, h.z - h.halfD - 2.4, h.z + h.halfD + 3),
+  box(h.x - h.doorHalf, h.x + h.doorHalf, HY + h.height - 1.1, HY + h.height, h.z + h.halfD - 0.25, h.z + h.halfD + 0.25),
+  // Mái chồng hai tầng của đại điện, gồm cả mái hiên phía trước.
+  box(h.x - h.halfW - 2.2, h.x + h.halfW + 2.2, HY + h.height - 0.05, HY + h.height + 6.4, h.z - h.halfD - 2.6, h.z + h.halfD + 3.2),
   // Thân bảo tháp: không cho camera chui vào trong tháp.
   box(PAGODA.x - 2.4, PAGODA.x + 2.4, -1, PAGODA.roofY, PAGODA.z - 2.4, PAGODA.z + 2.4),
   // Tấm mái hành lang, gác chuông, quán trà: ROOF_ZONES.y là trần camera cũ, mái thật ở ngay trên.

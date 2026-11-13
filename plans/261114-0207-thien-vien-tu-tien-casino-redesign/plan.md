@@ -16,8 +16,8 @@ Ngày 14/11/2026. Chủ dự án thấy sân chật (cả sòng lẫn các cụm
 
 | PR | Nội dung | Trạng thái |
 |---|---|---|
-| 1 | [Nới gò, dời các cụm theo sơ đồ](phase-01-noi-go-va-doi-cum.md) | PR mở |
-| 2 | Kiến trúc nội viện: đài cẩm thạch, đại điện mái chồng, tam quan, hành lang son, sân lát | Chờ |
+| 1 | [Nới gò, dời các cụm theo sơ đồ](phase-01-noi-go-va-doi-cum.md) | Đã merge (#90) |
+| 2 | [Kiến trúc nội viện kiểu tiên môn](phase-02-kien-truc-noi-vien.md) | PR mở |
 | 3 | Kim Ngân Phường: tường, cổng, Kim Ngân Lâu, Tụ Bảo Bồn, dây đèn, sàn lát | Chờ |
 | 4 | Cảnh xa: núi đá dựng, biển mây, đảo bay, thác, hạc, linh khí, trận pháp | Chờ |
 

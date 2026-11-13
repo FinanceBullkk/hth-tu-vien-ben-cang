@@ -1,19 +1,20 @@
 import * as THREE from 'three';
 import { BAMBOO_CLUMPS, GALLERIES, GALLERY_POSTS } from '../../../shared/layout.js';
-import { addRoof, rng } from './builders.js';
+import { rng } from './builders.js';
+import { PALACE, bracketBand, palaceRoof, redColumn } from './palace-kit.js';
 
 export function buildCampusGalleries(b) {
+  // Hành lang cột son nền cẩm thạch, dầm đỏ, dải đấu củng, mái lưu ly xanh ngọc.
   for (const g of GALLERIES) {
-    b.box(g.w, g.floor, g.d, '#c4b99d', g.x, g.floor / 2, g.z);
+    b.box(g.w, g.floor, g.d, PALACE.marble, g.x, g.floor / 2, g.z, { jitter: 0.01 });
+    b.box(g.w + 0.14, 0.05, g.d + 0.14, PALACE.marbleDeep, g.x, 0.025, g.z);
     for (const side of [-1, 1]) {
-      b.box(0.16, 0.18, g.d, '#97734e', g.x + side * 1.1, g.roof - 0.08, g.z);
+      b.box(0.18, 0.22, g.d, PALACE.redDark, g.x + side * 1.1, g.roof - 0.1, g.z);
+      bracketBand(b, g.d, g.x + side * 1.1, g.roof + 0.12, g.z, { ry: Math.PI / 2, depth: 0.3 });
     }
-    addRoof(b, g.d + 1, g.w + 0.7, 0.85, g.x, g.roof, g.z, { ry: Math.PI / 2, lift: 0.16 });
+    palaceRoof(b, g.d + 1, g.w + 0.7, 0.95, g.x, g.roof + 0.25, g.z, { ry: Math.PI / 2, lift: 0.3 });
   }
-  for (const p of GALLERY_POSTS) {
-    b.cyl(0.13, 0.16, 3, '#a17a51', p.x, 1.65, p.z, { seg: 8 });
-    b.box(0.42, 0.22, 0.42, '#d4c8aa', p.x, 0.22, p.z);
-  }
+  for (const p of GALLERY_POSTS) redColumn(b, p.x, p.z, 3.05, 0.16, 0.14);
   const random = rng(182);
   for (const clump of BAMBOO_CLUMPS) {
     b.cyl(clump.r + 0.5, clump.r + 0.5, 0.02, '#8ca66a', clump.x, 0.02, clump.z, { seg: 12 });

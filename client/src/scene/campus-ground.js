@@ -61,20 +61,25 @@ export function buildCampusGround(group, b) {
   const earth = new THREE.MeshLambertMaterial({ map: groundTexture() });
   const stone = new THREE.MeshLambertMaterial({ map: groundTexture(true), side: THREE.DoubleSide });
   const soil = new THREE.MeshLambertMaterial({ color: '#c9bc9c' });
+  const marble = new THREE.MeshLambertMaterial({ color: '#e8e2d4' });
   surface(group, rect({ minX: SITE.minX - 0.7, maxX: SITE.maxX + 0.9, minZ: SITE.minZ - 0.7, maxZ: SITE.maxZ + 1 }), earth, 0);
   // Sân đạo trường trước thiền đường: để trống, chỉ lát đá; thuôn lại ở đầu nối với trục chính.
   const z0 = HALL.z + 8;
   surface(group, [[-9.7, z0], [9.7, z0], [9.7, z0 + 18], [6.5, z0 + 21], [-6.5, z0 + 21], [-9.7, z0 + 18]], stone);
   surface(group, rect(CASINO), stone);
   surface(group, rect(MARKET_PLAZA), stone);
-  clearing(group, BELL.x, BELL.z, 5.5, 5.4, soil, 14);
-  clearing(group, TREE.x, TREE.z, 5.6, 5.1, soil, 12);
+  // Thần đạo: dải đá lát rộng từ tam quan tới chân bậc đại điện, giữa là lối cẩm thạch.
+  surface(group, rect({ minX: -4.4, maxX: 4.4, minZ: HALL.z + 10, maxZ: 30.2 }), stone, 0.026);
+  surface(group, rect({ minX: -1.3, maxX: 1.3, minZ: HALL.z + 10, maxZ: 30.2 }), marble, 0.034);
+  clearing(group, BELL.x, BELL.z, 5.5, 5.4, stone, 14);
+  clearing(group, TREE.x, TREE.z, 5.6, 5.1, stone, 12);
   clearing(group, PAGODA.x, PAGODA.z, 5.4, 5.5, stone, 19);
   clearing(group, PITCH_ZONE.x - 4, PITCH_ZONE.z, 5.2, 5.8, soil, 17);
   for (const lobe of LAKE.lobes) clearing(group, lobe.x, lobe.z, lobe.r + 0.9, lobe.r + 0.9, soil, 26);
 
   // ponytail: paths remain flush; true terrain steps must also change shared floorHeight.
   for (const path of COURT_PATHS) {
+    if (path.paved) continue; // Trục chính đã lát thần đạo riêng ở trên.
     const curve = new THREE.CatmullRomCurve3(path.points.map(([x, z]) => new THREE.Vector3(x, 0, z)));
     const steps = Math.ceil(curve.getLength() * 2);
     const points = curve.getSpacedPoints(steps);
@@ -102,5 +107,4 @@ export function buildCampusGround(group, b) {
     mesh.receiveShadow = true;
     group.add(mesh);
   }
-  b.box(17.6, 0.3, 3.4, '#d6c8aa', HALL.x, 0.15, HALL.z + HALL.halfD + 1.7);
 }

@@ -11,6 +11,18 @@ export const PLAYER_RADIUS = 0.4;
 
 export const BELL = { x: -15, z: 4, radius: 3.6, yardRadius: 12 };
 export const HALL = { x: 0, z: -32, halfW: 8, halfD: 6, doorHalf: 2.2, height: 4.6 };
+// Đài cẩm thạch dưới thiền đường: cao TERRACE.y, có lan can quanh mép, bậc lớn giữa mặt trước theo trục chính.
+// Thiền đường, hiên và lối đi vòng quanh điện đều nằm trên đài. Bậc chạy từ chân (stairFootZ) lên mép đài (frontZ).
+export const TERRACE = {
+  halfW: HALL.halfW + 2.5,
+  backZ: HALL.z - HALL.halfD - 2,
+  frontZ: HALL.z + HALL.halfD + 3.4,
+  y: 1.6,
+  stairHalf: 3,
+  stairRun: 3.6,
+  rail: 0.15, // nửa bề dày lan can
+};
+TERRACE.stairFootZ = TERRACE.frontZ + TERRACE.stairRun;
 // radius: vùng tương tác treo lời ước, nới đúng tới rìa dải lụa trên cành.
 export const TREE = { x: -14, z: 19, radius: 5.4 };
 // 8 cành tỏa ngang để treo dải lụa: dùng chung cho scene (monastery) và vị trí ribbon (wishes3d)
@@ -64,6 +76,8 @@ export const TRADE_POST = {
   board: { minX: TRADE_X - 0.9, maxX: TRADE_X + 0.9, minZ: TRADE_Z - 0.12, maxZ: TRADE_Z + 0.12 },
 };
 export const GATE_MONK = { x: 3.2, z: 28.4, rot: 0, radius: 0.35, actionRadius: 2.6 };
+// Hai sư tử đá giữ cổng, ngồi trên bậc thềm ngoài tam quan, chừa giữa thềm cho người lên xuống.
+export const GATE_LIONS = [-1, 1].map((side) => ({ x: side * 3.6, z: 31.5, r: 0.55, side }));
 
 // Kim Ngân Phường: khu sòng có tường riêng phía tây, hai cổng (đông nhìn sang gác chuông, nam ra phố chợ).
 // aisle là lối giữa chạy bắc–nam; hai cột bàn hai bên lối, khách luôn đứng phía lối, nhà cái đứng mép ngoài.
@@ -203,7 +217,7 @@ export const TEA_TABLES = [[0, 0], [-3.4, 2.6], [3.4, 2.6]]
 const CASINO_EAST_GATE_X = CASINO.maxX;
 export const COURT_PATHS = [
   // Trục chính từ tam quan tới chân sân đạo trường.
-  { width: 3.8, points: [[0, 40], [0, 30], [0, 16], [0, 4], [0, -3]] },
+  { width: 3.8, paved: true, points: [[0, 40], [0, 30], [0, 16], [0, 4], [0, -3]] },
   // Lối ngang phía tây: trục chính → cổng đông Kim Ngân Phường → Tụ Bảo Bồn.
   { width: 2.6, points: [[0, -4], [-8, -3.5], [-16, -3], [-22, -4], [CASINO_EAST_GATE_X - 1, -4], [-36, -4.5], [TREASURE_BASIN.x + 2.4, TREASURE_BASIN.z + 0.4]] },
   // Lối vào gác chuông.
@@ -236,6 +250,22 @@ export const BAMBOO_CLUMPS = [
 
 const WALL_T = 0.4;
 const h = HALL;
+
+/** Lan can quanh đài: chặn cả hai phía nên không ai bước hụt xuống hay trèo lên từ cạnh đài. */
+function terraceRailBoxes() {
+  const { halfW, backZ, frontZ, stairHalf, stairFootZ, rail } = TERRACE;
+  const x0 = HALL.x - halfW;
+  const x1 = HALL.x + halfW;
+  return [
+    { minX: x0, maxX: x1, minZ: backZ - rail, maxZ: backZ + rail },
+    { minX: x0 - rail, maxX: x0 + rail, minZ: backZ, maxZ: frontZ },
+    { minX: x1 - rail, maxX: x1 + rail, minZ: backZ, maxZ: frontZ },
+    { minX: x0, maxX: HALL.x - stairHalf, minZ: frontZ - rail, maxZ: frontZ + rail },
+    { minX: HALL.x + stairHalf, maxX: x1, minZ: frontZ - rail, maxZ: frontZ + rail },
+    { minX: HALL.x - stairHalf - 2 * rail, maxX: HALL.x - stairHalf, minZ: frontZ, maxZ: stairFootZ },
+    { minX: HALL.x + stairHalf, maxX: HALL.x + stairHalf + 2 * rail, minZ: frontZ, maxZ: stairFootZ },
+  ];
+}
 
 /** Tường Kim Ngân Phường thành các đoạn hộp, chừa cổng đông và cổng nam. */
 function casinoWallBoxes() {
@@ -277,6 +307,8 @@ export const BOXES = [
   SHOP.shelf,
   // Bảng của Trạm giao thương.
   TRADE_POST.board,
+  // Lan can đài cẩm thạch quanh thiền đường (chừa bậc giữa mặt trước) và lan can hai bên bậc.
+  ...terraceRailBoxes(),
   // Lan can cầu vòm qua hồ sen: giữ người chơi trên dải cầu.
   { minX: BRIDGE.x1, maxX: BRIDGE.x2, minZ: BRIDGE.z - 0.98, maxZ: BRIDGE.z - 0.72, cam: true },
   { minX: BRIDGE.x1, maxX: BRIDGE.x2, minZ: BRIDGE.z + 0.72, maxZ: BRIDGE.z + 0.98, cam: true },
@@ -297,6 +329,7 @@ export const CIRCLES = [
   { x: ZOEYY.x, z: ZOEYY.z, r: ZOEYY.radius },
   // Sư chú giữ cổng; chum lớn, đối thủ và hai bình ở sân đầu hồ
   { x: GATE_MONK.x, z: GATE_MONK.z, r: GATE_MONK.radius },
+  ...GATE_LIONS,
   { x: SHOP.x, z: SHOP.z, r: SHOP.radius },
   { x: BAUCUA_ZONE.x, z: BAUCUA_ZONE.z, r: BAUCUA_ZONE.tableRadius },
   { x: BAUCUA_ZONE.dealer.x, z: BAUCUA_ZONE.dealer.z, r: BAUCUA_ZONE.dealer.radius },
@@ -332,7 +365,7 @@ export const CIRCLES = [
 /** Vùng có mái: camera không được cao hơn mái khi người chơi đứng trong đó. */
 export const ROOF_ZONES = [
   ...GALLERIES.map(g => ({ minX: g.x - g.w / 2, maxX: g.x + g.w / 2, minZ: g.z - g.d / 2, maxZ: g.z + g.d / 2, y: g.roof - 0.35 })),
-  { minX: h.x - h.halfW, maxX: h.x + h.halfW, minZ: h.z - h.halfD, maxZ: h.z + h.halfD, y: 4.2 },
+  { minX: h.x - h.halfW, maxX: h.x + h.halfW, minZ: h.z - h.halfD, maxZ: h.z + h.halfD, y: TERRACE.y + 4.2 },
   { minX: BELL.x - 3.2, maxX: BELL.x + 3.2, minZ: BELL.z - 3.2, maxZ: BELL.z + 3.2, y: 4.3 },
   { minX: TEA.x - 5, maxX: TEA.x + 5, minZ: TEA.z - 3.8, maxZ: TEA.z + 4.4, y: 3.7 },
   { minX: PAGODA.x - 4.4, maxX: PAGODA.x + 4.4, minZ: PAGODA.z - 4.4, maxZ: PAGODA.z + 4.4, y: PAGODA.roofY },
@@ -438,7 +471,11 @@ export function floorHeight(x, z) {
   for (const g of GALLERIES) {
     if (Math.abs(x - g.x) < g.w / 2 && Math.abs(z - g.z) < g.d / 2) return g.floor;
   }
-  if (Math.abs(x - HALL.x) < HALL.halfW + 0.8 && z > HALL.z - HALL.halfD && z < HALL.z + HALL.halfD + 3.4) return 0.3;
+  // Mặt đài cẩm thạch (cả trong điện), rồi bậc dốc đều từ chân bậc lên mép đài.
+  if (Math.abs(x - HALL.x) < TERRACE.halfW && z > TERRACE.backZ && z <= TERRACE.frontZ) return TERRACE.y;
+  if (Math.abs(x - HALL.x) < TERRACE.stairHalf && z > TERRACE.frontZ && z < TERRACE.stairFootZ) {
+    return Math.max(0.04, TERRACE.y * (TERRACE.stairFootZ - z) / TERRACE.stairRun);
+  }
   if (Math.abs(x - BELL.x) < 3.5 && Math.abs(z - BELL.z) < 3.5) return 0.2;
   if (Math.abs(x - TEA.x) < 5 && z > TEA.z - 3.8 && z < TEA.z + 4.4) return 0.16;
   if (Math.abs(z - BRIDGE.z) < BRIDGE.halfW && x > BRIDGE.x1 && x < BRIDGE.x2) {
