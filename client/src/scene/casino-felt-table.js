@@ -7,12 +7,14 @@ import { floorHeight } from '../../../shared/layout.js';
 import { h } from '../ui/dom.js';
 import { chipMaterials } from './casino-chip-materials.js';
 import { TableDealer } from './table-dealer.js';
+import { disposeMergedMeshes, mergeStaticMeshes } from './static-mesh-merge.js';
 
 export const TOP_Y = 0.8; // Mặt bàn cao hơn nền chừng này.
 const CHIP_R = 0.034;
 const CHIP_H = 0.008;
 const MAX_STACK = 12; // Chồng cao hơn thì gộp, tránh cột chip xuyên mái.
 const LABEL_SHOW_DISTANCE = 22;
+const CHIP_GEOMETRY = new THREE.CylinderGeometry(CHIP_R, CHIP_R, CHIP_H, 18);
 
 export const matte = (color, extra = {}) => new THREE.MeshLambertMaterial({ color, flatShading: true, ...extra });
 
@@ -75,7 +77,10 @@ export class CasinoFeltTable {
     rim.rotation.x = Math.PI / 2;
     const stem = mesh(new THREE.CylinderGeometry(0.14, 0.22, TOP_Y - 0.08, 10), dark, 0, (TOP_Y - 0.08) / 2, 0);
     const foot = mesh(new THREE.CylinderGeometry(0.5, 0.56, 0.06, 18), dark, 0, 0.03, 0);
-    this.group.add(top, cloth, rim, stem, foot);
+    const base = new THREE.Group();
+    base.add(top, cloth, rim, stem, foot);
+    mergeStaticMeshes(base); // Năm khối gỗ và dạ chung một lần vẽ.
+    this.group.add(base);
   }
 
   #buildFelt() {
@@ -175,7 +180,10 @@ export class CasinoFeltTable {
     totals.forEach((amount, target) => {
       const old = this.stacks.get(target);
       if ((old?.userData.amount ?? 0) === amount) return;
-      if (old) this.group.remove(old);
+      if (old) {
+        this.group.remove(old);
+        disposeMergedMeshes(old);
+      }
       this.stacks.delete(target);
       if (!amount) return;
       const r = this.regions.find((g) => g.target === target);
@@ -184,9 +192,11 @@ export class CasinoFeltTable {
       const stack = new THREE.Group();
       stack.userData.amount = amount;
       chipBreakdown(amount).forEach((v, i) => {
-        const chip = mesh(new THREE.CylinderGeometry(CHIP_R, CHIP_R, CHIP_H, 18), chipMaterials(v), (i % 2) * 0.003, TOP_Y + 0.014 + i * CHIP_H, 0);
+        const chip = mesh(CHIP_GEOMETRY, chipMaterials(v), (i % 2) * 0.003, TOP_Y + 0.014 + i * CHIP_H, 0);
         stack.add(chip);
       });
+      // Mỗi đồng chip là 3 lần vẽ (cạnh, hai mặt); gộp cả chồng còn tối đa 2 lần mỗi mệnh giá.
+      mergeStaticMeshes(stack);
       stack.position.set(spot.x, 0, spot.z);
       this.group.add(stack);
       this.stacks.set(target, stack);

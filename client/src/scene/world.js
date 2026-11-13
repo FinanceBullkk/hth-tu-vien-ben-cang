@@ -5,6 +5,7 @@ import { BauCuaTable } from './baucua-table.js';
 import { XiDachTable } from './xidach-table.js';
 import { TaiXiuTable } from './taixiu-table.js';
 import { CoQuayTable } from './coquay-table.js';
+import { SlotMachines } from './slot-machines.js';
 import { ZOEYY } from '../../../shared/layout.js';
 import { Animals } from './animals.js';
 import { Celestial } from './celestial.js';
@@ -51,6 +52,7 @@ export class World {
     this.xidachTable = new XiDachTable(scene);
     this.taixiuTable = new TaiXiuTable(scene);
     this.coquayTable = new CoQuayTable(scene);
+    this.slotMachines = new SlotMachines(scene);
     this.wishes = new Wishes3D(scene);
     // Dải lụa thắt lên cành xong thì cánh hoa rơi nhẹ một nhịp.
     this.wishes.onLand = (amount) => this.particles.burstPetals(amount);

@@ -80,12 +80,29 @@ export function chipMaterials(value) {
   });
 }
 
-/** Bộ vật liệu cho một chồng count chip gộp thành một trụ (khay nhà cái). */
-export function chipStackMaterials(value, count) {
-  return cached(`stack:${value}:${count}`, () => {
+/**
+ * Bộ vật liệu cho một chồng chip gộp thành một trụ (khay nhà cái). Vân cạnh lặp theo trục dọc:
+ * geometry của chồng nhân toạ độ v với số chip (chipStackGeometry), nên mọi chồng cùng mệnh giá
+ * dùng chung một vật liệu và gộp được chung một lần vẽ.
+ */
+export function chipStackMaterials(value) {
+  return cached(`stack:${value}`, () => {
     const side = sideTexture(CHIP_COLORS[value], true);
     side.wrapT = THREE.RepeatWrapping;
-    side.repeat.set(1, count);
     return [new THREE.MeshLambertMaterial({ map: side }), chipMaterials(value)[1], chipMaterials(value)[1]];
+  });
+}
+
+/** Trụ chồng count chip cao 1 đơn vị (scale.y theo chiều cao thật): vân cạnh lặp count lần. */
+export function chipStackGeometry(base, count) {
+  return cached(`stack-geo:${base.uuid}:${count}`, () => {
+    const geometry = base.clone();
+    const uv = geometry.attributes.uv;
+    const side = geometry.groups.find((g) => g.materialIndex === 0);
+    // Cylinder có index: vùng thân là các đỉnh đầu tiên, trước hai nắp; lấy theo chỉ số đỉnh lớn nhất của nhóm thân.
+    let last = 0;
+    for (let i = side.start; i < side.start + side.count; i++) last = Math.max(last, geometry.index.getX(i));
+    for (let i = 0; i <= last; i++) uv.setY(i, uv.getY(i) * count);
+    return geometry;
   });
 }
