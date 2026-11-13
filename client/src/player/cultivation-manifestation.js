@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { swordGeometry } from './vfx/sword-geometry.js';
+import { buildHongLienThrone } from './vfx/hong-lien-throne.js';
 
 const cache = new Map();
 const petal = new THREE.PlaneGeometry(1, 1, 8, 12);
@@ -50,7 +51,8 @@ function build(effect, stage) {
       add(swordGeometry(), Math.sin(a) * r, 0.08, Math.cos(a) * r, len, len, len, lean, a, 0, 'YXZ');
     }
   };
-  if (effect === 12) {
+  if (effect === 4) buildHongLienThrone(add, stage);
+  else if (effect === 12) {
     if (stage === 0) plant(3, 0.7, 0.45, 0.2, 0.5);
     else if (stage === 1) plant(8, 0.62, 0.75, 0.38);
     else for (let i = 0; i < 7; i++) {
@@ -98,12 +100,9 @@ function build(effect, stage) {
     }
     stem([...points, points[0]], 0.008);
     if (stage === 2) for (let i = 0; i < 5; i++) add(petal, (i - 2) * 0.3, 1.7, -0.8, 0.08, 0.65, 0.2, 0, 0, (i - 2) * -0.2);
-  } else if (effect === 4 || effect === 8) {
-    wings(effect === 8);
+  } else if (effect === 8) {
+    wings(true);
     if (stage === 2) for (let i = 0; i < 3; i++) add(petal, (i - 1) * 0.12, 1.65, -0.5, 0.15, 0.55 - Math.abs(i - 1) * 0.15, 0.4, 0, 0, (i - 1) * -0.3);
-    if (stage === 2 && effect === 4) for (const side of [-1, 1]) {
-      add(petal, side * 0.45, 0.8, -0.6, 0.22, 1.1, 0.6, -0.5, 0, side * 2.4);
-    }
   } else if (effect === 5) {
     const side = stage === 1 ? -1 : 1;
     stem([[side * 0.45, 0.1, -0.65], [side * 0.85, 0.75, -0.65], [side * 0.65, 1.5, -0.65], [side * 0.25, 1.85, -0.65]], 0.018);
@@ -157,7 +156,8 @@ export function createManifestation(effect, tint, accent, lowQuality = false) {
     update(level, sit, time, fading) {
       group.visible = level >= 3 && sit > 0.1 && fading > 0;
       layers.forEach((mesh, i) => {
-        const replacesCrown = [0, 1, 3, 4, 8].includes(theme);
+        // Hồng Liên (4) giữ đài sen tầng 4 dưới đôi cánh tầng 5.
+        const replacesCrown = [0, 1, 3, 8].includes(theme);
         mesh.visible = level >= i + 3 && !(i === 1 && level >= 5 && replacesCrown);
         mesh.position.y = i ? Math.sin(time * 0.7 + i) * 0.035 : Math.sin(time) * 0.06;
         mesh.rotation.y = Math.sin(time * 0.35 + i) * (i ? 0.08 : 0.15);

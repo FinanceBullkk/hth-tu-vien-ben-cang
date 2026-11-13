@@ -4,7 +4,7 @@
 // 1 Sen kim — Kim đài liên hoa, pháp trận kép, chân ngôn 禪, cánh sen dâng kèm hoa rơi;
 // 2 Lưu ly — long khí bơi quanh người, gợn nước loang từ chân, đá lưu ly lấp lánh, chân ngôn 水;
 // 3 Tinh hà — dải ngân hà nghiêng, ba vòng hào quang, sao chổi quanh vành, chân ngôn 星;
-// 4 Hỏa diễm — hỏa liên cháy dưới chân, trụ hỏa dâng, tàn lửa bay ngược lên trời, chân ngôn 炎;
+// 4 Hồng Liên Hỏa Vũ — pháp tướng riêng ở vfx/hong-lien-aura.js (cánh chu tước, phượng vĩ, đài sen lửa);
 // 5 Đào hoa — mưa cánh đào hồng rơi li ti, trận đào, trụ hoa, sương hồng, chân ngôn 桃;
 // 6 Bích ngọc — lá ngọc rơi xoay, trúc khí mọc quanh chân, viên ngọc lục bay vòng vai, chân ngôn 竹;
 // 7 Nguyệt bạch — trăng lưỡi liềm bạc treo sau vai, dải sao bạc nghiêng, bụi trăng rơi, chân ngôn 月;
@@ -15,6 +15,7 @@
 import * as THREE from 'three';
 import { createRibbonAura } from './vfx/ribbon-aura.js';
 import { createKiemVuAura } from './vfx/kiem-vu-aura.js';
+import { createHongLienAura } from './vfx/hong-lien-aura.js';
 import { createAuraSignature } from './aura-signature.js';
 import { store } from '../ui/dom.js';
 
@@ -280,7 +281,7 @@ function crystalTexture() {
   });
 }
 
-// Ngọn lửa: thân lửa mềm chóp nhọn + lõi sáng, dùng cho tàn lửa và quỷ hỏa của Hỏa diễm.
+// Ngọn lửa: thân lửa mềm chóp nhọn + lõi sáng, dùng cho hắc viêm và long quyền.
 function flameTexture() {
   return canvasTex('flame', 64, 64, (ctx) => {
     const g = ctx.createRadialGradient(32, 38, 2, 32, 38, 26);
@@ -839,6 +840,8 @@ export function createEffect(effect, lowQuality = false) {
   } : null;
   // 12: Thanh Phong Kiếm Vũ có pháp tướng riêng (kiếm luân, phi kiếm, trận đồ).
   if (effect === 12) return createKiemVuAura(lowQuality, reducedMotion);
+  // 4: Hồng Liên Hỏa Vũ có pháp tướng riêng (cánh chu tước, phượng vĩ, đài sen lửa).
+  if (effect === 4) return createHongLienAura(lowQuality, reducedMotion);
 
   const colors = PALETTES[effect - 1] ?? PALETTES[0];
   const group = new THREE.Group();
@@ -1412,124 +1415,6 @@ export function createEffect(effect, lowQuality = false) {
       }
       dust.geo.attributes.position.needsUpdate = true;
       dust.geo.attributes.color.needsUpdate = true;
-      updateGlyphs(glyphs, t);
-    };
-  } else if (effect === 4) {
-    // HỎA DIỄM — hỏa liên cháy dưới chân, trụ hỏa dâng quanh người, tàn lửa bay ngược lên trời,
-    // quỷ hỏa chớp tắt lượn vòng, bụi lửa lấp lánh, chân ngôn 炎.
-    const count = lowQuality ? 14 : 26;
-    const sparkCount = lowQuality ? 12 : 22;
-    fillSeeds(seed, count);
-    const pool = sprite(glowTexture(), colors[0], 1.25, 1.25, 0, 0.04, 0, 0.32);
-    const pillar = sprite(wispTexture(), colors[0], 0.5, 1.7, 0, 0.85, 0, 0.15);
-    const lotus = flatMesh(lotusTexture(), colors[0], 1.7, 0.02, 0.85); // hỏa liên cõng người
-    const mantra = flatMesh(runeRingTexture('rune-yan', '炎'), colors[0], 1.5, 0.06, 0.8);
-    const counterRing = flatMesh(ringTexture(), colors[0], 1.0, 0.035, 0.35);
-
-    // vòm hỏa khí: ống khí cam bao toàn thân — cùng cấu trúc vòm với các hiệu ứng khác
-    const domeTex = domeTexture();
-    domeTex.wrapS = THREE.RepeatWrapping;
-    domeTex.wrapT = THREE.RepeatWrapping;
-    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
-      map: domeTex, color: colors[0], transparent: true, depthWrite: false,
-      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.14,
-    }), 0.14);
-    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.0, 1.95, 48, 1, true)), domeEntry.mat);
-    dome.position.y = 0.97;
-    group.add(dome);
-
-    // trụ hỏa: 4 cột lửa dâng nhanh quanh đài
-    const pillars = [];
-    for (let i = 0; i < (lowQuality ? 2 : 4); i++) {
-      const entry = dynMat(() => new THREE.SpriteMaterial({
-        map: wispTexture(), color: colors[0], transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, opacity: 0, rotation: 0.04 * (i - 1.5),
-      }), 0);
-      const sp = new THREE.Sprite(entry.mat);
-      group.add(sp);
-      pillars.push({ sp, entry, a0: (i / 4) * Math.PI * 2 + 0.8, r: 0.8 + ((i * 13) % 10) / 10 * 0.18, tw: ((i * 29) % 10) / 10 });
-    }
-
-    // quỷ hỏa: 3 ngọn lửa nhỏ bay vòng ngoài, chớp tắt dữ hơn hỏa ngọc của Sen kim
-    const orbs = [];
-    for (let i = 0; i < (lowQuality ? 2 : 3); i++) {
-      const entry = dynMat(() => new THREE.SpriteMaterial({
-        map: flameTexture(), color: colors[0], transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, opacity: 0.7,
-      }), 0.7);
-      const sp = new THREE.Sprite(entry.mat);
-      group.add(sp);
-      orbs.push({ sp, entry, a0: (i / 3) * Math.PI * 2, r: 1.0 + i * 0.13, y: 0.5 + i * 0.42, tw: ((i * 29) % 10) / 10 });
-    }
-
-    // tàn lửa bay ngược: ngọn lửa nhỏ từ chân dâng thẳng lên trời rồi tan
-    const flames = new THREE.InstancedMesh(track(new THREE.PlaneGeometry(0.15, 0.2)), glowMat({
-      map: flameTexture(), color: colors[0],
-    }), count);
-    group.add(flames);
-
-    const sparks = makeTwinkles(sparkCount, 0.055, (i, n) => ({
-      a0: (i / n) * Math.PI * 3.1,
-      r: 0.3 + ((i * 37) % 20) / 20 * 0.4,
-      y: 0.1 + ((i * 53) % 30) / 30 * 1.3,
-      tw: ((i * 29) % 10) / 10,
-      speed: 0.5 + ((i * 61) % 10) / 10,
-    }), colors[0]);
-    const glyphs = makeGlyphs(lowQuality ? 3 : 6, 0.62);
-
-    variantUpdate = (t) => {
-      pool.scale.setScalar(1.25 * (1 + Math.sin(t * 2.6) * 0.07)); // vũng lửa bùng nhịp nhanh
-      pool.scale.y = pool.scale.x;
-      pillar.scale.y = 1.7 * (1 + Math.sin(t * 1.7) * 0.06);
-      lotus.rotation.z = t * 0.16; // hỏa liên xoay chậm
-      mantra.rotation.z = -t * 0.42; // chân ngôn chạy ngược như lửa gió
-      counterRing.rotation.z = t * 0.5;
-      dome.rotation.y = t * 0.07;
-      domeTex.offset.y = -(t * 0.08) % 1; // khí lửa cuộn lên nhanh
-      domeEntry.base = 0.11 + 0.05 * (0.5 + 0.5 * Math.sin(t * 1.5));
-      for (const pl of pillars) {
-        const yn = (t * 0.26 + pl.tw) % 1; // trụ hỏa dâng nhanh hơn sen kim
-        const life = Math.sin(yn * Math.PI);
-        const a = pl.a0 + t * 0.14;
-        pl.sp.position.set(Math.cos(a) * pl.r, 0.1 + yn * 1.5, Math.sin(a) * pl.r);
-        pl.sp.scale.set(0.14, Math.max(0.001, life * 1.15), 1);
-        pl.entry.base = life * 0.3;
-      }
-      for (const ob of orbs) {
-        const a = ob.a0 + t * 0.2;
-        ob.sp.position.set(Math.cos(a) * ob.r, ob.y + Math.sin(t * 1.1 + ob.tw * 7) * 0.09, Math.sin(a) * ob.r);
-        ob.sp.scale.setScalar((0.09 + ob.tw * 0.04) * (1 + 0.2 * Math.sin(t * 3.1 + ob.tw * 8)));
-        ob.entry.base = 0.4 + 0.4 * Math.pow(0.5 + 0.5 * Math.sin(t * 2.6 + ob.tw * 11), 2); // quỷ hỏa chớp tắt
-      }
-      for (let i = 0; i < count; i++) {
-        const a0 = seed[i * 4], r0 = seed[i * 4 + 1], speed = seed[i * 4 + 2], tw = seed[i * 4 + 3];
-        const yn = (t * 0.3 * speed + tw) % 1; // tàn lửa bay ngược lên rồi lặp
-        const a = a0 + t * 0.3 * speed;
-        const r = r0 * (1 - yn * 0.3) + Math.sin(t * 1.1 + tw * 7) * 0.03;
-        e.set(0, 0, t * 2.2 * speed + tw * 6.28); // lửa dựng đứng, tự xoay quanh trục mình
-        q.setFromEuler(e);
-        const sc = Math.max(0.001, Math.sin(yn * Math.PI)) * 0.9;
-        v.set(Math.cos(a) * r, 0.05 + yn * 1.5, Math.sin(a) * r);
-        s.set(sc, sc, sc);
-        m4.compose(v, q, s);
-        flames.setMatrixAt(i, m4);
-      }
-      flames.instanceMatrix.needsUpdate = true;
-      for (let i = 0; i < sparkCount; i++) {
-        const st = sparks.seeds[i];
-        const a = st.a0 + t * 0.08 * st.speed;
-        const yn = (t * 0.35 * st.speed + st.tw) % 1; // bụi lửa cũng bay ngược theo tàn lửa
-        sparks.pos[i * 3] = Math.cos(a) * st.r;
-        sparks.pos[i * 3 + 1] = 0.1 + yn * 1.5;
-        sparks.pos[i * 3 + 2] = Math.sin(a) * st.r;
-        const shine = 0.35 + 0.65 * (0.55 + 0.45 * Math.sin(t * 3 + st.tw * 12.6));
-        c.set(sparks.tint).multiplyScalar(shine);
-        sparks.col[i * 3] = c.r;
-        sparks.col[i * 3 + 1] = c.g;
-        sparks.col[i * 3 + 2] = c.b;
-      }
-      sparks.geo.attributes.position.needsUpdate = true;
-      sparks.geo.attributes.color.needsUpdate = true;
       updateGlyphs(glyphs, t);
     };
   } else if (effect === 5) {
