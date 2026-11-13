@@ -4,6 +4,7 @@ import { swordGeometry } from './vfx/sword-geometry.js';
 import { dropGeometry } from './vfx/drop-geometry.js';
 import { buildDaoHoaThrone } from './vfx/dao-hoa-meditation-throne.js';
 import { buildHongLienThrone } from './vfx/hong-lien-throne.js';
+import { buildBichNgocThrone } from './vfx/bich-ngoc-meditation-throne.js';
 
 const cache = new Map();
 const petal = new THREE.PlaneGeometry(1, 1, 8, 12);
@@ -39,7 +40,7 @@ function build(effect, stage) {
     const transformed = geo.clone().applyMatrix4(matrix);
     const copy = transformed.index ? transformed.toNonIndexed() : transformed;
     if (copy !== transformed) transformed.dispose();
-    for (const name of ['uv', 'part', 'across', 'kind']) copy.deleteAttribute(name);
+    for (const name of ['uv', 'part', 'across', 'kind', 'node', 'sway']) copy.deleteAttribute(name);
     pieces.push(copy);
   };
   const stem = (points, radius = 0.025) => {
@@ -114,6 +115,9 @@ function build(effect, stage) {
   } else if (effect === 5) {
     // Đào Hoa: tòa cành đào và nguyệt môn riêng, không mượn đoá sen.
     buildDaoHoaThrone(stage, add);
+  } else if (effect === 6) {
+    // Bích Ngọc: tòa rừng trúc và đá rêu riêng, không mượn đoá sen.
+    buildBichNgocThrone(stage, add);
   } else if (stage === 0) {
   // Tier three is a small spirit seed; later tiers introduce a new silhouette.
     if (effect === 1 || effect === 0) bloom(0, 0.18, -0.42, 0.42, 8);
@@ -148,12 +152,6 @@ function build(effect, stage) {
   } else if (effect === 8) {
     wings(true);
     if (stage === 2) for (let i = 0; i < 3; i++) add(petal, (i - 1) * 0.12, 1.65, -0.5, 0.15, 0.55 - Math.abs(i - 1) * 0.15, 0.4, 0, 0, (i - 1) * -0.3);
-  } else if (effect === 6) {
-    for (let i = 0; i < 3; i++) {
-      const side = stage === 1 ? -1 : 1, x = side * (0.45 + i * 0.25), height = 1.2 + i * 0.3;
-      stem([[x, 0.1, -0.65], [x, height * 0.5, -0.68], [x - side * 0.15, height, -0.65]], 0.018);
-      for (let j = 0; j < 4; j++) add(petal, x, 0.5 + j * 0.28, -0.65, 0.14, 0.45, 0.4, 0.2, 0, (j % 2 ? -1 : 1) * 1.0);
-    }
   } else if (effect === 7) {
     const shape = new THREE.Shape();
     shape.absarc(0, 0, 1, Math.PI * 0.25, Math.PI * 1.75, false);
