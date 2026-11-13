@@ -179,6 +179,8 @@ export class XiDachPanel {
 
     const cards = mine?.cards ?? [];
     if (!cards.length) this.opened.clear(); // Ván mới.
+    // Chia bài: lá đầu ngửa, lá thứ hai úp để nặn; lá rút thêm tới tay là ngửa luôn.
+    cards.forEach((card, i) => { if (i !== 1) this.opened.add(card); });
     syncHand(this.myCards, cards, false, this.squeeze);
     if (phase === 'checking' || phase === 'result') openAll(this.myCards); // Tới lúc xét thì lật hết.
     const myTurn = phase === 'playing' && state?.turn === mySid && mine && !mine.stood;
