@@ -27,7 +27,7 @@ const STRANDS = [
     [[s * 0.11, -0.02, -0.06], [s * 0.8, -0.35, -1], 0.3, 0.03, 0],
   ]),
   [[0, 0.12, -0.08], [0, 0.4, -1], 0.46, 0.042, 0], [[0, 0.07, -0.12], [0, -0.05, -1], 0.4, 0.04, 0],
-  [[-0.06, 0.03, 0.32], [-1, -0.15, -0.6], 0.75, 0.012, 1], [[0.06, 0.03, 0.32], [1, -0.15, -0.6], 0.75, 0.012, 1],
+  [[-0.06, 0.03, 0.32], [-0.45, -0.25, -1], 0.72, 0.012, 1], [[0.06, 0.03, 0.32], [0.45, -0.25, -1], 0.72, 0.012, 1],
   [[-0.03, -0.1, 0.17], [-0.2, -1, -0.2], 0.2, 0.022, 2], [[0.03, -0.1, 0.17], [0.2, -1, -0.2], 0.2, 0.022, 2],
 ];
 
@@ -73,7 +73,7 @@ export function createDragonHead(parent, colors, lowQuality) {
       pearl.position.copy(PEARL_LOCAL).applyMatrix4(M);
       halo.position.copy(pearl.position);
       halo.scale.setScalar(0.5 + 0.06 * rhythm.pulse);
-      haloMat.opacity = (0.55 + 0.2 * rhythm.pulse) * f;
+      haloMat.opacity = (0.4 + 0.15 * rhythm.pulse) * f;
       strands.forEach(([root, d, len, width, kind], k) => {
         dir.set(...d).normalize();
         for (let j = 0; j <= seg; j++) {

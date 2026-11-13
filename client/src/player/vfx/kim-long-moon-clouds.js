@@ -11,12 +11,12 @@ import { sstep } from './aura-rhythm.js';
 //  · Tường vân vàng: cụm mây ôm chóp đuôi, đỡ khuỷu cổ, và dải mây cắt ngang chân trăng (chừa
 //    trống ngay trên đầu). Mây chỉ bồng bềnh tại chỗ, biên độ nhỏ.
 //  · Vảy kim quang rụng từ thân rồng, rơi chậm, xoay nhẹ rồi tan.
-export const MOON = { x: 0, y: 1.6, z: -0.78, size: 2.3 };
+export const MOON = { x: 0, y: 1.78, z: -0.8, size: 3.0 };
 export const FLAKE_LIFE = 8;
 // [x, y, z, cỡ]
 const CLOUDS = [
   [-0.98, 0.3, 0.12, 0.62, 1], [-0.7, 0.14, 0.32, 0.5, -1], [1.02, 0.62, 0.1, 0.6, -1], [0.82, 0.3, 0.36, 0.5, 1],
-  [-0.88, 1.55, -0.8, 0.6, 1], [0.9, 1.58, -0.82, 0.62, -1], [-0.36, 2.18, -0.6, 0.5, -1], [0.4, 2.2, -0.62, 0.46, 1],
+  [-0.88, 1.55, -0.8, 0.6, 1], [0.9, 1.58, -0.82, 0.62, -1], [-0.66, 2.32, -0.7, 0.44, -1], [0.7, 2.38, -0.72, 0.4, 1],
 ];
 
 export function createMoonAndClouds(parent, colors, lowQuality) {

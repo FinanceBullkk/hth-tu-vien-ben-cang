@@ -21,7 +21,7 @@ export function createCloudGround(parent, colors, lowQuality) {
   const tex = flatCloud(), layers = [billboardLayer(parent, 'kim-long-cloud-mounds', tex, MOUNDS, new THREE.Color(1, 1, 1), THREE.NormalBlending)];
   if (!lowQuality) layers.push(billboardLayer(parent, 'kim-long-cloud-mounds-glow', tex, MOUNDS, colors.gold.clone().multiplyScalar(0.4), THREE.AdditiveBlending));
   const seeds = Array.from({ length: MOUNDS }, (_, i) => ({
-    a: (i + 0.5) / MOUNDS * Math.PI * 2 + 0.25 * hash(i + 5), r: 1.0 + 0.25 * hash(i + 7), s: 0.55 + 0.25 * hash(i + 9),
+    a: (i + 0.5) / MOUNDS * Math.PI * 2 + 0.25 * hash(i + 5), r: 1.1 + 0.25 * hash(i + 7), s: 0.45 + 0.2 * hash(i + 9),
   }));
 
   return {

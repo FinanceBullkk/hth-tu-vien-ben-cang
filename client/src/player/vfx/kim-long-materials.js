@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { ribbonVertex } from './aura-flow-shaders.js';
 import {
   litVertex, bodyFragment, goldFragment, finFragment, strandFragment, mistFragment, pearlFragment,
-  planeVertex, moonFragment, cloudSeaFragment,
 } from './kim-long-shaders.js';
+import { planeVertex, moonFragment, cloudSeaFragment } from './kim-long-backdrop-shaders.js';
 import { WAVE } from './kim-long-spine.js';
 
 // Bảng màu Kim Long: vàng kim đậm (deep) → vàng (gold) → vàng sáng (light), ngà bụng/sừng (ivory),

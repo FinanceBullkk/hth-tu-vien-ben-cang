@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
-const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const colors = [[0xc62e16, 0xffce68], [0xb47c29, 0xffec9c]];
 
 function petal(angle, length, radius) {
@@ -54,9 +53,6 @@ export function createAuraEmblems(kind, lowQuality) {
   }
   function mesh(g, m, parent = group) {
     geometries.push(g); const obj = new THREE.Mesh(g, m); parent.add(obj); return obj;
-  }
-  function tube(points, radius, m, parent = group) {
-    return mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), lowQuality ? 24 : 48, radius, 5, false), m, parent);
   }
   if (kind === 0) {
     const layers = [[], []];
