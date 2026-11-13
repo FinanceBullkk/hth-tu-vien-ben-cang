@@ -22,6 +22,7 @@ import { createHongLienAura } from './vfx/hong-lien-aura.js';
 import { createNguyetBachAura } from './vfx/nguyet-bach-aura.js';
 import { createBichNgocAura } from './vfx/bich-ngoc-aura.js';
 import { createHuyenDaAura } from './vfx/huyen-da-aura.js';
+import { createKimLongAura } from './vfx/kim-long-aura.js';
 import { createAuraSignature } from './aura-signature.js';
 import { store } from '../ui/dom.js';
 
@@ -669,8 +670,8 @@ function fillSeeds(seed, count) {
 const BREATH = [8, 13, 14, 9, 10, 12, 16, 8.5]; // V10: hệ 1 thở cùng chu kỳ 8 s của signature
 
 export function createEffect(effect, lowQuality = false) {
-  // 10..11: aura dải lụa (ribbon-aura.js đánh số nội bộ 9..10); 9 là Long quyền của bản prod.
-  if (Number.isInteger(effect) && effect >= 10 && effect <= 11) return createRibbonAura(effect - 1, lowQuality);
+  // 10: aura dải lụa (ribbon-aura.js đánh số nội bộ 9); 9 là Long quyền của bản prod.
+  if (effect === 10) return createRibbonAura(effect - 1, lowQuality);
   if (!effect) return { points: null, update() {}, setColor() {} };
   // Người chơi đè "giảm chuyển động" của hệ điều hành bằng toggle "Hiệu ứng động đầy đủ"
   // trong Đổi trang phục (localStorage fullFx=1) — đọc lại mỗi khung nên đổi là áp ngay.
@@ -694,6 +695,8 @@ export function createEffect(effect, lowQuality = false) {
   if (effect === 8) return createHuyenDaAura(lowQuality, reducedMotion);
   // 6: Bích Ngọc Thanh Phong có pháp tướng riêng (rừng trúc ngọc, gió xoáy cuốn lá, đá rêu).
   if (effect === 6) return createBichNgocAura(lowQuality, reducedMotion);
+  // 11: Kim Long Nguyệt Ảnh có pháp tướng riêng (rồng vàng vắt vòm qua đầu, long châu, nửa trăng, biển mây).
+  if (effect === 11) return createKimLongAura(lowQuality, reducedMotion);
 
   const colors = PALETTES[effect - 1] ?? PALETTES[0];
   const group = new THREE.Group();

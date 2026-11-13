@@ -69,31 +69,20 @@ function ribbons(paths, segments) {
 
 function pathsFor(kind) {
   const paths = [], v = (x, y, z) => new THREE.Vector3(x, y, z);
-  if (kind === 0) {
-    // Open flame fans leave a clear window around the head and torso.
-    for (let i = 0; i < 7; i++) {
-      const a = i / 7 * Math.PI * 2, height = 1.3 + (i % 3) * .35;
-      paths.push({ width: .12, vertical: true, curve: u => {
-        const r = .72 + .43 * Math.sin(u * Math.PI) + .12 * Math.sin(u * 9 + i);
-        return v(Math.cos(a) * r, .12 + u * height, Math.sin(a) * r);
-      } });
-    }
-  } else {
-    for (let i = 0; i < 3; i++) paths.push({ width: i ? .035 : .07, vertical: true, curve: u => {
-      const a = u * Math.PI * 2.5 + i * .65;
-      return v(Math.sin(a) * (1.02 + i * .12), .28 + u * 1.9, Math.cos(a) * .78);
-    } });
-    // Crescent behind the shoulders, separate from the flowing dragon silhouette.
-    paths.push({ width: .14, vertical: true, curve: u => {
-      const a = -.8 + u * 4.5;
-      return v(Math.cos(a) * .49, 2.25 + Math.sin(a) * .49, -.52);
+  // Open flame fans leave a clear window around the head and torso. Kim Long (effect 11, kind 1)
+  // now has its own module: kim-long-aura.js.
+  if (kind === 0) for (let i = 0; i < 7; i++) {
+    const a = i / 7 * Math.PI * 2, height = 1.3 + (i % 3) * .35;
+    paths.push({ width: .12, vertical: true, curve: u => {
+      const r = .72 + .43 * Math.sin(u * Math.PI) + .12 * Math.sin(u * 9 + i);
+      return v(Math.cos(a) * r, .12 + u * height, Math.sin(a) * r);
     } });
   }
   return paths;
 }
 
 export function createRibbonAura(effect, lowQuality = false) {
-  if (!Number.isInteger(effect) || effect < 9 || effect > 10) throw new RangeError('Ribbon aura supports effects 9..10');
+  if (!Number.isInteger(effect) || effect !== 9) throw new RangeError('Ribbon aura supports effect 9');
   const kind = effect - 9, group = new THREE.Group();
   group.name = 'ribbon-aura';
   group.material = new THREE.MeshBasicMaterial({ transparent: true, opacity: .9 });
