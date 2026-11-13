@@ -139,6 +139,8 @@ Bấm nút **Chơi gì?** ở góc trên rồi chọn **Câu cá**, hoặc tự 
 - **Mồi:** bột, giun hoặc rau (bấm chữ dưới màn hình hoặc phím **Q**). Mỗi mồi có nhóm cá riêng.
 - **Bóng cá:** bóng đen bơi dưới mặt hồ, mọi máy thấy giống nhau. Bóng càng to càng dễ ra cá hiếm, ai thả trúng trước được. Chỗ nước gợn mạnh thường có bóng lớn.
 - **Thưởng:** thường, quý, hiếm được 1, 2, 4 TEU; ở trong vùng xanh từ 80% thời gian được thêm 1 TEU.
+- **Sạp đồ câu** (góc phải khi đang câu): Cần trúc đen 60 TEU, Cần kim long 160 TEU, mua một lần dùng mãi; cần tốt thì vùng xanh rộng hơn, cá tụt chậm hơn, và cả hồ thấy màu cần. Thính thơm 8 TEU một gói 5 nắm: bật **Thính** cạnh chọn mồi thì mỗi lần quăng rắc một nắm, cá cắn nhanh hơn và dễ ra cá quý, cá hiếm.
+- **Đơn bếp chùa:** mỗi ngày ba đơn chung cho cả tu viện, hiện ở góc trái: 3 con cá thường (+4 TEU), 1 con cá quý (+6 TEU), 1 con nặng ký (+8 TEU). Bắt đủ là tự cộng, mỗi đơn một lần một ngày.
 - **Sổ cá:** trong Sổ an có đủ 15 loài, mỗi loài một hình minh hoạ. Loài chưa bắt chỉ hiện bóng đen và gợi ý mồi, giờ và cỡ bóng. Đủ 5, 10 và 15 loài được thưởng 5, 10 và 25 TEU.
 
 ## Trò chuyện bằng mic
