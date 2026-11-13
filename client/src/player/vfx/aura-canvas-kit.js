@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
-// Bộ nét vẽ hoa văn cho Kiếm Vũ: vẽ trắng trên nền trong suốt (shader tô màu sau), nét
+// Bộ nét vẽ hoa văn dùng chung các aura pháp tướng (Kiếm Vũ, Lưu Ly...): vẽ trắng trên nền trong
+// suốt (shader tô màu sau), nét
 // có quầng mờ như aura-sigil của Kim Liên. Mỗi texture vẽ một lần, dùng chung mọi nhân vật.
 const cache = new Map();
 export const CJK_FONT = '"KaiTi", "STKaiti", "SimSun", serif';

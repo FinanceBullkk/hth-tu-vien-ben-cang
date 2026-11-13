@@ -1,4 +1,4 @@
-import { canvasTexture } from './kiem-vu-canvas-kit.js';
+import { canvasTexture } from './aura-canvas-kit.js';
 
 // Hoa văn Vạn Kiếm Quy Tông của Kiếm Vũ. Đơn vị px trong khung 1024 (bán kính 512).
 // Bố cục pháp luân sau lưng (khớp kiếm 3D: vòng ngoài từ ~160 tới ~395 px):
