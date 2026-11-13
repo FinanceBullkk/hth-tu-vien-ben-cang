@@ -15,6 +15,7 @@ import { WishActivity } from './wish.js';
 import { MELODY_ZONE } from '../../../shared/layout.js';
 import { MelodyActivity } from './melody.js';
 import { PkActivity } from './pk.js';
+import { TradeController } from './trade.js';
 
 const KIND_CODE = { bell: 2, write: 3, shake: 4, fish: 5, pitch: 6, baucua: 9, xidach: 10, taixiu: 11, coquay: 12 };
 
@@ -39,6 +40,8 @@ export class Activities {
     this.melody = new MelodyActivity(app);
     this.pk = new PkActivity(app);
     this.pk.bind();
+    // Trạm giao thương chỉ là một bảng (như Sạp Kim Bảo), không khoá di chuyển nên không đi qua enter/exit.
+    this.trade = new TradeController(app);
     this.zoneKey = '';
   }
 
@@ -112,6 +115,9 @@ export class Activities {
     }
     if (dist2d(x, z, SHOP.x, SHOP.z) < SHOP.actionRadius) {
       return { key: 'shop', label: 'Ghé Sạp Kim Bảo', run: () => openShop(this.app, 'shop') };
+    }
+    if (this.trade.inZone(x, z)) {
+      return { key: 'trade', label: 'Mở Trạm giao thương', run: () => this.trade.open() };
     }
     if (dist2d(x, z, ZOEYY.x, ZOEYY.z) < ZOEYY.actionRadius) {
       return { key: 'zoeyy', label: 'Hỏi Zoeyy Gay', run: () => this.app.world.zoeyy.advise() };

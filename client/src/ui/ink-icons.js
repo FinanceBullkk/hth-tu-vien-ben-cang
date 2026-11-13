@@ -26,6 +26,7 @@ const PATHS = {
   dice: `<rect x="4.5" y="4.5" width="15" height="15" rx="3"/>${DOT(9, 9)}${DOT(15, 9)}${DOT(12, 12)}${DOT(9, 15)}${DOT(15, 15)}`,
   cards: '<rect x="4" y="6" width="10" height="14" rx="1.5" transform="rotate(-12 9 13)"/><rect x="10" y="4" width="10" height="14" rx="1.5" transform="rotate(10 15 11)"/>',
   wheel: `<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3"/><path d="M12 3.5V9M12 15v5.5M3.5 12H9M15 12h5.5"/>${DOT(17.5, 7)}`,
+  scale: '<path d="M12 4v16M8 20h8M5 7h14"/><path d="m5 7-2.5 6h5zM19 7l-2.5 6h5z"/><path d="M2.5 13a2.5 1.6 0 0 0 5 0M16.5 13a2.5 1.6 0 0 0 5 0"/>',
   tree: '<path d="M12 21v-6"/><path d="M12 15c-4.5 0-7-2.5-7-5.5S8 4 12 4s7 2.5 7 5.5-2.5 5.5-7 5.5z"/><path d="m12 15-3-3M12 13l3-3"/>',
 };
 

@@ -85,6 +85,15 @@ TEU là điểm chung của tu viện: câu cá, giải đố của sư chú M�
 
 Sổ an giờ chia bốn thẻ: **Tổng quan** (số liệu, túi tiền, lối tắt sang sạp), **Tu luyện**, **Sổ cá**, **Kỷ niệm** (lời ước và quẻ đã rút).
 
+## Trạm giao thương
+
+Bảng gỗ mái ngói bên lối đi từ trục chính sang Sạp Kim Bảo. Hai người cùng đứng ở trạm thì trao đổi đồ ngoại hình đã mua và TEU với nhau, miễn phí. Bấm **Chơi gì?** rồi chọn **Giao thương**, hoặc tới gần bấm **E** hay bấm vào bảng.
+
+- **Mời:** bảng liệt kê người đang đứng ở trạm, bấm **Mời giao dịch**. Người được mời thấy lời mời (hết hạn sau 30 giây), bấm **Nhận** hoặc **Từ chối**.
+- **Đặt đề nghị:** mỗi bên chọn tối đa 6 món trả phí và 0–999 TEU muốn đưa; bên kia thấy ngay. Không đặt được món mà người kia đã có, hay nhiều TEU hơn mình đang có.
+- **Chốt:** cả hai bấm **Chốt đổi** thì đổi. Ai sửa đề nghị thì cả hai mất chốt và phải chốt lại, nên không ai bị tráo đồ phút chót. Món đang mặc mà đưa đi thì nhân vật tự cởi ra.
+- **Huỷ:** đóng bảng, bấm **Huỷ giao dịch**, đi khỏi trạm, mất kết nối, hoặc để yên 3 phút. TEU nhận qua trạm là chuyển tay, không tính vào bảng tuần.
+
 ## Đầu hồ
 
 Tới sân cạnh bãi container, bấm **Chơi đầu hồ** rồi chọn đối thủ. Mỗi trận tối đa 2 phút, dẫn 50 điểm hoặc chạm 250 điểm trước là thắng; hết giờ thì so điểm.

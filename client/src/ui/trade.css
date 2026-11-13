@@ -1,0 +1,28 @@
+/* Trạm giao thương: dùng khung neo phải và ô món của Sạp Kim Bảo (shop.css), thêm hàng người, ô TEU, dấu đã chốt. */
+.trade .modal-head h2::after { content: '交易'; }
+.trade-body > div > .muted.small:first-child { margin-top: 12px; }
+.trade-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 8px 10px; margin-bottom: 6px;
+  border: 1px solid rgba(143, 106, 56, .35); border-radius: 8px;
+  background: linear-gradient(180deg, #fffcf3, #f5ebd4);
+}
+.trade-row b { font: 700 15px var(--serif); color: #4a1c10; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trade-row-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.trade-row .btn { padding: 6px 12px; font-size: 13px; }
+.trade-ready {
+  margin-left: 8px; padding: 2px 8px; border-radius: 999px;
+  background: var(--jade, #3f8f5f); color: #f2fff4; font: 700 11px var(--sans); letter-spacing: .03em;
+}
+.trade-ready[hidden] { display: none; }
+.trade-their { cursor: default; }
+.trade-their:hover { transform: none; box-shadow: none; border-color: rgba(143, 106, 56, .45); }
+.trade-teu { display: flex; align-items: center; gap: 10px; margin-top: 10px; font: 600 13px var(--sans); color: #4a1c10; }
+.trade-teu small { color: var(--muted); font-weight: 500; }
+.trade-teu-input {
+  width: 92px; padding: 6px 8px; border: 1px solid rgba(143, 106, 56, .55); border-radius: 6px;
+  background: #fffcf3; font: 700 16px var(--serif); color: #8a5a1e; font-variant-numeric: tabular-nums;
+}
+.trade-teu-input:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+.trade-teu-line { margin: 8px 0 0; font: 700 16px var(--serif); color: #8a5a1e; }
+.shopx-card:disabled { opacity: .45; cursor: not-allowed; transform: none; }
