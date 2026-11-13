@@ -3,10 +3,11 @@ import { swordGeometry } from './sword-geometry.js';
 import { KIEM_VU_COLORS, swordMaterial } from './kiem-vu-materials.js';
 import { createEmblemLayers } from './kiem-vu-emblem-layers.js';
 import { createSwordRain } from './kiem-vu-ornaments.js';
-import { createLightArcs } from './kiem-vu-light-arcs.js';
-import { createSilkSashes } from './kiem-vu-silk-sashes.js';
+import { createLightArcs } from './aura-light-arcs.js';
+import { createSilkSashes } from './aura-silk-sashes.js';
 import { createBillboards } from './kiem-vu-billboards.js';
 import { createFlyingSwords } from './kiem-vu-flying-swords.js';
+import { breathRhythm, softDot as dot } from './aura-rhythm.js';
 
 // Thanh Phong Kiếm Vũ (effect 12) — Vạn Kiếm Quy Tông Trận, theo công thức nhiều lớp của Kim Liên:
 //  Pháp tướng sau lưng: quầng pháp quang · mandala kiếm hoa (12 kiếm vẽ, lưới sao đan xen, vành
@@ -21,29 +22,9 @@ import { createFlyingSwords } from './kiem-vu-flying-swords.js';
 const BASE_OPACITY = 0.9;
 /** Chu kỳ nhịp (giây): dài và êm — mọi thay đổi là phồng/xẹp mềm, không có pha tăng tốc. */
 export const KIEM_VU_CYCLE = 12;
-const sstep = (a, b, x) => { const k = Math.max(0, Math.min(1, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
-const bell = (c, w, x) => Math.exp(-((x - c) * (x - c)) / (w * w));
-
-let dotTexture = null;
-function dot() {
-  if (dotTexture) return dotTexture;
-  const px = new Uint8Array(16 * 16 * 4);
-  for (let i = 0; i < 256; i++) {
-    const r = Math.hypot((i % 16 - 7.5) / 7.5, (Math.floor(i / 16) - 7.5) / 7.5);
-    px.set([255, 255, 255, Math.round(255 * Math.max(0, 1 - r) ** 2)], i * 4);
-  }
-  dotTexture = new THREE.DataTexture(px, 16, 16); dotTexture.needsUpdate = true;
-  return dotTexture;
-}
 
 /** Nhịp thở của trận, hàm thuần của thời gian. */
-export function kiemVuRhythm(time) {
-  const phase = ((time / KIEM_VU_CYCLE) % 1 + 1) % 1;
-  // Hít vào (gather) rồi thở ra rất chậm (release ~4 giây), sóng sáng quét một vòng trong ~7 giây.
-  return { phase, gather: bell(0.15, 0.12, phase), release: bell(0.45, 0.17, phase),
-    sweepOn: sstep(0.25, 0.38, phase) * (1 - sstep(0.75, 0.9, phase)),
-    sweep: sstep(0.25, 0.85, phase) * Math.PI * 2, pulse: bell(0.45, 0.14, phase) };
-}
+export const kiemVuRhythm = time => breathRhythm(time, KIEM_VU_CYCLE);
 
 /** reducedMotion: đối tượng `{ matches }` (đã tính nút "Hiệu ứng động đầy đủ"); mặc định
     đọc thẳng thiết lập hệ điều hành. Giảm chuyển động = chậm ba lần, không tắt hình. */
