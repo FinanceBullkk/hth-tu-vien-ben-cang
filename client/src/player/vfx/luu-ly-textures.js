@@ -1,8 +1,9 @@
 import { canvasTexture } from './aura-canvas-kit.js';
 
 // Hoa văn Lưu Ly Vân Thủy (effect 2). Đơn vị px trong khung 1024 (bán kính 512), góc 0 = hướng lên.
-// Lưu Ly không có đĩa pháp luân hay vành chữ (khuôn riêng của Kiếm Vũ): hoa văn chỉ nằm dưới chân,
-// vẽ thành mặt hồ — sóng vảy, sóng cuộn, lá sen nổi, thủy liên sáu cánh.
+// Thủy luân sau lưng là một XOÁY NƯỚC (khác kiếm luân toả tròn đều của Kiếm Vũ): sáu nhánh xoáy
+// cong từ tâm 水 ra ngoài, sóng cuộn chen giữa nhánh, dải sóng vảy; vành ngoài là sóng vảy và
+// giọt nước — không có chữ. Dưới chân là mặt hồ có lá sen nổi, không có vành chữ hay bát quái.
 
 // --- nét riêng của Lưu Ly, vẽ trong khung đã xoay (điểm (0,-r) là hướng ra ngoài) ---
 /** Ngọn sóng cuộn: thân sóng dâng rồi cuộn xoáy vào trong như nét bút lông. */
@@ -27,13 +28,61 @@ function droplet({ c, stroke }, r, s, width = 1, alpha = 0.8) {
     c.bezierCurveTo(-s * 0.6, -r + s * 0.75, -s * 0.55, -r - s * 0.2, 0, -r - s);
   }, width, alpha);
 }
-
 /** Lá sen nổi: phiến tròn khuyết một rẻo, gân toả từ cuống, mép gợn. */
 function lilyPad({ c, stroke }, r, s, turn, width = 1.2, alpha = 0.75) {
   c.save(); c.translate(0, -r); c.rotate(turn);
   stroke(() => { c.arc(0, 0, 60 * s, 0.35, Math.PI * 2 - 0.05); c.lineTo(0, 0); c.closePath(); }, width, alpha);
   for (let k = 1; k < 8; k++) { const a = 0.35 + k * (Math.PI * 2 - 0.4) / 8; stroke(() => { c.moveTo(0, 0); c.lineTo(Math.cos(a) * 52 * s, Math.sin(a) * 52 * s); }, width * 0.5, alpha * 0.5); }
   c.restore();
+}
+
+/** Nhánh xoáy nước: cung xoắn ốc từ r0 ra r1, quay thêm `twist` rad, nét kép mảnh dần ra ngoài. */
+function spiralArm({ c, stroke }, r0, r1, twist, width = 1.3, alpha = 0.8) {
+  for (const [dr, w, a] of [[0, width, alpha], [16, width * 0.5, alpha * 0.5]]) {
+    stroke(() => {
+      for (let i = 0; i <= 40; i++) {
+        const k = i / 40, r = r0 + (r1 - r0) * k + dr * k, ang = twist * Math.pow(k, 0.8);
+        const x = Math.sin(ang) * r, y = -Math.cos(ang) * r;
+        if (i) c.lineTo(x, y); else c.moveTo(x, y);
+      }
+    }, w, a);
+  }
+}
+
+export function luuLyMandala() {
+  return canvasTexture('luu-ly-whirl', 1024, p => {
+    const { ring, around, glyph } = p;
+    around(6, () => spiralArm(p, 110, 420, 1.9, 1.4, 0.8));
+    around(6, () => spiralArm(p, 140, 330, 1.5, 0.8, 0.4), 0.5);
+    around(6, () => waveCurl(p, 300, 0.9, 1.2, 0.7), 0.25);
+    ring(365, 1.2, 0.7); scallops(p, 36, 392, 22, 0.55); ring(425, 1.1, 0.75);
+    ring(92, 1.8); ring(102, 0.8, 0.6);
+    around(12, () => droplet(p, 76, 12, 0.9, 0.6));
+    glyph('水', 0, 112, 0.95);
+  });
+}
+
+/** Vành sóng: sóng vảy lớn mở ra ngoài, giọt nước xen kẽ, sóng cuộn nhỏ — quay ngược chiều xoáy. */
+export function luuLyRim() {
+  return canvasTexture('luu-ly-wave-rim', 1024, p => {
+    const { c, stroke, ring, around } = p;
+    ring(438, 1); ring(462, 1.8, 0.8);
+    scallops(p, 30, 470, 30, 0.7);
+    around(12, () => waveCurl(p, 448, 0.55, 1, 0.65), 0.5);
+    around(30, () => droplet(p, 505, 9, 0.9, 0.7), 0.5);
+    around(60, () => stroke(() => { c.moveTo(0, -440); c.lineTo(0, -448); }, 0.7, 0.5));
+  });
+}
+
+export function luuLyGlow() {
+  return canvasTexture('luu-ly-whirl-glow', 512, ({ dot }) => {
+    for (let i = 0; i < 6; i++) for (const k of [0.35, 0.65, 0.95]) {
+      const r = 110 + 310 * k, a = i * Math.PI / 3 + 1.9 * Math.pow(k, 0.8);
+      dot(Math.sin(a) * r, -Math.cos(a) * r, 18 + 10 * k, 0.8);
+    }
+    for (let i = 0; i < 30; i++) { const a = (i + 0.5) * Math.PI / 15; dot(Math.sin(a) * 505, -Math.cos(a) * 505, 12, 0.6); }
+    dot(0, 0, 70, 0.5);
+  });
 }
 
 /** Mặt hồ dưới chân (đứng yên): sóng vảy viền ngoài, sóng cuộn, năm lá sen nổi, gợn tròn. */
@@ -112,5 +161,15 @@ export function luuLySparkle() {
       c.fillStyle = g; c.beginPath(); c.ellipse(0, 0, i ? 18 : 30, i ? 340 : 500, 0, 0, Math.PI * 2); c.fill(); c.restore();
     }
     dot(0, 0, 170, 1);
+  });
+}
+
+/** Mảnh lưu ly: hình thoi dài có mặt cắt, gân sáng chéo. */
+export function luuLyShard() {
+  return canvasTexture('luu-ly-shard', 128, ({ c, stroke }) => {
+    const g = c.createLinearGradient(-200, -460, 200, 460);
+    g.addColorStop(0, 'rgba(255,255,255,0.9)'); g.addColorStop(0.5, 'rgba(255,255,255,0.3)'); g.addColorStop(1, 'rgba(255,255,255,0.75)');
+    c.fillStyle = g; c.beginPath(); c.moveTo(0, -470); c.lineTo(190, -60); c.lineTo(0, 470); c.lineTo(-190, -60); c.closePath(); c.fill();
+    stroke(() => { c.moveTo(0, -470); c.lineTo(0, 470); c.moveTo(-190, -60); c.lineTo(190, -60); }, 9, 0.8);
   });
 }

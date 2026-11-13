@@ -7,12 +7,12 @@ import { softDot } from '../client/src/player/vfx/aura-rhythm.js';
 import { createManifestation } from '../client/src/player/cultivation-manifestation.js';
 import { CultivationAura } from '../client/src/player/cultivation-aura.js';
 
-// Rèm châu lưu ly 3D (lớp sáng + lớp mực); billboard cũng là InstancedMesh nhưng không tính.
+// Giọt lưu ly 3D trên nhánh xoáy (lớp sáng + lớp mực); billboard cũng là InstancedMesh nhưng không tính.
 const drops = aura => { const list = []; aura.points.traverse(o => { if (o.isInstancedMesh && o.geometry === dropGeometry()) list.push(o); }); return list; };
 const named = (aura, name) => { let hit = null; aura.points.traverse(o => { if (o.name === name) hit = o; }); return hit; };
-const BILLBOARDS = ['luu-ly-clouds', 'luu-ly-sparkles', 'luu-ly-drops', 'luu-ly-bubbles'];
+const BILLBOARDS = ['luu-ly-clouds', 'luu-ly-sparkles', 'luu-ly-drops', 'luu-ly-bubbles', 'luu-ly-shards'];
 
-test('Lưu Ly: rèm châu, màn nước, song lý và mặt hồ có số liệu hữu hạn ở mọi thời điểm', () => {
+test('Lưu Ly: thủy luân xoáy, dải thủy quang, song lý và mặt hồ có số liệu hữu hạn ở mọi thời điểm', () => {
   const aura = createLuuLyAura(false, { matches: false });
   assert.equal(aura.points.name, 'luu-ly-aura');
   for (const t of [0, 2.5, 6, 11.9, 1234567]) {
@@ -23,7 +23,7 @@ test('Lưu Ly: rèm châu, màn nước, song lý và mặt hồ có số liệu
       if (o.material && o !== aura.points) assert.equal(o.material.depthWrite, false);
     });
   }
-  for (const name of ['luu-ly-canopy', 'luu-ly-veils', 'luu-ly-beads', 'luu-ly-beads-ink', 'luu-ly-koi', 'luu-ly-koi-ink', 'luu-ly-ripple', ...BILLBOARDS]) {
+  for (const name of ['luu-ly-wheel', 'luu-ly-drops-3d', 'luu-ly-water-arcs', 'luu-ly-koi', 'luu-ly-koi-ink', 'luu-ly-ripple', ...BILLBOARDS]) {
     assert.ok(named(aura, name), name);
   }
   for (const name of BILLBOARDS) {
@@ -31,25 +31,28 @@ test('Lưu Ly: rèm châu, màn nước, song lý và mặt hồ có số liệu
     assert.ok([...b.instanceColor.array].every(Number.isFinite));
     assert.ok([...b.instanceColor.array].every((v, i) => i % 3 || v >= 0)); // kênh r = độ đậm
   }
-  // 15 chuỗi × (10 hạt + 1 mặt dây) + 3 hạt châu lớn trên vòm, lớp sáng và lớp mực chung ma trận.
-  assert.deepEqual(drops(aura).map(m => m.count), [168, 168]);
+  // 6 nhánh xoáy × 5 giọt, lớp sáng và lớp mực chung ma trận.
+  assert.deepEqual(drops(aura).map(m => m.count), [30, 30]);
   aura.dispose();
 });
 
-test('Lưu Ly: bóng dáng riêng — rèm châu rủ từ vòm trên đầu, không có đĩa pháp luân hay dải lưu quang của Kiếm Vũ', () => {
+test('Lưu Ly: bóng dáng riêng — giọt trôi theo nhánh xoáy nước, không phải vòng toả tròn đều như Kiếm Vũ', () => {
   const aura = createLuuLyAura(false, { matches: false });
+  for (const name of ['luu-ly-silk', 'kiem-vu-silk', 'kiem-vu-light-arcs']) assert.equal(named(aura, name), null, name);
+  const [glow] = drops(aura), radius = () => {
+    const m = glow.instanceMatrix.array, out = [];
+    for (let i = 0; i < glow.count; i++) out.push(Math.hypot(m[i * 16 + 12], m[i * 16 + 13]));
+    return out;
+  };
   aura.update(3);
-  for (const name of ['luu-ly-wheel', 'luu-ly-water-arcs', 'luu-ly-silk', 'kiem-vu-light-arcs', 'kiem-vu-silk']) assert.equal(named(aura, name), null, name);
-  const beads = named(aura, 'luu-ly-beads'), m = beads.instanceMatrix.array;
-  let top = -Infinity, low = Infinity, wide = 0;
-  for (let i = 0; i < beads.count; i++) {
-    const x = m[i * 16 + 12], y = m[i * 16 + 13], z = m[i * 16 + 14];
-    top = Math.max(top, y); low = Math.min(low, y); wide = Math.max(wide, Math.abs(x));
-    assert.ok(z < 0 || Math.abs(x) > 0.6, 'hạt không treo trước mặt');
-  }
-  assert.ok(top > 2.1, 'vòm cao hơn đầu');
-  assert.ok(low < 0.9, 'rèm rủ xuống ngang thân');
-  assert.ok(wide > 0.85 && wide < 1.3, 'rèm khung lấy người hai bên');
+  const before = radius();
+  // Giọt nằm ở nhiều bán kính khác nhau (nhánh xoáy), không cùng một vòng.
+  assert.ok(new Set(before.map(r => r.toFixed(2))).size >= 5);
+  assert.ok(Math.min(...before) > 0.15 && Math.max(...before) < 1.1);
+  // Giọt trôi đều ra ngoài: sau 1 giây phần lớn giọt ở xa tâm hơn.
+  aura.update(4);
+  const after = radius(), outward = after.filter((r, i) => r > before[i]).length;
+  assert.ok(outward >= glow.count * 0.7, `${outward}/${glow.count} giọt trôi ra`);
   aura.dispose();
 });
 
@@ -67,7 +70,7 @@ test('Lưu Ly: song lý bơi quanh trận, ở ngoài thân và lượn thấp',
 
 test('Lưu Ly: chất lượng thấp bớt giọt, bỏ lớp mực', () => {
   const low = createLuuLyAura(true, { matches: false });
-  assert.deepEqual(drops(low).map(m => m.count), [66]);
+  assert.deepEqual(drops(low).map(m => m.count), [18]);
   assert.equal(named(low, 'luu-ly-koi-ink'), null);
   let ink = 0; low.points.traverse(o => { if (o.material?.uniforms?.ink?.value === 1) ink++; });
   assert.equal(ink, 0);
@@ -89,13 +92,13 @@ test('Lưu Ly: nhịp thở tuần hoàn khép kín và không có pha tăng t�
     assert.ok(Math.abs(luuLyRhythm(1.7)[k] - luuLyRhythm(1.7 + LUU_LY_CYCLE * 5)[k]) < 1e-9);
   }
   const aura = createLuuLyAura(false, { matches: false });
-  // Song lý bơi gần như đều tốc độ, kể cả ở đỉnh nhịp thở ra; giọt sáng trượt dọc chuỗi theo t tuyến tính.
+  // Đầu dải thủy quang và song lý đi gần như đều tốc độ, kể cả ở đỉnh nhịp thở ra.
   const speed = (name, t) => {
     const at = time => { aura.update(time); return [...named(aura, name).geometry.attributes.position.array.slice(0, 3)]; };
     const a = at(t), b = at(t + 0.05);
     return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
   };
-  for (const name of ['luu-ly-koi']) {
+  for (const name of ['luu-ly-water-arcs', 'luu-ly-koi']) {
     const calm = speed(name, LUU_LY_CYCLE * 0.95), peak = speed(name, LUU_LY_CYCLE * 0.45);
     assert.ok(peak < calm * 1.6, `${name}: đỉnh nhịp ${peak} so với lúc lắng ${calm}`);
   }
