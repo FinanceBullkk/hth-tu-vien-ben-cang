@@ -4,7 +4,9 @@ import { swordGeometry } from './vfx/sword-geometry.js';
 import { dropGeometry } from './vfx/drop-geometry.js';
 import { buildDaoHoaThrone } from './vfx/dao-hoa-meditation-throne.js';
 import { buildHongLienThrone } from './vfx/hong-lien-throne.js';
+import { buildBichNgocThrone } from './vfx/bich-ngoc-meditation-throne.js';
 import { buildNguyetBachThrone } from './vfx/nguyet-bach-throne.js';
+import { buildHuyenDaThrone } from './vfx/huyen-da-meditation-throne.js';
 
 const cache = new Map();
 const petal = new THREE.PlaneGeometry(1, 1, 8, 12);
@@ -40,7 +42,7 @@ function build(effect, stage) {
     const transformed = geo.clone().applyMatrix4(matrix);
     const copy = transformed.index ? transformed.toNonIndexed() : transformed;
     if (copy !== transformed) transformed.dispose();
-    for (const name of ['uv', 'part', 'across', 'kind']) copy.deleteAttribute(name);
+    for (const name of ['uv', 'part', 'across', 'kind', 'node', 'sway']) copy.deleteAttribute(name);
     pieces.push(copy);
   };
   const stem = (points, radius = 0.025) => {
@@ -50,14 +52,6 @@ function build(effect, stage) {
   const bloom = (x, y, z, scale, n = 5) => {
     for (let i = 0; i < n; i++) add(petal, x, y, z, scale * 0.7, scale, scale, -0.3, 0, i * Math.PI * 2 / n);
     add(sphere, x, y, z + 0.03, scale * 0.13, scale * 0.13, scale * 0.13);
-  };
-  const wings = (dark) => {
-    for (const side of [-1, 1]) for (let i = 0; i < (stage === 2 ? 8 : 5); i++) {
-      const f = i / (stage === 2 ? 8 : 5);
-      add(dark ? crystal : petal, side * (0.22 + f * 0.55), 0.85 + f * 0.25, -0.45,
-        dark ? 0.25 : 0.38, (stage === 2 ? 1.55 : 1.05) * (1 - f * 0.35), 0.8,
-        -0.28, side * 0.25, -side * (0.4 + f * 1.0));
-    }
   };
   // Kiếm Vũ (12): tòa kiếm — kiếm cắm quanh người ngồi, mũi hướng trời, ngả ra ngoài như
   // cánh sen; tầng cuối thêm quạt kiếm sau lưng. Order YXZ: ngả trước rồi xoay quanh trục đứng.
@@ -115,9 +109,15 @@ function build(effect, stage) {
   } else if (effect === 7) {
     // Nguyệt Bạch: cổ cầm trước gối, trăng tròn lệch vai trái, đàn dựng đứng bên phải.
     buildNguyetBachThrone(stage, add);
+  } else if (effect === 8) {
+    // Huyền Dạ: tòa nhật thực đen và lông quạ riêng, không mượn đôi cánh.
+    buildHuyenDaThrone(stage, add);
   } else if (effect === 5) {
     // Đào Hoa: tòa cành đào và nguyệt môn riêng, không mượn đoá sen.
     buildDaoHoaThrone(stage, add);
+  } else if (effect === 6) {
+    // Bích Ngọc: tòa rừng trúc và đá rêu riêng, không mượn đoá sen.
+    buildBichNgocThrone(stage, add);
   } else if (stage === 0) {
   // Tier three is a small spirit seed; later tiers introduce a new silhouette.
     if (effect === 1 || effect === 0) bloom(0, 0.18, -0.42, 0.42, 8);
@@ -149,15 +149,6 @@ function build(effect, stage) {
       add(dropGeometry(), Math.sin(a) * (0.36 + 1.05 * s), 0.6 + Math.cos(a) * (0.36 + 1.05 * s), -0.62, 0.14, 0.14, 0.14, 0, 0, -a);
     }
     crest.dispose();
-  } else if (effect === 8) {
-    wings(true);
-    if (stage === 2) for (let i = 0; i < 3; i++) add(petal, (i - 1) * 0.12, 1.65, -0.5, 0.15, 0.55 - Math.abs(i - 1) * 0.15, 0.4, 0, 0, (i - 1) * -0.3);
-  } else if (effect === 6) {
-    for (let i = 0; i < 3; i++) {
-      const side = stage === 1 ? -1 : 1, x = side * (0.45 + i * 0.25), height = 1.2 + i * 0.3;
-      stem([[x, 0.1, -0.65], [x, height * 0.5, -0.68], [x - side * 0.15, height, -0.65]], 0.018);
-      for (let j = 0; j < 4; j++) add(petal, x, 0.5 + j * 0.28, -0.65, 0.14, 0.45, 0.4, 0.2, 0, (j % 2 ? -1 : 1) * 1.0);
-    }
   }
   const geometry = mergeGeometries(pieces);
   pieces.forEach(g => g.dispose());
