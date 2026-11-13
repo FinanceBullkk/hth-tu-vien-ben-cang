@@ -1,9 +1,9 @@
 // Mức đồ hoạ người chơi tự chọn trong bảng "Đồ hoạ".
-// 'auto' giữ cách cũ: bắt đầu ở mức Cao, máy giật thì AdaptiveQuality tự hạ dần.
+// 'auto': bắt đầu ở mức Cao, máy giật thì AdaptiveQuality tự hạ, chạy mượt trở lại thì tự nâng.
 // Các mức cố định thì không tự hạ nữa; "Rất nét" chỉ có khi chọn tay vì tốn GPU gấp vài lần.
 
 export const GRAPHICS_MODES = [
-  { id: 'auto', label: 'Tự động', hint: 'Bắt đầu ở mức Cao, máy giật thì tự hạ dần.' },
+  { id: 'auto', label: 'Tự động', hint: 'Bắt đầu ở mức Cao, máy giật thì tự hạ, mượt lại thì tự nâng.' },
   { id: 'low', level: 0, label: 'Thấp', hint: 'Ảnh thô, tắt bóng đổ và ánh sáng rực. Cho máy yếu.' },
   { id: 'medium', level: 1, label: 'Vừa', hint: 'Tối đa 1280×720, bóng đổ nhẹ.' },
   { id: 'high', level: 2, label: 'Cao', hint: 'Tối đa Full HD, bóng đổ và ánh sáng rực.' },

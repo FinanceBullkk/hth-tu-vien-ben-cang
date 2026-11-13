@@ -33,7 +33,7 @@ export class FollowCamera {
     this.targetPitch = 0.3;
     this.distance = 7.5;
     this.meditating = false;
-    this.shot = null; // { pos, look }: góc máy cố định do minigame đặt.
+    this.shot = null; // { pos, look, sway? }: góc máy cố định do minigame đặt; sway (mặc định 1) là độ lắc nhẹ.
     this.reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.minDist = 2.2;
     this.maxDist = 16;
@@ -97,7 +97,7 @@ export class FollowCamera {
 
     // Góc máy cố định của minigame (đầu hồ): trôi mượt tới chỗ đặt, lắc nhẹ như người say.
     if (mode === 'shot') {
-      const sway = this.reducedMotion ? 0 : 1;
+      const sway = this.reducedMotion ? 0 : (this.shot.sway ?? 1);
       this._desired.set(this.shot.pos.x, this.shot.pos.y + Math.sin(this.time * 0.9) * 0.03 * sway, this.shot.pos.z + Math.sin(this.time * 0.6) * 0.1 * sway);
       this.target.set(this.shot.look.x, this.shot.look.y, this.shot.look.z + Math.sin(this.time * 0.43) * 0.25 * sway);
       this.#glide(dt, 4, 4);

@@ -1,0 +1,55 @@
+/* Máy gạt cần: phần riêng thêm vào HUD dùng chung .crh (casino-round-hud.css). Nền đỏ son cho khác bàn bạt xanh. */
+.slot-hud { background: linear-gradient(180deg, rgba(92, 16, 10, .93), rgba(46, 8, 6, .95)); }
+.slot-hud .crh-bar { gap: 10px; }
+
+/* Dải các lần gạt gần nhất: mỗi lần ba hình nhỏ; có ăn thì viền vàng kèm hệ số. */
+.slot-history { display: flex; gap: 4px; flex: 1; min-width: 0; margin: 0; padding: 0; list-style: none; overflow: hidden; justify-content: flex-end; }
+.slot-history li { flex: none; display: flex; align-items: center; gap: 2px; padding: 1px 5px; border-radius: 6px; background: rgba(0, 0, 0, .3); font-size: 12px; line-height: 1.4; opacity: .6; }
+.slot-history li.push { opacity: .85; }
+.slot-history li.win { opacity: 1; background: rgba(255, 214, 110, .2); box-shadow: inset 0 0 0 1px #ffd46e; }
+.slot-history li.new { opacity: 1; }
+.slot-history li i { font: 800 11px var(--serif); font-style: normal; color: #ffe08a; }
+
+/* Nút gạt lớn: quả cầu đỏ như núm cần thật, nhấn lún xuống. */
+.slot-pull {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 6px 14px;
+  border: 2px solid #ffd46e; border-radius: 999px; cursor: pointer; touch-action: manipulation;
+  background: radial-gradient(circle at 50% 30%, #ff6a4a, #c41d12 60%, #7d0d07); color: #fff6dc;
+  box-shadow: 0 4px 0 #4a0805, 0 6px 14px rgba(0, 0, 0, .45); text-shadow: 0 1px 2px rgba(0, 0, 0, .6);
+  transition: transform .08s, box-shadow .08s, filter .15s;
+}
+.slot-pull b { font: 900 18px var(--serif); letter-spacing: .08em; text-transform: uppercase; }
+.slot-pull kbd { padding: 0 5px; border: 1px solid rgba(255, 255, 255, .5); border-radius: 4px; font: 700 10px var(--sans); opacity: .8; }
+.slot-pull:hover:not(:disabled), .slot-pull:focus-visible { filter: brightness(1.12); outline: none; }
+.slot-pull:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #4a0805, 0 2px 6px rgba(0, 0, 0, .45); }
+.slot-pull:disabled { cursor: default; filter: saturate(.5) brightness(.75); }
+.slot-pull.broke { filter: grayscale(.7) brightness(.8); }
+
+/* Bảng thưởng gập được: bảng nhỏ ba cột. */
+.slot-pay { font-size: 13px; color: #f1dfb8; }
+.slot-pay summary { cursor: pointer; width: max-content; color: #ffd98a; }
+.slot-pay table { width: 100%; margin: 6px 0 4px; border-collapse: collapse; }
+.slot-pay th, .slot-pay td { padding: 2px 6px; text-align: center; border-bottom: 1px solid rgba(255, 220, 140, .15); }
+.slot-pay th { font-weight: 600; color: #e7c98a; }
+.slot-pay td:first-child, .slot-pay th:first-child { text-align: left; }
+.slot-pay td:nth-child(2) { font-weight: 800; color: #ffe9b8; }
+.slot-pay small { color: #cdb995; }
+
+/* Màn kết quả: ba hình to; nổ hũ thì chữ vàng rung. */
+.slot-reveal em { font: 900 30px/1 var(--serif); font-style: normal; color: #ffd23f; letter-spacing: .08em; }
+.slot-reveal em:empty { display: none; }
+.slot-reveal b { font-size: 56px; letter-spacing: .06em; }
+.slot-reveal.jackpot em { font-size: 46px; animation: slot-jackpot .18s ease-in-out infinite alternate; }
+
+/* Biển tên nổi trên dãy máy: nền đỏ son như bảng hiệu máy. */
+.slot-label { background: rgba(110, 18, 12, .86); }
+
+@keyframes slot-jackpot { from { transform: rotate(-3deg) scale(1); } to { transform: rotate(3deg) scale(1.08); } }
+@media (max-width: 600px) {
+  .slot-pull b { font-size: 16px; }
+  .slot-pull kbd { display: none; }
+  .slot-history li:nth-child(n+4) { display: none; }
+  .slot-reveal b { font-size: 42px; }
+}
+@media (max-height: 560px) { .slot-pay { display: none; } }
+@media (prefers-reduced-motion: reduce) { .slot-reveal.jackpot em { animation: none; } }

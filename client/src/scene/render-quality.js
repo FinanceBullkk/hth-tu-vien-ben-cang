@@ -79,11 +79,26 @@ export function gpuName(gl) {
   }
 }
 
+const WINDOW_S = 2;
+const SLOW_FPS = 45;
+const FAST_FPS = 55;
+const UPGRADE_WINDOWS = 15; // 30 giây mượt liền mới thử nâng một mức.
+const MAX_UPGRADE_WINDOWS = 480; // Thử lại thưa nhất 16 phút một lần.
+const FAILED_UPGRADE_S = 60; // Vừa nâng mà trong một phút đã phải hạ thì coi như nâng hỏng.
+
+/**
+ * Tự chọn mức đồ hoạ theo FPS đo được. Hạ một mức khi hai cửa sổ 2 giây liền dưới 45 FPS;
+ * nâng lại một mức khi 30 giây liền trên 55 FPS. Máy chỉ bận nhất thời (đồng bộ file, quét virus)
+ * vì thế không bị kẹt ở mức thấp. Nâng lên rồi lại phải hạ ngay thì lần thử sau chờ gấp đôi, để không giật lên giật xuống.
+ */
 export class AdaptiveQuality {
-  constructor(onChange, level = 2) {
+  constructor(onChange, level = 2, maxLevel = 2) {
     this.onChange = onChange;
     this.level = level;
+    this.maxLevel = maxLevel;
     this.elapsed = 0;
+    this.upgradeWindows = UPGRADE_WINDOWS;
+    this.sinceUpgrade = Infinity;
     this.reset();
   }
 
@@ -91,6 +106,7 @@ export class AdaptiveQuality {
     this.seconds = 0;
     this.frames = 0;
     this.slowWindows = 0;
+    this.fastWindows = 0;
     this.stalls = 0;
   }
 
@@ -100,14 +116,16 @@ export class AdaptiveQuality {
       return;
     }
     this.elapsed += dt;
-    // ponytail: four-second shader warmup, one-way fallback; add recovery after GPU telemetry exists.
-    if (this.elapsed < 4 || this.level === 0) return;
+    this.sinceUpgrade += dt;
+    // Bốn giây đầu (và sau mỗi lần đổi mức) shader còn đang biên dịch, FPS chưa nói lên gì.
+    if (this.elapsed < 4) return;
     if (dt > 0.25) {
       this.stalls++;
       if (this.stalls < 3) {
         this.seconds = 0;
         this.frames = 0;
         this.slowWindows = 0;
+        this.fastWindows = 0;
         return;
       }
     } else {
@@ -115,14 +133,25 @@ export class AdaptiveQuality {
     }
     this.seconds += dt;
     this.frames++;
-    if (this.seconds < 2) return;
+    if (this.seconds < WINDOW_S) return;
     const fps = this.frames / this.seconds;
-    this.slowWindows = fps < 45 ? this.slowWindows + 1 : 0;
     this.seconds = 0;
     this.frames = 0;
-    if (this.slowWindows < 2) return;
-    this.level--;
+    this.slowWindows = fps < SLOW_FPS ? this.slowWindows + 1 : 0;
+    this.fastWindows = fps >= FAST_FPS ? this.fastWindows + 1 : 0;
+    if (this.slowWindows >= 2 && this.level > 0) {
+      if (this.sinceUpgrade < FAILED_UPGRADE_S) this.upgradeWindows = Math.min(MAX_UPGRADE_WINDOWS, this.upgradeWindows * 2);
+      this.#change(this.level - 1);
+    } else if (this.fastWindows >= this.upgradeWindows && this.level < this.maxLevel) {
+      this.sinceUpgrade = 0;
+      this.#change(this.level + 1);
+    }
+  }
+
+  #change(level) {
+    this.level = level;
+    this.elapsed = 0;
     this.reset();
-    this.onChange(this.level);
+    this.onChange(level);
   }
 }

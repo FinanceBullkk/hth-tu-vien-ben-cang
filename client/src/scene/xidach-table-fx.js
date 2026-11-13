@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { XIDACH } from '../../../shared/xidach.js';
 import { chipMaterials } from './casino-chip-materials.js';
+import { disposeMergedMeshes, mergeStaticMeshes } from './static-mesh-merge.js';
 import { h } from '../ui/dom.js';
 import { stampOf } from '../ui/xidach-cards.js';
 
@@ -23,6 +24,12 @@ function chipsFor(amount) {
     }
   }
   return out;
+}
+
+/** Dọn chồng chip cũ; geometry gộp là bản riêng nên phải giải phóng. */
+function clearStack(stack) {
+  disposeMergedMeshes(stack);
+  stack.clear();
 }
 
 export class XiDachTableFx {
@@ -61,13 +68,14 @@ export class XiDachTableFx {
     if (this.bets.get(seat) === amount) return;
     this.bets.set(seat, amount);
     const stack = this.stacks[seat];
-    stack.clear();
+    clearStack(stack);
     chipsFor(amount).forEach((v, i) => {
       const chip = new THREE.Mesh(chipGeometry, chipMaterials(v));
       chip.position.set((i % 2) * 0.006, this.spots.top + CHIP.h * (i + 0.5), 0);
       chip.castShadow = true;
       stack.add(chip);
     });
+    mergeStaticMeshes(stack); // Mỗi đồng chip 3 lần vẽ; gộp cả chồng còn tối đa 2 lần mỗi mệnh giá.
   }
 
   /** Chip bay từ from tới to theo vòng cung, lần lượt từng chip; tới nơi thì gỡ, chip cuối gọi done. */
@@ -107,7 +115,7 @@ export class XiDachTableFx {
     if (state.round !== this.round) {
       this.round = state.round;
       this.bets.clear();
-      this.stacks.forEach((s) => s.clear());
+      this.stacks.forEach(clearStack);
       this.stamps.forEach((s) => { s.visible = false; });
     }
     const before = new Map((prev?.round === state.round ? prev.seats : []).map((s) => [s.sid, s.outcome]));
@@ -116,7 +124,7 @@ export class XiDachTableFx {
       else if (!seat.outcome) this.#setStack(seat.seat, seat.bet);
     }
     if (state.phase === 'idle') {
-      this.stacks.forEach((s) => s.clear());
+      this.stacks.forEach(clearStack);
       this.stamps.forEach((s) => { s.visible = false; });
       this.bets.clear();
     }

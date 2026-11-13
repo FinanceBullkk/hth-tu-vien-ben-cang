@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { SHOP, floorHeight } from '../../../shared/layout.js';
 import { Avatar } from '../player/avatar.js';
+import { mergeStaticMeshes } from './static-mesh-merge.js';
 
 const KEEPER_NAME = 'Bà chủ Kim Bảo';
 const GREET_RADIUS = 6;
@@ -106,6 +107,7 @@ function buildStall(y) {
     lantern.position.set(px, y + postH - 0.55, c.minZ - 0.15);
     g.add(lantern);
   }
+  mergeStaticMeshes(g); // 24 mảnh tĩnh còn 3 lần vẽ.
   return g;
 }
 

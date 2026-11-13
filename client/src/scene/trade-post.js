@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { TRADE_POST, floorHeight } from '../../../shared/layout.js';
 import { textTexture } from './builders.js';
+import { mergeStaticMeshes } from './static-mesh-merge.js';
 
 const TAP_RANGE = 30;
 const POST_H = 2.35;
@@ -86,6 +87,7 @@ function buildPost() {
     crate.rotation.y = 0.3;
     g.add(crate);
   });
+  mergeStaticMeshes(g); // 22 mảnh tĩnh còn vài lần vẽ.
   return g;
 }
 
