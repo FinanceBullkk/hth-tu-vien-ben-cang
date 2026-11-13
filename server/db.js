@@ -150,6 +150,8 @@ export class Db {
     this.shop = new ShopStore(this.db);
     this.baucua = new TableStakeStore(this.db, 'baucua');
     this.xidach = new TableStakeStore(this.db, 'xidach');
+    this.taixiu = new TableStakeStore(this.db, 'taixiu');
+    this.coquay = new TableStakeStore(this.db, 'coquay');
     /** Gán từ Room: báo số dư TEU mới để đẩy ví cho người chơi. */
     this.onTeu = null;
   }

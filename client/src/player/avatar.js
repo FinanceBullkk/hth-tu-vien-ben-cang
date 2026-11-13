@@ -564,7 +564,7 @@ export class Avatar {
       armRx = -1.0;
       armLz = -0.35;
       armRz = 0.3;
-    } else if (this.activity === ACTIVITY.baucua) {
+    } else if (this.activity === ACTIVITY.baucua || this.activity === ACTIVITY.taixiu || this.activity === ACTIVITY.coquay) {
       // Hai tay chống lên mép bàn, chờ mở bát.
       armLx = -0.7;
       armRx = -0.7;

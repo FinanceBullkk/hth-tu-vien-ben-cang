@@ -27,7 +27,7 @@ const SIT_INTERVAL_MS = 1000; // Ngồi xuống phát tin cho cả phòng nên p
 const round2 = (n) => Math.round(n * 100) / 100;
 
 export class Room {
-  constructor({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch, melody, pk, shop, baucua, xidach }) {
+  constructor({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch, melody, pk, shop, baucua, xidach, taixiu, coquay }) {
     this.io = io;
     this.broadcast = io.to(PLAYERS_ROOM);
     this.db = db;
@@ -45,6 +45,8 @@ export class Room {
     this.shop = shop;
     this.baucua = baucua;
     this.xidach = xidach;
+    // Tài xỉu, cò quay: cùng lõi CasinoRoundTable, sự kiện <trò>:bet|clear|throw.
+    this.casinoTables = [taixiu, coquay].filter(Boolean);
     // Kết quả các bàn đỏ đen gửi riêng cho từng người cược (theo pid); người đã rời thì bỏ qua, tiền vẫn vào ví.
     const toPid = (event) => (pid, data) => this.byPid.get(pid)?.socket?.emit(event, data);
     if (this.baucua) this.baucua.onPayout = toPid('baucua:payout');
@@ -52,6 +54,7 @@ export class Room {
       this.xidach.onPayout = toPid('xidach:payout');
       this.xidach.onHand = toPid('xidach:hand'); // Bài của mình chỉ gửi cho mình.
     }
+    for (const table of this.casinoTables) table.onPayout = toPid(`${table.rules.name}:payout`);
     // Mỗi lần kiếm được TEU, đẩy số dư mới cho đúng người để ví trên HUD luôn khớp.
     this.db.onTeu = (pid, teu) => this.byPid.get(pid)?.socket?.emit('wallet', { teu });
     if (this.pk) this.pk.onKnockout = (player) => this.onActionStop(player);
@@ -79,6 +82,7 @@ export class Room {
     clearInterval(this.interval);
     this.baucua?.stop(); // Hoàn cược ván đang dở trước khi tắt.
     this.xidach?.stop();
+    for (const table of this.casinoTables) table.stop();
     for (const p of this.players.values()) {
       this.meditation.leave(p);
       clearTimeout(p.ghostTimer);
@@ -141,6 +145,7 @@ export class Room {
       this.pk?.sweep();
       this.baucua?.sweep();
       this.xidach?.sweep();
+      for (const table of this.casinoTables) table.sweep();
     }
   }
 
@@ -192,7 +197,7 @@ export class Room {
             ack?.({ ok: false, error: 'Chưa vào phòng.' });
             return;
           }
-          if (player?.melody && /^(action:start|rhythm:|fish:|pitch:|riddle:|baucua:|xidach:)/.test(event)) {
+          if (player?.melody && /^(action:start|rhythm:|fish:|pitch:|riddle:|baucua:|xidach:|taixiu:|coquay:)/.test(event)) {
             ack?.({ ok: false, error: 'Rời sân đàn trước nhé.' });
             return;
           }
@@ -244,6 +249,12 @@ export class Room {
     on('xidach:clear', (p) => this.xidach.clear(p));
     on('xidach:hit', (p) => this.xidach.hit(p));
     on('xidach:stand', (p) => this.xidach.stand(p));
+    for (const table of this.casinoTables) {
+      const { name } = table.rules;
+      on(`${name}:bet`, (p, data) => table.bet(p, data));
+      on(`${name}:clear`, (p) => table.clear(p));
+      on(`${name}:throw`, (p, data) => table.throw(p, data));
+    }
     on('shop:buy', (p, data) => this.onBuy(p, data));
     on('look:set', (p, data) => this.onLook(p, data));
     on('pk:attack', (p, data) => this.pk.attack(p, data));
@@ -393,6 +404,7 @@ export class Room {
         welcomeGift: isNewcomer ? TEU.welcomeGift : 0,
         baucua: this.baucua.snapshot(pid),
         xidach: this.xidach.snapshot(pid),
+        ...Object.fromEntries(this.casinoTables.map((t) => [t.rules.name, t.snapshot(pid)])),
         dayCycleMs: (this.config.dayCycleMinutes || 20) * 60_000,
         radio: { durationSec: 1758, startedAt: this.config.radioStartedAt },
         welcome: this.config.welcomeMessage,

@@ -42,6 +42,7 @@ import './ui/melody.css';
 import './ui/cultivation.css';
 import './ui/shop.css';
 import './ui/baucua.css';
+import './ui/casino-round-hud.css';
 import './ui/xidach.css';
 
 const isTouch = matchMedia('(pointer:coarse)').matches;
@@ -208,6 +209,8 @@ function main() {
     app.wallet.apply({ teu: snap.teu, owned: snap.owned });
     app.activities.baucua.setSnapshot(snap.baucua);
     app.activities.xidach.setSnapshot(snap.xidach);
+    app.activities.taixiu.setSnapshot(snap.taixiu);
+    app.activities.coquay.setSnapshot(snap.coquay);
     // Server gỡ món chưa sở hữu (mua ở máy khác, hết hạn giữ đồ cũ...): mặc đúng bộ server chốt.
     const look = lookOf(snap.me);
     if (Object.entries(look).some(([slot, v]) => profile[slot] !== v)) {
@@ -358,6 +361,12 @@ function main() {
   // ---------- Bầu cua ----------
   net.on('baucua:state', (state) => app.activities.baucua.applyState(state));
   net.on('baucua:payout', (result) => app.activities.baucua.onPayout(result));
+
+  // ---------- Tài xỉu, cò quay ----------
+  for (const name of ['taixiu', 'coquay']) {
+    net.on(`${name}:state`, (state) => app.activities[name].applyState(state));
+    net.on(`${name}:payout`, (result) => app.activities[name].onPayout(result));
+  }
 
   // ---------- Xì dách ----------
   net.on('xidach:state', (state) => app.activities.xidach.applyState(state));
@@ -560,6 +569,8 @@ function main() {
     world.shopStall.update(dt, me.x, me.z, camera);
     world.baucuaTable.update(dt, camera, nowMs);
     world.xidachTable.update(dt, camera, nowMs);
+    world.taixiuTable.update(dt, camera, nowMs);
+    world.coquayTable.update(dt, camera, nowMs);
     world.pitchCourt.update(dt, camera);
     app.follow.update(dt, me.x, me.y, me.z, look);
     world.sky.follow(camera);

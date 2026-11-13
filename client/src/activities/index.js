@@ -1,8 +1,10 @@
 // Điều phối hoạt động: phát hiện điểm gần người chơi, bật/tắt hoạt động, khoá di chuyển.
-import { ABBOT, BAUCUA_ZONE, BELL, LAKE, PITCH_ZONE, POND, SHOP, TEA, TREE, XIDACH_ZONE, ZOEYY, dist2d, isInsideHall, lakeDistance } from '../../../shared/layout.js';
+import { ABBOT, BAUCUA_ZONE, BELL, COQUAY_ZONE, LAKE, PITCH_ZONE, POND, SHOP, TAIXIU_ZONE, TEA, TREE, XIDACH_ZONE, ZOEYY, dist2d, isInsideHall, lakeDistance } from '../../../shared/layout.js';
 import { openShop } from '../ui/shop-panel.js';
 import { BauCuaActivity } from './baucua.js';
 import { XiDachActivity } from './xidach.js';
+import { createTaiXiuActivity } from './taixiu.js';
+import { createCoQuayActivity } from './coquay.js';
 import { BellEvent } from './bell-event.js';
 import { FishingActivity } from './fishing.js';
 import { FortuneActivity } from './fortune.js';
@@ -14,7 +16,7 @@ import { MELODY_ZONE } from '../../../shared/layout.js';
 import { MelodyActivity } from './melody.js';
 import { PkActivity } from './pk.js';
 
-const KIND_CODE = { bell: 2, write: 3, shake: 4, fish: 5, pitch: 6, baucua: 9, xidach: 10 };
+const KIND_CODE = { bell: 2, write: 3, shake: 4, fish: 5, pitch: 6, baucua: 9, xidach: 10, taixiu: 11, coquay: 12 };
 
 // Lớp CSS báo đang trong một hoạt động: khung chiến đấu (thanh máu, thanh chiêu) tự cất đi để không che bảng hoạt động.
 const markInActivity = (on) => document.body.classList.toggle('in-activity', on);
@@ -32,6 +34,8 @@ export class Activities {
     this.pitch = new PitchActivity(app);
     this.baucua = new BauCuaActivity(app);
     this.xidach = new XiDachActivity(app);
+    this.taixiu = createTaiXiuActivity(app);
+    this.coquay = createCoQuayActivity(app);
     this.melody = new MelodyActivity(app);
     this.pk = new PkActivity(app);
     this.pk.bind();
@@ -99,6 +103,12 @@ export class Activities {
     }
     if (dist2d(x, z, XIDACH_ZONE.x, XIDACH_ZONE.z) < XIDACH_ZONE.radius) {
       return { key: 'xidach', label: 'Chơi xì dách', run: () => this.xidach.start() };
+    }
+    if (dist2d(x, z, TAIXIU_ZONE.x, TAIXIU_ZONE.z) < TAIXIU_ZONE.radius) {
+      return { key: 'taixiu', label: 'Chơi tài xỉu', run: () => this.taixiu.start() };
+    }
+    if (dist2d(x, z, COQUAY_ZONE.x, COQUAY_ZONE.z) < COQUAY_ZONE.radius) {
+      return { key: 'coquay', label: 'Chơi cò quay', run: () => this.coquay.start() };
     }
     if (dist2d(x, z, SHOP.x, SHOP.z) < SHOP.actionRadius) {
       return { key: 'shop', label: 'Ghé Sạp Kim Bảo', run: () => openShop(this.app, 'shop') };

@@ -65,6 +65,18 @@ export const XIDACH_ZONE = {
   seat: { x: 4.05, z: 0, rot: Math.PI / 2 },
   dealer: { x: 6.85, z: 0, rot: -Math.PI / 2, radius: 0.35 },
 };
+// Hai bàn mới ngay sau hai bàn cũ, phía thiền đường, giữa hai hành lang: tài xỉu phía tây, cò quay phía đông.
+// Khách đứng phía trục chính; nhà cái đứng mép xa trục. Bàn cò quay to hơn vì có bánh xe và mặt bạt số.
+export const TAIXIU_ZONE = {
+  x: -5.5, z: -6.6, radius: 2.6, tableRadius: 0.95,
+  seat: { x: -4.05, z: -6.6, rot: -Math.PI / 2 },
+  dealer: { x: -6.85, z: -6.6, rot: Math.PI / 2, radius: 0.35 },
+};
+export const COQUAY_ZONE = {
+  x: 5.6, z: -6.6, radius: 2.8, tableRadius: 1.15,
+  seat: { x: 3.95, z: -6.6, rot: Math.PI / 2 },
+  dealer: { x: 7.15, z: -6.6, rot: -Math.PI / 2, radius: 0.35 },
+};
 // Hồ câu góc đông nam sân: ba vòng tròn ghép thành bờ cong tự nhiên, đi vòng quanh được.
 // Cả ba vòng nằm trong CIRCLES nên va chạm dùng chung cơ chế sẵn có. Tâm (x, z) nằm trong vòng giữa.
 export const LAKE = {
@@ -101,6 +113,8 @@ export const PLACES = [
   { key: 'pitch', icon: '🏺', name: 'Đầu hồ', desc: 'Ném tên vào bình, so tài cùng cao thủ', x: 23.4, z: 3 },
   { key: 'baucua', icon: '🎲', name: 'Bầu cua', desc: 'Đặt TEU, xóc đĩa cùng cả sân', x: BAUCUA_ZONE.seat.x, z: BAUCUA_ZONE.seat.z },
   { key: 'xidach', icon: '🃏', name: 'Xì dách', desc: 'Rút bài đấu nhà cái, luật miền Nam', x: XIDACH_ZONE.seat.x, z: XIDACH_ZONE.seat.z },
+  { key: 'taixiu', icon: '🎲', name: 'Tài xỉu', desc: 'Đoán tài hay xỉu, tay to nhất được tung', x: TAIXIU_ZONE.seat.x, z: TAIXIU_ZONE.seat.z },
+  { key: 'coquay', icon: '🎡', name: 'Cò quay', desc: 'Đặt số, đỏ đen; tay to nhất búng bi', x: COQUAY_ZONE.seat.x, z: COQUAY_ZONE.seat.z },
   { key: 'tea', icon: '🍵', name: 'Rút xăm', desc: 'Lắc ống xăm xin lời chúc hôm nay', x: TEA.x, z: TEA.z - 2.4 },
   { key: 'tree', icon: '🌳', name: 'Treo lời ước', desc: 'Viết điều mong muốn lên cây bồ đề', x: TREE.x + 3, z: TREE.z },
 ];
@@ -202,6 +216,7 @@ export const CIRCLES = [
   { x: BAUCUA_ZONE.dealer.x, z: BAUCUA_ZONE.dealer.z, r: BAUCUA_ZONE.dealer.radius },
   { x: XIDACH_ZONE.x, z: XIDACH_ZONE.z, r: XIDACH_ZONE.tableRadius },
   { x: XIDACH_ZONE.dealer.x, z: XIDACH_ZONE.dealer.z, r: XIDACH_ZONE.dealer.radius },
+  ...[TAIXIU_ZONE, COQUAY_ZONE].flatMap((t) => [{ x: t.x, z: t.z, r: t.tableRadius }, { x: t.dealer.x, z: t.dealer.z, r: t.dealer.radius }]),
   { x: PITCH_ZONE.jar.x, z: PITCH_ZONE.jar.z, r: PITCH_ZONE.jar.r },
   { x: PITCH_ZONE.opponent.x, z: PITCH_ZONE.opponent.z, r: 0.35 },
   ...PITCH_ZONE.pots.map((p) => ({ x: p.x, z: p.z, r: 0.28 })),
