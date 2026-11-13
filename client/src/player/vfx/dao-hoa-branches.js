@@ -3,25 +3,23 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { blossomGeometry, budGeometry, leafGeometry, branchGeometry, branchPoint } from './dao-hoa-geometry.js';
 import { floraMaterial } from './dao-hoa-materials.js';
 import { hash } from './aura-billboard-layer.js';
+import { softDot } from './aura-rhythm.js';
 
-// Hai cành đào 3D vắt qua nguyệt môn (toạ độ nhóm aura, mét): cành lớn mọc bên trái, lách qua chỗ
-// hở bên trái cổng rồi uốn vòm qua đỉnh; cành nhỏ bên phải lách qua chỗ hở bên phải, vươn vào trên
-// vai; gốc cành chìm trong mây hồng. Cả hai chừa trống vùng quanh đầu. Mỗi cành đung đưa chậm quanh gốc; hoa, nụ, lá đi theo cành,
-// bông hé nở theo nhịp thở (không đổi tốc độ).
-const BRANCHES = [
-  { root: [-1.5, 0.48, -0.4], radius: 0.045, sway: 0.022, phase: 0,
-    main: [[-1.5, 0.48, -0.4], [-1.42, 0.82, -0.36], [-1.25, 1.25, -0.32], [-1.0, 1.85, -0.3], [-0.6, 2.35, -0.33],
-      [0.0, 2.62, -0.38], [0.55, 2.6, -0.4], [0.95, 2.4, -0.42]],
-    twigs: [[[-1.0, 1.85, -0.3], [-0.8, 1.74, -0.26], [-0.6, 1.78, -0.24], [-0.45, 1.9, -0.25]],
-      [[-0.6, 2.35, -0.33], [-0.66, 2.6, -0.36], [-0.56, 2.85, -0.38]],
-      [[0.55, 2.6, -0.4], [0.72, 2.76, -0.4], [0.96, 2.82, -0.42]],
-      [[0.95, 2.4, -0.42], [1.05, 2.2, -0.4], [1.0, 2.0, -0.38]]],
-    blooms: [[0.3, 0.42, 0.55, 0.63, 0.71, 0.79, 0.87, 0.94], [0.55, 1], [0.75], [1], [0.65]] },
-  { root: [1.55, 0.62, -0.42], radius: 0.04, sway: 0.028, phase: 2.1,
-    main: [[1.55, 0.62, -0.42], [1.45, 0.9, -0.36], [1.3, 1.3, -0.32], [1.0, 1.6, -0.28], [0.75, 1.72, -0.26], [0.55, 1.7, -0.26]],
-    twigs: [[[1.45, 0.9, -0.36], [1.7, 1.05, -0.4], [1.85, 1.3, -0.42]],
-      [[1.0, 1.6, -0.28], [1.05, 1.85, -0.3], [0.95, 2.05, -0.32]]],
-    blooms: [[0.35, 0.5, 0.62, 0.75, 0.88, 1], [0.6, 1], [1]] },
+// Một cành đào già (toạ độ nhóm aura, mét): gốc nấp sau chân trái nguyệt môn, thân leo phía sau vành
+// cổng bên trái, vắt vòm qua đỉnh ra phía trước rồi rủ xuống bên phải. Năm nhánh con: vươn ra ngoài,
+// vút lên, hai nhánh rủ trước mặt cổng, một nhánh chúc xuống ngoài cổng. Mọi hoa lá ở ngoài vòng
+// rỗng giữa cổng, chừa trống quanh đầu. Cành đung đưa rất chậm quanh gốc; hoa, nụ, lá, chỉ hồng
+// đi theo cành; bông hé nở theo nhịp thở (không đổi tốc độ).
+export const BRANCHES = [
+  { root: [-0.84, 0.0, -0.9], radius: 0.055, sway: 0.012, phase: 0,
+    main: [[-0.84, 0.0, -0.9], [-1.06, 0.49, -0.92], [-1.28, 1.06, -0.88], [-1.32, 1.63, -0.8], [-1.06, 2.25, -0.6],
+      [-0.48, 2.69, -0.45], [0.13, 2.8, -0.4], [0.7, 2.64, -0.38], [1.14, 2.25, -0.38], [1.41, 1.76, -0.4], [1.48, 1.37, -0.42]],
+    twigs: [[[-1.32, 1.63, -0.8], [-1.63, 1.85, -0.8], [-1.76, 2.16, -0.78]],
+      [[-0.48, 2.69, -0.45], [-0.44, 2.95, -0.45], [-0.26, 3.13, -0.46]],
+      [[0.7, 2.64, -0.38], [0.66, 2.38, -0.3], [0.55, 2.16, -0.28]],
+      [[1.14, 2.25, -0.38], [1.01, 2.03, -0.3], [0.92, 1.81, -0.28]],
+      [[1.41, 1.76, -0.4], [1.67, 1.63, -0.45], [1.76, 1.41, -0.45]]],
+    blooms: [[0.42, 0.5, 0.56, 0.62, 0.68, 0.74, 0.8, 0.86, 0.92, 0.97, 1], [0.6, 1], [1], [0.5, 1], [0.55, 1], [1]] },
 ];
 
 /** Bố cục tĩnh của hoa/nụ/lá: mỗi phần tử { b (cành), pos, rot, s, ph }. */
@@ -30,11 +28,12 @@ function layout() {
   let n = 0;
   BRANCHES.forEach((br, b) => {
     [br.main, ...br.twigs].forEach((pts, k) => {
-      for (const u of br.blooms[k]) {
-        const p = branchPoint(pts, u), j = n++;
-        p.x += (hash(j + 3) - 0.5) * 0.08; p.y += (hash(j + 7) - 0.5) * 0.08; p.z += 0.03;
-        blossoms.push({ b, pos: p, rot: new THREE.Euler((hash(j + 11) - 0.5) * 0.9, (hash(j + 13) - 0.5) * 1.1, hash(j + 17) * 6.28),
-          s: 0.1 + 0.06 * hash(j + 19), ph: hash(j + 23) * 6.28 });
+      // Mỗi điểm nở một chùm hai bông (bông lớn mở mặt ra trước, bông nhỏ nghiêng lệch bên).
+      for (const u of br.blooms[k]) for (let c = 0; c < 2; c++) {
+        const p = branchPoint(pts, u), j = n++, spread = c ? 0.13 : 0.05;
+        p.x += (hash(j + 3) - 0.5) * spread * 2; p.y += (hash(j + 7) - 0.5) * spread * 2; p.z += 0.03 + 0.04 * c;
+        blossoms.push({ b, pos: p, rot: new THREE.Euler((hash(j + 11) - 0.5) * (0.9 + c), (hash(j + 13) - 0.5) * (1.1 + c), hash(j + 17) * 6.28),
+          s: c ? 0.08 + 0.04 * hash(j + 19) : 0.12 + 0.05 * hash(j + 19), ph: hash(j + 23) * 6.28 });
       }
       // Nụ ở chót và giữa nhánh, lá non mọc đôi gần ngọn.
       for (const u of k ? [0.35, 0.92] : [0.2, 0.48, 0.98]) {
@@ -54,7 +53,7 @@ export function createBranches(parent, colors, lowQuality) {
   const geometries = [], meshes = [];
   const holders = BRANCHES.map(br => {
     const rel = pts => pts.map(([x, y, z]) => [x - br.root[0], y - br.root[1], z - br.root[2]]);
-    const parts = [branchGeometry(rel(br.main), br.radius), ...br.twigs.map(t => branchGeometry(rel(t), 0.018, 4, 10))];
+    const parts = [branchGeometry(rel(br.main), br.radius, 6, 56), ...br.twigs.map(t => branchGeometry(rel(t), 0.02, 4, 10))];
     const geo = mergeGeometries(parts); parts.forEach(g => g.dispose()); geometries.push(geo);
     const holder = new THREE.Group(); holder.position.set(...br.root); parent.add(holder);
     const bark = new THREE.Mesh(geo, inkMat); bark.renderOrder = 6; holder.add(bark);
@@ -74,6 +73,12 @@ export function createBranches(parent, colors, lowQuality) {
   };
   const groups = [instanced(blossomGeometry(), blossoms, 'dao-hoa-blossoms', true),
     instanced(budGeometry(), buds, 'dao-hoa-buds', !lowQuality), instanced(leafGeometry(), leaves, 'dao-hoa-leaves', !lowQuality)];
+  // Đốm sáng nhụy hoa: một điểm mềm ở tâm mỗi bông, rực lên khi thở ra.
+  const glowPos = new Float32Array(blossoms.length * 3), glowGeo = new THREE.BufferGeometry();
+  glowGeo.setAttribute('position', new THREE.BufferAttribute(glowPos, 3)); geometries.push(glowGeo);
+  const dotMat = new THREE.PointsMaterial({ color: colors.core.clone().lerp(colors.edge, 0.4), size: 0.16, map: softDot(),
+    transparent: true, opacity: 0.6, depthWrite: false, blending: THREE.AdditiveBlending });
+  const dots = new THREE.Points(glowGeo, dotMat); dots.name = 'dao-hoa-blossom-glow'; dots.renderOrder = 9; parent.add(dots);
 
   const local = new THREE.Matrix4(), sway = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
   const pos = new THREE.Vector3(), scale = new THREE.Vector3(), swayM = BRANCHES.map(() => new THREE.Matrix4());
@@ -99,15 +104,17 @@ export function createBranches(parent, colors, lowQuality) {
           const s = it.s * (g === 0 ? open : g === 1 ? 1 + 0.04 * rhythm.release : 1);
           local.compose(pos.copy(it.pos), q.setFromEuler(e), scale.set(s, s, s));
           set[0].setMatrixAt(i, local.premultiply(swayM[it.b]));
+          if (g === 0) glowPos.set([local.elements[12], local.elements[13], local.elements[14] + 0.02], i * 3);
         });
         set[0].instanceMatrix.needsUpdate = true;
       });
       inkMat.uniforms.opacity.value = 0.95 * f; glowMat.uniforms.opacity.value = 0.8 * f;
       glowMat.uniforms.glow.value = rhythm.pulse;
+      glowGeo.attributes.position.needsUpdate = true; dotMat.opacity = (0.4 + 0.4 * rhythm.pulse) * f;
     },
     dispose() {
       meshes.forEach(m => m.dispose()); geometries.forEach(g => g.dispose());
-      glowMat.dispose(); inkMat.dispose();
+      glowMat.dispose(); inkMat.dispose(); dotMat.dispose();
     },
   };
 }

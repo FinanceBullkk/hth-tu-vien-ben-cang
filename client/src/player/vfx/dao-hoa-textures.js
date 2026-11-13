@@ -1,71 +1,34 @@
-import { canvasTexture } from './aura-canvas-kit.js';
+import { canvasTexture, CJK_FONT } from './aura-canvas-kit.js';
 import { daoHoaMotifs, petalPath as petal } from './dao-hoa-canvas-motifs.js';
 
-// Hoa văn nét (trắng, shader tô màu) của Đào Hoa — cố ý KHÔNG theo khuôn mandala/trận chữ tròn của
-// các aura khác. Đơn vị px trong khung 1024 (bán kính 512).
-//  Nguyệt môn (mặt phẳng 2.7 m, tâm cao 1.32 m): vành cổng nét bút lông khô ở r 494, hở hai chỗ nơi
-//    cành đào 3D vắt qua; bên trong là bức thủy mặc (dao-hoa-garden-painting.js).
-//  Dưới chân: mặt ao — bờ nước nét bút lượn hở, gợn loang nơi cánh rơi chạm nước, cánh đào trôi.
+// Texture của Đào Hoa (nguyệt môn kiến trúc, không mandala/vòng chữ/trận đồ). Đơn vị px khung 1024.
 const TAU = Math.PI * 2;
 
-/** Nguyệt môn: vành cổng tròn nét bút lông khô, hở ở hai bên (chỗ cành đào 3D vắt qua). */
-export function daoHoaMoonGate() {
-  return canvasTexture('dao-hoa-moon-gate', 1024, p => {
-    const m = daoHoaMotifs(p);
-    m.brushArc(494, 26, Math.PI * 0.58, Math.PI * 1.4, 0.95, 11, 12);
-    m.brushArc(494, 24, Math.PI * 1.58, Math.PI * 2.42, 0.95, 23, 12);
-    // Nét kép mảnh bên trong, hở lệch nhịp với nét chính như hai lần chấm bút.
-    m.brushArc(474, 4, Math.PI * 0.66, Math.PI * 1.08, 0.6, 31, 3);
-    m.brushArc(474, 4, Math.PI * 1.68, Math.PI * 2.22, 0.6, 37, 3);
+/** Hoa văn chạm trên mặt trước vòng cổng ngọc (mặt phẳng 2.6 m — mặt cổng nằm ở r ≈ 410–492 px):
+    hai rãnh chỉ, dây hoa đào nổi chạy vòng, lá non xen giữa. Nét trắng, shader tô màu. */
+export function daoHoaGateCarving() {
+  return canvasTexture('dao-hoa-gate-carving', 1024, p => {
+    const { ring, around, stroke, c } = p, m = daoHoaMotifs(p);
+    ring(420, 1.1, 0.8); ring(484, 1.1, 0.8);
+    around(20, () => m.blossom(0, -452, 15, 1, 0.9, 0.2, false));
+    around(20, () => {
+      stroke(() => c.arc(0, -478, 52, Math.PI * 0.42, Math.PI * 0.58), 0.9, 0.6);
+      m.leaf(-10, -446, 18, -1.2, 0.8, 0.7); m.leaf(10, -458, 16, 1.6, 0.8, 0.7);
+    }, 0.5);
   });
 }
 
-/** Quầng trăng cộng sáng (khớp vị trí trăng trong bức thủy mặc). */
-export function daoHoaMoonGlow() {
-  return canvasTexture('dao-hoa-moon-glow', 512, ({ dot }) => { dot(0, -190, 210, 0.45); dot(0, -190, 125, 0.35); });
-}
-
-/** Mặt ao dưới chân (đứng yên): bờ nước lượn hở, các cụm gợn loang, cánh đào rơi rải rác. */
-export function daoHoaPond() {
-  return canvasTexture('dao-hoa-pond', 1024, p => {
-    const { c, stroke } = p, m = daoHoaMotifs(p);
-    // Bờ nước: đường lượn không tròn đều, đứt thành bốn nét.
-    for (let k = 0; k < 4; k++) stroke(() => {
-      for (let i = 0; i <= 40; i++) {
-        const a = (k + 0.06 + i / 40 * 0.82) * TAU / 4, r = 470 + 16 * Math.sin(a * 5 + 1) + 9 * Math.sin(a * 13);
-        const [x, y] = m.polar(r, a); if (i) c.lineTo(x, y); else c.moveTo(x, y);
-      }
-    }, 2.2 - k * 0.2, 0.75);
-    // Gợn loang nơi cánh rơi chạm nước: ba vòng cung hở, nhạt dần ra ngoài.
-    for (let i = 0; i < 7; i++) {
-      const [x, y] = m.polar(200 + 230 * m.rand(i + 4), i * TAU / 7 + m.rand(i) * 0.6);
-      for (let k = 0; k < 3; k++) {
-        const a0 = m.rand(i * 9 + k) * TAU;
-        stroke(() => c.arc(x, y, 18 + k * 22, a0, a0 + TAU * 0.78), 1.2 - k * 0.25, 0.75 - k * 0.2);
-      }
-      m.blossom(x, y, 9, 0.8, 0.8, m.rand(i + 2) * 6, false);
-    }
-    // Vòng gợn lớn quanh chân, hở hai chỗ.
-    m.brushArc(236, 6, 0.2, Math.PI * 0.95, 0.65, 51, 4); m.brushArc(236, 6, Math.PI * 1.2, Math.PI * 1.95, 0.65, 53, 4);
-    // Cánh đào rải rác trên mặt nước.
-    for (let i = 0; i < 44; i++) {
-      const [x, y] = m.polar(260 + 200 * m.rand(i + 60), m.rand(i + 70) * TAU);
-      c.save(); c.translate(x, y); c.rotate(m.rand(i + 80) * TAU);
-      stroke(() => petal(c, 18 + 12 * m.rand(i + 90)), 0.9, 0.7); c.restore();
-    }
-  });
-}
-
-/** Vòng hoa trôi trên ao (quay rất chậm): năm bông đào nổi và cánh vụn quanh chân. */
-export function daoHoaDriftingPetals() {
-  return canvasTexture('dao-hoa-drifting-petals', 512, p => {
-    const { c, stroke, around } = p, m = daoHoaMotifs(p);
-    around(5, () => m.blossom(0, -330, 64, 1.5, 0.9, 0.3), 0.2);
-    around(5, () => m.leaf(40, -250, 60, 0.9, 1.2, 0.7), 0.2);
-    for (let i = 0; i < 30; i++) {
-      const [x, y] = m.polar(170 + 290 * m.rand(i + 7), m.rand(i + 17) * TAU);
-      c.save(); c.translate(x, y); c.rotate(m.rand(i + 27) * TAU); stroke(() => petal(c, 28 + 14 * m.rand(i + 37)), 1.2, 0.75); c.restore();
-    }
+/** Biển đề trên đỉnh cổng: gỗ hồng gụ viền mơ, hai chữ 桃源 màu ngà. Khung vuông dán lên tấm
+    PLAQUE_SIZE nên chữ vẽ giãn dọc cho đúng tỉ lệ. */
+export const PLAQUE_SIZE = [0.56, 0.21];
+export function daoHoaPlaque() {
+  return canvasTexture('dao-hoa-plaque', 512, ({ c }) => {
+    c.fillStyle = 'rgba(112,44,70,0.95)'; c.fillRect(-512, -512, 1024, 1024);
+    c.strokeStyle = 'rgba(255,205,176,0.95)'; c.lineWidth = 22; c.strokeRect(-492, -460, 984, 920);
+    c.lineWidth = 8; c.strokeRect(-452, -330, 904, 660);
+    c.scale(1, PLAQUE_SIZE[0] / PLAQUE_SIZE[1]);
+    c.fillStyle = 'rgba(255,243,232,1)'; c.font = `150px ${CJK_FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.shadowColor = 'rgba(255,190,210,1)'; c.shadowBlur = 10; c.fillText('桃 源', 0, 4);
   });
 }
 

@@ -1,10 +1,6 @@
 // Nét vẽ riêng của Đào Hoa, chồng lên bút chung của aura-canvas-kit (p = pen):
-// bông đào khía tim, lá non, nét bút lông khô hở đầu.
+// bông đào khía tim (có nhụy) và lá non có gân.
 // Hệ toạ độ như bút chung: tâm (0,0), góc 0 hướng lên, tăng theo chiều kim đồng hồ.
-
-/** Giả ngẫu nhiên tất định — hoa văn giống hệt nhau mỗi lần vẽ. */
-const rand = n => { const x = Math.sin(n * 91.7 + 13.1) * 43758.5453; return x - Math.floor(x); };
-const polar = (r, a) => [Math.sin(a) * r, -Math.cos(a) * r];
 
 /** Đường viền một cánh đào dài s hướng lên, chóp khía tim. */
 export function petalPath(c, s) {
@@ -35,17 +31,5 @@ export function daoHoaMotifs(p) {
     stroke(() => { c.moveTo(0, -s * 0.1); c.lineTo(0, -s * 0.85); }, width * 0.5, alpha * 0.7);
   });
 
-  /** Nét bút lông khô quanh tâm ở bán kính r, bề dày w, từ góc a0 tới a1 (radian, 0 = lên):
-      nhiều sợi lông lệch nhau, đầu cuối xơ tưa và nhạt dần — cung hở, không khép đều nét. */
-  const brushArc = (r, w, a0, a1, alpha = 0.9, seed = 1, hairs = 9) => {
-    for (let h = 0; h < hairs; h++) {
-      const off = (h / (hairs - 1) - 0.5) * w, j = rand(seed * 17 + h);
-      const s0 = a0 + (a1 - a0) * 0.04 * j * (1 + Math.abs(off) / w * 3);
-      const s1 = a1 - (a1 - a0) * 0.05 * rand(seed * 29 + h) * (1 + Math.abs(off) / w * 3);
-      const thin = 1 - Math.abs(off) / w;
-      stroke(() => c.arc(0, 0, r + off, s0 - Math.PI / 2, s1 - Math.PI / 2), 0.6 + 1.6 * thin, alpha * (0.35 + 0.65 * thin) * (0.7 + 0.3 * j));
-    }
-  };
-
-  return { blossom, leaf, brushArc, polar, rand };
+  return { blossom, leaf };
 }

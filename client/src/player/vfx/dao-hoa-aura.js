@@ -1,27 +1,25 @@
 import * as THREE from 'three';
 import { DAO_HOA_COLORS } from './dao-hoa-materials.js';
-import { createEmblemLayers } from './dao-hoa-emblem-layers.js';
+import { createJadeGate } from './dao-hoa-jade-gate.js';
+import { createGround } from './dao-hoa-ground.js';
 import { createBranches } from './dao-hoa-branches.js';
 import { createBillboards } from './dao-hoa-billboards.js';
 import { createRedThreads } from './dao-hoa-red-threads.js';
 import { breathRhythm, softDot } from './aura-rhythm.js';
 
-// Đào Hoa Tri Kỷ (effect 5) — Nguyệt Môn Đào Ảnh. Cố ý KHÔNG theo khuôn chung của các aura khác
-// (mandala quay sau lưng, dải lưu quang/phiêu đái trắng, trận chữ tròn dưới chân):
-//  Sau lưng: nguyệt môn nét bút lông hở hai chỗ, đứng trên đất, ôm trọn nhân vật; trong cổng là bức
-//    thủy mặc (trăng ngà treo trên đầu, núi xa, sương, rừng đào, chim yến) · hai cành đào 3D vắt qua
-//    cổng với hoa, nụ, lá non · chỉ hồng tri kỷ buộc đồng tâm kết treo trên cành.
-//  Quanh thân: lốc cánh đào ba dòng xoắn quanh người · cánh đào, bông đào, lá non rơi lả tả ·
-//    phấn hoa lấp lánh · sương hồng ôm gốc cành.
-//  Dưới chân: mặt ao — bờ nước nét bút, gợn loang nơi cánh rơi chạm nước, vòng hoa trôi.
-//  Nhịp 12 giây êm như hơi thở: hít vào nụ khép → thở ra hoa hé nở, trăng sáng lên, vòng xoắn nở
-//  rộng như gió nhẹ → lắng. Không có pha tăng tốc; mọi thứ là hàm thuần của thời gian.
+// Đào Hoa Tri Kỷ (effect 5) — Đào Nguyên Nguyệt Môn. Theo bảng phân vai aura: bóng dáng riêng là
+// NGUYỆT MÔN KIẾN TRÚC, động từ riêng là RƠI; không đĩa mandala, không vòng chữ, không trận đồ,
+// không dải lưu quang/phiêu đái, không trăng, không mặt nước.
+//  Sau lưng: vòng cổng ngọc trắng hồng 3D dày, chạm đất trên hai đế đá, cao hơn đầu, lòng cổng rỗng;
+//    mặt trước chạm dây hoa đào, đỉnh treo biển 桃源 · một cành đào già nấp sau chân cổng, leo vắt
+//    vòm qua đỉnh rồi rủ xuống bên phải, đầy hoa, nụ, lá non · chỉ hồng tri kỷ thắt đồng tâm kết.
+//  Rơi: cánh đào rụng từ tán xoắn rơi chậm, bông đào và lá non rơi theo; phấn hoa lấp lánh.
+//  Dưới chân: thảm cánh đào rải dày ở chân cổng, bóng cành đổ lay theo cành.
+//  Nhịp 14 giây: thở ra thì một đợt cánh rụng dày hơn (mật độ, không đổi tốc độ), hoa hé nở, đường
+//  chạm trên cổng sáng lên. Không có pha tăng tốc; mọi thứ là hàm thuần của thời gian.
 const BASE_OPACITY = 0.9;
 /** Chu kỳ nhịp (giây). */
-export const DAO_HOA_CYCLE = 12;
-/** Tâm nguyệt môn (m): vành cổng chạm đất, đầu nhân vật (y ≈ 1.07) nằm trong vùng trống giữa cổng. */
-export const DAO_HOA_GATE = new THREE.Vector3(0, 1.32, -0.5);
-
+export const DAO_HOA_CYCLE = 14;
 export const daoHoaRhythm = time => breathRhythm(time, DAO_HOA_CYCLE);
 
 /** reducedMotion: đối tượng `{ matches }`; giảm chuyển động = chậm ba lần, không tắt hình. */
@@ -30,11 +28,10 @@ export function createDaoHoaAura(lowQuality = false, reducedMotion = globalThis.
   const group = new THREE.Group(); group.name = 'dao-hoa-aura';
   // Bộ điều khiển opacity mà Avatar ghi khi mờ dần.
   group.material = new THREE.MeshBasicMaterial({ transparent: true, opacity: BASE_OPACITY });
-  const gate = new THREE.Group(); gate.name = 'dao-hoa-gate'; gate.position.copy(DAO_HOA_GATE); group.add(gate);
-
   const branches = createBranches(group, colors, lowQuality);
   const parts = [
-    createEmblemLayers(gate, group, colors, lowQuality),
+    createJadeGate(group, colors, lowQuality),
+    createGround(group, lowQuality),
     branches,
     createRedThreads(group, colors, branches, lowQuality), // sau cành: neo theo cành đã lắc
     createBillboards(group, colors, lowQuality),
@@ -53,7 +50,6 @@ export function createDaoHoaAura(lowQuality = false, reducedMotion = globalThis.
     update(t) {
       const time = reducedMotion?.matches ? t * 0.35 : t;
       const f = group.material.opacity / BASE_OPACITY, rhythm = daoHoaRhythm(time);
-      gate.position.y = DAO_HOA_GATE.y + 0.015 * Math.sin(time * 0.4);
       parts.forEach(p => p.update(time, rhythm, f));
       for (let i = 0; i < moteCount; i++) {
         const u = ((i / moteCount + time * 0.04) % 1 + 1) % 1, a = i * 2.39996 + time * 0.08;

@@ -107,6 +107,21 @@ export function branchGeometry(points, radius, sides = 5, seg = 24) {
   return tag(g, KIND.bark, i => part[i], () => 0);
 }
 
+/** Nguyệt môn kiến trúc: vòng cổng dày (vành khuyên đùn sâu `depth`, vát mép) tâm ở gốc toạ độ,
+    mặt trước hướng +z, đáy chạm y = -outer; kèm hai đế đá đỡ chân cổng. Người gọi tự dispose. */
+export function moonGateGeometry(outer, inner, depth) {
+  const shape = new THREE.Shape().absarc(0, 0, outer, 0, Math.PI * 2, false);
+  shape.holes.push(new THREE.Path().absarc(0, 0, inner, 0, Math.PI * 2, true));
+  const bevel = depth * 0.12;
+  const ring = new THREE.ExtrudeGeometry(shape, { depth, curveSegments: 72, bevelEnabled: true,
+    bevelThickness: bevel, bevelSize: bevel, bevelSegments: 2 }).translate(0, 0, -depth / 2);
+  const feet = [-1, 1].map(s => new THREE.BoxGeometry(outer * 0.32, outer * 0.08, depth * 2.2)
+    .translate(s * outer * 0.26, -outer + outer * 0.04, 0).toNonIndexed());
+  const merged = mergeGeometries([ring.index ? ring.toNonIndexed() : ring, ...feet]);
+  ring.dispose(); feet.forEach(g => g.dispose());
+  return merged;
+}
+
 /** Điểm trên cành (u 0..1) — để đặt hoa, nụ, lá dọc cành. */
 export function branchPoint(points, u) {
   return new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p))).getPointAt(u);

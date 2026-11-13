@@ -6,8 +6,8 @@ import { daoHoaKnotSprite } from './dao-hoa-textures.js';
 // Chỉ hồng tri kỷ: vài sợi chỉ đỏ buộc trên cành đào, rủ xuống, giữa sợi thắt một đồng tâm kết,
 // dưới nút là chùm tua xoè. Đung đưa chậm như gió thoảng (biên độ tăng dần về ngọn), neo theo
 // cành nên lắc cùng cành. Mọi chuyển động là hàm thuần của thời gian, tốc độ cố định.
-// [cành, nhánh, u trên nhánh, chiều dài] — chọn chỗ không rủ ngang mặt nhân vật.
-const THREADS = [[0, 0, 0.45, 0.55], [0, 0, 0.9, 0.5], [1, 0, 0.7, 0.42], [0, 0, 0.62, 0.34]];
+// [cành, nhánh, u trên nhánh, chiều dài] — treo trong lòng cổng phía trên đầu, không rủ ngang mặt.
+const THREADS = [[0, 0, 0.6, 0.5], [0, 0, 0.72, 0.62], [0, 0, 0.84, 0.46], [0, 4, 0.6, 0.36]];
 const SEG = 16, KNOT = 0.62;
 
 export function createRedThreads(parent, colors, branches, lowQuality) {

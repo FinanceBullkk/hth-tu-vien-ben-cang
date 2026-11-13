@@ -5,7 +5,7 @@ import * as THREE from 'three';
 export const DAO_HOA_COLORS = {
   steel: new THREE.Color('#9c3d66'), edge: new THREE.Color('#ff9cc4'),
   core: new THREE.Color('#fff3ea'), gold: new THREE.Color('#ffc9b0'),
-  leaf: new THREE.Color('#bfe98f'), bark: new THREE.Color('#6b3a45'),
+  leaf: new THREE.Color('#bfe98f'), bark: new THREE.Color('#6b3a45'), jade: new THREE.Color('#f2d3da'),
 };
 
 // Vật liệu cành đào 3D (cánh, nhụy, nụ, lá, vỏ cành — phân biệt bằng attribute kind).
@@ -62,6 +62,43 @@ const floraFragment = `
     #include <colorspace_fragment>
   }
 `;
+
+// Ngọc trắng hồng của nguyệt môn: thân normal-blend có vân hồng chảy trong đá (theo toạ độ vật thể),
+// mép bắt sáng; lớp sáng cộng màu chỉ là viền phát quang mềm thở theo nhịp.
+const jadeVertex = `
+  varying vec3 vPos, vN, vEye;
+  void main() {
+    vPos = position;
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    vN = normalize(normalMatrix * normal); vEye = normalize(-mv.xyz);
+    gl_Position = projectionMatrix * mv;
+  }
+`;
+const jadeFragment = `
+  uniform vec3 stone, vein, core;
+  uniform float opacity, ink, glow;
+  varying vec3 vPos, vN, vEye;
+  void main() {
+    float facing = abs(dot(normalize(vN), normalize(vEye))), rim = pow(1.0 - facing, 2.0);
+    float swirl = sin(vPos.x * 6.0 + sin(vPos.y * 4.0 + vPos.z * 9.0) * 1.7) + 0.6 * sin(vPos.y * 13.0 - vPos.x * 3.0);
+    float veins = pow(1.0 - abs(swirl) * 0.5, 14.0);
+    vec3 col = mix(stone, vein, veins * 0.55) * (0.72 + 0.28 * facing);
+    if (ink > 0.5) gl_FragColor = vec4(mix(col, core, rim * 0.35), opacity);
+    else gl_FragColor = vec4(mix(vein, core, 0.4) * rim * (0.55 + 0.45 * glow), opacity);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
+  }
+`;
+
+/** Ngọc nguyệt môn: ink=1 thân ngọc (normal blend), ink=0 viền sáng cộng màu. */
+export function jadeMaterial(colors, ink) {
+  // Một mặt: khối cổng kín nên chỉ vẽ mặt hướng ra, không lộ mặt trong qua thân ngọc.
+  return new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.FrontSide,
+    uniforms: { stone: { value: colors.jade }, vein: { value: colors.edge }, core: { value: colors.core },
+      opacity: { value: 1 }, ink: { value: ink }, glow: { value: 0 } },
+    vertexShader: jadeVertex, fragmentShader: jadeFragment,
+    blending: ink ? THREE.NormalBlending : THREE.AdditiveBlending });
+}
 
 /** ink=0 lớp sáng cộng màu, ink=1 thân hoa normal-blend. */
 export function floraMaterial(colors, ink) {
