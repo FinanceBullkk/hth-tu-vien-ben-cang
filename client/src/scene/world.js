@@ -40,7 +40,7 @@ export class World {
     scene.add(createTerrain(lowQuality));
     scene.add(createForest(lowQuality));
     this.monastery = createMonastery(scene);
-    createCasinoQuarter(scene);
+    this.casino = createCasinoQuarter(scene);
     this.port = createPort(scene, this.sky.uniforms, lowQuality);
     this.particles = new Particles(scene, this.monastery.lanterns.positions, this.monastery.hall.candles, lowQuality);
     this.animals = new Animals(scene, lowQuality);
@@ -111,6 +111,7 @@ export class World {
     emissiveMat.color.setScalar(0.55 + night * 0.6);
     hall.hallLight.intensity = (22 + night * 22) * flick;
     this.particles.update(dt, night, this.lanternBoost);
+    this.casino.update(dt, night, flick);
 
     // Chuông đung đưa rồi lặng dần; khúc gỗ thúc vào rồi trở về.
     this.bellSwing *= Math.exp(-dt * 0.7);

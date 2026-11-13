@@ -107,6 +107,12 @@ export const TAIXIU_ZONE = casinoTable(-52, 0, 0.95, 2.6, 1.45, 1.35);
 export const COQUAY_ZONE = casinoTable(-40, 0, 1.15, 2.8, 1.65, 1.55);
 // Tụ Bảo Bồn: chậu tụ bảo giữa lối, giữa bốn bàn; vật cản tròn.
 export const TREASURE_BASIN = { x: CASINO.aisleX, z: -7, r: 1.5 };
+// Kim Ngân Lâu: lầu hai tầng mái lưu ly vàng sát tường bắc khu sòng, mặt quay về lối giữa. Chỉ để nhìn, không vào được.
+export const CASINO_HALL = { x: CASINO.aisleX, z: CASINO.minZ + 3.5, halfW: 8, halfD: 2.6 };
+// Cột cờ treo dây đèn lồng vắt ngang sân sòng (hai dây đông–tây), đứng sát tường đông và tây, né hành lang máy gạt cần.
+export const CASINO_POLES = [-18, 5].flatMap((z) => [
+  { x: CASINO.minX + 1.4, z, r: 0.2 }, { x: CASINO.maxX - 1.4, z, r: 0.2 },
+]);
 
 // Hành lang có mái của Kim Ngân Phường, sát tường tây; dãy máy gạt cần đứng giữa hai cột ở khoang giữa:
 // lưng máy sát mép ngoài hành lang, mặt máy quay về phía đông nhìn ra sân sòng.
@@ -237,8 +243,8 @@ const GALLERY_BASE = { w: 3.2, d: 14, floor: 0.16, roof: 3.15 };
 export const GALLERIES = [
   { x: -11.6, z: HALL.z + 17 },
   { x: 11.6, z: HALL.z + 17 },
-  SLOT_GALLERY,
-].map((g) => ({ ...GALLERY_BASE, x: g.x, z: g.z }));
+  { ...SLOT_GALLERY, gold: true }, // Hành lang trong Kim Ngân Phường lợp lưu ly vàng.
+].map((g) => ({ ...GALLERY_BASE, ...g }));
 export const GALLERY_POSTS = GALLERIES.flatMap(g => [-1.1, 1.1].flatMap(dx =>
   [-6, -2, 2, 6].map(dz => ({ x: g.x + dx, z: g.z + dz, r: 0.19 }))));
 export const BAMBOO_CLUMPS = [
@@ -292,8 +298,12 @@ export const BOXES = [
   // Tường rào nam, hai bên cổng
   { minX: SITE.minX - 0.7, maxX: -4.6, minZ: 30 - WALL_T, maxZ: 30 + WALL_T, cam: true },
   { minX: 4.6, maxX: 31, minZ: 30 - WALL_T, maxZ: 30 + WALL_T, cam: true },
-  // Tường Kim Ngân Phường
+  // Tường Kim Ngân Phường và thân Kim Ngân Lâu
   ...CASINO_WALLS.map((w) => ({ ...w, cam: true })),
+  {
+    minX: CASINO_HALL.x - CASINO_HALL.halfW, maxX: CASINO_HALL.x + CASINO_HALL.halfW,
+    minZ: CASINO_HALL.z - CASINO_HALL.halfD, maxZ: CASINO_HALL.z + CASINO_HALL.halfD, cam: true,
+  },
   // Thiền đường: tường bắc, đông, tây, hai mảng tường trước (chừa cửa)
   { minX: h.x - h.halfW, maxX: h.x + h.halfW, minZ: h.z - h.halfD - 0.25, maxZ: h.z - h.halfD + 0.25, cam: true },
   { minX: h.x - h.halfW - 0.25, maxX: h.x - h.halfW + 0.25, minZ: h.z - h.halfD, maxZ: h.z + h.halfD, cam: true },
@@ -339,6 +349,7 @@ export const CIRCLES = [
   ...[TAIXIU_ZONE, COQUAY_ZONE].flatMap((t) => [{ x: t.x, z: t.z, r: t.tableRadius }, { x: t.dealer.x, z: t.dealer.z, r: t.dealer.radius }]),
   TREASURE_BASIN,
   ...CASINO_GATE_POSTS,
+  ...CASINO_POLES,
   { x: PITCH_ZONE.jar.x, z: PITCH_ZONE.jar.z, r: PITCH_ZONE.jar.r },
   { x: PITCH_ZONE.opponent.x, z: PITCH_ZONE.opponent.z, r: 0.35 },
   ...PITCH_ZONE.pots.map((p) => ({ x: p.x, z: p.z, r: 0.28 })),

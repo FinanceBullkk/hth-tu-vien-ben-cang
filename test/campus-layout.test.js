@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { CatmullRomCurve3, Vector3 } from 'three';
 import {
-  BAUCUA_ZONE, BELL, BRIDGE, CASINO, GATE_LIONS, MATS, TERRACE, COQUAY_ZONE, COURT_PATHS, GALLERIES, HALL, PAGODA, PLACES, POND, TAIXIU_ZONE, TREASURE_BASIN, TREE,
+  BAUCUA_ZONE, BELL, BRIDGE, CASINO, CASINO_HALL, CASINO_POLES, GATE_LIONS, SLOT_ZONE, MATS, TERRACE, COQUAY_ZONE, COURT_PATHS, GALLERIES, HALL, PAGODA, PLACES, POND, TAIXIU_ZONE, TREASURE_BASIN, TREE,
   XIDACH_ZONE, floorHeight, resolveCollision,
 } from '../shared/layout.js';
 
@@ -92,4 +92,21 @@ test('đài cẩm thạch: bậc lên dốc đều, lan can chặn mép đài, c
   const side = resolveCollision(HALL.x + TERRACE.stairHalf + 0.6, (frontZ + stairFootZ) / 2);
   assert.ok(side.x > HALL.x + TERRACE.stairHalf, 'lọt qua lan can bậc');
   for (const lion of GATE_LIONS) assert.ok(Math.abs(lion.x) - lion.r > 1.9, 'sư tử chừa lối giữa thềm');
+});
+
+test('Kim Ngân Lâu và cột đèn không lấn bàn, Tụ Bảo Bồn, máy gạt cần hay cổng', () => {
+  const hall = {
+    minX: CASINO_HALL.x - CASINO_HALL.halfW, maxX: CASINO_HALL.x + CASINO_HALL.halfW,
+    minZ: CASINO_HALL.z - CASINO_HALL.halfD, maxZ: CASINO_HALL.z + CASINO_HALL.halfD,
+  };
+  assert.ok(hall.minZ > CASINO.minZ && hall.maxX < CASINO.maxX && hall.minX > CASINO.minX, 'lầu nằm trong tường sòng');
+  for (const t of [BAUCUA_ZONE, XIDACH_ZONE, TAIXIU_ZONE, COQUAY_ZONE]) {
+    assert.ok(t.z - t.radius > hall.maxZ + 2, 'chừa ít nhất 2 m giữa vùng bàn và thềm lầu');
+  }
+  assert.ok(TREASURE_BASIN.z - TREASURE_BASIN.r > hall.maxZ + 2, 'Tụ Bảo Bồn cách thềm lầu');
+  for (const m of SLOT_ZONE.machines) assert.ok(m.x < hall.minX - 4, 'máy gạt cần cách lầu');
+  for (const p of CASINO_POLES) {
+    assert.ok(Math.abs(p.z - CASINO.gateEast.z) > CASINO.gateEast.half + 1, 'cột đèn không chắn cổng đông');
+    for (const m of SLOT_ZONE.machines) assert.ok(Math.hypot(p.x - m.stand.x, p.z - m.stand.z) > 2, 'cột đèn không chắn máy');
+  }
 });
