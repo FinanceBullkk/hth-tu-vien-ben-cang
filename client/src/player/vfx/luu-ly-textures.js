@@ -1,11 +1,8 @@
 import { canvasTexture } from './aura-canvas-kit.js';
 
 // Hoa văn Lưu Ly Vân Thủy (effect 2). Đơn vị px trong khung 1024 (bán kính 512), góc 0 = hướng lên.
-// Pháp luân sau lưng (khớp giọt lưu ly 3D: vòng ngoài ~235–370 px, vòng trong ~150 px):
-//   0–102 tâm 水 · 110–300 sáu nhánh băng tinh + lục mang tinh · 300–350 tám sóng cuộn ·
-//   365–425 dải sóng vảy (thanh hải ba) · vành phù văn tách riêng 436–505 quay ngược chiều.
-const INSCRIPTION = '琉璃雲水上善若水';
-const SEAL_TEXT = '坎水潤下雲行雨施';
+// Lưu Ly không có đĩa pháp luân hay vành chữ (khuôn riêng của Kiếm Vũ): hoa văn chỉ nằm dưới chân,
+// vẽ thành mặt hồ — sóng vảy, sóng cuộn, lá sen nổi, thủy liên sáu cánh.
 
 // --- nét riêng của Lưu Ly, vẽ trong khung đã xoay (điểm (0,-r) là hướng ra ngoài) ---
 /** Ngọn sóng cuộn: thân sóng dâng rồi cuộn xoáy vào trong như nét bút lông. */
@@ -22,15 +19,6 @@ function waveCurl({ c, stroke }, r, s, width = 1.3, alpha = 0.8) {
 function scallops({ around, stroke, c }, n, r, rad, alpha = 0.6) {
   around(n, () => { for (let k = 0; k < 3; k++) stroke(() => c.arc(0, -r, rad * (1 - k * 0.3), Math.PI, Math.PI * 2), k ? 0.7 : 1.1, alpha * (1 - k * 0.25)); });
 }
-/** Nhánh băng tinh: trục chính kèm ba cặp nhánh chữ V, đầu nhánh có hạt thoi. */
-function dendrite({ c, stroke, diamond }, r0, r1, width = 1.1, alpha = 0.7) {
-  stroke(() => { c.moveTo(0, -r0); c.lineTo(0, -r1); }, width, alpha);
-  for (const [k, b] of [[0.3, 34], [0.55, 42], [0.78, 26]]) {
-    const y = r0 + (r1 - r0) * k;
-    stroke(() => { c.moveTo(-b, -y - b); c.lineTo(0, -y); c.lineTo(b, -y - b); }, width * 0.75, alpha * 0.8);
-  }
-  diamond(r1 + 10, 10, width, alpha);
-}
 /** Giọt nước viền nét, đầu nhọn hướng ra ngoài. */
 function droplet({ c, stroke }, r, s, width = 1, alpha = 0.8) {
   stroke(() => {
@@ -39,59 +27,25 @@ function droplet({ c, stroke }, r, s, width = 1, alpha = 0.8) {
     c.bezierCurveTo(-s * 0.6, -r + s * 0.75, -s * 0.55, -r - s * 0.2, 0, -r - s);
   }, width, alpha);
 }
-function hexagram(p, r, width, alpha) { p.star(3, 1, r, width, alpha); p.at(Math.PI / 3, () => p.star(3, 1, r, width, alpha)); }
-function glyphAt(c, text, px = 30) {
-  c.globalAlpha = 0.9; c.font = `${px}px "KaiTi", "STKaiti", "SimSun", serif`;
-  c.textAlign = 'center'; c.textBaseline = 'middle'; c.shadowColor = '#fff'; c.shadowBlur = 6;
-  c.fillText(text, 0, 1);
+
+/** Lá sen nổi: phiến tròn khuyết một rẻo, gân toả từ cuống, mép gợn. */
+function lilyPad({ c, stroke }, r, s, turn, width = 1.2, alpha = 0.75) {
+  c.save(); c.translate(0, -r); c.rotate(turn);
+  stroke(() => { c.arc(0, 0, 60 * s, 0.35, Math.PI * 2 - 0.05); c.lineTo(0, 0); c.closePath(); }, width, alpha);
+  for (let k = 1; k < 8; k++) { const a = 0.35 + k * (Math.PI * 2 - 0.4) / 8; stroke(() => { c.moveTo(0, 0); c.lineTo(Math.cos(a) * 52 * s, Math.sin(a) * 52 * s); }, width * 0.5, alpha * 0.5); }
+  c.restore();
 }
 
-export function luuLyMandala() {
-  return canvasTexture('luu-ly-mandala', 1024, p => {
-    const { ring, around, star, glyph } = p;
-    hexagram(p, 300, 0.8, 0.22); star(12, 5, 360, 0.7, 0.16);
-    around(6, () => dendrite(p, 112, 290, 1.2, 0.75));
-    around(6, () => dendrite(p, 150, 230, 0.8, 0.4), 0.5);
-    around(8, () => waveCurl(p, 318, 1, 1.3, 0.8), 0.5);
-    ring(365, 1.5); scallops(p, 36, 392, 22, 0.55); ring(425, 1.1, 0.75);
-    ring(92, 1.8); ring(102, 0.8, 0.6);
-    around(12, () => droplet(p, 76, 12, 0.9, 0.6));
-    glyph('水', 0, 112, 0.95);
-  });
-}
-
-export function luuLyRim() {
-  return canvasTexture('luu-ly-rim', 1024, p => {
-    const { c, stroke, ring, around } = p;
-    ring(438, 1); ring(472, 2.2, 0.85); ring(503, 1);
-    around(24, i => { c.save(); c.translate(0, -456); glyphAt(c, INSCRIPTION[i % 8], 26); c.restore(); });
-    around(24, () => droplet(p, 456, 10, 1, 0.8), 0.5);
-    around(24, () => stroke(() => c.arc(0, -503, 14, Math.PI * 1.1, Math.PI * 1.9), 1, 0.7), 0.5);
-    around(72, () => stroke(() => { c.moveTo(0, -480); c.lineTo(0, -490); }, 0.7, 0.55));
-  });
-}
-
-export function luuLyGlow() {
-  return canvasTexture('luu-ly-glow', 512, ({ dot }) => {
-    for (let i = 0; i < 8; i++) { const a = (i + 0.5) * Math.PI / 4; dot(Math.sin(a) * 330, -Math.cos(a) * 330, 30, 0.85); }
-    for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; dot(Math.sin(a) * 300, -Math.cos(a) * 300, 20, 0.8); }
-    for (let i = 0; i < 24; i++) { const a = (i + 0.5) * Math.PI / 12; dot(Math.sin(a) * 456, -Math.cos(a) * 456, 14, 0.7); }
-    dot(0, 0, 70, 0.5);
-  });
-}
-
-/** Trận thủy văn dưới chân (đứng yên): 24 chữ, sóng cuộn, lục mang tinh, băng tinh. */
+/** Mặt hồ dưới chân (đứng yên): sóng vảy viền ngoài, sóng cuộn, năm lá sen nổi, gợn tròn. */
 export function luuLySealOuter() {
-  return canvasTexture('luu-ly-seal-outer', 1024, p => {
-    const { c, ring, around, star } = p;
-    ring(505, 1); ring(492, 2); ring(452, 1.2); ring(440, 0.8, 0.6);
-    around(24, i => { c.save(); c.translate(0, -472); glyphAt(c, SEAL_TEXT[i % 8], 30); c.restore(); });
-    around(24, () => droplet(p, 472, 9, 1, 0.85), 0.5);
-    hexagram(p, 430, 0.9, 0.3); star(12, 5, 400, 0.6, 0.16);
-    around(12, () => waveCurl(p, 385, 0.95, 1.4, 0.8), 0.5);
-    scallops(p, 30, 320, 24, 0.5); ring(292, 1.2);
-    around(6, () => dendrite(p, 180, 280, 1.2, 0.7));
-    ring(170, 1.2); ring(160, 0.7, 0.6);
+  return canvasTexture('luu-ly-pond', 1024, p => {
+    const { ring, around } = p;
+    ring(500, 0.8, 0.5); scallops(p, 40, 478, 26, 0.55); ring(452, 1.4, 0.8);
+    around(12, () => waveCurl(p, 405, 1, 1.3, 0.75), 0.25);
+    around(5, i => lilyPad(p, 300, 1 + 0.25 * (i % 2), i * 1.3, 1.3, 0.75), 0.1);
+    around(7, i => lilyPad(p, 230, 0.55, i * 2.1, 1, 0.5), 0.6);
+    for (const [r, a] of [[350, 0.35], [190, 0.3], [168, 0.6]]) ring(r, 0.8, a);
+    around(18, () => droplet(p, 352, 8, 0.9, 0.6), 0.5);
   });
 }
 
@@ -158,15 +112,5 @@ export function luuLySparkle() {
       c.fillStyle = g; c.beginPath(); c.ellipse(0, 0, i ? 18 : 30, i ? 340 : 500, 0, 0, Math.PI * 2); c.fill(); c.restore();
     }
     dot(0, 0, 170, 1);
-  });
-}
-
-/** Mảnh lưu ly: hình thoi dài có mặt cắt, gân sáng chéo. */
-export function luuLyShard() {
-  return canvasTexture('luu-ly-shard', 128, ({ c, stroke }) => {
-    const g = c.createLinearGradient(-200, -460, 200, 460);
-    g.addColorStop(0, 'rgba(255,255,255,0.9)'); g.addColorStop(0.5, 'rgba(255,255,255,0.3)'); g.addColorStop(1, 'rgba(255,255,255,0.75)');
-    c.fillStyle = g; c.beginPath(); c.moveTo(0, -470); c.lineTo(190, -60); c.lineTo(0, 470); c.lineTo(-190, -60); c.closePath(); c.fill();
-    stroke(() => { c.moveTo(0, -470); c.lineTo(0, 470); c.moveTo(-190, -60); c.lineTo(190, -60); }, 9, 0.8);
   });
 }
