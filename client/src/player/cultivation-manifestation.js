@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { swordGeometry } from './vfx/sword-geometry.js';
+import { dropGeometry } from './vfx/drop-geometry.js';
 import { buildDaoHoaThrone } from './vfx/dao-hoa-meditation-throne.js';
 
 const cache = new Map();
@@ -13,6 +14,20 @@ for (let i = 0; i < p.count; i++) {
 petal.computeVertexNormals();
 const crystal = new THREE.OctahedronGeometry(1);
 const sphere = new THREE.SphereGeometry(1, 10, 6);
+
+// Ngọn sóng cuộn (Lưu Ly): tấm mỏng dâng lên rồi cuộn xoáy về phía +z, chân rộng, ngọn thuôn.
+// Đường giữa là xoắn ốc bán kính co dần cộng độ dâng theo chiều dài.
+function waveCrest() {
+  const geo = new THREE.PlaneGeometry(1, 1, 4, 28), pos = geo.attributes.position, uvs = geo.attributes.uv;
+  for (let i = 0; i < pos.count; i++) {
+    const t = uvs.getY(i), across = uvs.getX(i) - 0.5;
+    const phi = t * Math.PI * 1.3, R = 0.5 - 0.3 * t;
+    const w = Math.pow(1 - t, 0.7) * Math.min(1, t * 6 + 0.35);
+    pos.setXYZ(i, across * w, R * Math.sin(phi) + 0.62 * t, R * (1 - Math.cos(phi)) * 0.8);
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
 
 function build(effect, stage) {
   const pieces = [];
@@ -99,7 +114,10 @@ function build(effect, stage) {
   } else if (stage === 0) {
   // Tier three is a small spirit seed; later tiers introduce a new silhouette.
     if (effect === 1 || effect === 0) bloom(0, 0.18, -0.42, 0.42, 8);
-    else for (let i = 0; i < 3; i++) {
+    else if (effect === 2) for (let i = 0; i < 3; i++) {
+      const a = i * Math.PI * 2 / 3;
+      add(dropGeometry(), Math.cos(a) * 0.62, 0.45 + i * 0.12, Math.sin(a) * 0.52, 0.32, 0.32, 0.32);
+    } else for (let i = 0; i < 3; i++) {
       const a = i * Math.PI * 2 / 3;
       add(crystal, Math.cos(a) * 0.65, 0.5 + i * 0.12, Math.sin(a) * 0.55, 0.08, 0.2, 0.08, 0, 0, -a);
     }
@@ -111,22 +129,19 @@ function build(effect, stage) {
         stage === 1 ? 0.85 : 1.4, 0.8, -0.2, 0, a);
     }
   } else if (effect === 2) {
-    const side = stage === 1 ? -1 : 1;
-    const points = Array.from({ length: 33 }, (_, i) => {
-      const t = i / 32, a = t * Math.PI * 1.45;
-      return [side * (0.35 + Math.sin(a) * 0.72), 0.2 + t * 1.65, -0.65 + Math.cos(a) * 0.35];
-    });
-    stem(points, 0.065);
-    const head = points.at(-1);
-    add(sphere, ...head, 0.14, 0.13, 0.22, -0.3);
-    add(sphere, head[0], head[1] - 0.025, head[2] + 0.2, 0.11, 0.065, 0.15);
-    for (const horn of [-1, 1]) {
-      const x = head[0] + horn * 0.09, y = head[1], z = head[2];
-      stem([[x, y + 0.08, z], [x + horn * 0.06, y + 0.26, z - 0.08], [x + horn * 0.14, y + 0.34, z - 0.12]], 0.015);
-      stem([[x, y + 0.05, z + 0.18], [x + horn * 0.18, y - 0.04, z + 0.35], [x + horn * 0.27, y + 0.07, z + 0.4]], 0.008);
-      add(crystal, x, y + 0.03, z + 0.12, 0.035, 0.025, 0.04);
+    // Lưu Ly (2): tòa sóng lưu ly — tầng 4 tám ngọn sóng cuộn theo một chiều quanh người ngồi như
+    // xoáy nước; tầng 5 quạt bảy ngọn sóng sau lưng cuộn ra hai bên, đầu ngọn đọng giọt lưu ly.
+    // Ngọn sóng xoay để mặt cắt xoắn ốc hướng về người nhìn — thấy rõ nét cuộn thay vì tấm phẳng.
+    const crest = waveCrest();
+    if (stage === 1) for (let i = 0; i < 8; i++) {
+      const a = (i + 0.5) * Math.PI * 2 / 8;
+      add(crest, Math.sin(a) * 0.7, 0.04, Math.cos(a) * 0.7, 0.26, 0.55, 0.5, -0.1, a + Math.PI / 2, 0, 'YXZ');
+    } else for (let i = 0; i < 7; i++) {
+      const a = (i - 3) * 0.36, s = 1 - Math.abs(i - 3) * 0.1, side = i < 3 || (i === 3) ? -1 : 1;
+      add(crest, Math.sin(a) * 0.36, 0.55 + Math.cos(a) * 0.36, -0.66, 0.3 * s, 1.2 * s, 0.75 * s, 0, side * Math.PI / 2, -a, 'ZYX');
+      add(dropGeometry(), Math.sin(a) * (0.36 + 1.05 * s), 0.6 + Math.cos(a) * (0.36 + 1.05 * s), -0.62, 0.14, 0.14, 0.14, 0, 0, -a);
     }
-    for (let i = 3; i < 29; i += 3) add(petal, ...points[i], 0.16, 0.28, 0.3, -0.5, 0, side * -0.7);
+    crest.dispose();
   } else if (effect === 4 || effect === 8) {
     wings(effect === 8);
     if (stage === 2) for (let i = 0; i < 3; i++) add(petal, (i - 1) * 0.12, 1.65, -0.5, 0.15, 0.55 - Math.abs(i - 1) * 0.15, 0.4, 0, 0, (i - 1) * -0.3);
