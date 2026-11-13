@@ -1,5 +1,9 @@
 import * as THREE from 'three';
-import { BELL, COURT_PATHS, HALL, LAKE, PAGODA, TREE } from '../../../shared/layout.js';
+import { BELL, CASINO, COURT_PATHS, HALL, LAKE, PAGODA, PITCH_ZONE, SITE, TREE } from '../../../shared/layout.js';
+
+// Phố chợ lát đá từ quán trà tới trạm giao thương, ôm cả đoạn phố trước cổng nam Kim Ngân Phường.
+const MARKET_PLAZA = { minX: -56, maxX: -23, minZ: 11.5, maxZ: 28.5 };
+const rect = ({ minX, maxX, minZ, maxZ }) => [[minX, minZ], [maxX, minZ], [maxX, maxZ], [minX, maxZ]];
 import { rng } from './builders.js';
 
 function groundTexture(stone = false) {
@@ -57,13 +61,16 @@ export function buildCampusGround(group, b) {
   const earth = new THREE.MeshLambertMaterial({ map: groundTexture() });
   const stone = new THREE.MeshLambertMaterial({ map: groundTexture(true), side: THREE.DoubleSide });
   const soil = new THREE.MeshLambertMaterial({ color: '#c9bc9c' });
-  surface(group, [[-31, -31], [31, -31], [31, 31], [-31, 31]], earth, 0);
-  // The formal court belongs to the hall; the outer garden has no rectangular plot grid.
-  surface(group, [[-9.7, -12], [9.7, -12], [9.7, 0], [6.5, 3], [-6.5, 3], [-9.7, 0]], stone);
+  surface(group, rect({ minX: SITE.minX - 0.7, maxX: SITE.maxX + 0.9, minZ: SITE.minZ - 0.7, maxZ: SITE.maxZ + 1 }), earth, 0);
+  // Sân đạo trường trước thiền đường: để trống, chỉ lát đá; thuôn lại ở đầu nối với trục chính.
+  const z0 = HALL.z + 8;
+  surface(group, [[-9.7, z0], [9.7, z0], [9.7, z0 + 18], [6.5, z0 + 21], [-6.5, z0 + 21], [-9.7, z0 + 18]], stone);
+  surface(group, rect(CASINO), stone);
+  surface(group, rect(MARKET_PLAZA), stone);
   clearing(group, BELL.x, BELL.z, 5.5, 5.4, soil, 14);
   clearing(group, TREE.x, TREE.z, 5.6, 5.1, soil, 12);
   clearing(group, PAGODA.x, PAGODA.z, 5.4, 5.5, stone, 19);
-  clearing(group, 21, 3, 5.2, 5.8, soil, 17);
+  clearing(group, PITCH_ZONE.x - 4, PITCH_ZONE.z, 5.2, 5.8, soil, 17);
   for (const lobe of LAKE.lobes) clearing(group, lobe.x, lobe.z, lobe.r + 0.9, lobe.r + 0.9, soil, 26);
 
   // ponytail: paths remain flush; true terrain steps must also change shared floorHeight.

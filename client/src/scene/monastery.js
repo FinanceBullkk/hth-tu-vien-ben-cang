@@ -1,7 +1,7 @@
 // Khu tu viện: cổng, sân, gác chuông, thiền đường, cây bồ đề, hồ sen, vườn đá, quán trà, đèn lồng.
 import * as THREE from 'three';
 import {
-  BELL, BOUNDS, CONTAINERS, COURT_TREES, GARDEN_ROCKS, HALL, LANTERN_POSTS, MATS, POND, TEA, TEA_TABLES, TREE, TREE_BRANCHES,
+  BELL, BOUNDS, CONTAINERS, COURT_TREES, GARDEN_ROCKS, HALL, LANTERN_POSTS, MATS, POND, SITE, TEA, TEA_TABLES, TREE, TREE_BRANCHES,
 } from '../../../shared/layout.js';
 import { Batch, addRoof, flatMaterial, rng, textTexture } from './builders.js';
 import { buildCampusGround } from './campus-ground.js';
@@ -27,21 +27,27 @@ function buildWalls(b) {
     b.box(w, 10, d, PLASTER, cx, -3.2, cz, { jitter: 0.02 });
     b.box(w + 0.3, 0.3, d + 0.3, '#73988d', cx, 1.95, cz);
   };
-  wall(-30.3, 0, 0.6, 61);
-  wall(0, -30.3, 61, 0.6);
-  wall(-17.7, 30, 26.2, 0.6);
-  wall(17.7, 30, 26.2, 0.6);
-  for (let z = -30; z <= 30; z += 6) b.box(0.85, 2.3, 0.85, '#bda98a', -30.3, 1.05, z);
-  for (let x = -30; x <= 30; x += 6) {
-    b.box(0.85, 2.3, 0.85, '#bda98a', x, 1.05, -30.3);
-    if (Math.abs(x) > 5) b.box(0.85, 2.3, 0.85, '#bda98a', x, 1.05, 30);
+  // Đoạn tường từ a tới b dọc một trục, tâm ở giữa.
+  const spanX = (x0, x1, z) => wall((x0 + x1) / 2, z, x1 - x0, 0.6);
+  const spanZ = (z0, z1, x) => wall(x, (z0 + z1) / 2, 0.6, z1 - z0);
+  const { minX, maxX, minZ, maxZ } = SITE;
+  spanZ(minZ - 0.3, maxZ + 0.3, minX);
+  spanX(minX - 0.3, maxX + 0.4, minZ);
+  spanX(minX - 0.3, -4.6, maxZ);
+  spanX(4.6, maxX + 0.7, maxZ);
+  for (let z = maxZ; z >= minZ; z -= 6) b.box(0.85, 2.3, 0.85, '#bda98a', minX, 1.05, z);
+  for (let x = maxX; x >= minX; x -= 6) {
+    b.box(0.85, 2.3, 0.85, '#bda98a', x, 1.05, minZ);
+    if (Math.abs(x) > 5) b.box(0.85, 2.3, 0.85, '#bda98a', x, 1.05, maxZ);
   }
 
-  // Rào gỗ phía đông, nhìn xuống cảng
-  b.box(0.6, 10, 61, STONE, 30.1, -5.1, 0);
-  for (let z = -30; z <= 30; z += 2.5) b.box(0.18, 1.2, 0.18, WOOD_DARK, 29.95, 0.6, z);
-  b.box(0.12, 0.12, 61, WOOD, 29.95, 1.15, 0);
-  b.box(0.12, 0.12, 61, WOOD, 29.95, 0.65, 0);
+  // Rào gỗ phía đông trên tường chắn, nhìn xuống cảng
+  const eastLen = maxZ + 0.5 - (minZ - 0.3);
+  const eastZ = (maxZ + 0.5 + minZ - 0.3) / 2;
+  b.box(0.6, 10, eastLen, STONE, maxX, -5.1, eastZ);
+  for (let z = maxZ; z >= minZ; z -= 2.5) b.box(0.18, 1.2, 0.18, WOOD_DARK, maxX - 0.15, 0.6, z);
+  b.box(0.12, 0.12, eastLen, WOOD, maxX - 0.15, 1.15, eastZ);
+  b.box(0.12, 0.12, eastLen, WOOD, maxX - 0.15, 0.65, eastZ);
 
   // Bậc thềm trước cổng
   b.box(9.6, 10, 11, STONE, 0, -5.03, 35.5);

@@ -1,5 +1,6 @@
 // Trời và chu kì ngày: hoàng hôn sang đêm rồi về lại, tính từ giờ server nên mọi máy giống nhau.
 import * as THREE from 'three';
+import { SITE } from '../../../shared/layout.js';
 import { rng } from './builders.js';
 
 const smooth = (a, b, x) => {
@@ -95,15 +96,16 @@ export class DayNight {
 
     this.sun = new THREE.DirectionalLight(this.dusk.sun.getHex(), 2.3);
     this.sun.castShadow = true;
-    this.sun.shadow.camera.left = -48;
-    this.sun.shadow.camera.right = 48;
-    this.sun.shadow.camera.top = 52;
-    this.sun.shadow.camera.bottom = -52;
+    // Khung bóng phủ cả gò (khoảng 97×77 m) dù mặt trời xiên góc nào: nửa đường chéo + lề.
+    this.sun.shadow.camera.left = -64;
+    this.sun.shadow.camera.right = 64;
+    this.sun.shadow.camera.top = 64;
+    this.sun.shadow.camera.bottom = -64;
     this.sun.shadow.camera.near = 10;
     this.sun.shadow.camera.far = 220;
     this.sun.shadow.bias = -0.0006;
     this.sun.shadow.normalBias = 0.03;
-    this.sun.target.position.set(0, 0, 4);
+    this.sun.target.position.set((SITE.minX + SITE.maxX) / 2, 0, (SITE.minZ + SITE.maxZ) / 2);
     scene.add(this.sun, this.sun.target);
 
     this.hemi = new THREE.HemisphereLight(this.dusk.hemiSky.getHex(), this.dusk.hemiGnd.getHex(), 1.5);

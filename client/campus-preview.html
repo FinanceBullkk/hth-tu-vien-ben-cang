@@ -19,6 +19,7 @@
   <button data-view="plan">Mặt bằng</button>
   <button data-view="gate">Từ cổng</button>
   <button data-view="garden">Vườn trà</button>
+  <button data-view="casino">Kim Ngân Phường</button>
   <label>Ánh sáng <select id="light"><option value="0">Nắng sớm</option><option value="0.65">Ánh trăng</option></select></label>
   <p>Kéo để xoay · Cuộn để phóng to</p>
 </nav>
@@ -31,6 +32,15 @@
   import { PitchPotCourt } from '/src/scene/pitch-pot-court.js';
   import { createTerrain, createForest } from '/src/scene/terrain.js';
   import { DayNight } from '/src/scene/sky.js';
+  import { createCasinoQuarter } from '/src/scene/casino-quarter.js';
+  import { BauCuaTable } from '/src/scene/baucua-table.js';
+  import { XiDachTable } from '/src/scene/xidach-table.js';
+  import { TaiXiuTable } from '/src/scene/taixiu-table.js';
+  import { CoQuayTable } from '/src/scene/coquay-table.js';
+  import { SlotMachines } from '/src/scene/slot-machines.js';
+  import { ShopStall } from '/src/scene/shop-stall.js';
+  import { TradePost } from '/src/scene/trade-post.js';
+  import { SITE } from '../shared/layout.js';
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 1800);
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -48,15 +58,20 @@
   createWuxiaProps(scene);
   new FishingScene(scene);
   new PitchPotCourt(scene);
+  createCasinoQuarter(scene);
+  for (const Piece of [BauCuaTable, XiDachTable, TaiXiuTable, CoQuayTable, SlotMachines, ShopStall, TradePost]) new Piece(scene);
+  const cx = (SITE.minX + SITE.maxX) / 2;
+  const cz = (SITE.minZ + SITE.maxZ) / 2;
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.maxPolarAngle = Math.PI / 2 - 0.04;
   controls.maxDistance = 450;
   controls.minDistance = 4;
   const views = {
-    overview: { pos: [65, 57, 82], target: [0, 0, 0] },
-    plan: { pos: [0, 105, 0.01], target: [0, 0, 0] },
+    overview: { pos: [cx + 70, 80, cz + 95], target: [cx, 0, cz] },
+    plan: { pos: [cx, 150, cz + 0.01], target: [cx, 0, cz] },
     gate: { pos: [0, 2.8, 27], target: [0, 3, -18] },
     garden: { pos: [-3, 3.2, 23], target: [-18, 2, 10] },
+    casino: { pos: [-22, 16, 16], target: [-46, 0, -7] },
   };
   function view(key) {
     camera.position.fromArray(views[key].pos);
