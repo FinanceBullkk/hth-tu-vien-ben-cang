@@ -30,6 +30,8 @@ export const groundFragment = `
     if (theme == 4.0) shape = 0.37 + 0.18 * pow(1.0 - abs(sin(turn * 8.0)), 2.2);
     if (theme == 7.0) shape = 0.43 + 0.13 * cos(turn);
     if (theme == 8.0) shape = 0.41 + 0.12 * sin(turn * 3.0 + r * 7.0);
+    // Long Quyền: viền gãy khúc như mép hố chấn địa.
+    if (theme == 9.0) shape = 0.4 + 0.07 * abs(sin(turn * 4.5 + sin(turn * 13.0) * 0.6));
     // Xích Diễm: mép mây cuộn — chín múi tròn, khấc lõm nhọn giữa các múi.
     if (theme == 10.0) shape = 0.38 + 0.15 * sqrt(abs(sin(turn * 4.5)));
     if (theme == 12.0) shape = 0.36 + 0.2 * pow(abs(cos(turn * 4.0)), 6.0);
@@ -59,6 +61,14 @@ export const groundFragment = `
       vec2 q = (vUv - vec2(0.42, 0.08)) / vec2(0.22, 0.34);
       float lines = smoothstep(0.2, 0.9, sin(vUv.y * 60.0 + sin(vUv.x * 11.0 + time * 0.3) * 1.5 - time * 0.2));
       light += (1.0 - smoothstep(0.5, 1.0, length(q))) * (0.3 + 0.9 * lines) * seated;
+    }
+    // Long Quyền: chín khe nứt gãy khúc toả từ tâm (đứng yên), ánh lửa trôi chậm ra ngoài theo khe.
+    if (theme == 9.0) {
+      float sector = a * 9.0 / 6.2831853;
+      float jag = 0.18 * sin(r * 23.0 + floor(sector) * 1.7) + 0.08 * sin(r * 61.0 + floor(sector) * 4.1);
+      float crack = stroke((fract(sector + jag) - 0.5) * r * 0.7, 0.004 + 0.006 * (1.0 - r));
+      crack *= smoothstep(0.06, 0.16, r) * (1.0 - smoothstep(0.55, 0.85, r));
+      light += crack * (0.45 + 0.55 * pow(0.5 + 0.5 * sin(r * 18.0 - time * 0.8), 3.0)) * 0.9 * seated;
     }
     light += stroke(r - 0.3 - (1.0 - burst) * 0.65, 0.012) * burst * 0.4;
     float alpha = min(0.85, light + gold * 0.5) * opacity;
