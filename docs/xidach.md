@@ -1,6 +1,6 @@
 # Xì dách (luật miền Nam)
 
-Bàn chung tối đa 5 khách đấu với Bà Năm nhà cái (NPC) ở sân trước thiền đường, phía đông trục chính
+Bàn chung tối đa 5 khách đấu với nhà cái Mikumilu (NPC) ở sân trước thiền đường, phía đông trục chính
 (`XIDACH_ZONE` trong `shared/layout.js`); bàn bầu cua đối xứng phía tây. Cược bằng TEU thật.
 
 ## Luật
