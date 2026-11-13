@@ -5,7 +5,7 @@
 // 2 Lưu ly — long khí bơi quanh người, gợn nước loang từ chân, đá lưu ly lấp lánh, chân ngôn 水;
 // 3 Tinh hà — dải ngân hà nghiêng, ba vòng hào quang, sao chổi quanh vành, chân ngôn 星;
 // 4 Hỏa diễm — hỏa liên cháy dưới chân, trụ hỏa dâng, tàn lửa bay ngược lên trời, chân ngôn 炎;
-// 5 Đào hoa — mưa cánh đào hồng rơi li ti, trận đào, trụ hoa, sương hồng, chân ngôn 桃;
+// 5 Đào hoa — module riêng vfx/dao-hoa-aura.js (nguyệt môn, cành đào 3D, cánh đào xoắn rơi);
 // 6 Bích ngọc — lá ngọc rơi xoay, trúc khí mọc quanh chân, viên ngọc lục bay vòng vai, chân ngôn 竹;
 // 7 Nguyệt bạch — trăng lưỡi liềm bạc treo sau vai, dải sao bạc nghiêng, bụi trăng rơi, chân ngôn 月;
 // 8 Hắc ám — hắc viêm lửa đen lõi tím vờn quanh người, vũng âm khí nuốt sáng, trận lục lăng, quỷ hỏa, chân ngôn 魔;
@@ -15,6 +15,7 @@
 import * as THREE from 'three';
 import { createRibbonAura } from './vfx/ribbon-aura.js';
 import { createKiemVuAura } from './vfx/kiem-vu-aura.js';
+import { createDaoHoaAura } from './vfx/dao-hoa-aura.js';
 import { createAuraSignature } from './aura-signature.js';
 import { store } from '../ui/dom.js';
 
@@ -839,6 +840,8 @@ export function createEffect(effect, lowQuality = false) {
   } : null;
   // 12: Thanh Phong Kiếm Vũ có pháp tướng riêng (kiếm luân, phi kiếm, trận đồ).
   if (effect === 12) return createKiemVuAura(lowQuality, reducedMotion);
+  // 5: Đào Hoa Tri Kỷ có pháp tướng riêng (nguyệt môn, cành đào 3D, cánh đào xoắn rơi).
+  if (effect === 5) return createDaoHoaAura(lowQuality, reducedMotion);
 
   const colors = PALETTES[effect - 1] ?? PALETTES[0];
   const group = new THREE.Group();
@@ -1523,144 +1526,6 @@ export function createEffect(effect, lowQuality = false) {
         sparks.pos[i * 3 + 1] = 0.1 + yn * 1.5;
         sparks.pos[i * 3 + 2] = Math.sin(a) * st.r;
         const shine = 0.35 + 0.65 * (0.55 + 0.45 * Math.sin(t * 3 + st.tw * 12.6));
-        c.set(sparks.tint).multiplyScalar(shine);
-        sparks.col[i * 3] = c.r;
-        sparks.col[i * 3 + 1] = c.g;
-        sparks.col[i * 3 + 2] = c.b;
-      }
-      sparks.geo.attributes.position.needsUpdate = true;
-      sparks.geo.attributes.color.needsUpdate = true;
-      updateGlyphs(glyphs, t);
-    };
-  } else if (effect === 5) {
-    // ĐÀO HOA — mưa cánh đào hồng rơi li ti là chủ đạo, bông đào xoay quanh thân,
-    // trụ hoa dâng, sương hồng bao người, chân ngôn 桃.
-    const count = lowQuality ? 10 : 18;
-    const fallCount = lowQuality ? 8 : 14;
-    const sparkCount = lowQuality ? 10 : 16;
-    fillSeeds(seed, count);
-    const pool = sprite(glowTexture(), colors[0], 1.15, 1.15, 0, 0.04, 0, 0.26);
-    const pillar = sprite(wispTexture(), colors[1] ?? colors[0], 0.46, 1.7, 0, 0.85, 0, 0.12);
-    const mandala = flatMesh(mandalaTexture(), colors[0], 1.32, 0.045, 0.7); // trận đào dưới chân
-    const mantra = flatMesh(runeRingTexture('rune-thao', '桃'), colors[0], 1.5, 0.06, 0.78);
-    const counterRing = flatMesh(ringTexture(), colors[0], 0.95, 0.035, 0.32);
-
-    // vòm sương hồng bao thân
-    const domeTex = domeTexture();
-    domeTex.wrapS = THREE.RepeatWrapping;
-    domeTex.wrapT = THREE.RepeatWrapping;
-    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
-      map: domeTex, color: colors[0], transparent: true, depthWrite: false,
-      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.12,
-    }), 0.12);
-    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.0, 1.95, 48, 1, true)), domeEntry.mat);
-    dome.position.y = 0.97;
-    group.add(dome);
-
-    // trụ hoa: 4 cột hồng dâng chậm quanh người
-    const pillars = [];
-    for (let i = 0; i < (lowQuality ? 2 : 4); i++) {
-      const entry = dynMat(() => new THREE.SpriteMaterial({
-        map: wispTexture(), color: colors[0], transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, opacity: 0, rotation: 0.04 * (i - 1.5),
-      }), 0);
-      const sp = new THREE.Sprite(entry.mat);
-      group.add(sp);
-      pillars.push({ sp, entry, a0: (i / 4) * Math.PI * 2 + 0.4, r: 0.82 + ((i * 13) % 10) / 10 * 0.18, tw: ((i * 29) % 10) / 10 });
-    }
-
-    // quầng hoa: 3 đốm hồng bay vòng ngoài
-    const orbs = [];
-    for (let i = 0; i < (lowQuality ? 2 : 3); i++) {
-      const entry = dynMat(() => new THREE.SpriteMaterial({
-        map: glowTexture(), color: colors[1] ?? colors[0], transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, opacity: 0.6,
-      }), 0.6);
-      const sp = new THREE.Sprite(entry.mat);
-      group.add(sp);
-      orbs.push({ sp, entry, a0: (i / 3) * Math.PI * 2, r: 1.0 + i * 0.12, y: 0.55 + i * 0.4, tw: ((i * 29) % 10) / 10 });
-    }
-
-    // mưa cánh đào: cánh lớn rơi chậm, phất phơ — phần chính của hiệu ứng
-    const fallers = new THREE.InstancedMesh(track(new THREE.PlaneGeometry(0.17, 0.12)), glowMat({
-      map: petalTexture(), color: colors[0],
-    }), fallCount);
-    group.add(fallers);
-
-    // bông đào xoay quanh thân: cánh nhỏ dâng nhẹ mềm hơn sen kim
-    const petals = new THREE.InstancedMesh(track(new THREE.PlaneGeometry(0.15, 0.1)), glowMat({
-      map: petalTexture(), color: colors[1] ?? colors[0],
-    }), count);
-    group.add(petals);
-
-    const sparks = makeTwinkles(sparkCount, 0.05, (i, n) => ({
-      a0: (i / n) * Math.PI * 3.2,
-      r: 0.32 + ((i * 37) % 20) / 20 * 0.34,
-      y: 0.15 + ((i * 53) % 30) / 30 * 1.2,
-      tw: ((i * 29) % 10) / 10,
-      speed: 0.5 + ((i * 61) % 10) / 10,
-    }), colors[1] ?? colors[0]); // bụi phấn hồng lơ lửng
-    const glyphs = makeGlyphs(lowQuality ? 3 : 6, 0.62);
-
-    variantUpdate = (t) => {
-      pool.scale.setScalar(1.15 * (1 + Math.sin(t * 1.9) * 0.06)); // sương hồng thở
-      pool.scale.y = pool.scale.x;
-      pillar.scale.y = 1.7 * (1 + Math.sin(t * 1.2) * 0.05);
-      mandala.rotation.z = t * 0.35; // trận đào xoay
-      mantra.rotation.z = -t * 0.28;
-      counterRing.rotation.z = t * 0.42;
-      dome.rotation.y = t * 0.06;
-      domeTex.offset.y = -(t * 0.05) % 1;
-      domeEntry.base = 0.1 + 0.04 * (0.5 + 0.5 * Math.sin(t * 1.1));
-      for (const pl of pillars) {
-        const yn = (t * 0.16 + pl.tw) % 1; // trụ hoa dâng thong thả
-        const life = Math.sin(yn * Math.PI);
-        const a = pl.a0 + t * 0.12;
-        pl.sp.position.set(Math.cos(a) * pl.r, 0.1 + yn * 1.5, Math.sin(a) * pl.r);
-        pl.sp.scale.set(0.15, Math.max(0.001, life * 1.1), 1);
-        pl.entry.base = life * 0.26;
-      }
-      for (const ob of orbs) {
-        const a = ob.a0 + t * 0.13;
-        ob.sp.position.set(Math.cos(a) * ob.r, ob.y + Math.sin(t * 0.85 + ob.tw * 7) * 0.07, Math.sin(a) * ob.r);
-        ob.sp.scale.setScalar((0.1 + ob.tw * 0.05) * (1 + 0.15 * Math.sin(t * 1.8 + ob.tw * 8)));
-        ob.entry.base = 0.4 + 0.28 * (0.55 + 0.45 * Math.sin(t * 1.6 + ob.tw * 10));
-      }
-      for (let i = 0; i < fallCount; i++) {
-        const a0 = seed[i * 4], speed = seed[i * 4 + 2], tw = seed[i * 4 + 3];
-        const yn = (t * 0.09 * speed + tw * 1.3) % 1; // rơi chậm hơn sen kim, lượn rộng
-        const a = a0 * 2.3 + t * 0.08 * speed;
-        const r = 0.45 + tw * 0.42 + Math.sin(t * 0.8 + tw * 6) * 0.07;
-        e.set(Math.sin(t * 1.6 + tw * 8) * 0.8, Math.sin(t * 1.1 + tw * 5) * 0.6, t * 0.9 * speed + tw * 6.28);
-        q.setFromEuler(e);
-        const sc = (0.75 + tw * 0.5) * Math.min(1, yn * 5, (1 - yn) * 4);
-        v.set(Math.cos(a) * r + Math.sin(t * 1.4 + tw * 9) * 0.12, 1.95 - yn * 1.88, Math.sin(a) * r + Math.cos(t * 1.2 + tw * 7) * 0.12);
-        s.set(sc, sc, sc);
-        m4.compose(v, q, s);
-        fallers.setMatrixAt(i, m4);
-      }
-      fallers.instanceMatrix.needsUpdate = true;
-      for (let i = 0; i < count; i++) {
-        const a0 = seed[i * 4], r0 = seed[i * 4 + 1], speed = seed[i * 4 + 2], tw = seed[i * 4 + 3];
-        const yn = (t * 0.18 * speed + tw) % 1; // cánh nhỏ dâng quanh thân
-        const a = a0 + t * 0.3 * speed;
-        const r = r0 * (1 - yn * 0.35) + Math.sin(t * 0.7 + tw * 7) * 0.03;
-        e.set(1.0 + Math.sin(t * 1.2 + tw * 8) * 0.5, Math.sin(t * 0.85 + tw * 5) * 0.4, t * 1.3 * speed + tw * 6.28);
-        q.setFromEuler(e);
-        const sc = Math.max(0.001, Math.sin(yn * Math.PI)) * 0.85;
-        v.set(Math.cos(a) * r, 0.06 + yn * 1.28, Math.sin(a) * r);
-        s.set(sc, sc, sc);
-        m4.compose(v, q, s);
-        petals.setMatrixAt(i, m4);
-      }
-      petals.instanceMatrix.needsUpdate = true;
-      for (let i = 0; i < sparkCount; i++) {
-        const st = sparks.seeds[i];
-        const a = st.a0 + t * 0.06 * st.speed;
-        sparks.pos[i * 3] = Math.cos(a) * st.r;
-        sparks.pos[i * 3 + 1] = st.y + Math.sin(t * 0.65 + st.tw * 9) * 0.05;
-        sparks.pos[i * 3 + 2] = Math.sin(a) * st.r;
-        const shine = 0.35 + 0.65 * (0.55 + 0.45 * Math.sin(t * 2 + st.tw * 12.6));
         c.set(sparks.tint).multiplyScalar(shine);
         sparks.col[i * 3] = c.r;
         sparks.col[i * 3 + 1] = c.g;

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { swordGeometry } from './vfx/sword-geometry.js';
+import { buildDaoHoaThrone } from './vfx/dao-hoa-meditation-throne.js';
 
 const cache = new Map();
 const petal = new THREE.PlaneGeometry(1, 1, 8, 12);
@@ -22,8 +23,7 @@ function build(effect, stage) {
     const transformed = geo.clone().applyMatrix4(matrix);
     const copy = transformed.index ? transformed.toNonIndexed() : transformed;
     if (copy !== transformed) transformed.dispose();
-    copy.deleteAttribute('uv');
-    copy.deleteAttribute('part');
+    for (const name of ['uv', 'part', 'across', 'kind']) copy.deleteAttribute(name);
     pieces.push(copy);
   };
   const stem = (points, radius = 0.025) => {
@@ -57,9 +57,12 @@ function build(effect, stage) {
       const a = (i - 3) * 0.33;
       add(swordGeometry(), Math.sin(a) * 0.32, 0.95 + Math.cos(a) * 0.32, -0.62, 0.78, 0.78, 0.78, 0, 0, -a);
     }
+  } else if (effect === 5) {
+    // Đào Hoa: tòa cành đào và nguyệt môn riêng, không mượn đoá sen.
+    buildDaoHoaThrone(stage, add);
   } else if (stage === 0) {
   // Tier three is a small spirit seed; later tiers introduce a new silhouette.
-    if (effect === 1 || effect === 0 || effect === 5) bloom(0, 0.18, -0.42, 0.42, effect === 5 ? 5 : 8);
+    if (effect === 1 || effect === 0) bloom(0, 0.18, -0.42, 0.42, 8);
     else for (let i = 0; i < 3; i++) {
       const a = i * Math.PI * 2 / 3;
       add(crystal, Math.cos(a) * 0.65, 0.5 + i * 0.12, Math.sin(a) * 0.55, 0.08, 0.2, 0.08, 0, 0, -a);
@@ -104,10 +107,6 @@ function build(effect, stage) {
     if (stage === 2 && effect === 4) for (const side of [-1, 1]) {
       add(petal, side * 0.45, 0.8, -0.6, 0.22, 1.1, 0.6, -0.5, 0, side * 2.4);
     }
-  } else if (effect === 5) {
-    const side = stage === 1 ? -1 : 1;
-    stem([[side * 0.45, 0.1, -0.65], [side * 0.85, 0.75, -0.65], [side * 0.65, 1.5, -0.65], [side * 0.25, 1.85, -0.65]], 0.018);
-    for (let i = 0; i < 5; i++) bloom(side * (0.35 + Math.sin(i * 1.3) * 0.4), 0.55 + i * 0.3, -0.6, 0.18 + i % 2 * 0.07);
   } else if (effect === 6) {
     for (let i = 0; i < 3; i++) {
       const side = stage === 1 ? -1 : 1, x = side * (0.45 + i * 0.25), height = 1.2 + i * 0.3;
