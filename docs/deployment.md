@@ -1,6 +1,29 @@
 # Deployment
 
-## Current release: 2026-11-13 casino-style layout for bầu cua and xì dách, 15:12 UTC+7
+## Current release: 2026-11-13 tài xỉu and cò quay tables, 15:24 UTC+7
+
+Deploy run [43392988121](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43392988121)
+released main `d3207a8` (PR #56) as `hth:261113-1524-d3207a8`, replacing
+`hth:261113-1512-9ba0faf`. Two new tables behind bầu cua and xì dách, sharing
+server core `CasinoRoundTable`: tài xỉu (Xỉu/Tài 1:1, Bão 1:30 max 3 TEU) and
+European roulette cò quay (straight 1:35 max 5, dozens 1:2, outside 1:1).
+Players sit at eye level with their own avatar hidden locally, click the 3D
+felt to bet, and the round's biggest bettor holds mouse/Space to charge and
+releases to throw; dice and ball animate to the server-drawn result. New
+socket events `taixiu:*`, `coquay:*` (`bet`, `clear`, `throw`, `state`,
+`payout`); stakes held in `taixiu_pending`, `coquay_pending`; weekly board
+counts both tables as net profit/loss. Public bundle: `index-CL2zyIYn.js`,
+confirmed served at `https://game.hthlogistics.top/` with `/api/health` 200.
+
+Local suite 225/225 and Vite build passed on Node 24; Docker tests 225/225.
+Candidate passed with DB `quick_check` ok (52 players, 23 wishes, 53 fish).
+UI checked in a local browser at desktop and 375x812, not on the public site.
+
+Rollback container `hth-rollback-261113-1524-d3207a8` preserves
+`hth:261113-1512-9ba0faf`. Private backup is in the data volume at
+`backups/cutover-261113-1524-d3207a8/`.
+
+## Previous release: 2026-11-13 casino-style layout for bầu cua and xì dách, 15:12 UTC+7
 
 Deploy run [43391379530](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43391379530)
 released main `9ba0faf` (PR #55) as `hth:261113-1512-9ba0faf`, replacing
