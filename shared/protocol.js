@@ -99,6 +99,9 @@ export const TEU = {
   bellEventOnBeat: 1,
   // Quà nhập môn: người chơi lần đầu vào tu viện được tặng một lần; không tính vào bảng tuần.
   welcomeGift: 100,
+  // Tĩnh tọa: đủ mỗi phút ngồi thiền liên tục được 1 TEU, có trần mỗi ngày để không treo máy cày điểm.
+  meditateEveryMs: 60_000,
+  meditateDailyCap: 15,
 };
 
 // Màu áo quý: mở khoá bằng TEU ở Sổ an, bitmask theo thứ tự trong mảng.

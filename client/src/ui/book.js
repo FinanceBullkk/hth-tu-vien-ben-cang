@@ -111,7 +111,7 @@ export async function openBook(app, tab = store.get('bookTab') || 'overview') {
         stat('món đồ đã sắm', ownedCount)),
       h('h3', { 'data-hanzi': '寶' }, 'Túi tiền & tủ đồ'),
       h('div', { class: 'bookx-purse' },
-        h('p', {}, `Bạn đang có ${teuNow} TEU. Câu cá, giải đố, đầu hồ, Audition chuông, tấu nhạc đều được TEU; tiêu ở Sạp Kim Bảo cạnh lối đi tới quán trà.`),
+        h('p', {}, `Bạn đang có ${teuNow} TEU. Câu cá, giải đố, đầu hồ, Audition chuông, tấu nhạc, ngồi thiền đều được TEU; tiêu ở Sạp Kim Bảo cạnh lối đi tới quán trà.`),
         h('div', { class: 'bookx-purse-actions' },
           h('button', { class: 'btn primary small', type: 'button', onClick: goShop('shop') }, 'Mở Sạp Kim Bảo'),
           h('button', { class: 'btn ghost small', type: 'button', onClick: goShop('wardrobe') }, 'Mở tủ đồ'))),
