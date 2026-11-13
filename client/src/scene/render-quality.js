@@ -1,7 +1,8 @@
 // Bound GPU work by pixel count, including large monitors with devicePixelRatio = 1.
+// Mức 3 ("Rất nét") chỉ có khi người chơi tự chọn: tới 4K và tối đa 2 điểm vẽ cho mỗi điểm CSS.
 export function renderPixelRatio(width, height, dpr, level = 2, lowQuality = false) {
-  const pixels = [960 * 540, 1280 * 720, 1920 * 1080][level];
-  const cap = [0.75, 1, lowQuality ? 1 : 1.5][level];
+  const pixels = [960 * 540, 1280 * 720, 1920 * 1080, 3840 * 2160][level];
+  const cap = [0.75, 1, lowQuality ? 1 : 1.5, 2][level];
   return Math.min(dpr || 1, cap, Math.sqrt(pixels / Math.max(1, width * height)));
 }
 

@@ -20,12 +20,14 @@ import './ui/pk.css';
 import { trimShadowCasters } from './player/avatar-lod.js';
 import { World, createRenderer } from './scene/world.js';
 import { AdaptiveQuality, gpuName, pinShaderPrograms, renderPixelRatio, startQualityLevel } from './scene/render-quality.js';
+import { modeLevel, qualityFeatures, readGraphicsMode } from './scene/graphics-settings.js';
 import { warmShaders } from './scene/shader-warmup.js';
 import { openShare } from './share/share.js';
 import { openBoard } from './ui/board.js';
 import { openBook } from './ui/book.js';
 import { Chat } from './ui/chat.js';
 import { $, h, store } from './ui/dom.js';
+import { openGraphicsPanel } from './ui/graphics-panel.js';
 import { Hud } from './ui/hud.js';
 import { applyLook, lookOf, openShop, rememberLook } from './ui/shop-panel.js';
 import { Wallet } from './ui/wallet.js';
@@ -536,16 +538,21 @@ function main() {
     frameIntro();
   };
   const applyQuality = (level) => {
-    // Tắt bloom và thu bóng đều không phải biên dịch lại shader, nên hạ bậc không gây khựng.
-    if (level <= 1) {
-      if (bloomPass) bloomPass.enabled = false;
-      world.sky.setShadowSize(1024);
+    // Bloom và cỡ bóng đổi không phải biên dịch lại shader, nên đổi mức không gây khựng.
+    const features = qualityFeatures(level, isTouch);
+    if (bloomPass) bloomPass.enabled = features.bloom;
+    if (world.sky.sun.shadow.mapSize.x !== features.shadowSize) world.sky.setShadowSize(features.shadowSize);
+    // Bật/tắt hẳn bóng thì mọi vật liệu phải biên dịch lại; Tự động nhớ mức này nên lần sau tắt ngay từ đầu.
+    if (renderer.shadowMap.enabled !== features.shadows) {
+      renderer.shadowMap.enabled = features.shadows;
+      scene.traverse((o) => {
+        for (const m of [o.material].flat()) if (m) m.needsUpdate = true;
+      });
     }
-    // Tắt hẳn bóng thì phải biên dịch lại; nhớ mức này nên từ lần sau tắt ngay từ đầu.
-    if (level === 0) renderer.shadowMap.enabled = false;
   };
   const gpu = gpuName(renderer.getContext());
-  const startLevel = startQualityLevel(store.getJson('quality'), gpu, Date.now());
+  let graphicsMode = readGraphicsMode(store.get('graphics'));
+  const startLevel = modeLevel(graphicsMode) ?? startQualityLevel(store.getJson('quality'), gpu, Date.now());
   applyQuality(startLevel);
   const quality = new AdaptiveQuality((level) => {
     applyQuality(level);
@@ -553,6 +560,25 @@ function main() {
     onResize();
   }, startLevel);
   app.quality = quality;
+  /** Người chơi chọn mức trong hộp Đồ hoạ: áp dụng ngay, nhớ cho lần sau. */
+  const setGraphicsMode = (mode) => {
+    graphicsMode = readGraphicsMode(mode);
+    store.set('graphics', graphicsMode);
+    // Chọn lại Tự động là muốn thử lại từ mức Cao, nên quên mức đã tự hạ trước đó.
+    if (graphicsMode === 'auto') store.setJson('quality', null);
+    quality.level = modeLevel(graphicsMode) ?? 2;
+    quality.elapsed = 0; // Cho shader vừa đổi thời gian khởi động trước khi đo lại FPS.
+    quality.reset();
+    applyQuality(quality.level);
+    onResize();
+  };
+  $('graphicsBtn').addEventListener('click', () => openGraphicsPanel({
+    getState: () => {
+      const size = renderer.getDrawingBufferSize(new THREE.Vector2());
+      return { mode: graphicsMode, level: quality.level, width: size.x, height: size.y, shadows: renderer.shadowMap.enabled };
+    },
+    onPick: setGraphicsMode,
+  }));
   window.addEventListener('resize', onResize);
   onResize();
   warmShaders({ renderer, camera, scene, target: composer?.readBuffer ?? null, lowQuality: isTouch });
@@ -608,7 +634,8 @@ function main() {
     else renderer.render(scene, camera);
     pinShaderPrograms(renderer);
     labelRenderer.render(scene, camera);
-    quality.update(rawDt, !document.hidden && document.hasFocus());
+    // Mức cố định do người chơi chọn thì không tự hạ.
+    if (graphicsMode === 'auto') quality.update(rawDt, !document.hidden && document.hasFocus());
     // Thời gian CPU của một khung, xem trong DevTools bằng __hth.frameMs.
     app.frameMs += (performance.now() - t - app.frameMs) * 0.1;
   };
