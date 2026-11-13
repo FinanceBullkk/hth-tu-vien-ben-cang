@@ -71,10 +71,10 @@ export class CultivationAura {
     const [tint, accent] = PALETTES[this.effect];
     this.uniforms.tint.value.set(tint);
     this.uniforms.accent.value.set(accent);
-    this.uniforms.theme.value = this.effect === 9 ? 2 : this.effect;
+    this.uniforms.theme.value = this.effect;
     this.dustMaterial.color.set(accent);
     this.manifestation?.dispose();
-    this.manifestation = createManifestation(this.effect === 9 ? 2 : this.effect, this.uniforms.tint.value, this.uniforms.accent.value, this.lowQuality);
+    this.manifestation = createManifestation(this.effect, this.uniforms.tint.value, this.uniforms.accent.value, this.lowQuality);
     this.group.add(this.manifestation.group);
   }
 
