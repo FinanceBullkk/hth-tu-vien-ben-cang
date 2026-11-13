@@ -1,6 +1,28 @@
 # Deployment
 
-## Current release: 2026-11-13 Bích Ngọc, Nguyệt Bạch and Huyền Dạ auras rebuilt, 23:03 UTC+7
+## Current release: 2026-11-14 slot machines and fewer redraws, 01:05 UTC+7
+
+Deploy run [43479145756](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43479145756)
+released main `f334c04` as `hth:261114-0105-f334c04`, replacing
+`hth:261113-2303-3871ff6`. Includes PR #82 (Gạt cần: three slot machines in
+the west gallery facing the casino court; three reels, bets 1/5/10 TEU, three
+dragons pay ×200, expected return 95.6%; each spin settled on the server and
+seen by the whole court) and PR #80 (fewer redraws; graphics quality steps back
+up once the machine is no longer busy). Public bundle `index-D08ElozQ.js`,
+confirmed served at `https://game.hthlogistics.top/` with `/api/health` 200.
+
+Docker tests 358/358. Candidate passed with DB `quick_check` ok (52 players,
+23 wishes, 81 fish). The first attempt, run
+[43477974860](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43477974860),
+stopped in the Docker test stage before touching production: the host was
+slow (suite 149 s against 54 s the run before) and the bầu cua socket test
+timed out on a 3 s ack. The retry passed with the same code.
+
+Rollback container `hth-rollback-261114-0105-f334c04` preserves
+`hth:261113-2303-3871ff6`. Private backup is in the data volume at
+`backups/cutover-261114-0105-f334c04/`.
+
+## Previous release: 2026-11-13 Bích Ngọc, Nguyệt Bạch and Huyền Dạ auras rebuilt, 23:03 UTC+7
 
 Deploy run [43458759105](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43458759105)
 released main `3871ff6` as `hth:261113-2303-3871ff6`, replacing
