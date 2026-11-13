@@ -3,6 +3,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { swordGeometry } from './vfx/sword-geometry.js';
 import { dropGeometry } from './vfx/drop-geometry.js';
 import { buildDaoHoaThrone } from './vfx/dao-hoa-meditation-throne.js';
+import { buildHongLienThrone } from './vfx/hong-lien-throne.js';
 
 const cache = new Map();
 const petal = new THREE.PlaneGeometry(1, 1, 8, 12);
@@ -108,6 +109,8 @@ function build(effect, stage) {
     }
   } else if (effect === 3) {
     tinhHa(stage);
+  } else if (effect === 4) {
+    buildHongLienThrone(add, stage);
   } else if (effect === 5) {
     // Đào Hoa: tòa cành đào và nguyệt môn riêng, không mượn đoá sen.
     buildDaoHoaThrone(stage, add);
@@ -142,12 +145,9 @@ function build(effect, stage) {
       add(dropGeometry(), Math.sin(a) * (0.36 + 1.05 * s), 0.6 + Math.cos(a) * (0.36 + 1.05 * s), -0.62, 0.14, 0.14, 0.14, 0, 0, -a);
     }
     crest.dispose();
-  } else if (effect === 4 || effect === 8) {
-    wings(effect === 8);
+  } else if (effect === 8) {
+    wings(true);
     if (stage === 2) for (let i = 0; i < 3; i++) add(petal, (i - 1) * 0.12, 1.65, -0.5, 0.15, 0.55 - Math.abs(i - 1) * 0.15, 0.4, 0, 0, (i - 1) * -0.3);
-    if (stage === 2 && effect === 4) for (const side of [-1, 1]) {
-      add(petal, side * 0.45, 0.8, -0.6, 0.22, 1.1, 0.6, -0.5, 0, side * 2.4);
-    }
   } else if (effect === 6) {
     for (let i = 0; i < 3; i++) {
       const side = stage === 1 ? -1 : 1, x = side * (0.45 + i * 0.25), height = 1.2 + i * 0.3;

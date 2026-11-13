@@ -5,7 +5,7 @@ import { createManifestation } from './cultivation-manifestation.js';
 
 const PALETTES = [
   ['#a4d8c7', '#ffe6ac'], ['#f4ca73', '#fff0c8'], ['#6db8f2', '#e6e0ff'],
-  ['#a9bfff', '#fff1bb'], ['#ff955b', '#ffe2a2'], ['#ee9cbb', '#ffdfca'],
+  ['#a9bfff', '#fff1bb'], ['#ff6f62', '#ffe4c4'], ['#ee9cbb', '#ffdfca'],
   ['#73cfa0', '#e8f4bc'], ['#c6daf5', '#fff4d9'], ['#ae83d0', '#e8bbef'],
   ['#ff693b', '#ffe6a1'],
 ];

@@ -26,7 +26,8 @@ export const groundFragment = `
     if (theme == 2.0) shape = 0.49 + 0.035 * sin(turn * 3.0 + time * 0.4);
     // Tinh Hà: sao bảy cánh nhọn (Bắc Đẩu thất tinh).
     if (theme == 3.0) shape = 0.36 + 0.2 * pow(abs(cos(turn * 3.5)), 7.0);
-    if (theme == 4.0) shape = 0.37 + 0.19 * pow(abs(cos(turn * 4.0)), 0.65);
+    // Hồng Liên: mười sáu cánh sen nhọn như ngọn lửa lụa.
+    if (theme == 4.0) shape = 0.37 + 0.18 * pow(1.0 - abs(sin(turn * 8.0)), 2.2);
     if (theme == 7.0) shape = 0.43 + 0.13 * cos(turn);
     if (theme == 8.0) shape = 0.41 + 0.12 * sin(turn * 3.0 + r * 7.0);
     if (theme == 12.0) shape = 0.36 + 0.2 * pow(abs(cos(turn * 4.0)), 6.0);
