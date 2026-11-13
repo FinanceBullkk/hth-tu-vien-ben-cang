@@ -86,11 +86,13 @@ test('camera orbits 360 degrees without jumping or crossing walls', () => withMa
   for (const point of [SPAWN, ...MATS]) {
     const follow = orbitCamera(point);
     // Cho khoảng cách trượt xong (trong thiền đường bị giới hạn gần hơn) rồi mới quay.
-    for (let i = 0; i < 90; i++) follow.update(1 / 60, point.x, 0, point.z, STILL);
+    // Chiếu thiền nằm trên đài cẩm thạch: đứng đúng độ cao sàn như trong game.
+    const y = floorHeight(point.x, point.z);
+    for (let i = 0; i < 90; i++) follow.update(1 / 60, point.x, y, point.z, STILL);
     let previous;
     for (let degree = 0; degree <= 360; degree++) {
       follow.yaw = degree * Math.PI / 180;
-      follow.update(1 / 60, point.x, 0, point.z, STILL);
+      follow.update(1 / 60, point.x, y, point.z, STILL);
       if (previous) assert.ok(follow.pos.distanceTo(previous) < 0.6, `camera jumped at ${point.x}, ${point.z}, ${degree}°`);
       assertClearView(follow, `${point.x}, ${point.z}, ${degree}°`);
       previous = follow.pos.clone();

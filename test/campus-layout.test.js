@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { CatmullRomCurve3, Vector3 } from 'three';
 import {
-  BAUCUA_ZONE, BELL, BRIDGE, CASINO, COQUAY_ZONE, COURT_PATHS, GALLERIES, HALL, PAGODA, PLACES, POND, TAIXIU_ZONE, TREASURE_BASIN, TREE,
+  BAUCUA_ZONE, BELL, BRIDGE, CASINO, GATE_LIONS, MATS, TERRACE, COQUAY_ZONE, COURT_PATHS, GALLERIES, HALL, PAGODA, PLACES, POND, TAIXIU_ZONE, TREASURE_BASIN, TREE,
   XIDACH_ZONE, floorHeight, resolveCollision,
 } from '../shared/layout.js';
 
@@ -69,4 +69,27 @@ test('Kim Ngân Phường: hai cổng đi qua được, bàn không chồng nhau
     // Khách đứng phía lối giữa, nhà cái đứng mép ngoài.
     assert.ok(Math.abs(a.seat.x - CASINO.aisleX) < Math.abs(a.dealer.x - CASINO.aisleX));
   });
+});
+
+test('đài cẩm thạch: bậc lên dốc đều, lan can chặn mép đài, chiếu thiền nằm trên mặt đài', () => {
+  const { y, frontZ, stairFootZ, halfW, backZ } = TERRACE;
+  let previous = floorHeight(0, stairFootZ + 0.5);
+  for (let z = stairFootZ + 0.4; z >= frontZ - 0.4; z -= 0.1) {
+    const now = floorHeight(0, z);
+    assert.ok(now >= previous - 1e-9 && now - previous < 0.06, `bậc giật cao tại z=${z.toFixed(2)}`);
+    previous = now;
+  }
+  assert.equal(floorHeight(0, frontZ - 0.5), y);
+  for (const m of MATS) assert.equal(floorHeight(m.x, m.z), y, 'chiếu nằm trên mặt đài');
+  // Đi ngang từ sân vào cạnh đài thì bị lan can đẩy ra, không leo tắt lên đài.
+  for (const z of [backZ + 2, (backZ + frontZ) / 2, frontZ - 1]) {
+    const west = resolveCollision(HALL.x - halfW - 0.3, z);
+    assert.ok(west.x < HALL.x - halfW, `lọt qua lan can tây tại z=${z}`);
+    const east = resolveCollision(HALL.x + halfW + 0.3, z);
+    assert.ok(east.x > HALL.x + halfW, `lọt qua lan can đông tại z=${z}`);
+  }
+  // Bước từ hai bên bậc vào giữa bậc cũng bị chặn.
+  const side = resolveCollision(HALL.x + TERRACE.stairHalf + 0.6, (frontZ + stairFootZ) / 2);
+  assert.ok(side.x > HALL.x + TERRACE.stairHalf, 'lọt qua lan can bậc');
+  for (const lion of GATE_LIONS) assert.ok(Math.abs(lion.x) - lion.r > 1.9, 'sư tử chừa lối giữa thềm');
 });

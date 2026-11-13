@@ -19,10 +19,13 @@ phía đông là tường chắn dốc xuống cảng nên giữ nguyên. Kế h
 ## Nguồn và ràng buộc
 
 `shared/layout.js` giữ tọa độ, đường đi, va chạm, vùng mái và điểm đến trong menu; `SITE` là tường bao,
-`CASINO` là tường khu sòng. Địa hình (`terrain.js`), nền sân (`campus-ground.js`), tường bao (`monastery.js`),
+`CASINO` là tường khu sòng, `TERRACE` là đài cẩm thạch cao 1.6 m dưới đại điện (bậc giữa mặt trước, lan can
+chặn mép đài ở cả hai phía; `floorHeight` trả độ cao mặt đài và dốc đều trên bậc). Địa hình (`terrain.js`), nền sân (`campus-ground.js`), tường bao (`monastery.js`),
 khung bóng đổ (`sky.js`) và vùng hoa rơi đều đọc từ đó. `client/src/scene/casino-quarter.js` dựng tường khu
 sòng và Tụ Bảo Bồn. Mặt lát cao tối đa 0.04 m; bậc thiền đường, sàn chuông, quán trà và cầu giữ độ cao cũ.
-Mô hình GLB và fallback dùng cùng tọa độ. Lời ước vẫn gắn theo slot cành cây, không chuyển dữ liệu DB.
+Kiến trúc nội viện theo tông tiên môn: cột son, mái lưu ly xanh ngọc nóc vàng, nền cẩm thạch, tường cung đỏ son;
+bộ dựng chung ở `client/src/scene/palace-kit.js`, đại điện ở `great-hall.js`, sơn môn và sư tử đá ở
+`mountain-gate.js`. Mô hình GLB và fallback dùng cùng tọa độ. Lời ước vẫn gắn theo slot cành cây, không chuyển dữ liệu DB.
 
 ## Kiểm tra
 
