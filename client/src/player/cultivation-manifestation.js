@@ -7,6 +7,8 @@ import { buildHongLienThrone } from './vfx/hong-lien-throne.js';
 import { buildBichNgocThrone } from './vfx/bich-ngoc-meditation-throne.js';
 import { buildNguyetBachThrone } from './vfx/nguyet-bach-throne.js';
 import { buildHuyenDaThrone } from './vfx/huyen-da-meditation-throne.js';
+import { buildLongQuyenThrone } from './vfx/long-quyen-meditation-throne.js';
+import { buildXichDiemThrone } from './vfx/xich-diem-meditation-throne.js';
 import { buildKimLongThrone } from './vfx/kim-long-meditation-throne.js';
 
 const cache = new Map();
@@ -113,12 +115,18 @@ function build(effect, stage) {
   } else if (effect === 8) {
     // Huyền Dạ: tòa nhật thực đen và lông quạ riêng, không mượn đôi cánh.
     buildHuyenDaThrone(stage, add);
+  } else if (effect === 10) {
+    // Xích Diễm: đài mây lửa thấp rộng và vòng lửa ngang eo, không mượn đoá sen.
+    buildXichDiemThrone(stage, add);
   } else if (effect === 5) {
     // Đào Hoa: tòa cành đào và nguyệt môn riêng, không mượn đoá sen.
     buildDaoHoaThrone(stage, add);
   } else if (effect === 6) {
     // Bích Ngọc: tòa rừng trúc và đá rêu riêng, không mượn đoá sen.
     buildBichNgocThrone(stage, add);
+  } else if (effect === 9) {
+    // Long Quyền: hỏa long xoắn quanh người ngồi rồi vươn quyền, không mượn tòa sóng Lưu Ly.
+    buildLongQuyenThrone(stage, add);
   } else if (effect === 11) {
     // Kim Long: vòm rồng vàng thu nhỏ qua đầu, long châu, cung bán nguyệt, đài mây.
     buildKimLongThrone(stage, add);
@@ -160,7 +168,7 @@ function build(effect, stage) {
 }
 
 export function createManifestation(effect, tint, accent, lowQuality = false) {
-  const theme = Number.isInteger(effect) && ((effect >= 0 && effect <= 8) || effect === 11 || effect === 12) ? effect : 0;
+  const theme = Number.isInteger(effect) && effect >= 0 && effect <= 12 ? effect : 0;
   if (!cache.has(theme)) cache.set(theme, [0, 1, 2].map(stage => {
     const geometry = build(theme, stage);
     geometry.userData.outline = new THREE.EdgesGeometry(geometry, 35);
@@ -189,7 +197,7 @@ export function createManifestation(effect, tint, accent, lowQuality = false) {
       group.visible = level >= 3 && sit > 0.1 && fading > 0;
       layers.forEach((mesh, i) => {
         // Tinh Hà giữ Bắc Đẩu ở tầng 5 (hồn thiên nghi ôm lấy chòm sao).
-        const replacesCrown = [0, 1, 4, 8, 11].includes(theme);
+        const replacesCrown = [0, 1, 4, 8, 9, 10, 11].includes(theme);
         mesh.visible = level >= i + 3 && !(i === 1 && level >= 5 && replacesCrown);
         mesh.position.y = i ? Math.sin(time * 0.7 + i) * 0.035 : Math.sin(time) * 0.06;
         mesh.rotation.y = Math.sin(time * 0.35 + i) * (i ? 0.08 : 0.15);

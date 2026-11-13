@@ -9,8 +9,9 @@ const PALETTES = [
   ['#73cfa0', '#e8f4bc'], ['#c6daf5', '#fff4d9'], ['#ae83d0', '#e8bbef'],
   ['#ff693b', '#ffe6a1'],
 ];
+PALETTES[10] = ['#ff4a2e', '#ffcf7a']; // Xích Diễm: đỏ son, viền vàng kim.
 PALETTES[11] = ['#f0ad2e', '#fff0bf']; // Kim Long: vàng kim, viền mây sáng.
-PALETTES[12] = ['#5fd6c4', '#e9fff9']; // Kiếm Vũ; 10 chưa có bảng riêng nên vẫn rơi về 0.
+PALETTES[12] = ['#5fd6c4', '#e9fff9']; // Kiếm Vũ.
 
 const groundGeometry = new THREE.PlaneGeometry(2.8, 2.8);
 groundGeometry.rotateX(-Math.PI / 2);
@@ -72,10 +73,10 @@ export class CultivationAura {
     const [tint, accent] = PALETTES[this.effect];
     this.uniforms.tint.value.set(tint);
     this.uniforms.accent.value.set(accent);
-    this.uniforms.theme.value = this.effect === 9 ? 2 : this.effect;
+    this.uniforms.theme.value = this.effect;
     this.dustMaterial.color.set(accent);
     this.manifestation?.dispose();
-    this.manifestation = createManifestation(this.effect === 9 ? 2 : this.effect, this.uniforms.tint.value, this.uniforms.accent.value, this.lowQuality);
+    this.manifestation = createManifestation(this.effect, this.uniforms.tint.value, this.uniforms.accent.value, this.lowQuality);
     this.group.add(this.manifestation.group);
   }
 

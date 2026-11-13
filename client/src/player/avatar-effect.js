@@ -9,11 +9,8 @@
 // 6 Bích ngọc — module riêng vfx/bich-ngoc-aura.js (rừng trúc ngọc, gió xoáy cuốn lá, đá rêu);
 // 7 Nguyệt bạch — trăng lưỡi liềm bạc treo sau vai, dải sao bạc nghiêng, bụi trăng rơi, chân ngôn 月;
 // 8 Hắc ám — hắc viêm lửa đen lõi tím vờn quanh người, vũng âm khí nuốt sáng, trận lục lăng, quỷ hỏa, chân ngôn 魔;
-// 9 Long quyền — song long lửa quấn thân ngược chiều, vương miện lửa trên đầu, hỏa quyền bùng
-// kèm lõi trắng, chấn địa kiểu Tempest: sóng xung kích cam vàng dội từ chân kèm chỏm lửa bùng
-// theo rìa sóng, chân ngôn 龍.
+// 9 Long Quyền — module riêng vfx/long-quyen-aura.js (hỏa long xoắn ốc vươn quyền, ấn quyền 拳, vết nứt chấn địa).
 import * as THREE from 'three';
-import { createRibbonAura } from './vfx/ribbon-aura.js';
 import { createKiemVuAura } from './vfx/kiem-vu-aura.js';
 import { createTinhHaAura } from './vfx/tinh-ha-aura.js';
 import { createLuuLyAura } from './vfx/luu-ly-aura.js';
@@ -22,6 +19,8 @@ import { createHongLienAura } from './vfx/hong-lien-aura.js';
 import { createNguyetBachAura } from './vfx/nguyet-bach-aura.js';
 import { createBichNgocAura } from './vfx/bich-ngoc-aura.js';
 import { createHuyenDaAura } from './vfx/huyen-da-aura.js';
+import { createLongQuyenAura } from './vfx/long-quyen-aura.js';
+import { createXichDiemAura } from './vfx/xich-diem-aura.js';
 import { createKimLongAura } from './vfx/kim-long-aura.js';
 import { createAuraSignature } from './aura-signature.js';
 import { store } from '../ui/dom.js';
@@ -259,317 +258,6 @@ function wispTexture() {
   });
 }
 
-// Ngọn lửa: thân lửa mềm chóp nhọn + lõi sáng, dùng cho hắc viêm và long quyền.
-function flameTexture() {
-  return canvasTex('flame', 64, 64, (ctx) => {
-    const g = ctx.createRadialGradient(32, 38, 2, 32, 38, 26);
-    g.addColorStop(0, 'rgba(255,255,255,1)');
-    g.addColorStop(0.55, 'rgba(255,255,255,0.7)');
-    g.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.moveTo(32, 2); // chóp lửa
-    ctx.bezierCurveTo(48, 22, 52, 40, 32, 60);
-    ctx.bezierCurveTo(12, 40, 16, 22, 32, 2);
-    ctx.fill();
-    const core = ctx.createRadialGradient(32, 44, 1, 32, 44, 12);
-    core.addColorStop(0, 'rgba(255,255,255,1)');
-    core.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = core;
-    ctx.beginPath();
-    ctx.arc(32, 44, 12, 0, Math.PI * 2);
-    ctx.fill();
-  });
-}
-
-// Rồng khí "Hộ Thể" — quấn xoắn ốc chậm rãi quanh người, thân 2 lớp dải (vảy cuộn UV + lõi sáng)
-// và long vĩ quạt ở đuôi. Sức nặng nằm ở dáng lượn rõ ràng, không chất đống hiệu ứng cho khỏi rối.
-// Đầu rồng BẰNG KHÍ: không khối cứng — chỉ các lớp sáng mềm đổ thành hình sọ/mõm,
-// sừng và râu là tia khí mỏng, bờm là dải khóe. Cùng ngôn ngữ mềm mờ với toàn bộ aura.
-function buildDragonHead(colors) {
-  const group = new THREE.Group();
-  const mats = [];
-  const softSprite = (color, opacity, map) => {
-    const m = new THREE.SpriteMaterial({
-      map: map ?? glowTexture(), color, transparent: true, depthWrite: false,
-      blending: THREE.AdditiveBlending, opacity,
-    });
-    mats.push([m, opacity]);
-    const sp = new THREE.Sprite(m);
-    group.add(sp);
-    return sp;
-  };
-  // sọ: 3 lớp sáng ôm nhau — quầng rộng, lõi ngọc, điểm rực
-  const skullHalo = softSprite(colors[1] ?? colors[0], 0.3);
-  skullHalo.position.set(0, 0.01, 0);
-  skullHalo.scale.setScalar(0.3);
-  const skullCore = softSprite(colors[0], 0.45);
-  skullCore.position.set(0, 0.01, -0.01);
-  skullCore.scale.setScalar(0.17);
-  const skullHot = softSprite(0xffffff, 0.55);
-  skullHot.position.set(0, 0.015, -0.02);
-  skullHot.scale.setScalar(0.09);
-  // trán và mõm: hai vệt sáng kéo dài về phía trước (-Z) gợi xương mũi đầu rồng
-  const brow = softSprite(colors[0], 0.4);
-  brow.position.set(0, 0.035, -0.06);
-  brow.scale.set(0.11, 0.07, 1);
-  const snout = softSprite(colors[0], 0.4);
-  snout.position.set(0, -0.005, -0.15);
-  snout.scale.set(0.09, 0.05, 1);
-  const jaw = softSprite(colors[1] ?? colors[0], 0.3);
-  jaw.position.set(0, -0.035, -0.06);
-  jaw.scale.set(0.08, 0.05, 1);
-  // 2 mắt sáng nhỏ
-  const eyeR = softSprite(0xfff6d8, 0.8);
-  eyeR.position.set(0.05, 0.028, -0.055);
-  eyeR.scale.setScalar(0.03);
-  const eyeL = softSprite(0xfff6d8, 0.8);
-  eyeL.position.set(-0.05, 0.028, -0.055);
-  eyeL.scale.setScalar(0.03);
-  // sừng: 2 tia khí cong mảnh vút về sau
-  const hornMat = new THREE.MeshBasicMaterial({
-    color: colors[0], transparent: true, opacity: 0.55, depthWrite: false,
-    blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
-  });
-  mats.push([hornMat, 0.55]);
-  for (const s of [1, -1]) {
-    const curve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0.03 * s, 0.055, 0.02),
-      new THREE.Vector3(0.055 * s, 0.11, 0.05),
-      new THREE.Vector3(0.06 * s, 0.15, 0.11),
-    ]);
-    group.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 8, 0.006, 4), hornMat));
-  }
-  // bờm: 6 dải khóe mềm xòe sau gáy (plane dẹt phủ texture khói)
-  const maneMat = new THREE.MeshBasicMaterial({
-    map: wispTexture(), color: colors[0], transparent: true, opacity: 0.4, depthWrite: false,
-    blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
-  });
-  mats.push([maneMat, 0.4]);
-  for (let i = 0; i < 6; i++) {
-    const a = -0.95 + (i / 5) * 1.9;
-    const plane = new THREE.Mesh(new THREE.PlaneGeometry(0.05, 0.17), maneMat);
-    plane.position.set(0, 0.03, 0.05);
-    plane.rotation.set(-1.25, 0, a);
-    group.add(plane);
-  }
-  // 2 râu dài tơ khí
-  for (const s of [1, -1]) {
-    const curve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0.035 * s, -0.012, -0.14),
-      new THREE.Vector3(0.11 * s, -0.03, -0.22),
-      new THREE.Vector3(0.17 * s, 0.002, -0.19),
-      new THREE.Vector3(0.2 * s, -0.032, -0.11),
-    ]);
-    const whisker = new THREE.Mesh(new THREE.TubeGeometry(curve, 8, 0.0045, 4), hornMat);
-    group.add(whisker);
-  }
-  return { group, mats };
-}
-
-// vảy rồng: các hàng cung sáng xếp so le, cuộn UV thành da rồng chảy
-function scaleTexture() {
-  return canvasTex('scales', 128, 128, (ctx, w, h) => {
-    ctx.fillStyle = 'rgba(255,255,255,0.1)';
-    ctx.fillRect(0, 0, w, h);
-    const s = 16;
-    for (let row = 0; row < h / s; row++) {
-      for (let col = 0; col < w / s + 1; col++) {
-        const x = col * s - (row % 2 ? s / 2 : 0);
-        const y = row * s;
-        ctx.beginPath();
-        ctx.arc(x + s / 2, y, s * 0.62, 0, Math.PI);
-        ctx.closePath();
-        const g = ctx.createLinearGradient(0, y, 0, y + s * 0.62);
-        g.addColorStop(0, 'rgba(255,255,255,0.9)');
-        g.addColorStop(0.45, 'rgba(255,255,255,0.28)');
-        g.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = g;
-        ctx.fill();
-      }
-    }
-  });
-}
-
-function createDragon(colors, lowQuality) {
-  const ST = lowQuality ? 16 : 28; // khoang ribbon theo sau đầu
-  const group = new THREE.Group();
-  const cc2 = new THREE.Color();
-
-  // đầu rồng cứng dẫn đường, to hơn đầu người
-  const head = buildDragonHead(colors);
-  head.group.scale.setScalar(1.55);
-  group.add(head.group);
-
-  // 3 lớp dải thân: vảy cuộn UV / lõi sáng / quầng khí bao ngoài
-  const mkBand = (withTex) => {
-    const geo = new THREE.BufferGeometry();
-    const pos = new Float32Array(ST * 2 * 3);
-    const uv = new Float32Array(ST * 2 * 2);
-    const col = new Float32Array(ST * 2 * 3);
-    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
-    geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    for (let k = 0; k < ST; k++) {
-      const u = (k / (ST - 1)) * (withTex ? 3.5 : 2);
-      uv[k * 4] = u;
-      uv[k * 4 + 1] = 0;
-      uv[k * 4 + 2] = u;
-      uv[k * 4 + 3] = 1;
-      const b = 0.15 + 0.85 * Math.pow(1 - k / ST, 0.5);
-      cc2.set(k < 2 ? colors[0] : colors[1] ?? colors[0]).multiplyScalar(b);
-      col[k * 6] = cc2.r;
-      col[k * 6 + 1] = cc2.g;
-      col[k * 6 + 2] = cc2.b;
-      col[k * 6 + 3] = cc2.r;
-      col[k * 6 + 4] = cc2.g;
-      col[k * 6 + 5] = cc2.b;
-    }
-    const idx = [];
-    for (let k = 0; k < ST - 1; k++) {
-      const a = k * 2;
-      idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
-    }
-    geo.setIndex(idx);
-    const m = new THREE.MeshBasicMaterial({
-      vertexColors: true, transparent: true, opacity: 0.9, depthWrite: false,
-      blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
-      ...(withTex ? { map: scaleTexture() } : { color: colors[0] }),
-    });
-    const mesh = new THREE.Mesh(geo, m);
-    mesh.frustumCulled = false;
-    group.add(mesh);
-    return { geo, mat: m };
-  };
-  const band = mkBand(true);
-  const core = mkBand(false);
-  band.mat.map.wrapS = THREE.RepeatWrapping;
-  band.mat.map.wrapT = THREE.RepeatWrapping;
-  const bands = [
-    { geo: band.geo, wMul: 1, tw: 0 },
-    { geo: core.geo, wMul: 0.42, tw: 0.35 },
-  ];
-
-  // long vĩ: quạt đuôi lửa xòe ở cuối thân
-  const PLUME_N = lowQuality ? 3 : 5;
-  const plumeGeo = new THREE.BufferGeometry();
-  const plumePos = new Float32Array(PLUME_N * 9);
-  const plumeCol = new Float32Array(PLUME_N * 9);
-  plumeGeo.setAttribute('position', new THREE.BufferAttribute(plumePos, 3).setUsage(THREE.DynamicDrawUsage));
-  plumeGeo.setAttribute('color', new THREE.BufferAttribute(plumeCol, 3));
-  for (let i = 0; i < PLUME_N; i++) {
-    cc2.set(colors[0]).multiplyScalar(0.95 - i * 0.09);
-    for (let v = 0; v < 3; v++) {
-      const o = (i * 3 + v) * 3;
-      plumeCol[o] = cc2.r;
-      plumeCol[o + 1] = cc2.g;
-      plumeCol[o + 2] = cc2.b;
-    }
-  }
-  const plumeMat = new THREE.MeshBasicMaterial({
-    vertexColors: true, transparent: true, opacity: 0.9, depthWrite: false,
-    blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
-  });
-  const plume = new THREE.Mesh(plumeGeo, plumeMat);
-  plume.frustumCulled = false;
-  group.add(plume);
-
-  // đường bơi: xoắn ốc ôm người, nhịp lượn rộng và chậm — rồng lượn chứ không giẫy
-  const pathAt = (u, out) => {
-    const r = 0.68 + Math.sin(u * 0.8) * 0.05;
-    out.set(
-      Math.cos(u) * r,
-      0.95 + Math.sin(u * 1.6 + 1.2) * 0.62,
-      Math.sin(u) * r,
-    );
-    return out;
-  };
-
-  const centers = [], tangs = [], sides = [], ups = [];
-  for (let k = 0; k <= ST; k++) {
-    centers.push(new THREE.Vector3());
-    tangs.push(new THREE.Vector3());
-    sides.push(new THREE.Vector3());
-    ups.push(new THREE.Vector3());
-  }
-  const tmpA = new THREE.Vector3();
-  const tmpB = new THREE.Vector3();
-  const m4 = new THREE.Matrix4();
-  const WORLD_UP = new THREE.Vector3(0, 1, 0);
-
-  const update = (t) => {
-    const U = t * 0.42; // bơi chậm rãi, từng vòng quấn rõ ràng
-    for (let k = 0; k <= ST; k++) {
-      const u = U - k * 0.07; // khoang 0 là đầu, thân theo sau
-      pathAt(u, centers[k]);
-      pathAt(u + 0.02, tmpA);
-      pathAt(u - 0.02, tmpB);
-      tangs[k].subVectors(tmpA, tmpB).normalize();
-      sides[k].crossVectors(tangs[k], WORLD_UP);
-      if (sides[k].lengthSq() < 1e-6) sides[k].set(1, 0, 0);
-      else sides[k].normalize();
-      ups[k].crossVectors(sides[k], tangs[k]).normalize();
-    }
-    // đầu cứng: đặt lên khoang 0, xoay theo hướng bơi, thở nhẹ
-    head.group.position.copy(centers[0]);
-    m4.lookAt(tmpA.set(0, 0, 0), tangs[0], ups[0]);
-    head.group.quaternion.setFromRotationMatrix(m4);
-    head.group.scale.setScalar(1.4 * (1 + Math.sin(t * 5) * 0.02));
-    // 3 lớp dải: vảy / lõi / quầng — rộng ở cổ thon về đuôi, xoắn quanh trục bơi
-    for (const def of bands) {
-      const pos = def.geo.attributes.position.array;
-      for (let k = 1; k <= ST; k++) {
-        const i = k - 1;
-        const cK = centers[k], sK = sides[k], uK = ups[k];
-        const tw = i * 0.08 + def.tw;
-        const w = (0.015 + 0.08 * Math.pow(1 - i / ST, 0.55)) * def.wMul;
-        const ux = uK.x * Math.cos(tw) + sK.x * Math.sin(tw);
-        const uy = uK.y * Math.cos(tw) + sK.y * Math.sin(tw);
-        const uz = uK.z * Math.cos(tw) + sK.z * Math.sin(tw);
-        const o = i * 6;
-        pos[o] = cK.x - ux * w;
-        pos[o + 1] = cK.y - uy * w;
-        pos[o + 2] = cK.z - uz * w;
-        pos[o + 3] = cK.x + ux * w;
-        pos[o + 4] = cK.y + uy * w;
-        pos[o + 5] = cK.z + uz * w;
-      }
-      def.geo.attributes.position.needsUpdate = true;
-    }
-    band.mat.map.offset.x = -(t * 0.7) % 1; // vảy trôi chậm từ đầu về đuôi
-    // long vĩ xòe ở đuôi, phất theo nhịp
-    const cT = centers[ST], tT = tangs[ST], sT = sides[ST], uT = ups[ST];
-    for (let i = 0; i < PLUME_N; i++) {
-      const a = -1.2 + (i / (PLUME_N - 1)) * 2.4 + Math.sin(t * 2 + i) * 0.15;
-      const dx = sT.x * Math.cos(a) + uT.x * Math.sin(a);
-      const dy = sT.y * Math.cos(a) + uT.y * Math.sin(a);
-      const dz = sT.z * Math.cos(a) + uT.z * Math.sin(a);
-      const reach = 0.1 + 0.03 * Math.sin(t * 2.6 + i * 1.7);
-      const o = i * 9;
-      plumePos[o] = cT.x - tT.x * 0.045;
-      plumePos[o + 1] = cT.y - tT.y * 0.045;
-      plumePos[o + 2] = cT.z - tT.z * 0.045;
-      plumePos[o + 3] = cT.x - tT.x * (0.17 + 0.02 * Math.sin(t * 2.2 + i)) + dx * reach;
-      plumePos[o + 4] = cT.y - tT.y * (0.17 + 0.02 * Math.sin(t * 2.2 + i)) + dy * reach;
-      plumePos[o + 5] = cT.z - tT.z * (0.17 + 0.02 * Math.sin(t * 2.2 + i)) + dz * reach;
-      plumePos[o + 6] = cT.x + tT.x * 0.045;
-      plumePos[o + 7] = cT.y + tT.y * 0.045;
-      plumePos[o + 8] = cT.z + tT.z * 0.045;
-    }
-    plumeGeo.attributes.position.needsUpdate = true;
-  };
-
-  return {
-    group,
-    update,
-    mats: [
-      ...head.mats,
-      [band.mat, 0.7], [core.mat, 0.7], [plumeMat, 0.65],
-    ],
-    geos: [band.geo, core.geo, plumeGeo],
-  };
-}
-
 // Vòng khắc: vành sáng mềm, 24 vạch khắc và 12 chấm nhỏ trong để thấy rõ vòng xoay.
 function ringTexture() {
   return canvasTex('ring', 256, 256, (ctx) => {
@@ -629,7 +317,7 @@ function domeTexture() {
   });
 }
 
-// Bảng màu theo hiệu ứng: [Sen kim, Lưu ly, Tinh hà, Hỏa diễm, Đào hoa, Bích ngọc, Nguyệt bạch, Hắc ám, Long quyền]
+// Bảng màu theo hiệu ứng: [Sen kim, Lưu ly, Tinh hà, Hỏa diễm, Đào hoa, Bích ngọc, Nguyệt bạch, Hắc ám]
 // — mỗi mục 1-2 tông xen nhau cho phần tử phụ và chính.
 const PALETTES = [
   [0xffd98a],
@@ -640,7 +328,6 @@ const PALETTES = [
   [0x7ee8a0, 0xd0ffd8],
   [0xf6f7ff, 0xcdd9ff],
   [0x7a2ecc, 0x2a0d4a],
-  [0xff3d00, 0xffa200],
 ];
 const BASE_OPACITY = 0.9;
 
@@ -654,7 +341,6 @@ export function setAuraNight(v) {
 const TIME_GLOW = [
   [1.12, 0.92], [1, 1.05], [0.86, 1.2], [0.95, 1.15],
   [1.08, 0.95], [1.05, 1.0], [0.85, 1.25], [1.05, 1.25],
-  [0.95, 1.18],
 ];
 
 function fillSeeds(seed, count) {
@@ -670,8 +356,6 @@ function fillSeeds(seed, count) {
 const BREATH = [8, 13, 14, 9, 10, 12, 16, 8.5]; // V10: hệ 1 thở cùng chu kỳ 8 s của signature
 
 export function createEffect(effect, lowQuality = false) {
-  // 10: aura dải lụa (ribbon-aura.js đánh số nội bộ 9); 9 là Long quyền của bản prod.
-  if (effect === 10) return createRibbonAura(effect - 1, lowQuality);
   if (!effect) return { points: null, update() {}, setColor() {} };
   // Người chơi đè "giảm chuyển động" của hệ điều hành bằng toggle "Hiệu ứng động đầy đủ"
   // trong Đổi trang phục (localStorage fullFx=1) — đọc lại mỗi khung nên đổi là áp ngay.
@@ -695,6 +379,10 @@ export function createEffect(effect, lowQuality = false) {
   if (effect === 8) return createHuyenDaAura(lowQuality, reducedMotion);
   // 6: Bích Ngọc Thanh Phong có pháp tướng riêng (rừng trúc ngọc, gió xoáy cuốn lá, đá rêu).
   if (effect === 6) return createBichNgocAura(lowQuality, reducedMotion);
+  // 9: Long Quyền có pháp tướng riêng (hỏa long xoắn ốc từ chân vươn quyền, ấn quyền, vết nứt chấn địa).
+  if (effect === 9) return createLongQuyenAura(lowQuality, reducedMotion);
+  // 10: Xích Diễm Lưu Vân có pháp tướng riêng (đài mây lửa thấp rộng, vòng lửa ngang eo).
+  if (effect === 10) return createXichDiemAura(lowQuality, reducedMotion);
   // 11: Kim Long Nguyệt Ảnh có pháp tướng riêng (rồng vàng vắt vòm qua đầu, long châu, nửa trăng, biển mây).
   if (effect === 11) return createKimLongAura(lowQuality, reducedMotion);
 
@@ -770,7 +458,6 @@ export function createEffect(effect, lowQuality = false) {
   const GLYPHS = [
     ['禪', '蓮', '光'], ['水', '冰', '澄'], ['星', '月', '河'], ['炎', '焱', '焚'],
     ['桃', '花', '蕊'], ['竹', '青', '翠'], ['月', '明', '輝'], ['魔', '冥', '影'],
-    ['龍', '拳', '氣'],
   ][effect - 1] ?? ['咒'];
   const makeGlyphs = (count, radius) => {
     const items = [];
@@ -950,180 +637,6 @@ export function createEffect(effect, lowQuality = false) {
       sparks.geo.attributes.color.needsUpdate = true;
       updateGlyphs(glyphs, t);
     };
-  } else {
-    // LONG QUYỀN — song long lửa quấn thân ngược chiều là chủ đạo, hỏa liên kèm trận tâm xoay,
-    // vương miện lửa trên đầu, hỏa quyền bùng đan nhau kèm lõi trắng, chấn địa Tempest:
-    // sóng xung kích dội từ chân kèm chỏm lửa bùng theo rìa sóng, chân ngôn 龍.
-    const sparkCount = lowQuality ? 12 : 22;
-    const pool = sprite(glowTexture(), colors[0], 1.35, 1.35, 0, 0.04, 0, 0.4);
-    const pillar = sprite(wispTexture(), colors[0], 0.55, 1.8, 0, 0.9, 0, 0.16);
-    const lotus = flatMesh(lotusTexture(), colors[0], 1.8, 0.02, 0.9); // hỏa liên cõng người
-    const core = flatMesh(mandalaTexture(), colors[1] ?? colors[0], 1.42, 0.045, 0.6); // trận tâm xoay ngược
-    const mantra = flatMesh(runeRingTexture('rune-long', '龍'), colors[0], 1.62, 0.06, 0.85);
-    const counterRing = flatMesh(ringTexture(), colors[0], 1.05, 0.035, 0.4);
-
-    // vòm hỏa khí: ống khí đỏ bao toàn thân — cùng cấu trúc vòm với các hiệu ứng khác
-    const domeTex = domeTexture();
-    domeTex.wrapS = THREE.RepeatWrapping;
-    domeTex.wrapT = THREE.RepeatWrapping;
-    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
-      map: domeTex, color: colors[0], transparent: true, depthWrite: false,
-      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.16,
-    }), 0.16);
-    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.0, 1.95, 48, 1, true)), domeEntry.mat);
-    dome.position.y = 0.97;
-    group.add(dome);
-
-    // song long: hai rồng lửa truy đuổi nhau quanh người — đỏ chủ đạo và vàng kim,
-    // tốc độ khác nhau nên đầu rồng lúc tách xa lúc vờn sát nhau; máy yếu giữ một rồng.
-    const dragonA = createDragon(colors, lowQuality);
-    dragonA.geos.forEach((g) => track(g));
-    for (const [mat, base] of dragonA.mats) parts.push({ mat, base });
-    dragonA.group.scale.setScalar(1.12);
-    group.add(dragonA.group);
-    let dragonB = null;
-    if (!lowQuality) {
-      dragonB = createDragon([colors[1], colors[0]], lowQuality);
-      dragonB.geos.forEach((g) => track(g));
-      for (const [mat, base] of dragonB.mats) parts.push({ mat, base });
-      dragonB.group.scale.setScalar(0.92);
-      group.add(dragonB.group);
-    }
-
-    // vương miện lửa: vòng lửa xoay nhanh trên đầu kèm lõi sáng giữa vương miện
-    const crownCount = lowQuality ? 5 : 7;
-    const crown = [];
-    for (let i = 0; i < crownCount; i++) {
-      const entry = dynMat(() => new THREE.SpriteMaterial({
-        map: flameTexture(), color: colors[i % colors.length], transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, opacity: 0.75, rotation: ((i * 29) % 10) / 10 - 0.5,
-      }), 0.75);
-      const sp = new THREE.Sprite(entry.mat);
-      group.add(sp);
-      crown.push({ sp, entry, a0: (i / crownCount) * 6.283, tw: ((i * 29) % 10) / 10 });
-    }
-    const crownGlow = sprite(glowTexture(), colors[1] ?? colors[0], 0.55, 0.55, 0, 2.28, 0, 0.35);
-
-    // hỏa quyền: hai cụm lửa bùng đan nhau ở hai hông kèm lõi trắng nén — tay không mà khí bốc thành lửa
-    const fists = [];
-    for (const side of [-1, 1]) {
-      const body = dynMat(() => new THREE.SpriteMaterial({
-        map: flameTexture(), color: colors[0], transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, opacity: 0.8, rotation: side * 0.15,
-      }), 0.8);
-      const hot = dynMat(() => new THREE.SpriteMaterial({
-        map: glowTexture(), color: 0xfff3d0, transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, opacity: 0.9,
-      }), 0.9);
-      const spBody = new THREE.Sprite(body.mat);
-      const spHot = new THREE.Sprite(hot.mat);
-      group.add(spBody, spHot);
-      fists.push({ spBody, spHot, body, hot, side });
-    }
-
-    // chấn địa Tempest (E): ba vòng sóng xung kích dội từ chân ra lệch pha, mỗi vòng kéo theo
-    // chỏm lửa bùng lên theo rìa — sóng lan đến đâu lửa bùng đến đó; bước đi thì dội mạnh hơn
-    const waves = [];
-    const waveCount = lowQuality ? 2 : 3;
-    const crestCount = lowQuality ? 4 : 6;
-    for (let k = 0; k < waveCount; k++) {
-      const entry = dynMat(() => new THREE.MeshBasicMaterial({
-        map: ringTexture(), color: colors[k % colors.length], transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0,
-      }), 0);
-      const ring = new THREE.Mesh(track(new THREE.PlaneGeometry(1, 1)), entry.mat);
-      ring.rotation.x = -Math.PI / 2;
-      ring.position.y = 0.03;
-      ring.userData.entry = entry;
-      ring.userData.k = k;
-      group.add(ring);
-      const crest = dynMat(() => new THREE.SpriteMaterial({
-        map: flameTexture(), color: colors[k % colors.length], transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, opacity: 0,
-      }), 0);
-      const flames = [];
-      for (let i = 0; i < crestCount; i++) {
-        const sp = new THREE.Sprite(crest.mat);
-        group.add(sp);
-        flames.push(sp);
-      }
-      waves.push({ ring, entry, crest, flames, k });
-    }
-
-    const sparks = makeTwinkles(sparkCount, 0.06, (i, n) => ({
-      a0: (i / n) * Math.PI * 3.2,
-      r: 0.3 + ((i * 37) % 20) / 20 * 0.42,
-      y: 0.1 + ((i * 53) % 30) / 30 * 1.35,
-      tw: ((i * 29) % 10) / 10,
-      speed: 0.5 + ((i * 61) % 10) / 10,
-    }), colors[1] ?? colors[0]);
-    const glyphs = makeGlyphs(lowQuality ? 3 : 6, 0.62);
-
-    variantUpdate = (t, walkAmt) => {
-      const boost = 1 + walkAmt * 0.9; // bước đi thì cả trận bùng theo
-      pool.scale.setScalar(1.35 * (1 + Math.sin(t * 2.6) * 0.07) * (1 + walkAmt * 0.06));
-      pool.scale.y = pool.scale.x;
-      pillar.scale.y = 1.8 * (1 + Math.sin(t * 1.6) * 0.06);
-      lotus.rotation.z = t * 0.22;
-      core.rotation.z = -t * 0.55; // trận tâm xoay ngược hỏa liên
-      mantra.rotation.z = -t * (0.45 + walkAmt * 0.3);
-      counterRing.rotation.z = t * 0.6;
-      dome.rotation.y = t * 0.08;
-      domeTex.offset.y = -(t * 0.09) % 1;
-      domeEntry.base = 0.13 + 0.05 * (0.5 + 0.5 * Math.sin(t * 1.5));
-      dragonA.update(t * 1.25);
-      if (dragonB) dragonB.update(-t * 1.05 + 4.6);
-      for (const f of crown) {
-        const a = f.a0 + t * 1.7; // vòng lửa xoay nhanh trên đầu
-        f.sp.position.set(Math.cos(a) * 0.34, 2.22 + Math.sin(t * 2.2 + f.tw * 9) * 0.05 + Math.cos(a * 2) * 0.03, Math.sin(a) * 0.34);
-        f.sp.scale.set(0.1, 0.15 + 0.05 * Math.sin(t * 3.1 + f.tw * 7), 1);
-        f.sp.material.rotation = Math.sin(t * 1.8 + f.tw * 6) * 0.4;
-        f.entry.base = 0.55 + 0.25 * (0.5 + 0.5 * Math.sin(t * 2.8 + f.tw * 11));
-      }
-      crownGlow.scale.setScalar(0.55 * (1 + Math.sin(t * 2.2) * 0.08));
-      crownGlow.scale.y = crownGlow.scale.x;
-      // hai hỏa quyền nén đan nhau lệch pha, bước đi thì kéo lửa về sau như vệt tốc độ
-      for (const f of fists) {
-        const punch = Math.pow(0.5 + 0.5 * Math.sin(t * 4.2 + (f.side > 0 ? 0 : Math.PI / 2)), 3);
-        f.spBody.position.set(f.side * (0.31 + walkAmt * 0.07), 0.76 + punch * 0.12, 0.08 - walkAmt * 0.14);
-        f.spBody.scale.set(0.11 + punch * 0.13, 0.16 + punch * 0.19, 1);
-        f.body.base = 0.55 + punch * 0.6;
-        f.spHot.position.copy(f.spBody.position);
-        f.spHot.position.y += 0.03 + punch * 0.05;
-        f.spHot.scale.setScalar(0.06 + punch * 0.1);
-        f.hot.base = 0.45 + punch * 0.6;
-      }
-      for (const w of waves) {
-        const p = (t * 0.55 + w.k / waveCount) % 1; // sóng dội dày, lệch pha đều nhau
-        const reach = 0.35 + p * 2.05;
-        w.ring.scale.setScalar(reach);
-        const life = Math.pow(Math.sin(p * Math.PI), 0.7); // rực nhất lúc sóng đang lan rộng
-        w.entry.base = life * (0.62 + walkAmt * 0.3);
-        // chỏm lửa bùng theo rìa sóng: cao lên lúc sóng lan xa rồi tắt khi sóng tan
-        const rEdge = reach * 0.485;
-        for (let i = 0; i < w.flames.length; i++) {
-          const a = (i / w.flames.length) * 6.283 + w.k * 0.7 + t * 0.25;
-          w.flames[i].position.set(Math.cos(a) * rEdge, 0.1 + life * 0.24, Math.sin(a) * rEdge);
-          w.flames[i].scale.set(0.1, 0.16 + life * 0.2, 1);
-        }
-        w.crest.base = Math.pow(Math.sin(p * Math.PI), 0.8) * (0.55 + walkAmt * 0.25);
-      }
-      for (let i = 0; i < sparkCount; i++) {
-        const st = sparks.seeds[i];
-        const a = st.a0 + t * 0.08 * st.speed * boost;
-        sparks.pos[i * 3] = Math.cos(a) * st.r;
-        sparks.pos[i * 3 + 1] = st.y + Math.sin(t * 0.75 + st.tw * 9) * 0.05;
-        sparks.pos[i * 3 + 2] = Math.sin(a) * st.r;
-        const shine = 0.35 + 0.65 * (0.55 + 0.45 * Math.sin(t * 2.6 + st.tw * 12.6));
-        c.set(sparks.tint).multiplyScalar(shine);
-        sparks.col[i * 3] = c.r;
-        sparks.col[i * 3 + 1] = c.g;
-        sparks.col[i * 3 + 2] = c.b;
-      }
-      sparks.geo.attributes.position.needsUpdate = true;
-      sparks.geo.attributes.color.needsUpdate = true;
-      updateGlyphs(glyphs, t);
-    };
   }
 
   // Kiếm khí: hai lưỡi khí bay vòng quanh người, chỉ hiện khi nhân vật mang vũ khí.
@@ -1151,7 +664,7 @@ export function createEffect(effect, lowQuality = false) {
   };
 
   // Lớp signature của phiên trước (phù văn chân, emblem, ribbon + manifestation + flow).
-  // V9: chỉ thiết kế cho hệ 1-8 — Long quyền (9) của prod không có signature riêng.
+  // V9: chỉ thiết kế cho hệ 1-8.
   const signature = effect >= 1 && effect <= 8 ? createAuraSignature(effect, lowQuality) : null;
   if (signature) group.add(signature.group);
 
