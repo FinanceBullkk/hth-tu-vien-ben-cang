@@ -137,6 +137,25 @@ Hai bàn ngay sau bầu cua và xì dách, phía thiền đường: tài xỉu p
 - **Cò quay:** bánh xe châu Âu 0–36. Số đơn ăn 35 (tối đa 5 TEU một số), tá ăn 2, đỏ/đen/chẵn/lẻ/nhỏ/lớn ăn 1; ra 0 thì cửa ngoài thua. Phím **1–4**: Đỏ, Đen, Chẵn, Lẻ.
 - Tối đa 50 TEU một ván. Nhà cái lợi chút ít (2,7–2,8%, riêng Bão 13,9%) nên chơi lâu TEU vẫn hao; bảng tuần tính lãi/lỗ ròng như bầu cua. Chi tiết và giao thức xem `docs/taixiu-coquay.md`.
 
+## Gạt cần
+
+Dãy ba máy gạt cần trong hành lang có mái phía tây, quay mặt ra sân sòng. Bấm **Chơi gì?** rồi chọn **Gạt cần**, hoặc đứng trước máy nào bấm **E** để chơi máy đó. Mỗi lần gạt là một ván riêng của mình, không phải chờ ai.
+
+- **Gạt:** chọn mức 1, 5 hoặc 10 TEU (phím **1–3**), rồi bấm lên máy, nút **Gạt cần** hoặc **Space**. Cần kéo xuống, ba cuộn quay rồi dừng lần lượt trái sang phải; ví trừ cược ngay, tiền thắng cộng khi cuộn cuối dừng.
+- **Ăn:** ba hình giống nhau hoặc đôi ở hai ô bất kỳ. `×n` là số lần tiền cược được trả về (đã gồm tiền cược, ×1 là hoà vốn).
+
+  | Hình | Ba hình | Đôi |
+  | --- | --- | --- |
+  | 🐉 Rồng (nổ hũ) | ×200 | ×8 |
+  | 💰 Túi vàng | ×80 | ×3 |
+  | 🧧 Lì xì | ×40 | ×2 |
+  | 🏮 Đèn lồng | ×20 | ×1 |
+  | 🍊 Quýt | ×10 | ×1 |
+  | 🍑 Đào | ×5 | – |
+
+- Khoảng 35% lượt có ăn; máy hoàn vốn kỳ vọng khoảng 95,6% nên chơi lâu TEU vẫn hao. Bảng tuần tính lãi/lỗ ròng như bầu cua. Trúng từ ×40 trở lên thì cả sân được báo tên.
+- Người khác gạt thì máy của họ cũng quay trên màn hình mình. Chi tiết và giao thức xem `docs/slot.md`.
+
 ## Câu cá
 
 Bấm nút **Chơi gì?** ở góc trên rồi chọn **Câu cá**, hoặc tự đi tới bờ hồ góc đông nam sân. Không tốn gì, ai đứng bờ nào cũng thấy nhau câu. Bấm **Về bờ**, **Esc** hoặc phím đi để rời hồ.

@@ -46,6 +46,8 @@ import './ui/shop.css';
 import './ui/table-hud.css';
 import './ui/baucua.css';
 import './ui/casino-round-hud.css';
+import './ui/slot.css';
+import './ui/slot.css';
 import './ui/xidach.css';
 import './ui/trade.css';
 
@@ -375,6 +377,12 @@ function main() {
     net.on(`${name}:payout`, (result) => app.activities[name].onPayout(result));
   }
 
+  // ---------- Máy gạt cần ----------
+  net.on('slot:spin', (spin) => app.activities.slot.onRemoteSpin(spin));
+
+  // ---------- Máy gạt cần ----------
+  net.on('slot:spin', (spin) => app.activities.slot.onRemoteSpin(spin));
+
   // ---------- Xì dách ----------
   net.on('xidach:state', (state) => app.activities.xidach.applyState(state));
   net.on('xidach:hand', (hand) => app.activities.xidach.onHand(hand));
@@ -614,6 +622,7 @@ function main() {
     world.xidachTable.update(dt, camera, nowMs);
     world.taixiuTable.update(dt, camera, nowMs);
     world.coquayTable.update(dt, camera, nowMs);
+    world.slotMachines.update(dt, camera);
     world.pitchCourt.update(dt, camera);
     app.follow.update(dt, me.x, me.y, me.z, look);
     world.sky.follow(camera);

@@ -564,6 +564,12 @@ export class Avatar {
       armRx = -1.0;
       armLz = -0.35;
       armRz = 0.3;
+    } else if (this.activity === ACTIVITY.slot) {
+      // Tay phải nắm núm cần gạt bên hông máy, tay trái tì lên bệ phím.
+      armRx = -1.35 + Math.sin(t * 1.2) * 0.03;
+      armRz = -0.25;
+      armLx = -0.75;
+      armLz = -0.1;
     } else if (this.activity === ACTIVITY.baucua || this.activity === ACTIVITY.taixiu || this.activity === ACTIVITY.coquay) {
       // Hai tay chống lên mép bàn, chờ mở bát.
       armLx = -0.7;

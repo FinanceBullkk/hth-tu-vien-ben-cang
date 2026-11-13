@@ -27,7 +27,7 @@ const SIT_INTERVAL_MS = 1000; // Ngồi xuống phát tin cho cả phòng nên p
 const round2 = (n) => Math.round(n * 100) / 100;
 
 export class Room {
-  constructor({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch, melody, pk, shop, baucua, xidach, taixiu, coquay, trade }) {
+  constructor({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch, melody, pk, shop, baucua, xidach, taixiu, coquay, slot, trade }) {
     this.io = io;
     this.broadcast = io.to(PLAYERS_ROOM);
     this.db = db;
@@ -45,6 +45,7 @@ export class Room {
     this.shop = shop;
     this.baucua = baucua;
     this.xidach = xidach;
+    this.slot = slot; // Máy gạt cần: mỗi lần gạt chấm ngay, không có ván chung nên không cần sweep hay snapshot.
     // Tài xỉu, cò quay: cùng lõi CasinoRoundTable, sự kiện <trò>:bet|clear|throw.
     this.casinoTables = [taixiu, coquay].filter(Boolean);
     // Kết quả các bàn đỏ đen gửi riêng cho từng người cược (theo pid); người đã rời thì bỏ qua, tiền vẫn vào ví.
@@ -202,7 +203,7 @@ export class Room {
             ack?.({ ok: false, error: 'Chưa vào phòng.' });
             return;
           }
-          if (player?.melody && /^(action:start|rhythm:|fish:|pitch:|riddle:|baucua:|xidach:|taixiu:|coquay:)/.test(event)) {
+          if (player?.melody && /^(action:start|rhythm:|fish:|pitch:|riddle:|baucua:|xidach:|taixiu:|coquay:|slot:)/.test(event)) {
             ack?.({ ok: false, error: 'Rời sân đàn trước nhé.' });
             return;
           }
@@ -263,6 +264,7 @@ export class Room {
       on(`${name}:clear`, (p) => table.clear(p));
       on(`${name}:throw`, (p, data) => table.throw(p, data));
     }
+    on('slot:spin', (p, data) => this.slot.spin(p, data));
     on('shop:buy', (p, data) => this.onBuy(p, data));
     on('look:set', (p, data) => this.onLook(p, data));
     on('trade:invite', (p, data) => this.trade.invite(p, data));
