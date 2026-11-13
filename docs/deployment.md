@@ -1,6 +1,32 @@
 # Deployment
 
-## Current release: 2026-11-13 four auras rebuilt with distinct forms, 20:27 UTC+7
+## Current release: 2026-11-13 graphics settings and sharper bầu cua table, 22:29 UTC+7
+
+Deploy run [43449139081](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43449139081)
+released main `4a2b348` (PR #75) as `hth:261113-2229-4a2b348`, replacing
+`hth:261113-2226-4a2b348`. Two Deploy runs were dispatched for the same commit
+while the runner was offline; run
+[43441673086](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43441673086)
+cut over first at 22:26 (`hth:261113-2027-2a1d28e` → `hth:261113-2226-4a2b348`),
+then this run re-released the same commit. Adds the "Đồ hoạ" menu button
+(Tự động / Thấp / Vừa / Cao / Rất nét, saved in `hth.graphics`; "Rất nét"
+renders up to 4K at 2× density) and draws the bầu cua mat and dice at twice
+the pixels. Public bundle `index-lbvkdmza.js`, confirmed served at
+`https://game.hthlogistics.top/` with `/api/health` 200.
+
+Docker tests 301/301. Candidate passed with DB `quick_check` ok (52 players,
+23 wishes, 73 fish).
+
+Rollback containers `hth-rollback-261113-2229-4a2b348` (preserves
+`hth:261113-2226-4a2b348`) and `hth-rollback-261113-2226-4a2b348` (preserves
+`hth:261113-2027-2a1d28e`). Private backups are in the data volume at
+`backups/cutover-261113-2226-4a2b348/` and `backups/cutover-261113-2229-4a2b348/`.
+
+Runner note: the run stayed queued ~1 h because `Runner.Listener` on
+`pc-chinh` had been cancelled at 21:10 (window closed, not a network fault).
+Restarted by launching the Startup `hth-deploy-runner.cmd` again.
+
+## Previous release: 2026-11-13 four auras rebuilt with distinct forms, 20:27 UTC+7
 
 Deploy run [43433806435](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43433806435)
 released main `2a1d28e` as `hth:261113-2027-2a1d28e`, replacing
