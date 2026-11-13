@@ -1,4 +1,4 @@
-// Bàn xì dách ở sân trước thiền đường: bàn tròn phủ dạ xanh, Bà Năm nhà cái đứng phía đông, khách đứng phía trục.
+// Bàn xì dách ở sân trước thiền đường: bàn bán nguyệt phủ dạ xanh (xidach-table-model.js), Bà Năm nhà cái đứng phía đông, khách đứng phía trục.
 // Mỗi ghế (0..4) có một quạt bài trên mặt bàn theo hình cung phía khách; bài nhà cái nằm phía nhà cái.
 // Bài người khác úp tới lúc chấm, bài của mình ngửa (activity gửi qua setMine). Cảnh chỉ vẽ theo trạng thái server gửi.
 import * as THREE from 'three';
@@ -9,15 +9,19 @@ import { h } from '../ui/dom.js';
 import { DEAL_GAP_S, flipAnim, flyAnim, stepCard } from './card-motion.js';
 import { cardBackMaterial, cardFaceMaterial } from './card-textures.js';
 import { TableDealer, pickLine } from './table-dealer.js';
+import { buildXiDachTableModel } from './xidach-table-model.js';
 import { XiDachTableFx } from './xidach-table-fx.js';
 
 const TOP_Y = 0.8;
+const RADIUS = XIDACH_ZONE.tableRadius - 0.03;
+const CHORD = 0.7; // Cạnh thẳng phía nhà cái của mặt bàn bán nguyệt.
 const CARD = { w: 0.12, h: 0.17, gap: 0.075 };
 const SEAT_RADIUS = 0.56; // Quạt bài của khách cách tâm bàn chừng này, về phía tây (phía khách).
-const CHIP_RADIUS = 0.78; // Chồng chip cược của khách, sát mép bàn.
+const CHIP_RADIUS = 0.72; // Vòng đặt cược của khách, ngoài quạt bài, trong đệm da.
 const SEAT_ANGLES = [-56, -28, 0, 28, 56].map((d) => (d * Math.PI) / 180);
-const DEALER_X = 0.5;
-const SHOE = { x: DEALER_X + 0.12, y: TOP_Y + 0.06, z: -0.42 }; // Chồng bài cạnh tay nhà cái.
+const DEALER_X = 0.4;
+const TRAY = { x: 0.62, length: 0.5 }; // Khay chip nhà cái, dọc cạnh thẳng.
+const SHOE = { x: 0.45, y: TOP_Y + 0.07, z: -0.4 }; // Mép trước hộp bài cạnh tay nhà cái; lá chia bay ra từ đây.
 const cardMaterial = (card) => (card >= 0 ? cardFaceMaterial(card) : cardBackMaterial());
 const LABEL_SHOW_DISTANCE = 22;
 const DEALER = { name: 'Bà Năm nhà cái', look: { color: 7, hair: 1, hat: 7, attire: 6 } };
@@ -27,31 +31,23 @@ const LINES = {
   dealer: ['Cái lật bài nè!', 'Coi cái nè!'],
 };
 
-const matte = (color) => new THREE.MeshLambertMaterial({ color, flatShading: true });
-
-function mesh(geometry, material, x = 0, y = 0, z = 0) {
-  const m = new THREE.Mesh(geometry, material);
-  m.position.set(x, y, z);
-  m.castShadow = true;
-  m.receiveShadow = true;
-  return m;
-}
-
 export class XiDachTable {
   constructor(scene) {
     const { x, z } = XIDACH_ZONE;
     this.group = new THREE.Group();
     this.group.position.set(x, floorHeight(x, z), z);
-    this.#buildTable();
+    const at = (r) => SEAT_ANGLES.map((a) => new THREE.Vector3(-Math.cos(a) * r, 0, Math.sin(a) * r));
+    this.group.add(buildXiDachTableModel({
+      top: TOP_Y, radius: RADIUS, chord: CHORD, chipSpots: at(CHIP_RADIUS), emblem: { x: 0.08, z: 0 }, tray: TRAY, shoe: SHOE,
+    }));
     this.cardGeometry = new THREE.PlaneGeometry(CARD.w, CARD.h);
     // Lá nằm ngửa có đầu lá hướng -z; xoay quanh trục đứng một góc φ thì đầu lá hướng (-sin φ, -cos φ).
     // Muốn đầu lá chỉ về tâm bàn từ ghế ở góc a (vị trí (-cos a, sin a)·R) thì φ = a - π/2; hàng nhà cái φ = -π/2.
     this.dealerCards = this.#cardRow(DEALER_X, 0, -Math.PI / 2);
     this.seatCards = SEAT_ANGLES.map((a) => this.#cardRow(-Math.cos(a) * SEAT_RADIUS, Math.sin(a) * SEAT_RADIUS, a - Math.PI / 2));
     this.#buildLabel();
-    // Chip cược bày sát mép bàn phía khách, ngoài quạt bài; khay chip của cái ở phía nhà cái.
-    const at = (r) => SEAT_ANGLES.map((a) => new THREE.Vector3(-Math.cos(a) * r, 0, Math.sin(a) * r));
-    this.fx = new XiDachTableFx(this.group, { seats: at(SEAT_RADIUS), chipSpots: at(CHIP_RADIUS), dealer: new THREE.Vector3(DEALER_X, TOP_Y, 0.36), top: TOP_Y });
+    // Chip cược bày trong vòng đặt cược trước từng khách; chip thua bay về khay nhà cái, chip thưởng bay ra từ khay.
+    this.fx = new XiDachTableFx(this.group, { seats: at(SEAT_RADIUS), chipSpots: at(CHIP_RADIUS), dealer: new THREE.Vector3(TRAY.x, TOP_Y + 0.04, 0), top: TOP_Y });
     this.fx.onChipLand = () => this.onLand?.();
     scene.add(this.group);
     this.dealer = new TableDealer(scene, { spot: XIDACH_ZONE.dealer, ...DEALER });
@@ -60,22 +56,6 @@ export class XiDachTable {
     this.phase = 'idle';
     this.mine = null; // { seat, cards }
     this.labelClock = 0;
-  }
-
-  #buildTable() {
-    const r = XIDACH_ZONE.tableRadius - 0.03;
-    const dark = matte(0x3f2414);
-    const top = mesh(new THREE.CylinderGeometry(r, r, 0.07, 32), matte(0x6a3f22), 0, TOP_Y - 0.035, 0);
-    const felt = mesh(new THREE.CylinderGeometry(r - 0.05, r - 0.05, 0.012, 32), matte(0x1f5c3a), 0, TOP_Y + 0.001, 0);
-    const line = mesh(new THREE.TorusGeometry(r - 0.28, 0.008, 4, 40, Math.PI * 0.75), matte(0xe9c46a), 0, TOP_Y + 0.009, 0);
-    line.rotation.set(Math.PI / 2, 0, Math.PI * 0.625);
-    const rim = mesh(new THREE.TorusGeometry(r, 0.035, 6, 32), dark, 0, TOP_Y, 0);
-    rim.rotation.x = Math.PI / 2;
-    const stem = mesh(new THREE.CylinderGeometry(0.13, 0.2, TOP_Y - 0.08, 10), dark, 0, (TOP_Y - 0.08) / 2, 0);
-    const foot = mesh(new THREE.CylinderGeometry(0.45, 0.5, 0.06, 16), dark, 0, 0.03, 0);
-    // Chồng bài của nhà cái: mọi lá được chia đều bay ra từ đây.
-    const shoe = mesh(new THREE.BoxGeometry(CARD.h, 0.05, CARD.w), cardBackMaterial(), SHOE.x, SHOE.y - 0.03, SHOE.z);
-    this.group.add(top, felt, line, rim, stem, foot, shoe);
   }
 
   /** Một hàng 5 lá nằm trên bàn, xoay để đầu lá hướng về nhà cái (chữ đọc xuôi với khách). */

@@ -60,6 +60,12 @@ Hello trả thêm `snapshot.xidach` (kèm `mine` là ghế, tiền cược và b
 
 ## Hiệu ứng
 
+- Bàn 3D (`scene/xidach-table-model.js`): mặt bán nguyệt kiểu sòng bài, cạnh thẳng phía nhà cái, đệm da bọc cung phía khách,
+  khay chip của nhà cái, hộp bài (shoe) cạnh tay nhà cái. Mặt dạ (`scene/xidach-felt-texture.js`) vẽ canvas: thớ dạ, chữ in vàng
+  chạy theo cung ("Xì dách · trả gấp đôi", luật nhà cái rút và non), vòng đặt cược trước từng ghế, ấn HTH giữa bàn.
+- Lá bài (`scene/card-textures.js`, `card-suit-paths.js`, `card-court-figure.js`): một bộ ảnh canvas dùng chung cho bàn 3D và bảng
+  chơi; góc chỉ số hai đầu, chất xếp theo bố cục bài thật, J Q K có hình người hai đầu, mặt lưng đỏ viền trắng có ấn HTH.
+  Chất vẽ bằng đường cong nên máy nào cũng giống nhau. Chip 3D (`scene/casino-chip-materials.js`) có sọc cạnh và mặt in mệnh giá.
 - Bàn 3D (`scene/card-motion.js`): mỗi lá bay từ chồng bài của nhà cái tới đúng chỗ theo vòng cung, các lá cùng lượt cách
   nhau 0,13 giây; lá úp lật ra (lá thứ hai của nhà cái, bài khách lúc chấm) bằng một vòng lật quanh sống lá. Có tiếng lá rơi, tiếng lật.
 - Nhân vật: đứng ở bàn thì hai tay cầm quạt bài; rút thì với tay ra chồng bài; bong bóng "Rút!" / "Dằn! (3 lá)" cho cả phòng thấy.
@@ -78,5 +84,5 @@ Hello trả thêm `snapshot.xidach` (kèm `mine` là ghế, tiền cược và b
 - `shared/xidach.js`: bài, tính điểm, phân loại, so bài, chấm tiền, luật rút của nhà cái.
 - `server/xidach.js` (vòng đời bàn), `server/xidach-view.js` (những gì được phát cho cả phòng).
 - `client/src/activities/xidach.js`, `ui/xidach-panel.js`, `ui/xidach.css` (dùng chung khung với `ui/baucua.css`),
-  `scene/xidach-table.js`, `scene/card-textures.js`, `scene/table-dealer.js` (NPC nhà cái dùng chung với bầu cua).
+  `scene/xidach-table.js`, `scene/xidach-table-model.js`, `scene/xidach-felt-texture.js`, `scene/card-textures.js`, `scene/table-dealer.js` (NPC nhà cái dùng chung với bầu cua).
 - `test/xidach.test.js`.
