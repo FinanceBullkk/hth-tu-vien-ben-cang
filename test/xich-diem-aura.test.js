@@ -229,8 +229,7 @@ test('Xích Diễm: createEffect(10) dùng pháp tướng mới, 11 là Kim Long
   aura.update(2);
   aura.dispose();
   const kimLong = createEffect(11, false);
-  assert.notEqual(kimLong.points.name, 'xich-diem-aura');
-  assert.notEqual(kimLong.points.name, 'ribbon-aura');
+  assert.equal(kimLong.points.name, 'kim-long-aura');
   kimLong.dispose();
 });
 

@@ -8,6 +8,8 @@ import { SEATED_HEAD_Y } from '../client/src/player/vfx/kim-long-meditation-thro
 import { createManifestation } from '../client/src/player/cultivation-manifestation.js';
 import { createEffect } from '../client/src/player/avatar-effect.js';
 import { CultivationAura } from '../client/src/player/cultivation-aura.js';
+import { AVATAR, EFFECT_NAMES } from '../shared/protocol.js';
+import { AURA_TITLES } from '../client/src/player/avatar-title.js';
 
 const make = (low = false) => createKimLongAura(low, { matches: false });
 const named = (aura, name) => { const hits = []; aura.points.traverse(o => { if (o.name === name) hits.push(o); }); return hits; };
@@ -203,13 +205,13 @@ test('Kim Long: dispose giải phóng tài nguyên riêng, giữ texture và khu
   assert.equal(sharedDisposed, 0);
 });
 
-test('Kim Long: createEffect(11) dùng pháp tướng mới, effect 10 không đổi', () => {
+test('Kim Long: createEffect(11) dùng pháp tướng mới; ID aura mới nối thêm, không đổi lựa chọn cũ', () => {
   const aura = createEffect(11, false);
   assert.equal(aura.points.name, 'kim-long-aura');
   aura.update(2); aura.dispose();
-  const ribbon = createEffect(10, false);
-  assert.notEqual(ribbon.points.name, 'kim-long-aura');
-  ribbon.dispose();
+  assert.deepEqual(EFFECT_NAMES.slice(0, 9), ['Không', 'Sen kim', 'Lưu ly', 'Tinh hà', 'Hỏa diễm', 'Đào hoa', 'Bích ngọc', 'Nguyệt bạch', 'Hắc ám']);
+  assert.equal(AVATAR.effects, AURA_TITLES.length);
+  assert.equal(AVATAR.effects, EFFECT_NAMES.length);
 });
 
 test('Kim Long khi ngồi thiền: tòa riêng (châu, nửa vòm, vòm đầy đủ), chừa trống mặt, theme 11', () => {
