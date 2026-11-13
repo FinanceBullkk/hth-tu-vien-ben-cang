@@ -1,8 +1,9 @@
 // Câu cá ở hồ trong sân: quăng cần, lắc dụ cá, giằng co rồi kéo lên.
 // Server định giờ cắn, roll loài và tự mô phỏng tiến độ từ vị trí kim client gửi lên.
 import { LAKE, lakeDistance } from '../shared/layout.js';
-import { ACTIVITY, TEU } from '../shared/protocol.js';
+import { ACTIVITY } from '../shared/protocol.js';
 import { BAITS, DEFAULT_BAIT, FISH_BITE, FISH_BOOK_MILESTONES, FISH_FIGHT, SHADOW_WAIT, castSpot, fightAdvance, fightGrade, fightNew, fightSeed, fishRoll, isLakeNight } from '../shared/fish.js';
+import { GOLDEN_HOUR, catchTeu, isGoldenHour, isTrophy } from '../shared/fish-bonus.js';
 import { THINH } from '../shared/fish-gear.js';
 import { LAKE_SHADOW, shadowNear } from '../shared/fish-lake-shadows.js';
 import { FishingSupplies } from './fishing-supplies.js';
@@ -31,9 +32,11 @@ export class Fishing {
     const shadow = this.takeShadow(bx, bz, now, player.sid);
     const thinh = this.supplies.takeThinh(player, data?.thinh);
     const tier = this.supplies.rodTier(player.pid);
+    const golden = isGoldenHour(now);
     player.rod = {
       castAt: now,
-      biteAt: now + (FISH_BITE.minMs + Math.random() * (FISH_BITE.maxMs - FISH_BITE.minMs)) * SHADOW_WAIT[shadow ?? 'none'] * (thinh ? THINH.waitFactor : 1),
+      biteAt: now + (FISH_BITE.minMs + Math.random() * (FISH_BITE.maxMs - FISH_BITE.minMs)) * SHADOW_WAIT[shadow ?? 'none']
+        * (thinh ? THINH.waitFactor : 1) * (golden ? GOLDEN_HOUR.waitFactor : 1),
       shadow,
       thinh,
       tier,
@@ -107,6 +110,7 @@ export class Fishing {
       return true;
     }
     if (rod.fight.progress <= 0 || now > rod.fightEndsAt) {
+      player.fishStreak = 0;
       this.clear(player, true);
       player.socket?.emit('fish:escaped', { reason: 'fight' });
       return false;
@@ -131,6 +135,7 @@ export class Fishing {
     const rod = player.rod;
     if (!rod) return { ok: false, error: 'Chưa thả cần mà.' };
     if (rod.state === 'waiting') {
+      player.fishStreak = 0;
       this.clear(player, true);
       return { ok: true, escaped: true, reason: 'early', error: 'Cá chưa cắn đã rút, nó bỏ đi rồi.' };
     }
@@ -148,13 +153,18 @@ export class Fishing {
     this.db.fishCatch(player.pid, fish.id, weight, grade, date, Date.now());
     // Đơn hàng: thưởng đơn cộng chung vào TEU con cá này, ghi riêng lí do để còn tra.
     const { orderDone, orders } = this.supplies.recordCatch(player.pid, date, fish.id, weight);
-    const teu = (TEU.fishByRarity[fish.rarity] ?? 1) + (grade === 'perfect' ? TEU.fishPerfectBonus : 0) + (milestone?.teu ?? 0);
+    // Chuỗi câu đẹp chỉ sống trong một lần ra hồ: câu thường, cá tuột hay về bờ là về 0.
+    const perfect = grade === 'perfect';
+    player.fishStreak = perfect ? (player.fishStreak ?? 0) + 1 : 0;
+    // Giờ cá vàng tính theo lúc quăng: đã thả kịp trong giờ thì con cá đó vẫn được gấp đôi.
+    const bonus = { trophy: isTrophy(fish, weight), golden: isGoldenHour(rod.castAt), streak: player.fishStreak };
+    const teu = catchTeu({ rarity: fish.rarity, perfect, ...bonus }) + (milestone?.teu ?? 0);
     this.db.addTeu(player.pid, teu, 'fish', date);
     if (orderDone) this.db.addTeu(player.pid, orderDone.teu, 'fish-order', date);
     // Báo trước khi dọn để mọi máy còn thấy nước văng đúng chỗ phao.
-    this.io.emit('fish:caught', { sid: player.sid, id: fish.id, name: fish.name, rarity: fish.rarity, weight });
+    this.io.emit('fish:caught', { sid: player.sid, id: fish.id, name: fish.name, rarity: fish.rarity, weight, trophy: bonus.trophy });
     this.clear(player, true);
-    return { ok: true, grade, fish: { id: fish.id, name: fish.name, rarity: fish.rarity, weight }, teu: teu + (orderDone?.teu ?? 0), isNew, record, species, milestone, orderDone, orders };
+    return { ok: true, grade, fish: { id: fish.id, name: fish.name, rarity: fish.rarity, weight }, teu: teu + (orderDone?.teu ?? 0), isNew, record, species, milestone, orderDone, orders, bonus };
   }
 
   /** Về bờ hẳn. Người đang cầm cần chờ quăng tiếp không có rod nên phải xét cả tư thế. */
@@ -167,6 +177,7 @@ export class Fishing {
   clear(player, stillFishing = false) {
     player.rod = null;
     this.io.emit('fish:rodoff', { sid: player.sid, idle: stillFishing });
+    if (!stillFishing) player.fishStreak = 0;
     if (!stillFishing && player.activity === ACTIVITY.fish) {
       player.activity = ACTIVITY.none;
       player.dirty = true;
@@ -184,6 +195,7 @@ export class Fishing {
       if (rod.state === 'waiting' && now >= rod.biteAt) this.bite(player, rod);
       else if (rod.state === 'fighting') this.settle(player, rod, now);
       else if (rod.state === 'ready' && now > rod.readyUntil) {
+        player.fishStreak = 0;
         this.clear(player, true);
         player.socket?.emit('fish:escaped', { reason: 'slack' });
       }

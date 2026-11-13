@@ -1,6 +1,7 @@
 // Câu cá ở hồ: chạm mặt nước để thả → chờ → cá cắn thì giữ chấm trong vùng xanh → đầy vòng tự kéo lên.
 // File này giữ vòng trạng thái và nói chuyện với server; ngắm và giằng co nằm ở hai pha riêng.
 import { SHADOW_SIZES } from '../../../shared/fish-lake-shadows.js';
+import { goldenHour } from '../../../shared/fish-bonus.js';
 import { BAITS, DEFAULT_BAIT } from '../../../shared/fish.js';
 import { LAKE } from '../../../shared/layout.js';
 import { FishingPanel } from '../ui/fishing-panel.js';
@@ -52,6 +53,8 @@ export class FishingActivity {
     this.earned = 0;
     this.total = catchesSoFar();
     this.companyClock = COMPANY_INTERVAL_S;
+    this.streak = 0;
+    this.goldenOn = null;
     this.panel.show();
     this.panel.setBait(this.bait);
     this.panel.setTally(0, 0);
@@ -167,6 +170,7 @@ export class FishingActivity {
     }
     this.caught += 1;
     this.earned += res.teu;
+    this.streak = res.bonus?.streak ?? 0;
     this.total = noteCatch();
     this.panel.setTally(this.caught, this.earned);
     this.panel.showCatch(res);
@@ -181,6 +185,7 @@ export class FishingActivity {
 
   escaped() {
     if (this.state === 'idle') return;
+    this.streak = 0;
     this.fighting.stop();
     this.app.audio.rustle();
     this.aiming.hideRing();
@@ -220,6 +225,18 @@ export class FishingActivity {
       .map((sid) => app.remotes.map.get(sid)?.name)
       .filter(Boolean);
     this.panel.setCompany(names);
+    this.updateGolden();
+  }
+
+  /** Giờ cá vàng tính thuần từ giờ server; vừa mở thì chuông và báo một lần. */
+  updateGolden() {
+    const golden = goldenHour(this.app.net.now());
+    this.panel.setGolden(golden, this.streak);
+    if (golden.on && this.goldenOn === false) {
+      this.app.hud.toast('Giờ cá vàng! Cá cắn nhanh, TEU gấp đôi');
+      this.app.audio.chime(0.08);
+    }
+    this.goldenOn = golden.on;
   }
 
   update(dt) {

@@ -1,6 +1,7 @@
 // HUD câu cá tối giản: mặt nước là chính, màn hình chỉ có một dòng lời dẫn theo từng pha.
 // Không có nút hành động: chạm ở đâu trên màn hình cũng được, kể cả trên điện thoại.
 import { BAITS, FISH, fishForBait } from '../../../shared/fish.js';
+import { GOLDEN_HOUR, TROPHY, streakBonus } from '../../../shared/fish-bonus.js';
 import { $, h } from './dom.js';
 import { fishPortraitSvg } from './fish-portrait.js';
 import { FishingArcGauge } from './fishing-arc-gauge.js';
@@ -10,6 +11,11 @@ const NEEDLE_SPAN_PX = 520; // quãng kéo tương ứng toàn bộ vòng cung
 const BAIT_NOTE_MS = 3500;
 const CATCH_MS = 4600;
 
+const mmss = (ms) => {
+  const s = Math.ceil(ms / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+};
+
 const pointerOf = (e) => ({ x: e.clientX, y: e.clientY, clientX: e.clientX, touch: e.pointerType === 'touch' });
 
 export class FishingPanel {
@@ -18,6 +24,7 @@ export class FishingPanel {
     this.supplies = new FishingSuppliesView({ onBuy, onThinh });
     this.tally = h('p', { class: 'fish-tally' });
     this.company = h('p', { class: 'fish-company' });
+    this.golden = h('p', { class: 'fish-golden' });
     this.hint = h('p', { class: 'fish-hint', role: 'status' });
     this.baitNote = h('p', { class: 'fish-bait-note' });
     this.catchEl = h('div', { class: 'fish-catch', hidden: true });
@@ -29,7 +36,7 @@ export class FishingPanel {
       h('span', {}, 'Mồi'), ...this.baitButtons.values(), this.supplies.thinhBtn);
 
     this.root = h('section', { class: 'fish-hud', hidden: true, tabIndex: -1, 'aria-label': 'Câu cá ở hồ' },
-      h('div', { class: 'fish-corner' }, this.tally, this.company, this.supplies.orders),
+      h('div', { class: 'fish-corner' }, this.tally, this.golden, this.company, this.supplies.orders),
       h('div', { class: 'fish-top-right' }, this.supplies.shopBtn, h('button', { type: 'button', class: 'fish-exit', onClick: onExit }, 'Về bờ')),
       this.supplies.shop,
       this.gauge.root,
@@ -115,6 +122,17 @@ export class FishingPanel {
     this.tally.textContent = count ? `${count} con · +${teu} TEU` : '';
   }
 
+  /** Banner Giờ cá vàng: đang mở thì đếm ngược tới lúc đóng, sắp mở (dưới 10 phút) thì báo trước. */
+  setGolden({ on, endsIn, startsIn }, streak = 0) {
+    const soon = !on && startsIn <= 10 * 60_000;
+    const parts = [];
+    if (on) parts.push(`Giờ cá vàng ×${GOLDEN_HOUR.teuFactor} TEU · còn ${mmss(endsIn)}`);
+    else if (soon) parts.push(`Giờ cá vàng sau ${mmss(startsIn)}`);
+    if (streak >= 2) parts.push(`Chuỗi câu đẹp ${streak}`);
+    this.golden.textContent = parts.join(' · ');
+    this.golden.classList.toggle('on', on);
+  }
+
   setCompany(names) {
     const shown = names.slice(0, 3).join(', ');
     const more = names.length > 3 ? ` +${names.length - 3}` : '';
@@ -125,8 +143,12 @@ export class FishingPanel {
     this.catchEl.hidden = true;
   }
 
-  showCatch({ fish, teu, isNew, record, species, milestone, grade, orderDone }) {
+  showCatch({ fish, teu, isNew, record, species, milestone, grade, orderDone, bonus }) {
+    const streak = bonus?.streak ?? 0;
     const notes = [
+      bonus?.trophy ? `Cá khủng ×${TROPHY.teuFactor}` : '',
+      bonus?.golden ? `Giờ cá vàng ×${GOLDEN_HOUR.teuFactor}` : '',
+      streakBonus(streak) ? `Chuỗi ${streak} +${streakBonus(streak)}` : '',
       orderDone ? `Xong đơn bếp chùa +${orderDone.teu} TEU` : '',
       isNew ? `Sổ cá ${species}/${FISH.length}` : '',
       record ? 'Kỷ lục mới' : '',
@@ -139,6 +161,7 @@ export class FishingPanel {
     art.innerHTML = fishPortraitSvg(fish.id);
     this.catchEl.replaceChildren(
       isNew ? h('span', { class: 'fish-catch-new' }, 'Loài mới') : '',
+      !isNew && bonus?.trophy ? h('span', { class: 'fish-catch-new trophy' }, 'Cá khủng') : '',
       art,
       h('span', { class: 'fish-catch-stars' }, '★'.repeat(fish.rarity)),
       h('b', {}, fish.name),
