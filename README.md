@@ -118,6 +118,16 @@ Bàn xì dách ở sân trước thiền đường, phía đông trục chính. 
 - **Nhà cái:** rút khi dưới 17 và rút tiếp khi 17–18 có Át đang tính 10/11. Nhà cái lợi chút ít nên chơi lâu TEU vẫn hao; bảng tuần tính lãi/lỗ ròng như bầu cua.
 - Bài người khác úp tới lúc chấm. Chi tiết, con số mô phỏng và giao thức xem `docs/xidach.md`.
 
+## Tài xỉu và cò quay
+
+Hai bàn ngay sau bầu cua và xì dách, phía thiền đường: tài xỉu phía tây, cò quay phía đông. Bấm **Chơi gì?** rồi chọn bàn, hoặc đứng quanh bàn bấm **E**.
+
+- **Ngồi vào là thấy bàn:** góc máy hạ xuống ngang tầm mắt, nhà cái đối diện. Rê chuột lên mặt bạt thì ô sáng, bấm (hoặc chạm) là đặt chip vào ô đó. Chọn chip 1/5/10 ở dải dưới đáy; **Rút cược** hoàn đủ khi còn đang nhận cược.
+- **Ai cược to nhất được tung:** hết giờ cược, người đặt nhiều TEU nhất ván có 5 giây: **giữ chuột hoặc Space** để lấy đà, **thả ra** là tung xúc xắc hoặc búng bi. Không kịp thì bàn tự tung. Lực tung chỉ đổi cách bay, kết quả server bốc.
+- **Tài xỉu:** ba viên. Xỉu 4–10, Tài 11–17 ăn 1 ăn 1; ra bộ ba thì cả hai thua. Bão (bộ ba bất kỳ) ăn 1 ăn 30, tối đa 3 TEU. Phím **1–3**: Xỉu, Tài, Bão.
+- **Cò quay:** bánh xe châu Âu 0–36. Số đơn ăn 35 (tối đa 5 TEU một số), tá ăn 2, đỏ/đen/chẵn/lẻ/nhỏ/lớn ăn 1; ra 0 thì cửa ngoài thua. Phím **1–4**: Đỏ, Đen, Chẵn, Lẻ.
+- Tối đa 50 TEU một ván. Nhà cái lợi chút ít (2,7–2,8%, riêng Bão 13,9%) nên chơi lâu TEU vẫn hao; bảng tuần tính lãi/lỗ ròng như bầu cua. Chi tiết và giao thức xem `docs/taixiu-coquay.md`.
+
 ## Câu cá
 
 Bấm nút **Chơi gì?** ở góc trên rồi chọn **Câu cá**, hoặc tự đi tới bờ hồ góc đông nam sân. Không tốn gì, ai đứng bờ nào cũng thấy nhau câu. Bấm **Về bờ**, **Esc** hoặc phím đi để rời hồ.

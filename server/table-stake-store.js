@@ -1,15 +1,15 @@
-// Tiền cược của các bàn đỏ đen (bầu cua, xì dách) trên cùng kết nối SQLite với Db: giữ tiền cược, trả thưởng, hoàn cược.
+// Tiền cược của các bàn đỏ đen (bầu cua, xì dách, tài xỉu, cò quay) trên cùng kết nối SQLite với Db: giữ tiền cược, trả thưởng, hoàn cược.
 // Số dư nằm ở players.teu, mọi lần cộng/trừ ghi vào teu_log với lý do "<trò>:bet|return|win".
 // Cược chưa chấm còn ghi ở bảng <trò>_pending: server sập giữa ván thì lần khởi động sau hoàn lại, không ai mất TEU oan.
 // Mọi thao tác nằm trong transaction nên TEU không bao giờ âm và không bị trừ hay hoàn hai lần.
 
 /** Các trò dùng kho này. Tên trò là tiền tố lý do trong teu_log; bảng tuần tính lãi/lỗ ròng theo tiền tố này. */
-export const TABLE_GAMES = ['baucua', 'xidach'];
+export const TABLE_GAMES = ['baucua', 'xidach', 'taixiu', 'coquay'];
 
 export class TableStakeStore {
   /**
    * @param {import('better-sqlite3').Database} sqlite
-   * @param {'baucua'|'xidach'} game tên trò, đồng thời là tên bảng giữ tiền (<trò>_pending)
+   * @param {'baucua'|'xidach'|'taixiu'|'coquay'} game tên trò, đồng thời là tên bảng giữ tiền (<trò>_pending)
    */
   constructor(sqlite, game) {
     if (!TABLE_GAMES.includes(game)) throw new Error(`Trò không có trong TABLE_GAMES: ${game}`);
