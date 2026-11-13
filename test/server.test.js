@@ -932,6 +932,39 @@ test('Tấu nhạc qua socket: giữ sân, chặn hoạt động khác và huỷ
   a.disconnect();
 });
 
+test('quà nhập môn: người mới được tặng TEU đúng một lần, người cũ không, không tính vào bảng tuần', async () => {
+  const fresh = 'a1'.repeat(16);
+  const veteran = 'b2'.repeat(16);
+  const { Db } = await import('../server/db.js');
+  const { TEU } = await import('../shared/protocol.js');
+  await withServer({}, async ({ connectAs, base }) => {
+    const a = await connectAs('10.0.0.1');
+    const first = await call(a, 'hello', { name: 'Khách Mới', color: 0, playerId: fresh });
+    assert.deepEqual([first.ok, first.snapshot.teu, first.snapshot.welcomeGift], [true, TEU.welcomeGift, TEU.welcomeGift]);
+    a.disconnect();
+
+    // Vào lại (tab mới, đổi cả tên) không được tặng thêm.
+    const a2 = await connectAs('10.0.0.1');
+    const again = await call(a2, 'hello', { name: 'Đổi Tên', color: 0, playerId: fresh });
+    assert.deepEqual([again.snapshot.teu, again.snapshot.welcomeGift], [TEU.welcomeGift, 0]);
+
+    // Người đã có trong DB từ trước: không phải người mới.
+    const c = await connectAs('10.0.0.3');
+    const old = await call(c, 'hello', { name: 'Khách Cũ', color: 0, playerId: veteran });
+    assert.deepEqual([old.snapshot.teu, old.snapshot.welcomeGift], [5, 0]);
+
+    const weekly = await (await fetch(`${base}/api/weekly`, { headers: { 'x-player-id': fresh } })).json();
+    assert.deepEqual(weekly.teu.map((r) => [r.name, r.teu]), [['Khách Cũ', 5]], 'quà không đẩy người mới lên bảng');
+    a2.disconnect();
+    c.disconnect();
+  }, (dbPath) => {
+    const db = new Db(dbPath);
+    db.touchPlayer({ id: veteran, name: 'Khách Cũ', color: 0, hat: 7, now: Date.now(), isVisit: true });
+    db.addTeu(veteran, 5, 'seed', localDate(Date.now(), example.timezone));
+    db.close();
+  });
+});
+
 test('cửa hàng qua socket: món chưa mua bị gỡ khi vào, mua bằng TEU, tủ đồ phát cho cả phòng', async () => {
   const pid = 'f'.repeat(32);
   const { Db } = await import('../server/db.js');

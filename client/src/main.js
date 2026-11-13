@@ -245,6 +245,7 @@ function main() {
       app.follow.yaw = 0;
       app.follow.look.copy(app.follow.target);
       if (snap.welcome) hud.toast(snap.welcome, { ms: 6500 });
+      if (snap.welcomeGift) hud.toast(`🎁 Quà nhập môn: bạn được tặng ${snap.welcomeGift} TEU`, { ms: 6500 });
       showTutorial(store, isTouch);
       nudgePlacesMenu();
     }

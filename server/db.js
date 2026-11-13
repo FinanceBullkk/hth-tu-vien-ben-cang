@@ -212,7 +212,7 @@ export class Db {
       teuBump: p('UPDATE players SET teu=teu+@amount WHERE id=@pid'),
       teuWeekTop: p(`SELECT t.player_id, pl.name, SUM(t.amount) teu FROM teu_log t
         JOIN players pl ON pl.id = t.player_id
-        WHERE t.local_date >= @since AND (t.amount > 0 ${TABLE_GAMES.map((g) => `OR t.reason LIKE '${g}:%'`).join(' ')})
+        WHERE t.local_date >= @since AND t.reason <> 'welcome' AND (t.amount > 0 ${TABLE_GAMES.map((g) => `OR t.reason LIKE '${g}:%'`).join(' ')})
         GROUP BY t.player_id HAVING teu > 0 ORDER BY teu DESC, pl.name LIMIT 10`),
       // Cá: log từng con + tổng hợp bộ sưu tập.
       fishLogInsert: p(`INSERT INTO fish_log (player_id,fish_id,weight,grade,local_date,created_at)

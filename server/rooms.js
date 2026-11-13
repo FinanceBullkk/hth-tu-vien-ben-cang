@@ -1,7 +1,7 @@
 // Phòng chung duy nhất: người online, gói vị trí 20 lần/giây, chat, emoji, vẫy tay, kết nối lại.
 import crypto from 'node:crypto';
 import { MATS, SPAWN, clampToWalkable } from '../shared/layout.js';
-import { ACTIVITY, ACTIVITY_BY_NAME, AVATAR, EMOJIS, LIMITS, MOTION, PLAYER_ID_RE } from '../shared/protocol.js';
+import { ACTIVITY, ACTIVITY_BY_NAME, AVATAR, EMOJIS, LIMITS, MOTION, PLAYER_ID_RE, TEU } from '../shared/protocol.js';
 import { LOOK_SLOTS, sanitizeLook } from '../shared/shop.js';
 import { cleanText } from './filter.js';
 import { WindowCounter, clientIp } from './limits.js';
@@ -356,7 +356,10 @@ export class Room {
     socket.join(PLAYERS_ROOM);
 
     const date = localDate(now, this.config.timezone);
+    // Chưa có dòng trong DB tức là lần đầu vào: tặng quà nhập môn đúng một lần (join chạy đồng bộ nên không bị cấp đôi).
+    const isNewcomer = !this.db.playerRow(pid);
     this.db.touchPlayer({ id: pid, name: player.name, color: player.color, hair: player.hair, hat: player.hat, attire: player.attire, weapon: player.weapon, effect: player.effect, now, isVisit: !isResume });
+    if (isNewcomer) this.db.addTeu(pid, TEU.welcomeGift, 'welcome', date, now);
     player.cultivationTier = this.db.cultivation(pid).tier;
     player.qi = Math.floor((this.db.playerRow(pid)?.cultivation_ms ?? 0) / QI_INTERVAL_MS);
     if (!isResume) {
@@ -387,6 +390,7 @@ export class Room {
         fishShadowsTaken: this.fishing.takenShadowIds(),
         owned: [...owned],
         teu: this.db.shop.teu(pid),
+        welcomeGift: isNewcomer ? TEU.welcomeGift : 0,
         baucua: this.baucua.snapshot(pid),
         xidach: this.xidach.snapshot(pid),
         dayCycleMs: (this.config.dayCycleMinutes || 20) * 60_000,
