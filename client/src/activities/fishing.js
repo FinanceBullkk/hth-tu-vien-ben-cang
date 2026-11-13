@@ -34,7 +34,10 @@ export class FishingActivity {
       onRelease: () => this.release(),
       onBait: (id) => this.setBait(id),
       onExit: () => app.activities.exit(),
+      onBuy: (item) => this.buy(item),
+      onThinh: () => this.toggleThinh(),
     });
+    this.useThinh = false;
     const phase = { app, panel: this.panel, lines: this.lines };
     this.aiming = new FishingAimPhase(phase);
     this.fighting = new FishingFightPhase({ ...phase, onFull: () => this.reel() });
@@ -53,6 +56,7 @@ export class FishingActivity {
     this.panel.setTally(0, 0);
     this.aiming.reset();
     this.aim();
+    this.loadSupplies();
     if (app.chat.open) app.chat.close();
     const { me, world, follow } = app;
     me.rot = Math.atan2(LAKE.x - me.x, LAKE.z - me.z);
@@ -65,6 +69,44 @@ export class FishingActivity {
     this.state = 'aim';
     this.pressing = false;
     this.aiming.enter(message, this.total);
+  }
+
+  /** Cần đang dùng, số thính, đơn hôm nay: hỏi server mỗi lần ra hồ. */
+  async loadSupplies() {
+    const generation = this.generation;
+    const info = await this.app.net.call('fish:gear').catch(() => null);
+    if (generation !== this.generation || !info?.ok) return;
+    this.applySupplies(info);
+  }
+
+  applySupplies(info) {
+    const { panel, app } = this;
+    panel.supplies.apply(info);
+    if (Number.isFinite(info.teu)) app.wallet.apply({ teu: info.teu });
+    if (info.rod != null) app.world.fishing.setRodTier(app.sid, info.rod);
+    if (!panel.supplies.state.thinh) this.useThinh = false;
+    panel.supplies.setThinh(this.useThinh);
+  }
+
+  toggleThinh() {
+    if (!this.panel.supplies.state.thinh) return;
+    this.useThinh = !this.useThinh;
+    this.panel.supplies.setThinh(this.useThinh);
+    this.app.audio.tick();
+  }
+
+  async buy(item) {
+    const { app } = this;
+    const res = await app.net.call('fish:buy', { item }).catch(() => null);
+    if (res?.rod != null) {
+      // Vừa mua thính thì bật luôn cho lần quăng tới: mua là để dùng.
+      if (res.ok && item === 'thinh') this.useThinh = true;
+      this.applySupplies(res);
+    }
+    if (res?.ok) {
+      app.audio.chime(0.05);
+      app.hud.toast(item === 'thinh' ? 'Đã mua thính, lần quăng tới sẽ rắc.' : 'Đã thay cần mới!');
+    } else app.hud.toast(res?.error || 'Chưa mua được, thử lại nhé.');
   }
 
   setBait(id) {
@@ -113,12 +155,13 @@ export class FishingActivity {
     app.world.fishing.setAim(null);
     app.me.rot = Math.atan2(bx - app.me.x, bz - app.me.z);
     app.audio.rodCast();
-    const res = await app.net.call('fish:cast', { tx: bx, tz: bz, bait: this.bait }).catch(() => null);
+    const res = await app.net.call('fish:cast', { tx: bx, tz: bz, bait: this.bait, thinh: this.useThinh }).catch(() => null);
     if (generation !== this.generation) return;
     if (!res?.ok) {
       this.aim(res?.error ?? 'Chưa thả được, thử lại nhé');
       return;
     }
+    if (res.thinh) this.applySupplies({ thinh: res.thinhLeft });
     this.state = 'waiting';
     this.panel.mode('waiting');
     const waiting = this.lines.waiting(this.total);
@@ -163,6 +206,8 @@ export class FishingActivity {
     this.total = noteCatch();
     this.panel.setTally(this.caught, this.earned);
     this.panel.showCatch(res);
+    if (res.orders) this.panel.supplies.apply({ orders: res.orders });
+    if (res.orderDone) app.audio.chime(0.08);
     app.audio.splash(1);
     app.audio.chime(0.06);
     buzz([60, 40, 90]);

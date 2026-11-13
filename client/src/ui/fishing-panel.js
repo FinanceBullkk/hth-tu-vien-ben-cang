@@ -4,6 +4,7 @@ import { BAITS, FISH, fishForBait } from '../../../shared/fish.js';
 import { $, h } from './dom.js';
 import { fishPortraitSvg } from './fish-portrait.js';
 import { FishingArcGauge } from './fishing-arc-gauge.js';
+import { FishingSuppliesView } from './fishing-supplies.js';
 
 const NEEDLE_SPAN_PX = 520; // quãng kéo tương ứng toàn bộ vòng cung
 const BAIT_NOTE_MS = 3500;
@@ -12,8 +13,9 @@ const CATCH_MS = 4600;
 const pointerOf = (e) => ({ x: e.clientX, y: e.clientY, clientX: e.clientX, touch: e.pointerType === 'touch' });
 
 export class FishingPanel {
-  constructor({ onPress, onMove, onRelease, onBait, onExit }) {
+  constructor({ onPress, onMove, onRelease, onBait, onExit, onBuy, onThinh }) {
     this.gauge = new FishingArcGauge();
+    this.supplies = new FishingSuppliesView({ onBuy, onThinh });
     this.tally = h('p', { class: 'fish-tally' });
     this.company = h('p', { class: 'fish-company' });
     this.hint = h('p', { class: 'fish-hint', role: 'status' });
@@ -24,11 +26,12 @@ export class FishingPanel {
       onClick: () => { onBait(bait.id); this.root.focus({ preventScroll: true }); },
     }, bait.name.replace('Mồi ', ''))]));
     this.baits = h('div', { class: 'fish-baits', role: 'group', 'aria-label': 'Chọn mồi' },
-      h('span', {}, 'Mồi'), ...this.baitButtons.values());
+      h('span', {}, 'Mồi'), ...this.baitButtons.values(), this.supplies.thinhBtn);
 
     this.root = h('section', { class: 'fish-hud', hidden: true, tabIndex: -1, 'aria-label': 'Câu cá ở hồ' },
-      h('div', { class: 'fish-corner' }, this.tally, this.company),
-      h('button', { type: 'button', class: 'fish-exit', onClick: onExit }, 'Về bờ'),
+      h('div', { class: 'fish-corner' }, this.tally, this.company, this.supplies.orders),
+      h('div', { class: 'fish-top-right' }, this.supplies.shopBtn, h('button', { type: 'button', class: 'fish-exit', onClick: onExit }, 'Về bờ')),
+      this.supplies.shop,
       this.gauge.root,
       this.catchEl,
       h('div', { class: 'fish-dock' }, this.baitNote, this.hint, this.baits),
@@ -36,14 +39,14 @@ export class FishingPanel {
     $('rhythmLayer').append(this.root);
 
     this.root.addEventListener('pointerdown', (e) => {
-      if (e.target.closest('button')) return;
+      if (e.target.closest('button, .fish-shop')) return;
       this.root.setPointerCapture(e.pointerId);
       this.root.focus({ preventScroll: true });
       onPress(pointerOf(e));
     });
     this.root.addEventListener('pointermove', (e) => onMove(pointerOf(e)));
     this.root.addEventListener('pointerup', (e) => {
-      if (!e.target.closest('button')) onRelease();
+      if (!e.target.closest('button, .fish-shop')) onRelease();
     });
     this.root.addEventListener('pointercancel', () => {});
     this.root.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -73,6 +76,7 @@ export class FishingPanel {
   }
 
   hide() {
+    this.supplies.toggleShop(false);
     clearTimeout(this.catchTimer);
     clearTimeout(this.noteTimer);
     clearTimeout(this.hintTimer);
@@ -121,8 +125,9 @@ export class FishingPanel {
     this.catchEl.hidden = true;
   }
 
-  showCatch({ fish, teu, isNew, record, species, milestone, grade }) {
+  showCatch({ fish, teu, isNew, record, species, milestone, grade, orderDone }) {
     const notes = [
+      orderDone ? `Xong đơn bếp chùa +${orderDone.teu} TEU` : '',
       isNew ? `Sổ cá ${species}/${FISH.length}` : '',
       record ? 'Kỷ lục mới' : '',
       milestone ? `Đủ ${milestone.count} loài, thưởng ${milestone.teu} TEU` : '',

@@ -1,5 +1,6 @@
 // Câu cá ở hồ trong sân, dùng chung client + server: danh mục cá, mồi, roll loài và mô phỏng pha giằng co.
 // Cùng một hàm mô phỏng: client vẽ cho mượt, server tính thật và quyết định đầy hay tuột.
+import { THINH, rodOf } from './fish-gear.js';
 import { LAKE, lakeDistance } from './layout.js';
 
 export const FISH_BITE = {
@@ -122,9 +123,10 @@ export function castSpot(x, z, tx, tz) {
   return spotAt(ux, uz, Math.min(toLake, 5.5));
 }
 
-/** Roll loài + cân nặng deterministic. Mồi đúng, bóng to và đúng giờ làm tăng tỉ lệ. */
-export function fishRoll(castAt, salt = 0, { bait = DEFAULT_BAIT, shadow = null, night = false } = {}) {
-  const bias = SHADOW_BIAS[shadow ?? 'none'];
+/** Roll loài + cân nặng deterministic. Mồi đúng, bóng to, đúng giờ và có rắc thính làm tăng tỉ lệ. */
+export function fishRoll(castAt, salt = 0, { bait = DEFAULT_BAIT, shadow = null, night = false, thinh = false } = {}) {
+  const shadowBias = SHADOW_BIAS[shadow ?? 'none'];
+  const bias = thinh ? Object.fromEntries(Object.entries(shadowBias).map(([r, v]) => [r, v * THINH.rareBias[r]])) : shadowBias;
   const period = night ? 'night' : 'dusk';
   const rand = lcg((Math.imul(castAt, 2246822519) ^ Math.imul(salt + 1, 3266489917)) >>> 0);
   const weightOf = (f) => (f.time && f.time !== period ? 0 : RARITY_WEIGHT[f.rarity])
@@ -151,16 +153,22 @@ export const fightSeed = (castAt, salt = 0) => (Math.imul(castAt, 2654435761) ^ 
 /**
  * Thông số giằng co của một con cá. assist là chế độ cho người mới: vùng xanh rộng hơn, chạy chậm hơn,
  * đầy nhanh và tụt rất chậm, để những con cá đầu tiên gần như chắc chắn về tay.
+ * rod: bậc cần câu (shared/fish-gear.js), cần xịn thì vùng xanh rộng hơn và tụt chậm hơn.
  */
-export function fightTune(rarity, assist = false) {
+export function fightTune(rarity, assist = false, rod = 0) {
   const base = FISH_FIGHT.byRarity[rarity];
-  if (!assist) return base;
-  return { half: base.half * 1.35, speed: base.speed * 0.75, gain: base.gain * 1.3, drain: base.drain * 0.35 };
+  const gear = rodOf(rod);
+  const tune = assist
+    ? { half: base.half * 1.35, speed: base.speed * 0.75, gain: base.gain * 1.3, drain: base.drain * 0.35 }
+    : { ...base };
+  tune.half = Math.min(0.32, tune.half * gear.half);
+  tune.drain *= gear.drain;
+  return tune;
 }
 
 /** Tâm vùng xanh 0..1 theo thời gian: hai lớp sóng chậm, hạt giống riêng cho từng con cá. */
-export function fightGreen(elapsedMs, seed, rarity, assist = false) {
-  const { half, speed } = fightTune(rarity, assist);
+export function fightGreen(elapsedMs, seed, rarity, assist = false, rod = 0) {
+  const { half, speed } = fightTune(rarity, assist, rod);
   const t = (Math.max(0, elapsedMs) / 1000) * speed;
   const p1 = (seed % 6283) / 1000;
   const p2 = ((seed >>> 9) % 6283) / 1000;
@@ -168,17 +176,17 @@ export function fightGreen(elapsedMs, seed, rarity, assist = false) {
   return half + ((wave + 1) / 2) * (1 - 2 * half);
 }
 
-export function fightNew({ seed, rarity, startAt, assist = false }) {
-  return { seed, rarity, assist, startAt, at: startAt, progress: FISH_FIGHT.startProgress, inMs: 0, totalMs: 0 };
+export function fightNew({ seed, rarity, startAt, assist = false, rod = 0 }) {
+  return { seed, rarity, assist, rod, startAt, at: startAt, progress: FISH_FIGHT.startProgress, inMs: 0, totalMs: 0 };
 }
 
 /** Tích phân tiến độ tới nowMs với kim đứng ở needle; dừng ngay khi đầy hoặc cạn. */
 export function fightAdvance(fight, needle, nowMs, slack = 0) {
-  const { half, gain, drain } = fightTune(fight.rarity, fight.assist);
+  const { half, gain, drain } = fightTune(fight.rarity, fight.assist, fight.rod);
   const { stepMs } = FISH_FIGHT;
   while (fight.at + stepMs <= nowMs && fight.progress > 0 && fight.progress < 1) {
     fight.at += stepMs;
-    const center = fightGreen(fight.at - fight.startAt, fight.seed, fight.rarity, fight.assist);
+    const center = fightGreen(fight.at - fight.startAt, fight.seed, fight.rarity, fight.assist, fight.rod);
     const inZone = Math.abs(needle - center) <= half + slack;
     fight.progress = clamp01(fight.progress + ((inZone ? gain : -drain) * stepMs) / 1000);
     fight.totalMs += stepMs;

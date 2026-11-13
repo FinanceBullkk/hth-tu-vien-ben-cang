@@ -5,7 +5,7 @@ import { LAKE } from '../../../shared/layout.js';
 import { CatchShows } from './fishing-catch-show.js';
 import { buildLake } from './fishing-lake.js';
 import { LakeShadows } from './fishing-lake-shadows.js';
-import { makeRodRig, updateRodRig } from './fishing-rod-rig.js';
+import { makeRodRig, setRigTier, updateRodRig } from './fishing-rod-rig.js';
 import { WaterEffects } from './fishing-water-effects.js';
 
 const AIM_IDLE = 0xf0dcae;
@@ -58,7 +58,7 @@ export class FishingScene {
   }
 
   /** Bật/tắt bộ cần câu của một người. Có bx, bz là đã quăng; không có thì chỉ cầm cần trên tay. */
-  setRod(sid, { x, z, on, bx, bz }) {
+  setRod(sid, { x, z, on, bx, bz, tier }) {
     let rig = this.rods.get(sid);
     if (!on) {
       if (rig) {
@@ -75,6 +75,7 @@ export class FishingScene {
     }
     const data = rig.userData;
     data.anchor = { x, z };
+    if (tier != null) setRigTier(rig, tier);
     // Cần luôn chĩa ra phía phao; chưa quăng thì chĩa về tâm hồ.
     const tx = bx ?? LAKE.x;
     const tz = bz ?? LAKE.z;
@@ -89,6 +90,19 @@ export class FishingScene {
     }
     if (!data.cast) data.castT = 0;
     Object.assign(data, { cast: true, bx, bz });
+  }
+
+  setRodTier(sid, tier) {
+    const rig = this.rods.get(sid);
+    if (rig) setRigTier(rig, tier);
+  }
+
+  /** Rắc thính: mặt nước quanh phao sủi vài vòng sóng nhỏ. */
+  sprinkle(x, z) {
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * Math.PI * 2;
+      this.effects.ripple(x + Math.sin(a) * 0.45, z + Math.cos(a) * 0.45, 0.5, 0.6);
+    }
   }
 
   /** Cá của người này vừa cắn: phao quẫy cho tới khi hết lượt, cả phòng đều thấy. rarity: cỡ bóng cá dưới phao. */
