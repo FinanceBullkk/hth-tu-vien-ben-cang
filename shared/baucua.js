@@ -21,6 +21,7 @@ export const BAUCUA = {
   rollMs: 2_000, // Xóc đĩa; trong lúc này không nhận cược nữa.
   resultMs: 3_000, // Giữ kết quả trên bàn; cược tiếp trong lúc này là mở ván mới ngay.
   betIntervalMs: 120, // Giãn cách tối thiểu giữa hai lần đặt cược của một người.
+  historySize: 12, // Số ván gần nhất gửi kèm trạng thái bàn để vẽ dải lịch sử.
 };
 
 export const PHASES = ['idle', 'betting', 'rolling', 'result'];

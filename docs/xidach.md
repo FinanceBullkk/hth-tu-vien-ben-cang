@@ -76,6 +76,10 @@ Hello trả thêm `snapshot.xidach` (kèm `mine` là ghế, tiền cược và b
   nhà cái đẩy chip thưởng sang người thắng.
 - Nặn bài (`ui/xidach-cards.js`): chia hai lá thì lá đầu ngửa, lá thứ hai úp; lá rút thêm ngửa luôn. Kéo lá úp lên thì hé dần từ dưới lên, quá 60% thì lật hẳn, chạm một cái
   cũng lật. Điểm hiện "Nặn bài" tới khi nặn xong; bàn 3D chỉ ngửa những lá đã thấy. Tới lúc xét thì tự lật hết.
+- Đang chơi thì camera khoá góc nhìn bàn từ phía khách, thấy nhà cái và mặt dạ (`activities/table-camera-shot.js`).
+- Bảng chơi (`ui/xidach-panel.js`) cùng khung với bầu cua: vòng đếm ngược to ở đầu bảng, pha và lượt ai, bài nhà cái thu nhỏ;
+  lúc nhận cược đáy bảng là chip, **Rút cược**, **Cược lại** (tách tiền ván trước thành các chip, gửi lần lượt); lúc chơi là
+  hai nút lớn **Rút bài** / **Dằn**, chỉ sáng khi tới lượt mình. Chữ báo giữa màn hình: "Đặt cược!", "Chia bài", "Tới lượt bạn".
 - Bảng chơi: vòng giờ vàng chạy quanh ô người đang tới lượt (và quanh dòng "Bạn"), ô ghế khác hiện "chờ lượt / đang rút / đã dằn",
   nháy xanh khi họ rút, đỏ khi họ dằn; dấu mộc đóng lên ô khi được xét; tiếng chuông nhỏ khi tới lượt mình.
 
