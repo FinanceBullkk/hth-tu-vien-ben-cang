@@ -19,13 +19,54 @@ test('a machine that had to lower quality starts there next time, same GPU only,
   assert.equal(startQualityLevel(null, 'Intel UHD 620', now), 2);
 });
 
-test('quality that starts lowered keeps lowering from there, never back up', () => {
+test('quality that starts lowered keeps lowering on a slow machine and stays at minimum', () => {
   const changes = [];
   const quality = new AdaptiveQuality((level) => changes.push(level), 1);
   for (let i = 0; i < 800; i++) quality.update(1 / 40);
   assert.deepEqual(changes, [0]);
   const floor = new AdaptiveQuality(() => assert.fail('already at minimum'), 0);
-  for (let i = 0; i < 800; i++) floor.update(1 / 20);
+  for (let i = 0; i < 2000; i++) floor.update(1 / 20);
+});
+
+/** Chạy n giây ở fps cho trước. */
+const run = (quality, fps, seconds) => {
+  for (let i = 0; i < fps * seconds; i++) quality.update(1 / fps);
+};
+
+test('a machine that was only busy for a while climbs back to high after 30 smooth seconds per level', () => {
+  const changes = [];
+  const quality = new AdaptiveQuality((level) => changes.push(level), 0);
+  run(quality, 60, 30);
+  assert.deepEqual(changes, [], 'not before 30 smooth seconds');
+  run(quality, 60, 10);
+  assert.deepEqual(changes, [1]);
+  run(quality, 60, 40);
+  assert.deepEqual(changes, [1, 2]);
+  run(quality, 144, 300);
+  assert.deepEqual(changes, [1, 2], 'never above the automatic maximum');
+});
+
+test('middling or hitchy FPS does not count as smooth', () => {
+  const quality = new AdaptiveQuality(() => assert.fail('unexpected upgrade'), 1);
+  run(quality, 50, 120);
+  for (let s = 0; s < 120; s++) {
+    run(quality, 60, 1);
+    quality.update(0.5); // Khựng mỗi giây: chưa mượt thật.
+  }
+  assert.equal(quality.level, 1);
+});
+
+test('an upgrade that cannot hold waits twice as long before the next try', () => {
+  const changes = [];
+  const quality = new AdaptiveQuality((level) => changes.push(level), 1);
+  run(quality, 60, 35); // 4 giây khởi động + 30 giây mượt.
+  assert.deepEqual(changes, [2]);
+  run(quality, 40, 10); // Mức Cao không chịu nổi: hạ lại ngay.
+  assert.deepEqual(changes, [2, 1]);
+  run(quality, 60, 40);
+  assert.deepEqual(changes, [2, 1], 'second try needs 60 smooth seconds, not 30');
+  run(quality, 60, 30);
+  assert.deepEqual(changes, [2, 1, 2]);
 });
 
 test('shader programs survive their last material being disposed', () => {

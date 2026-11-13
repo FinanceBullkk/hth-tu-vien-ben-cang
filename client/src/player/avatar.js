@@ -10,6 +10,7 @@ import { createEffect } from './avatar-effect.js';
 import { applyAvatarTitle } from './avatar-title.js';
 import { createCultivation } from './avatar-cultivation.js';
 import { CultivationAura } from './cultivation-aura.js';
+import { disposeMergedMeshes, mergeStaticMeshes } from '../scene/static-mesh-merge.js';
 
 const G = {
   body: new THREE.CylinderGeometry(0.17, 0.25, 0.5, 8),
@@ -234,6 +235,8 @@ function buildLook(hat, hair, color) {
   const style = hat <= 2 ? hat : hair;
   if (hat !== 6) g.add(buildHair(style));
   if (hat >= 3) g.add(buildHat(hat, color, style));
+  // Tóc và mũ không có mảnh nào cử động riêng: gộp lại, mỗi nhân vật bớt 1-6 lần vẽ.
+  mergeStaticMeshes(g);
   return g;
 }
 
@@ -391,6 +394,7 @@ export class Avatar {
       }
     }
     this.head.remove(this.hatGroup);
+    disposeMergedMeshes(this.hatGroup);
     this.hairIndex = hair;
     this.hatGroup = buildLook(hat, hair, color);
     this.head.add(this.hatGroup);
@@ -682,6 +686,7 @@ export class Avatar {
       if (o.isMesh && o !== this.halo && o.material.transparent) o.material.dispose();
     });
     if (this.aura.points) this.aura.dispose();
+    disposeMergedMeshes(this.hatGroup);
     if (this.combatSword) {
       this.armR.remove(this.combatSword);
       this.combatSword.traverse((o) => {
