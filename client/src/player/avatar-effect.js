@@ -19,6 +19,7 @@ import { createTinhHaAura } from './vfx/tinh-ha-aura.js';
 import { createLuuLyAura } from './vfx/luu-ly-aura.js';
 import { createDaoHoaAura } from './vfx/dao-hoa-aura.js';
 import { createHongLienAura } from './vfx/hong-lien-aura.js';
+import { createNguyetBachAura } from './vfx/nguyet-bach-aura.js';
 import { createAuraSignature } from './aura-signature.js';
 import { store } from '../ui/dom.js';
 
@@ -335,29 +336,6 @@ function leafTexture() {
       ctx.lineTo(44, y + 8);
       ctx.stroke();
     }
-  });
-}
-
-// Trăng lưỡi liềm: khoét đĩa trăng rồi vẽ quầng mềm phía sau (destination-over).
-function moonTexture() {
-  return canvasTex('moon', 128, 128, (ctx) => {
-    ctx.fillStyle = 'rgba(255,255,255,1)';
-    ctx.beginPath();
-    ctx.arc(64, 64, 40, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.beginPath();
-    ctx.arc(82, 54, 38, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalCompositeOperation = 'destination-over';
-    const halo = ctx.createRadialGradient(64, 64, 20, 64, 64, 62);
-    halo.addColorStop(0, 'rgba(255,255,255,0.55)');
-    halo.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = halo;
-    ctx.beginPath();
-    ctx.arc(64, 64, 62, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalCompositeOperation = 'source-over';
   });
 }
 
@@ -716,30 +694,6 @@ function ringTexture() {
   });
 }
 
-// Ngân hà: các đám mây sao mờ + sao lấm tấm dày đặc (random có hạt giống cho giống nhau mỗi lần).
-function starfieldTexture() {
-  return canvasTex('starfield', 256, 256, (ctx) => {
-    let s = 7;
-    const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
-    for (let k = 0; k < 3; k++) {
-      const x = 40 + rnd() * 176, y = 40 + rnd() * 176;
-      const g = ctx.createRadialGradient(x, y, 2, x, y, 90);
-      g.addColorStop(0, 'rgba(255,255,255,0.16)');
-      g.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, 256, 256);
-    }
-    for (let k = 0; k < 150; k++) {
-      const x = rnd() * 256, y = rnd() * 256;
-      const big = rnd() > 0.92;
-      ctx.fillStyle = `rgba(255,255,255,${0.35 + rnd() * 0.65})`;
-      ctx.beginPath();
-      ctx.arc(x, y, big ? 1.4 + rnd() * 1.2 : 0.5 + rnd() * 0.9, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  });
-}
-
 // Vách khí kết giới: vệt khí dọc + vệt loang, tile ngang cho ống trụ bao người
 function domeTexture() {
   return canvasTex('dome', 256, 256, (ctx, w, h) => {
@@ -830,6 +784,8 @@ export function createEffect(effect, lowQuality = false) {
   if (effect === 5) return createDaoHoaAura(lowQuality, reducedMotion);
   // 4: Hồng Liên Hỏa Vũ có pháp tướng riêng (cánh chu tước giang ngang, phượng vĩ, sen lửa).
   if (effect === 4) return createHongLienAura(lowQuality, reducedMotion);
+  // 7: Nguyệt Bạch Tri Âm có pháp tướng riêng (trăng tròn lệch vai, cổ cầm ngân, gương nước).
+  if (effect === 7) return createNguyetBachAura(lowQuality, reducedMotion);
 
   const colors = PALETTES[effect - 1] ?? PALETTES[0];
   const group = new THREE.Group();
@@ -1221,113 +1177,6 @@ export function createEffect(effect, lowQuality = false) {
       }
       sparks.geo.attributes.position.needsUpdate = true;
       sparks.geo.attributes.color.needsUpdate = true;
-      updateGlyphs(glyphs, t);
-    };
-  } else if (effect === 7) {
-    // NGUYỆT BẠCH — trăng lưỡi liềm bạc treo sau vai phát quầng, dải sao bạc nghiêng quanh người,
-    // hai vòng bạc xoay nghịch quanh đầu, bụi trăng rơi lác đác, chân ngôn 月.
-    const motes = [];
-    const moteCount = lowQuality ? 4 : 8;
-    const dustCount = lowQuality ? 6 : 12;
-    const pool = sprite(glowTexture(), colors[0], 1.1, 1.1, 0, 0.04, 0, 0.22);
-    const mantra = flatMesh(runeRingTexture('rune-nguyet', '月'), colors[0], 1.35, 0.03, 0.55);
-    const counterRing = flatMesh(ringTexture(), colors[0], 1.05, 0.035, 0.32);
-
-    // vòm khí bạc: ống mỏng bao thân, dịu hơn các hiệu ứng lửa
-    const domeTex = domeTexture();
-    domeTex.wrapS = THREE.RepeatWrapping;
-    domeTex.wrapT = THREE.RepeatWrapping;
-    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
-      map: domeTex, color: colors[0], transparent: true, depthWrite: false,
-      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.1,
-    }), 0.1);
-    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.0, 1.95, 48, 1, true)), domeEntry.mat);
-    dome.position.y = 0.97;
-    group.add(dome);
-
-    // huyền nguyệt: quầng mềm ôm ngoài lưỡi liềm, treo sau gáy trên cao
-    const halo = sprite(glowTexture(), colors[1] ?? colors[0], 0.72, 0.72, 0, 2.02, -0.52, 0.3);
-    const moon = sprite(moonTexture(), 0xffffff, 0.46, 0.46, 0, 2.02, -0.51, 0.95);
-
-    // dải sao bạc nghiêng — chỉ một vành, khác Tinh hà có hai vành bắt chéo
-    const bandTilt = new THREE.Group();
-    bandTilt.position.set(0, 0.95, 0);
-    bandTilt.rotation.x = -Math.PI / 2 + 0.35;
-    group.add(bandTilt);
-    const band = new THREE.Mesh(track(new THREE.RingGeometry(0.58, 0.95, 64)), glowMat({
-      map: starfieldTexture(), color: colors[0], opacity: 0.45,
-    }), 0.45);
-    bandTilt.add(band);
-
-    // hai vòng bạc xoay nghịch quanh đầu
-    const mkRing = (size, col, base) => {
-      const mesh = new THREE.Mesh(track(new THREE.PlaneGeometry(size, size)), glowMat({
-        map: ringTexture(), color: col, opacity: base,
-      }), base);
-      mesh.position.set(0, 1.14, -0.3);
-      group.add(mesh);
-      return mesh;
-    };
-    const ring1 = mkRing(1.0, colors[0], 0.35);
-    const ring2 = mkRing(0.78, colors[1] ?? colors[0], 0.55);
-
-    // bụi trăng rơi từ trên cao
-    for (let i = 0; i < moteCount; i++) {
-      const entry = dynMat(() => new THREE.SpriteMaterial({
-        map: glowTexture(), color: colors[i % colors.length], transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, opacity: 0, rotation: ((i * 29) % 10) / 10 * 3,
-      }), 0);
-      const sp = new THREE.Sprite(entry.mat);
-      group.add(sp);
-      motes.push({ sp, entry, a0: (i / moteCount) * 6.283, r: 0.35 + ((i * 37) % 20) / 20 * 0.65, tw: ((i * 29) % 10) / 10, fall: 0.3 + ((i * 61) % 10) / 10 * 0.3 });
-    }
-
-    const dust = makeTwinkles(dustCount, 0.05, (i, n) => ({
-      a0: (i / n) * Math.PI * 2,
-      r: 0.3 + ((i * 37) % 20) / 20 * 0.24,
-      tw: ((i * 29) % 10) / 10,
-      speed: 0.5 + ((i * 61) % 10) / 10,
-    }), colors[1] ?? colors[0]);
-    const glyphs = makeGlyphs(lowQuality ? 3 : 6, 0.62);
-
-    variantUpdate = (t, walkAmt) => {
-      const boost = 1 + walkAmt * 0.6;
-      pool.scale.setScalar(1.1 * (1 + Math.sin(t * 1.5) * 0.06)); // vũng bạc thở
-      pool.scale.y = pool.scale.x;
-      mantra.rotation.z = -t * 0.2;
-      counterRing.rotation.z = t * 0.35;
-      band.rotation.z = t * 0.08; // dải sao trôi rất chậm
-      dome.rotation.y = t * 0.05;
-      domeTex.offset.y = -(t * 0.045) % 1;
-      domeEntry.base = 0.08 + 0.03 * (0.5 + 0.5 * Math.sin(t * 1.0));
-      // trăng bồng bềnh và quầng thở nhịp chậm
-      moon.position.y = 2.02 + Math.sin(t * 0.7) * 0.04;
-      halo.position.y = moon.position.y;
-      halo.scale.setScalar(0.72 * (1 + Math.sin(t * 0.9) * 0.05));
-      moon.material.rotation = Math.sin(t * 0.23) * 0.2; // lưỡi liềm lắc lư rất khẽ
-      ring1.rotation.z = t * 0.3;
-      ring2.rotation.z = -t * 0.7;
-      for (const mo of motes) {
-        const yn = (t * 0.09 * mo.fall + mo.tw) % 1; // bụi trăng rơi từ trời xuống
-        const a = mo.a0 + t * 0.07;
-        mo.sp.position.set(Math.cos(a) * mo.r + Math.sin(t + mo.tw * 9) * 0.04, 2.0 - yn * 1.9, Math.sin(a) * mo.r);
-        mo.sp.scale.setScalar(0.03 + mo.tw * 0.02);
-        mo.entry.base = Math.min(1, yn * 4, (1 - yn) * 4) * 0.45;
-      }
-      for (let i = 0; i < dustCount; i++) {
-        const st = dust.seeds[i];
-        const a = st.a0 + t * 0.35 * st.speed * boost;
-        dust.pos[i * 3] = Math.cos(a) * st.r;
-        dust.pos[i * 3 + 1] = 0.6 + Math.sin(a * 2) * 0.28 + Math.sin(t + st.tw * 7) * 0.05;
-        dust.pos[i * 3 + 2] = Math.sin(a) * st.r;
-        const shine = 0.35 + 0.65 * (0.55 + 0.45 * Math.sin(t * 2 + st.tw * 12.6));
-        c.set(dust.tint).multiplyScalar(shine);
-        dust.col[i * 3] = c.r;
-        dust.col[i * 3 + 1] = c.g;
-        dust.col[i * 3 + 2] = c.b;
-      }
-      dust.geo.attributes.position.needsUpdate = true;
-      dust.geo.attributes.color.needsUpdate = true;
       updateGlyphs(glyphs, t);
     };
   } else if (effect === 8) {

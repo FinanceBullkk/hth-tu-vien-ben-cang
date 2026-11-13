@@ -52,6 +52,12 @@ export const groundFragment = `
       float age = fract(time * 0.06 + float(k) / 3.0);
       light += stroke(r - 0.2 - age * 0.72, 0.003 + age * 0.006) * pow(1.0 - age, 1.5) * smoothstep(0.0, 0.15, age) * 0.5 * seated;
     }
+    // Nguyệt Bạch: gương nước tĩnh — bóng trăng in lệch về phía trăng (+x), vỡ thành vạch ngang lăn tăn.
+    if (theme == 7.0) {
+      vec2 q = (vUv - vec2(0.42, 0.08)) / vec2(0.22, 0.34);
+      float lines = smoothstep(0.2, 0.9, sin(vUv.y * 60.0 + sin(vUv.x * 11.0 + time * 0.3) * 1.5 - time * 0.2));
+      light += (1.0 - smoothstep(0.5, 1.0, length(q))) * (0.3 + 0.9 * lines) * seated;
+    }
     light += stroke(r - 0.3 - (1.0 - burst) * 0.65, 0.012) * burst * 0.4;
     float alpha = min(0.85, light + gold * 0.5) * opacity;
     if (r > 0.98 || alpha < 0.002) discard;
