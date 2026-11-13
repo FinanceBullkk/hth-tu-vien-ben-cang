@@ -8,9 +8,11 @@ const quad = new THREE.PlaneGeometry(1, 1); // dùng chung mọi lớp, không d
 /** Số giả ngẫu nhiên tất định 0..1 theo chỉ số (hạt đặt cố định, không cần trạng thái). */
 export const hash = n => { const x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); };
 
-export function billboardLayer(parent, name, map, count, tint, blending) {
-  const material = new THREE.ShaderMaterial({ uniforms: { map: { value: map }, tint: { value: tint }, opacity: { value: 1 } },
-    vertexShader: billboardVertex, fragmentShader: billboardFragment,
+/** options.vertexShader / options.uniforms: thay shader đỉnh (cùng quy ước instanceColor) và thêm
+    uniform riêng, ví dụ lớp sao chừa mặt của Tinh Hà; mặc định giữ shader billboard chung. */
+export function billboardLayer(parent, name, map, count, tint, blending, { vertexShader = billboardVertex, uniforms = {} } = {}) {
+  const material = new THREE.ShaderMaterial({ uniforms: { map: { value: map }, tint: { value: tint }, opacity: { value: 1 }, ...uniforms },
+    vertexShader, fragmentShader: billboardFragment,
     transparent: true, depthWrite: false, side: THREE.DoubleSide, blending });
   const mesh = new THREE.InstancedMesh(quad, material, count);
   mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(count * 3), 3);

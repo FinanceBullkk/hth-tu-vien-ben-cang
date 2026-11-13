@@ -15,6 +15,7 @@
 import * as THREE from 'three';
 import { createRibbonAura } from './vfx/ribbon-aura.js';
 import { createKiemVuAura } from './vfx/kiem-vu-aura.js';
+import { createTinhHaAura } from './vfx/tinh-ha-aura.js';
 import { createDaoHoaAura } from './vfx/dao-hoa-aura.js';
 import { createAuraSignature } from './aura-signature.js';
 import { store } from '../ui/dom.js';
@@ -684,27 +685,6 @@ function createDragon(colors, lowQuality) {
   };
 }
 
-// Vệt sao băng: đầu sao rực ở phía trước (phải), đuôi loang mờ dần.
-function streakTexture() {
-  return canvasTex('streak', 128, 32, (ctx, w, h) => {
-    const g = ctx.createLinearGradient(0, 0, w, 0);
-    g.addColorStop(0, 'rgba(255,255,255,0)');
-    g.addColorStop(0.55, 'rgba(255,255,255,0.45)');
-    g.addColorStop(1, 'rgba(255,255,255,0.9)');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.ellipse(w * 0.5, h / 2, w * 0.5, h * 0.28, 0, 0, Math.PI * 2);
-    ctx.fill();
-    const head = ctx.createRadialGradient(w * 0.9, h / 2, 1, w * 0.9, h / 2, h * 0.6);
-    head.addColorStop(0, 'rgba(255,255,255,1)');
-    head.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = head;
-    ctx.beginPath();
-    ctx.arc(w * 0.9, h / 2, h * 0.6, 0, Math.PI * 2);
-    ctx.fill();
-  });
-}
-
 // Vòng khắc: vành sáng mềm, 24 vạch khắc và 12 chấm nhỏ trong để thấy rõ vòng xoay.
 function ringTexture() {
   return canvasTex('ring', 256, 256, (ctx) => {
@@ -840,7 +820,9 @@ export function createEffect(effect, lowQuality = false) {
   } : null;
   // 12: Thanh Phong Kiếm Vũ có pháp tướng riêng (kiếm luân, phi kiếm, trận đồ).
   if (effect === 12) return createKiemVuAura(lowQuality, reducedMotion);
-  // 5: Đào Hoa Tri Kỷ có pháp tướng riêng (nguyệt môn, cành đào 3D, cánh đào xoắn rơi).
+  // 3: Tinh Hà có pháp tướng riêng (Chu Thiên Tinh Đồ, Bắc Đẩu, lưu tinh, tinh bàn).
+  if (effect === 3) return createTinhHaAura(lowQuality, reducedMotion);
+  // 5: Đào Hoa Tri Kỷ có pháp tướng riêng (nguyệt môn ngọc, cành đào 3D, cánh đào rơi).
   if (effect === 5) return createDaoHoaAura(lowQuality, reducedMotion);
 
   const colors = PALETTES[effect - 1] ?? PALETTES[0];
@@ -1259,162 +1241,6 @@ export function createEffect(effect, lowQuality = false) {
         wisps[i].position.set(Math.cos(a) * r, 0.04 + yn * 1.3, Math.sin(a) * r);
         wisps[i].scale.set((0.05 + tw * 0.03) * (1 + sway * 0.2), Math.max(0.001, life * (0.24 + tw * 0.16)), 1);
       }
-      updateGlyphs(glyphs, t);
-    };
-  } else if (effect === 3) {
-    // TINH HÀ — dải ngân hà nghiêng quay chậm, ba vòng hào quang chồng nghịch, sao chổi quanh vành,
-    // vòng chân ngôn 星 dưới chân, sao băng kéo lửa và bụi sao.
-    const count = lowQuality ? 16 : 28;
-    const dustCount = lowQuality ? 8 : 16;
-    fillSeeds(seed, count);
-    const mantra = flatMesh(runeRingTexture('rune-xing', '星'), colors[0], 1.3, 0.03, 0.5);
-
-    const galaxyTilt = new THREE.Group();
-    galaxyTilt.position.set(0, 0.78, 0);
-    galaxyTilt.rotation.x = -Math.PI / 2 + 0.42; // dải ngân hà nghiêng quanh người
-    group.add(galaxyTilt);
-    const galaxy = new THREE.Mesh(track(new THREE.RingGeometry(0.55, 0.98, 64)), glowMat({
-      map: starfieldTexture(), color: colors[0], opacity: 0.55,
-    }), 0.55);
-    galaxyTilt.add(galaxy);
-    // vành ngân hà thứ hai nghiêng ngược — bắt chéo nhau như khối thiên cầu
-    const galaxy2Tilt = new THREE.Group();
-    galaxy2Tilt.position.set(0, 1.08, 0);
-    galaxy2Tilt.rotation.x = -Math.PI / 2 - 0.38;
-    group.add(galaxy2Tilt);
-    const galaxy2 = new THREE.Mesh(track(new THREE.RingGeometry(0.6, 0.92, 64)), glowMat({
-      map: starfieldTexture(), color: colors[1] ?? colors[0], opacity: 0.4,
-    }), 0.4);
-    galaxy2Tilt.add(galaxy2);
-    const counterRing = flatMesh(ringTexture(), colors[0], 1.05, 0.035, 0.35);
-
-    // vòm sao: ống khí xanh bao thân
-    const domeTex = domeTexture();
-    domeTex.wrapS = THREE.RepeatWrapping;
-    domeTex.wrapT = THREE.RepeatWrapping;
-    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
-      map: domeTex, color: colors[0], transparent: true, depthWrite: false,
-      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.12,
-    }), 0.12);
-    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.0, 1.95, 48, 1, true)), domeEntry.mat);
-    dome.position.y = 0.97;
-    group.add(dome);
-
-    // sao băng vụt: mỗi ~5 giây một vệt sao vụng qua trời trên cao
-    const shootEntry = dynMat(() => new THREE.SpriteMaterial({
-      map: streakTexture(), color: 0xffffff, transparent: true, depthWrite: false,
-      blending: THREE.AdditiveBlending, opacity: 0,
-    }), 0);
-    const shoot = new THREE.Sprite(shootEntry.mat);
-    shoot.scale.set(0.55, 0.12, 1);
-    group.add(shoot);
-
-    // mưa sao: bụi sao rơi lác đác từ trên cao
-    const starMotes = [];
-    for (let i = 0; i < (lowQuality ? 4 : 10); i++) {
-      const entry = dynMat(() => new THREE.SpriteMaterial({
-        map: glowTexture(), color: colors[i % colors.length], transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, opacity: 0, rotation: ((i * 29) % 10) / 10 * 3,
-      }), 0);
-      const sp = new THREE.Sprite(entry.mat);
-      group.add(sp);
-      starMotes.push({ sp, entry, a0: (i / 10) * 6.283, r: 0.4 + ((i * 37) % 20) / 20 * 0.7, tw: ((i * 29) % 10) / 10, fall: 0.35 + ((i * 61) % 10) / 10 * 0.3 });
-    }
-
-    const mkRing = (size, col, base) => {
-      const mesh = new THREE.Mesh(track(new THREE.PlaneGeometry(size, size)), glowMat({
-        map: ringTexture(), color: col, opacity: base,
-      }), base);
-      mesh.position.set(0, 1.12, -0.3);
-      group.add(mesh);
-      return mesh;
-    };
-    const ring1 = mkRing(1.05, colors[0], 0.4);
-    const ring2 = mkRing(0.85, colors[0], 0.6);
-    const ring3 = mkRing(0.6, colors[1] ?? colors[0], 0.8);
-    const comet = sprite(glowTexture(), colors[1] ?? colors[0], 0.16, 0.16, 0, 1.12, -0.29, 0.95);
-    const cometTail = sprite(glowTexture(), colors[0], 0.11, 0.11, 0, 1.12, -0.29, 0.5);
-
-    const stars = new THREE.InstancedMesh(track((() => {
-      const g = new THREE.PlaneGeometry(0.3, 0.05);
-      g.rotateX(-Math.PI / 2); // nằm ngang để thấy rõ từ camera nhìn chếch xuống
-      return g;
-    })()), glowMat({ map: streakTexture() }), count);
-    for (let i = 0; i < count; i++) stars.setColorAt(i, c.set(colors[i % colors.length]));
-    group.add(stars);
-
-    const dust = makeTwinkles(dustCount, 0.05, (i, n) => ({
-      a0: (i / n) * Math.PI * 2,
-      r: 0.3 + ((i * 37) % 20) / 20 * 0.22,
-      tw: ((i * 29) % 10) / 10,
-      speed: 0.5 + ((i * 61) % 10) / 10,
-      parity: i % colors.length,
-    }), null);
-    const glyphs = makeGlyphs(lowQuality ? 3 : 6, 0.62);
-
-    variantUpdate = (t, walkAmt) => {
-      const boost = 1 + walkAmt * 0.8;
-      mantra.rotation.z = -t * 0.22;
-      galaxy.rotation.z = t * 0.1; // ngân hà xoay rất chậm
-      galaxy2.rotation.z = -t * 0.14; // vành hai quay ngược
-      counterRing.rotation.z = t * 0.4;
-      dome.rotation.y = t * 0.06;
-      domeTex.offset.y = -(t * 0.05) % 1;
-      domeEntry.base = 0.1 + 0.04 * (0.5 + 0.5 * Math.sin(t * 1.1));
-      // sao băng vụt qua trong 0.7s mỗi 5 giây
-      const shootCyc = (t % 5) / 5;
-      if (shootCyc < 0.14) {
-        const p = shootCyc / 0.14;
-        shoot.position.set(1.5 - p * 2.8, 1.95 - p * 0.85, 0.9 - p * 0.6);
-        shoot.material.rotation = -2.8;
-        shootEntry.base = Math.sin(p * Math.PI) * 0.85;
-      } else {
-        shootEntry.base = 0;
-      }
-      for (const mo of starMotes) {
-        const yn = (t * 0.1 * mo.fall + mo.tw) % 1; // sao rơi từ trời xuống
-        const a = mo.a0 + t * 0.07;
-        mo.sp.position.set(Math.cos(a) * mo.r + Math.sin(t + mo.tw * 9) * 0.04, 2.0 - yn * 1.9, Math.sin(a) * mo.r);
-        mo.sp.scale.setScalar(0.03 + mo.tw * 0.02);
-        mo.entry.base = Math.min(1, yn * 4, (1 - yn) * 4) * 0.45;
-      }
-      ring1.rotation.z = t * 0.35;
-      ring2.rotation.z = -t * 0.8;
-      ring3.rotation.z = t * 1.25;
-      const ca = t * 1.1; // sao chổi chạy quanh vành ngoài
-      comet.position.set(Math.cos(ca) * 0.42, 1.12 + Math.sin(ca) * 0.42, -0.29);
-      comet.scale.setScalar(0.16 * (1 + Math.sin(t * 6) * 0.15));
-      cometTail.position.set(Math.cos(ca - 0.45) * 0.42, 1.12 + Math.sin(ca - 0.45) * 0.42, -0.29);
-      for (let i = 0; i < count; i++) {
-        const a0 = seed[i * 4], r0 = seed[i * 4 + 1], speed = seed[i * 4 + 2], tw = seed[i * 4 + 3];
-        const band = i % 2 === 0 ? 0 : 0.5;
-        const a = a0 + t * 0.9 * speed * boost + band;
-        const rr = r0 + band * 0.1;
-        const shine = 0.55 + 0.45 * Math.sin(t * 2.2 + tw * 12.6);
-        e.set(0, -(a + Math.PI / 2), 0); // xoay theo phương bay
-        q.setFromEuler(e);
-        v.set(Math.cos(a) * rr, 0.62 + Math.sin(a * 2 + band * 3) * 0.3, Math.sin(a) * rr);
-        s.set(0.75 + shine * 0.45, 1, 1);
-        m4.compose(v, q, s);
-        stars.setMatrixAt(i, m4);
-        stars.setColorAt(i, c.set(colors[i % colors.length]).multiplyScalar(0.4 + shine * 0.6));
-      }
-      stars.instanceMatrix.needsUpdate = true;
-      if (stars.instanceColor) stars.instanceColor.needsUpdate = true;
-      for (let i = 0; i < dustCount; i++) {
-        const st = dust.seeds[i];
-        const a = st.a0 + t * 0.4 * st.speed;
-        dust.pos[i * 3] = Math.cos(a) * st.r;
-        dust.pos[i * 3 + 1] = 0.62 + Math.sin(a * 2) * 0.3 + Math.sin(t + st.tw * 7) * 0.05;
-        dust.pos[i * 3 + 2] = Math.sin(a) * st.r;
-        const shine = 0.35 + 0.65 * (0.55 + 0.45 * Math.sin(t * 2.2 + st.tw * 12.6));
-        c.set(colors[st.parity]).multiplyScalar(shine);
-        dust.col[i * 3] = c.r;
-        dust.col[i * 3 + 1] = c.g;
-        dust.col[i * 3 + 2] = c.b;
-      }
-      dust.geo.attributes.position.needsUpdate = true;
-      dust.geo.attributes.color.needsUpdate = true;
       updateGlyphs(glyphs, t);
     };
   } else if (effect === 4) {
