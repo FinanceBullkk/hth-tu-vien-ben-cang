@@ -1,6 +1,25 @@
 # Deployment
 
-## Current release: 2026-11-13 graphics settings and sharper bầu cua table, 22:29 UTC+7
+## Current release: 2026-11-13 Bích Ngọc, Nguyệt Bạch and Huyền Dạ auras rebuilt, 23:03 UTC+7
+
+Deploy run [43458759105](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43458759105)
+released main `3871ff6` as `hth:261113-2303-3871ff6`, replacing
+`hth:261113-2229-4a2b348`. Includes PR #77 (Nguyệt Bạch as Cầm Nguyệt Thủy
+Kính: off-centre moon, zither strings and a still water mirror), PR #76
+(Huyền Dạ as Nhật Thực Huyền Nha: black eclipse behind the head, crow
+feathers and ink drawn inward, dark ink-vortex ground) and PR #78 (Bích Ngọc
+as Trúc Lâm Phong Quyển: jade bamboo grove with swirling wind and wuxia props).
+Each has its own meditation throne. Public bundle `index-Cbjr_ing.js`,
+confirmed served at `https://game.hthlogistics.top/` with `/api/health` 200.
+
+Docker tests 342/342. Candidate passed with DB `quick_check` ok (52 players,
+23 wishes, 77 fish).
+
+Rollback container `hth-rollback-261113-2303-3871ff6` preserves
+`hth:261113-2229-4a2b348`. Private backup is in the data volume at
+`backups/cutover-261113-2303-3871ff6/`.
+
+## Previous release: 2026-11-13 graphics settings and sharper bầu cua table, 22:29 UTC+7
 
 Deploy run [43449139081](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43449139081)
 released main `4a2b348` (PR #75) as `hth:261113-2229-4a2b348`, replacing
