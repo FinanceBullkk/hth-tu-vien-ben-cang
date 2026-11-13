@@ -95,6 +95,8 @@ export const TEU = {
   pitchRank: { S: 8, A: 5, B: 3, C: 1 },
   rhythmPer25: 1, // floor(score / 25)
   bellEventOnBeat: 1,
+  // Quà nhập môn: người chơi lần đầu vào tu viện được tặng một lần; không tính vào bảng tuần.
+  welcomeGift: 100,
 };
 
 // Màu áo quý: mở khoá bằng TEU ở Sổ an, bitmask theo thứ tự trong mảng.
