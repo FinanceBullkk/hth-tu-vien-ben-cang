@@ -19,6 +19,7 @@ import { createTinhHaAura } from './vfx/tinh-ha-aura.js';
 import { createLuuLyAura } from './vfx/luu-ly-aura.js';
 import { createDaoHoaAura } from './vfx/dao-hoa-aura.js';
 import { createHongLienAura } from './vfx/hong-lien-aura.js';
+import { createHuyenDaAura } from './vfx/huyen-da-aura.js';
 import { createAuraSignature } from './aura-signature.js';
 import { store } from '../ui/dom.js';
 
@@ -358,44 +359,6 @@ function moonTexture() {
     ctx.arc(64, 64, 62, 0, Math.PI * 2);
     ctx.fill();
     ctx.globalCompositeOperation = 'source-over';
-  });
-}
-
-// Trận lục lăng hắc ám: hai tam giác chồng nhau trong đôi vòng tròn, kèm vạch khắc quanh vành.
-function hexTexture() {
-  return canvasTex('hex', 256, 256, (ctx) => {
-    ctx.translate(128, 128);
-    ctx.strokeStyle = 'rgba(255,255,255,0.95)';
-    ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.arc(0, 0, 112, 0, Math.PI * 2); ctx.stroke();
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(0, 0, 96, 0, Math.PI * 2); ctx.stroke();
-    const tri = (off) => {
-      ctx.beginPath();
-      for (let k = 0; k < 3; k++) {
-        const a = off + (k / 3) * Math.PI * 2;
-        const x = Math.cos(a) * 86;
-        const y = Math.sin(a) * 86;
-        if (k) ctx.lineTo(x, y);
-        else ctx.moveTo(x, y);
-      }
-      ctx.closePath();
-      ctx.lineWidth = 3;
-      ctx.stroke();
-    };
-    tri(-Math.PI / 2);
-    tri(Math.PI / 2);
-    ctx.lineWidth = 2.5;
-    for (let k = 0; k < 12; k++) {
-      const a = (k / 12) * Math.PI * 2 + Math.PI / 12;
-      ctx.beginPath();
-      ctx.moveTo(Math.cos(a) * 98, Math.sin(a) * 98);
-      ctx.lineTo(Math.cos(a) * 110, Math.sin(a) * 110);
-      ctx.stroke();
-    }
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.stroke();
-    softEdge(ctx, 118);
   });
 }
 
@@ -830,6 +793,8 @@ export function createEffect(effect, lowQuality = false) {
   if (effect === 5) return createDaoHoaAura(lowQuality, reducedMotion);
   // 4: Hồng Liên Hỏa Vũ có pháp tướng riêng (cánh chu tước giang ngang, phượng vĩ, sen lửa).
   if (effect === 4) return createHongLienAura(lowQuality, reducedMotion);
+  // 8: Huyền Dạ Du Hành có pháp tướng riêng (nhật thực đen, lông quạ, xoáy mực hút vào tâm).
+  if (effect === 8) return createHuyenDaAura(lowQuality, reducedMotion);
 
   const colors = PALETTES[effect - 1] ?? PALETTES[0];
   const group = new THREE.Group();
@@ -1328,135 +1293,6 @@ export function createEffect(effect, lowQuality = false) {
       }
       dust.geo.attributes.position.needsUpdate = true;
       dust.geo.attributes.color.needsUpdate = true;
-      updateGlyphs(glyphs, t);
-    };
-  } else if (effect === 8) {
-    // HẮC ÁM — hắc viêm lửa đen lõi tím vờn quanh người là chủ đạo, vũng âm khí đen nuốt sáng dưới chân,
-    // trận lục lăng tím sẫm, quỷ hỏa chớp tắt, chân ngôn 魔.
-    // Phần đen dùng NormalBlending màu gần đen để tối thật sự (blending cộng sáng không ra được màu đen).
-    const soulCount = lowQuality ? 2 : 4;
-    const sparkCount = lowQuality ? 8 : 14;
-    // vũng âm khí: đĩa đen dưới chân, nhấp nhô như hố tối
-    const voidEntry = childMat(new THREE.MeshBasicMaterial({
-      map: glowTexture(), color: 0x020008, transparent: true, depthWrite: false, opacity: 0.72,
-    }), 0.72);
-    const voidPool = new THREE.Mesh(track(new THREE.PlaneGeometry(2.05, 2.05)), voidEntry);
-    voidPool.rotation.x = -Math.PI / 2;
-    voidPool.position.y = 0.015;
-    group.add(voidPool);
-    const rim = flatMesh(ringTexture(), colors[0], 1.5, 0.028, 0.4);
-    const hex = flatMesh(hexTexture(), colors[0], 1.32, 0.05, 0.55); // lục lăng ma trận
-    const mantra = flatMesh(runeRingTexture('rune-mo', '魔'), colors[0], 1.52, 0.06, 0.6);
-
-    // vòm kết giới tím sẫm: additive mỏng để khung nhẹ, màu đen do khói + vũng âm khí gánh
-    const domeTex = domeTexture();
-    domeTex.wrapS = THREE.RepeatWrapping;
-    domeTex.wrapT = THREE.RepeatWrapping;
-    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
-      map: domeTex, color: colors[1] ?? colors[0], transparent: true, depthWrite: false,
-      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.12,
-    }), 0.12);
-    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.02, 1.95, 48, 1, true)), domeEntry.mat);
-    dome.position.y = 0.97;
-    group.add(dome);
-
-    // hắc viêm: ngọn lửa đen vờn quanh người — thân lửa đen dựng đứng, lõi tím nhỏ rực bên trong;
-    // cứ mỗi ngọn thứ 4 là một hắc viêm lớn ôm sát thân cho khỏi thưa
-    const flameCount = lowQuality ? 8 : 14;
-    const flames = [];
-    for (let i = 0; i < flameCount; i++) {
-      const big = i % 4 === 0;
-      const body = dynMat(() => new THREE.SpriteMaterial({
-        map: flameTexture(), color: 0x05020c, transparent: true, depthWrite: false,
-        opacity: 0, rotation: ((i * 29) % 10) / 10 * 0.36 - 0.18,
-      }), 0);
-      const core = dynMat(() => new THREE.SpriteMaterial({
-        map: glowTexture(), color: colors[0], transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, opacity: 0,
-      }), 0);
-      const spBody = new THREE.Sprite(body.mat);
-      const spCore = new THREE.Sprite(core.mat);
-      group.add(spBody);
-      group.add(spCore);
-      flames.push({
-        spBody, spCore, body, core,
-        a0: (i / flameCount) * 6.283 + ((i * 17) % 10) / 10 * 0.4,
-        r: (0.3 + ((i * 37) % 20) / 20 * 0.38) * (big ? 0.55 : 1),
-        tw: ((i * 29) % 10) / 10,
-        speed: 0.7 + ((i * 61) % 10) / 10 * 0.5,
-        size: (0.2 + ((i * 41) % 10) / 10 * 0.12) * (big ? 1.9 : 1),
-      });
-    }
-
-    // quỷ hỏa tím: chớp tắt thất thường quanh người
-    const souls = [];
-    for (let i = 0; i < soulCount; i++) {
-      const entry = dynMat(() => new THREE.SpriteMaterial({
-        map: glowTexture(), color: colors[0], transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, opacity: 0.7,
-      }), 0.7);
-      const sp = new THREE.Sprite(entry.mat);
-      group.add(sp);
-      souls.push({ sp, entry, a0: (i / soulCount) * 6.283 + 0.5, r: 0.78 + ((i * 17) % 10) / 10 * 0.25, y: 0.4 + ((i * 23) % 30) / 30 * 1.0, tw: ((i * 29) % 10) / 10, size: 0.09 + ((i * 41) % 10) / 10 * 0.04 });
-    }
-
-    const sparks = makeTwinkles(sparkCount, 0.05, (i, n) => ({
-      a0: (i / n) * Math.PI * 3.4,
-      r: 0.3 + ((i * 37) % 20) / 20 * 0.38,
-      y: 0.1 + ((i * 53) % 30) / 30 * 1.3,
-      tw: ((i * 29) % 10) / 10,
-      speed: 0.5 + ((i * 61) % 10) / 10,
-    }), colors[0]);
-    const glyphs = makeGlyphs(lowQuality ? 3 : 6, 0.62);
-
-    variantUpdate = (t) => {
-      voidEntry.base = 0.72 + 0.12 * (0.5 + 0.5 * Math.sin(t * 0.9)); // hố tối nhấp nhô
-      rim.rotation.z = t * 0.25;
-      hex.rotation.z = -t * 0.4; // trận lục lăng xoay ngược
-      mantra.rotation.z = t * 0.18;
-      dome.rotation.y = -t * 0.05;
-      domeTex.offset.y = -(t * 0.045) % 1; // khí trong vòm cuộn lên chậm
-      domeEntry.base = 0.09 + 0.04 * (0.5 + 0.5 * Math.sin(t * 0.8));
-      for (const f of flames) {
-        const yn = (t * 0.16 * f.speed + f.tw) % 1; // lửa đen vờn lên rồi tắt
-        const life = Math.sin(yn * Math.PI);
-        const a = f.a0 + t * 0.22;
-        const x = Math.cos(a) * f.r + Math.sin(t * 1.8 + f.tw * 9) * 0.06; // ngọn lửa lượn mềm
-        const z = Math.sin(a) * f.r + Math.cos(t * 1.4 + f.tw * 7) * 0.05;
-        const y = 0.12 + yn * 1.55;
-        f.spBody.position.set(x, y, z);
-        f.spBody.scale.set(
-          f.size * (0.8 + 0.3 * Math.sin(t * 2.6 + f.tw * 11)),
-          f.size * 1.55 * (0.85 + 0.25 * Math.sin(t * 2.2 + f.tw * 5)),
-          1,
-        );
-        f.spBody.material.rotation = f.tw * 1.2 + Math.sin(t * 1.5 + f.tw * 6) * 0.1;
-        f.body.base = life * 0.9;
-        // lõi tím rực bên trong ngọn lửa đen — hồn của hắc viêm
-        f.spCore.position.set(x, y + f.size * 0.18, z);
-        f.spCore.scale.setScalar(f.size * 0.62 * (0.8 + 0.3 * Math.sin(t * 3.2 + f.tw * 13)));
-        f.core.base = life * (0.5 + 0.28 * Math.sin(t * 2.9 + f.tw * 12));
-      }
-      for (const so of souls) {
-        const a = so.a0 + t * 0.16;
-        so.sp.position.set(Math.cos(a) * so.r, so.y + Math.sin(t * 1.2 + so.tw * 9) * 0.1, Math.sin(a) * so.r);
-        so.sp.scale.setScalar(so.size * (1 + 0.2 * Math.sin(t * 3.4 + so.tw * 8)));
-        so.entry.base = 0.3 + 0.45 * Math.pow(0.5 + 0.5 * Math.sin(t * 2.8 + so.tw * 13), 3); // chớp tắt ma quái
-      }
-      for (let i = 0; i < sparkCount; i++) {
-        const st = sparks.seeds[i];
-        const a = st.a0 + t * 0.07 * st.speed;
-        sparks.pos[i * 3] = Math.cos(a) * st.r;
-        sparks.pos[i * 3 + 1] = st.y + Math.sin(t * 0.75 + st.tw * 9) * 0.05;
-        sparks.pos[i * 3 + 2] = Math.sin(a) * st.r;
-        const shine = 0.35 + 0.65 * (0.55 + 0.45 * Math.sin(t * 2.4 + st.tw * 12.6));
-        c.set(sparks.tint).multiplyScalar(shine);
-        sparks.col[i * 3] = c.r;
-        sparks.col[i * 3 + 1] = c.g;
-        sparks.col[i * 3 + 2] = c.b;
-      }
-      sparks.geo.attributes.position.needsUpdate = true;
-      sparks.geo.attributes.color.needsUpdate = true;
       updateGlyphs(glyphs, t);
     };
   } else {
