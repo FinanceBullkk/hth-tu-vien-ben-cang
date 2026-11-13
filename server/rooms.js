@@ -27,7 +27,7 @@ const SIT_INTERVAL_MS = 1000; // Ngồi xuống phát tin cho cả phòng nên p
 const round2 = (n) => Math.round(n * 100) / 100;
 
 export class Room {
-  constructor({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch, melody, pk, shop, baucua, xidach, taixiu, coquay }) {
+  constructor({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch, melody, pk, shop, baucua, xidach, taixiu, coquay, trade }) {
     this.io = io;
     this.broadcast = io.to(PLAYERS_ROOM);
     this.db = db;
@@ -60,6 +60,10 @@ export class Room {
     if (this.pk) this.pk.onKnockout = (player) => this.onActionStop(player);
     this.players = new Map(); // sid -> player
     this.pk?.bind(this.players);
+    // Trạm giao thương: cần danh sách người chơi để tìm người được mời; ai cho đi món đang mặc thì cả phòng thấy đổi đồ.
+    this.trade = trade;
+    this.trade?.bind(this.players);
+    if (this.trade) this.trade.onLook = (p, look) => this.broadcast.emit('player:look', { sid: p.sid, ...look });
     this.voice = new Voice(this.players);
     this.byPid = new Map();
     this.kicked = new Map(); // pid -> hết hạn chặn
@@ -146,6 +150,7 @@ export class Room {
       this.baucua?.sweep();
       this.xidach?.sweep();
       for (const table of this.casinoTables) table.sweep();
+      this.trade?.sweep();
     }
   }
 
@@ -260,6 +265,11 @@ export class Room {
     }
     on('shop:buy', (p, data) => this.onBuy(p, data));
     on('look:set', (p, data) => this.onLook(p, data));
+    on('trade:invite', (p, data) => this.trade.invite(p, data));
+    on('trade:respond', (p, data) => this.trade.respond(p, data));
+    on('trade:offer', (p, data) => this.trade.offer(p, data));
+    on('trade:ready', (p, data) => this.trade.ready(p, data));
+    on('trade:cancel', (p) => this.trade.cancel(p));
     on('pk:attack', (p, data) => this.pk.attack(p, data));
     on('pk:skill', (p, data) => this.pk.skill(p, data));
 
@@ -318,6 +328,7 @@ export class Room {
       const old = player.socket;
       if (old && old.id !== socket.id) {
         this.onActionStop(player);
+        this.trade?.leave(player); // Tab cũ đang giao dịch dở: huỷ, tab mới bắt đầu lại sạch.
         this.voice.leave(player);
         old.data.player = null;
         old.emit('session:replaced');
@@ -546,11 +557,13 @@ export class Room {
     p.socket = null;
     // Rời chiếu ngay để người khác ngồi được; nhân vật giữ lại 10 giây chờ kết nối lại.
     this.onActionStop(p);
+    this.trade?.leave(p); // Giao dịch dở thì huỷ ngay, không bắt đối phương chờ.
     p.ghostTimer = setTimeout(() => this.removePlayer(p), GHOST_MS);
   }
 
   removePlayer(p) {
     this.voice.leave(p);
+    this.trade?.leave(p);
     clearTimeout(p.ghostTimer);
     this.players.delete(p.sid);
     this.byPid.delete(p.pid);

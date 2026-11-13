@@ -22,6 +22,7 @@ import { BauCua } from './baucua.js';
 import { XiDach } from './xidach.js';
 import { TaiXiu } from './taixiu.js';
 import { CoQuay } from './coquay.js';
+import { Trade } from './trade.js';
 import { PLAYERS_ROOM, Room } from './rooms.js';
 import { Riddle } from './riddle.js';
 import { Fishing } from './fishing.js';
@@ -88,7 +89,8 @@ const baucua = new BauCua({ db, io: players, config });
 const xidach = new XiDach({ db, io: players, config });
 const taixiu = new TaiXiu({ db, io: players, config });
 const coquay = new CoQuay({ db, io: players, config });
-const room = new Room({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch, melody, pk, shop, baucua, xidach, taixiu, coquay });
+const trade = new Trade({ db, config });
+const room = new Room({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch, melody, pk, shop, baucua, xidach, taixiu, coquay, trade });
 
 // Tài nguyên trang cùng nguồn; WebRTC có đường media riêng và ICE do người vận hành cấu hình.
 app.use((_req, res, next) => {

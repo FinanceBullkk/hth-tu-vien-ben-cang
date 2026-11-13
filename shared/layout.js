@@ -49,6 +49,12 @@ export const SHOP = {
   counter: { minX: -13.3, maxX: -10.7, minZ: 21.7, maxZ: 22.3 },
   shelf: { minX: -13.3, maxX: -10.7, minZ: 23.6, maxZ: 24 },
 };
+// Trạm giao thương: bảng gỗ có mái nhỏ bên lối đi từ trục chính sang Sạp Kim Bảo, mặt bảng quay về phía nam.
+// Hai người cùng đứng trong radius quanh bảng thì mời nhau trao đổi đồ và TEU; board là vật cản.
+export const TRADE_POST = {
+  x: -5.5, z: 18.5, rot: 0, radius: 3.2,
+  board: { minX: -6.4, maxX: -4.6, minZ: 18.38, maxZ: 18.62 },
+};
 export const GATE_MONK = { x: 3.2, z: 28.4, rot: 0, radius: 0.35, actionRadius: 2.6 };
 // Hai bàn đỏ đen ở sân trước thiền đường, đối xứng hai bên trục chính: bầu cua phía tây, xì dách phía đông.
 // Bàn là vật cản tròn; ai đứng trong radius quanh bàn thì bấm E để chơi, đứng đâu quanh bàn cũng được.
@@ -115,6 +121,7 @@ export const PLACES = [
   { key: 'xidach', icon: '🃏', name: 'Xì dách', desc: 'Rút bài đấu nhà cái, luật miền Nam', x: XIDACH_ZONE.seat.x, z: XIDACH_ZONE.seat.z },
   { key: 'taixiu', icon: '🎲', name: 'Tài xỉu', desc: 'Đoán tài hay xỉu, tay to nhất được tung', x: TAIXIU_ZONE.seat.x, z: TAIXIU_ZONE.seat.z },
   { key: 'coquay', icon: '🎡', name: 'Cò quay', desc: 'Đặt số, đỏ đen; tay to nhất búng bi', x: COQUAY_ZONE.seat.x, z: COQUAY_ZONE.seat.z },
+  { key: 'trade', icon: '⚖️', name: 'Giao thương', desc: 'Trao đổi đồ và TEU với người khác', x: TRADE_POST.x, z: TRADE_POST.z + 1.5 },
   { key: 'tea', icon: '🍵', name: 'Rút xăm', desc: 'Lắc ống xăm xin lời chúc hôm nay', x: TEA.x, z: TEA.z - 2.4 },
   { key: 'tree', icon: '🌳', name: 'Treo lời ước', desc: 'Viết điều mong muốn lên cây bồ đề', x: TREE.x + 3, z: TREE.z },
 ];
@@ -191,6 +198,8 @@ export const BOXES = [
   // Quầy và kệ hàng của Sạp Kim Bảo.
   SHOP.counter,
   SHOP.shelf,
+  // Bảng của Trạm giao thương.
+  TRADE_POST.board,
   // Lan can cầu vòm qua hồ sen: giữ người chơi trên dải cầu.
   { minX: BRIDGE.x1, maxX: BRIDGE.x2, minZ: BRIDGE.z - 0.98, maxZ: BRIDGE.z - 0.72, cam: true },
   { minX: BRIDGE.x1, maxX: BRIDGE.x2, minZ: BRIDGE.z + 0.72, maxZ: BRIDGE.z + 0.98, cam: true },

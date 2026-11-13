@@ -11,6 +11,7 @@ import { Celestial } from './celestial.js';
 import { FishingScene } from './fishing.js';
 import { GateMonk } from './gate-monk.js';
 import { ShopStall } from './shop-stall.js';
+import { TradePost } from './trade-post.js';
 import { createMonastery } from './monastery.js';
 import { Particles } from './particles.js';
 import { PitchPotCourt } from './pitch-pot-court.js';
@@ -45,6 +46,7 @@ export class World {
     this.zoeyy = new Abbot(scene, 'Zoeyy Gay', ZOEYY);
     this.monk = new GateMonk(scene);
     this.shopStall = new ShopStall(scene);
+    this.tradePost = new TradePost(scene);
     this.baucuaTable = new BauCuaTable(scene);
     this.xidachTable = new XiDachTable(scene);
     this.taixiuTable = new TaiXiuTable(scene);

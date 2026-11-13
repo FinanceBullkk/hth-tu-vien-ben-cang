@@ -45,6 +45,7 @@ import './ui/table-hud.css';
 import './ui/baucua.css';
 import './ui/casino-round-hud.css';
 import './ui/xidach.css';
+import './ui/trade.css';
 
 const isTouch = matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch', isTouch);
@@ -185,6 +186,7 @@ function main() {
     app.voice.stop();
     wasLost = true;
     app.activities.abort();
+    app.activities.trade.reset(); // Server đã huỷ phiên giao dịch khi mất kết nối.
     hud.toast('Mất kết nối, đang kết nối lại…', { ms: 4000 });
   };
 
@@ -377,6 +379,14 @@ function main() {
   net.on('xidach:act', (act) => app.activities.xidach.onAct(act));
   net.on('xidach:payout', (result) => app.activities.xidach.onPayout(result));
 
+  // Trạm giao thương: lời mời, trạng thái phiên, kết quả đổi đồ.
+  const { trade } = app.activities;
+  net.on('trade:invite', (inv) => trade.onInvite(inv));
+  net.on('trade:declined', (data) => trade.onDeclined(data));
+  net.on('trade:state', (state) => trade.onState(state));
+  net.on('trade:done', (res) => trade.onDone(res));
+  net.on('trade:closed', (data) => trade.onClosed(data));
+
   let blessToastAt = 0;
   net.on('wish:new', (wish) => {
     const mine = app.mineWishIds.has(wish.id);
@@ -479,6 +489,10 @@ function main() {
     }
     if (world.shopStall.atRay(raycaster.ray)) {
       openShop(app, 'shop');
+      return;
+    }
+    if (world.tradePost.atRay(raycaster.ray)) {
+      app.activities.trade.open();
       return;
     }
     if (world.abbot.atRay(raycaster.ray)) {

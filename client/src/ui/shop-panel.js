@@ -32,7 +32,7 @@ export function rememberLook(app, look) {
 const EFFECT_TINT = { 3: '#5b6fd6', 4: '#e2672a', 7: '#c9d6e8', 8: '#4b2f63', 9: '#d4a017', 10: '#c0392b', 11: '#e8c34a', 12: '#5fb7d9' };
 
 /** Ô vẽ món: màu áo là ô màu, hào quang nhuộm theo màu riêng, món khác là triện chữ Hán theo loại. */
-function itemSwatch(slot, index, owned) {
+export function itemSwatch(slot, index, owned) {
   const tint = slot === 'color' ? SHIRT_COLORS[index] : slot === 'effect' ? EFFECT_TINT[index] : null;
   const style = tint ? `--sw:${tint}` : '';
   return h('span', { class: `shopx-swatch slot-${slot}`, style, 'aria-hidden': 'true' }, owned ? '✓' : slot === 'color' ? '' : HANZI[slot]);
