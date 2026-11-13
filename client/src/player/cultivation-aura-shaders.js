@@ -35,6 +35,8 @@ export const groundFragment = `
     // Xích Diễm: mép mây cuộn — chín múi tròn, khấc lõm nhọn giữa các múi.
     if (theme == 10.0) shape = 0.38 + 0.15 * sqrt(abs(sin(turn * 4.5)));
     if (theme == 12.0) shape = 0.36 + 0.2 * pow(abs(cos(turn * 4.0)), 6.0);
+    // Kim Long: viền mây cuộn — chín thuỳ tròn lồi ra ngoài, khe nhọn giữa các thuỳ.
+    if (theme == 11.0) shape = 0.38 + 0.13 * sqrt(abs(sin(turn * 4.5)));
     float motif = stroke(r - shape * breath, 0.0035);
     float veins = stroke(r - (shape * 0.83) * breath, 0.0018) * 0.32;
     float broken = smoothstep(-0.1, 0.45, sin(a * 3.0 - time * 0.18));

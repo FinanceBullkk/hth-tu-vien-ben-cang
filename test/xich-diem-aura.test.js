@@ -223,14 +223,15 @@ test('Xích Diễm: dispose giải phóng tài nguyên riêng, giữ hình cuộ
   assert.equal(sharedDisposed, 0);
 });
 
-test('Xích Diễm: createEffect(10) dùng pháp tướng mới, 11 vẫn là dải lụa', () => {
+test('Xích Diễm: createEffect(10) dùng pháp tướng mới, 11 là Kim Long', () => {
   const aura = createEffect(10, false);
   assert.equal(aura.points.name, 'xich-diem-aura');
   aura.update(2);
   aura.dispose();
-  const ribbon = createEffect(11, false);
-  assert.equal(ribbon.points.name, 'ribbon-aura');
-  ribbon.dispose();
+  const kimLong = createEffect(11, false);
+  assert.notEqual(kimLong.points.name, 'xich-diem-aura');
+  assert.notEqual(kimLong.points.name, 'ribbon-aura');
+  kimLong.dispose();
 });
 
 test('Xích Diễm khi ngồi thiền: tòa đài mây riêng thấp rộng, không mượn đoá sen hay cánh', () => {

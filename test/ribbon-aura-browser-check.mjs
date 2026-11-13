@@ -35,8 +35,8 @@ try {
     await page.type('#nameInput', 'Vân An');
     await page.click('#enterBtn');
     await page.waitForFunction(() => window.__hth.net.ready);
-    // 9 (Long Quyền) và 10 (Xích Diễm) đã có pháp tướng riêng; chỉ 11 còn dùng ribbon-aura.
-    for (const effect of [11]) {
+    // 9 (Long Quyền), 10 (Xích Diễm), 11 (Kim Long) đều đã có pháp tướng riêng, không còn dùng ribbon-aura.
+    for (const effect of [9, 10, 11]) {
       await page.evaluate(effect => {
         const app = window.__hth, a = app.me.avatar;
         a.setLook(0, 6, 0, 1, 0, effect);
@@ -47,11 +47,10 @@ try {
         };
       }, effect);
       await new Promise(resolve => setTimeout(resolve, 200));
-      assert.equal(await page.evaluate(() => window.__hth.me.avatar.aura.points.name), 'ribbon-aura');
-      if (!mobile && process.env.AVATAR_SCREENSHOT_DIR) await page.screenshot({ path: path.join(process.env.AVATAR_SCREENSHOT_DIR, `ribbon-${effect}.png`) });
+      const name = await page.evaluate(() => window.__hth.me.avatar.aura.points.name);
+      assert.ok(name && name !== 'ribbon-aura', `effect ${effect}: ${name}`);
+      if (!mobile && process.env.AVATAR_SCREENSHOT_DIR) await page.screenshot({ path: path.join(process.env.AVATAR_SCREENSHOT_DIR, `aura-${effect}.png`) });
     }
-    await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
-    await page.waitForFunction(() => window.__hth.me.avatar.aura.points.children[0].material.uniforms.motion.value === 0);
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     await page.close();
   }

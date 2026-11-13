@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
-const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const colors = [[0xc62e16, 0xffce68], [0xb47c29, 0xffec9c]];
 
 function petal(angle, length, radius) {
@@ -55,9 +54,6 @@ export function createAuraEmblems(kind, lowQuality) {
   function mesh(g, m, parent = group) {
     geometries.push(g); const obj = new THREE.Mesh(g, m); parent.add(obj); return obj;
   }
-  function tube(points, radius, m, parent = group) {
-    return mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), lowQuality ? 24 : 48, radius, 5, false), m, parent);
-  }
   if (kind === 0) {
     const layers = [[], []];
     for (let i = 0; i < 12; i++) {
@@ -78,31 +74,8 @@ export function createAuraEmblems(kind, lowQuality) {
     const merged = mergeGeometries(crown); crown.forEach(g => g.dispose());
     const fan = mesh(merged, body);
     anim.push(t => { fan.scale.y = 1 + .06 * Math.sin(t * 1.6); });
-  } else {
-    const dragon = new THREE.Group(); group.add(dragon);
-    const spine = [];
-    for (let i = 0; i <= 40; i++) {
-      const u = i / 40, a = u * Math.PI * 2.1 - 1;
-      spine.push(V(Math.sin(a) * 1.1, .3 + u * 1.7, Math.cos(a) * .8));
-    }
-    tube(spine, .105, body, dragon);
-    tube(spine.map(p => p.clone().add(V(0, .065, 0))), .022, bright, dragon);
-    for (let i = 5; i < 39; i += lowQuality ? 4 : 2) {
-      const scale = mesh(new THREE.ConeGeometry(.075, .2, 3), bright, dragon);
-      scale.position.copy(spine[i]); scale.position.y += .13; scale.rotation.z = -.4;
-    }
-    const head = new THREE.Group(); dragon.add(head); head.position.copy(spine.at(-1));
-    head.quaternion.setFromUnitVectors(V(0, 0, 1), spine.at(-1).clone().sub(spine.at(-2)).normalize());
-    const skull = mesh(new THREE.SphereGeometry(.19, 12, 8), body, head); skull.scale.set(.9, .78, 1.6);
-    const snout = mesh(new THREE.ConeGeometry(.14, .42, 5), bright, head);
-    snout.rotation.x = Math.PI / 2; snout.position.z = .27;
-    for (const side of [-1, 1]) {
-      const eye = mesh(new THREE.SphereGeometry(.035, 6, 4), bright, head); eye.position.set(side * .15, .07, .15);
-      tube([V(side * .11, .1, -.06), V(side * .25, .36, -.25), V(side * .19, .45, -.43)], .027, bright, head);
-      tube([V(side * .08, -.04, .31), V(side * .35, -.08, .3), V(side * .5, .06, .1), V(side * .53, .19, -.1)], .013, bright, head);
-    }
-    anim.push(t => { dragon.rotation.y = t * .18; dragon.position.y = .05 * Math.sin(t * .8); });
   }
+  // Kind 1 (dải rồng xoắn ốc của Kim Long cũ) đã chuyển sang module riêng kim-long-aura.js.
   const sealMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide,
     uniforms: { color: { value: new THREE.Color(colors[kind][1]) }, time: { value: 0 }, opacity: { value: .65 } },
     vertexShader: 'varying vec2 p; void main(){p=uv*2.-1.; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',

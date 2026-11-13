@@ -10,7 +10,8 @@ const PALETTES = [
   ['#ff693b', '#ffe6a1'],
 ];
 PALETTES[10] = ['#ff4a2e', '#ffcf7a']; // Xích Diễm: đỏ son, viền vàng kim.
-PALETTES[12] = ['#5fd6c4', '#e9fff9']; // Kiếm Vũ; 11 chưa có bảng riêng nên vẫn rơi về 0.
+PALETTES[11] = ['#f0ad2e', '#fff0bf']; // Kim Long: vàng kim, viền mây sáng.
+PALETTES[12] = ['#5fd6c4', '#e9fff9']; // Kiếm Vũ.
 
 const groundGeometry = new THREE.PlaneGeometry(2.8, 2.8);
 groundGeometry.rotateX(-Math.PI / 2);

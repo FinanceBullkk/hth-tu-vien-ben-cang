@@ -11,7 +11,6 @@
 // 8 Hắc ám — hắc viêm lửa đen lõi tím vờn quanh người, vũng âm khí nuốt sáng, trận lục lăng, quỷ hỏa, chân ngôn 魔;
 // 9 Long Quyền — module riêng vfx/long-quyen-aura.js (hỏa long xoắn ốc vươn quyền, ấn quyền 拳, vết nứt chấn địa).
 import * as THREE from 'three';
-import { createRibbonAura } from './vfx/ribbon-aura.js';
 import { createKiemVuAura } from './vfx/kiem-vu-aura.js';
 import { createTinhHaAura } from './vfx/tinh-ha-aura.js';
 import { createLuuLyAura } from './vfx/luu-ly-aura.js';
@@ -22,6 +21,7 @@ import { createBichNgocAura } from './vfx/bich-ngoc-aura.js';
 import { createHuyenDaAura } from './vfx/huyen-da-aura.js';
 import { createLongQuyenAura } from './vfx/long-quyen-aura.js';
 import { createXichDiemAura } from './vfx/xich-diem-aura.js';
+import { createKimLongAura } from './vfx/kim-long-aura.js';
 import { createAuraSignature } from './aura-signature.js';
 import { store } from '../ui/dom.js';
 
@@ -356,8 +356,6 @@ function fillSeeds(seed, count) {
 const BREATH = [8, 13, 14, 9, 10, 12, 16, 8.5]; // V10: hệ 1 thở cùng chu kỳ 8 s của signature
 
 export function createEffect(effect, lowQuality = false) {
-  // 11: aura dải lụa (ribbon-aura.js đánh số nội bộ 10); 9 là Long quyền của bản prod.
-  if (effect === 11) return createRibbonAura(effect - 1, lowQuality);
   if (!effect) return { points: null, update() {}, setColor() {} };
   // Người chơi đè "giảm chuyển động" của hệ điều hành bằng toggle "Hiệu ứng động đầy đủ"
   // trong Đổi trang phục (localStorage fullFx=1) — đọc lại mỗi khung nên đổi là áp ngay.
@@ -385,6 +383,8 @@ export function createEffect(effect, lowQuality = false) {
   if (effect === 9) return createLongQuyenAura(lowQuality, reducedMotion);
   // 10: Xích Diễm Lưu Vân có pháp tướng riêng (đài mây lửa thấp rộng, vòng lửa ngang eo).
   if (effect === 10) return createXichDiemAura(lowQuality, reducedMotion);
+  // 11: Kim Long Nguyệt Ảnh có pháp tướng riêng (rồng vàng vắt vòm qua đầu, long châu, nửa trăng, biển mây).
+  if (effect === 11) return createKimLongAura(lowQuality, reducedMotion);
 
   const colors = PALETTES[effect - 1] ?? PALETTES[0];
   const group = new THREE.Group();
