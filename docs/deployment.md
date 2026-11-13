@@ -1,6 +1,22 @@
 # Deployment
 
-## Current release: 2026-11-13 meditation earns TEU, fishing shop and kitchen orders, 16:02 UTC+7
+## Current release: 2026-11-13 renamed casino table dealers, 16:35 UTC+7
+
+Deploy run [43402508930](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43402508930)
+released main `2ba3e4c` (PR #63) as `hth:261113-1635-2ba3e4c`, replacing
+`hth:261113-1602-66944f5`. NPC dealers renamed: bầu cua PhucGay, xì dách
+Mikumilu, tài xỉu SnowLe, cò quay TheEm. Public bundle: `index-C-vT8igH.js`,
+confirmed served at `https://game.hthlogistics.top/` with `/api/health` 200
+and all four new names present in the bundle.
+
+Docker tests 235/235. Candidate passed with DB `quick_check` ok (52 players,
+23 wishes, 67 fish).
+
+Rollback container `hth-rollback-261113-1635-2ba3e4c` preserves
+`hth:261113-1602-66944f5`. Private backup is in the data volume at
+`backups/cutover-261113-1635-2ba3e4c/`.
+
+## Previous release: 2026-11-13 meditation earns TEU, fishing shop and kitchen orders, 16:02 UTC+7
 
 Deploy run [43397934568](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43397934568)
 released main `66944f5` as `hth:261113-1602-66944f5`, replacing
