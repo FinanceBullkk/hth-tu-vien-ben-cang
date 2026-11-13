@@ -1,6 +1,27 @@
 # Deployment
 
-## Current release: 2026-11-13 xì dách turns, dealer checks, card squeeze and effects, 06:58 UTC+7
+## Current release: 2026-11-13 100 TEU welcome gift for new players, 11:30 UTC+7
+
+Deploy run [43365987558](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43365987558)
+released main `2d1b1c4` (PR #52) as `hth:261113-1130-2d1b1c4`, replacing
+`hth:261113-0942-2155bcc` (PR #51, deploy run
+[43353949351](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43353949351),
+not recorded separately here). A player joining for the first time (no row in
+`players`) gets `TEU.welcomeGift` = 100 once, logged in `teu_log` with reason
+`welcome` and excluded from the weekly TEU board. Existing players get nothing;
+rejoining does not grant it again. Snapshot carries `welcomeGift`, the client
+shows a "Quà nhập môn" toast. Public bundle: `index-Cv7QlaDD.js`, confirmed
+served at `https://game.hthlogistics.top/` with `/api/health` ok.
+
+Local suite 206/206 and Vite build passed on Node 24; Docker tests 206/206.
+Candidate passed with DB `quick_check` ok (52 players, 23 wishes, 48 fish).
+Toast not checked in a browser; server behaviour covered by `test/server.test.js`.
+
+Rollback container `hth-rollback-261113-1130-2d1b1c4` preserves
+`hth:261113-0942-2155bcc`. Private backup is in the data volume at
+`backups/cutover-261113-1130-2d1b1c4/`.
+
+## Previous release: 2026-11-13 xì dách turns, dealer checks, card squeeze and effects, 06:58 UTC+7
 
 Deploy run [43333211851](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43333211851)
 released main `92c1a2e` (PR #48 and #49) as `hth:261113-0658-92c1a2e`, replacing
