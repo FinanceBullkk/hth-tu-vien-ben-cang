@@ -1,6 +1,8 @@
 // Tích Chân khí khi ngồi yên; giữ chiếu và đồng bộ người cùng thiền.
 import { MAT_COUNT, MATS, dist2d } from '../shared/layout.js';
 import { QI_GAIN_RATE, QI_INTERVAL_MS } from '../shared/cultivation.js';
+import { TEU } from '../shared/protocol.js';
+import { localDate } from './time.js';
 
 export class Meditation {
   constructor({ db, io, config }) {
@@ -44,11 +46,34 @@ export class Meditation {
     player.medMates = new Set();
     player.qiAt = now;
     player.qiPendingMs = 0;
+    player.teuPendingMs = 0;
     player.cultivationMs = this.db.playerRow(player.pid)?.cultivation_ms ?? 0;
     player.qi = Math.floor(player.cultivationMs / QI_INTERVAL_MS);
     this.io.emit('meditation:mats', this.occupancy());
     this.sync();
-    return { ok: true, epoch: this.epoch, startAt: player.medStartAt, now, mat, qi: player.qi, mates: [...player.medMates] };
+    const teuToday = this.db.teuToday(player.pid, 'meditate', this.today(now));
+    return {
+      ok: true, epoch: this.epoch, startAt: player.medStartAt, now, mat, qi: player.qi, mates: [...player.medMates],
+      teuToday, teuCap: TEU.meditateDailyCap,
+    };
+  }
+
+  today(now) {
+    return localDate(now, this.config.timezone);
+  }
+
+  /** Đủ mỗi phút ngồi liên tục thì cộng 1 TEU, không vượt trần ngày; phần lẻ phút mất khi đứng dậy. */
+  rewardTeu(player, liveMs, now) {
+    player.teuPendingMs += liveMs;
+    const minutes = Math.floor(player.teuPendingMs / TEU.meditateEveryMs);
+    if (!minutes) return;
+    player.teuPendingMs -= minutes * TEU.meditateEveryMs;
+    const date = this.today(now);
+    const earned = this.db.teuToday(player.pid, 'meditate', date);
+    const grant = Math.min(minutes, TEU.meditateDailyCap - earned);
+    if (grant <= 0) return;
+    this.db.addTeu(player.pid, grant, 'meditate', date, now);
+    player.socket?.emit('meditation:teu', { teu: grant, today: earned + grant, cap: TEU.meditateDailyCap });
   }
 
   accrue(player, now = Date.now(), flush = false) {
@@ -56,7 +81,10 @@ export class Meditation {
     const elapsed = Math.max(0, now - player.qiAt);
     player.qiAt = Math.max(now, player.qiAt);
     // A suspended server is not online meditation time.
-    if (elapsed <= 15_000) player.qiPendingMs += elapsed * QI_GAIN_RATE;
+    if (elapsed <= 15_000) {
+      player.qiPendingMs += elapsed * QI_GAIN_RATE;
+      this.rewardTeu(player, elapsed, now);
+    }
     if (!player.qiPendingMs || (!flush && player.qiPendingMs < QI_INTERVAL_MS)) return;
     player.cultivationMs = this.db.addCultivation(player.pid, player.qiPendingMs);
     player.qiPendingMs = 0;

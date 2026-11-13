@@ -323,6 +323,7 @@ function main() {
   net.on('meditation:sync', (data) => {
     app.activities.meditation.onSync(data);
   });
+  net.on('meditation:teu', (data) => app.activities.meditation.onTeu(data));
   net.on('cultivation:progress', ({ sid, qi }) => avatarOf(sid)?.setQi(qi));
   net.on('meditation:scene', (data) => world.meditation.apply(data));
 

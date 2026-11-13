@@ -14,8 +14,10 @@ export class MeditationActivity {
       h('img', { src: '/icons/cultivation.svg', alt: '', width: 100, height: 100, draggable: false }));
     this.progress = h('progress', { class: 'cultivation-progress', max: 1, value: 0, 'aria-label': 'Chân khí tới tầng tiếp theo' });
     this.notice = h('p', { role: 'status', class: 'cultivation-notice' });
+    // TEU nhận từ tĩnh tọa hôm nay; server tính và giữ trần, đây chỉ hiển thị.
+    this.teuLine = h('p', { class: 'cultivation-teu' });
     this.panel = h('section', { class: 'cultivation-panel', hidden: true, 'aria-label': 'Tĩnh tu tích Chân khí' },
-      this.orb, this.progress, this.notice);
+      this.orb, this.progress, this.teuLine, this.notice);
     $('hud').append(this.panel);
   }
 
@@ -34,6 +36,7 @@ export class MeditationActivity {
     this.previousFocus = document.activeElement;
     this.panel.hidden = false;
     this.notice.textContent = 'Đang ngồi xuống…';
+    this.teuLine.hidden = true;
     this.paint(app.me.avatar.qi ?? 0);
     // Flush the last walking position before the server locks meditation in place.
     app.net.socket.emit('move', [app.me.x, app.me.z, app.me.rot, 0]);
@@ -52,10 +55,24 @@ export class MeditationActivity {
     this.notice.textContent = 'Đang ngồi yên và thở chậm. Bấm quả cầu hoặc di chuyển để đứng dậy.';
     this.onSync(seated);
     this.paint(seated.qi);
+    this.paintTeu(seated.teuToday ?? 0, seated.teuCap ?? 0);
   }
 
   onSync({ mates = [] }) {
     this.mates = mates;
+  }
+
+  /** Server báo vừa cộng TEU vì ngồi đủ phút. */
+  onTeu({ today, cap }) {
+    if (!this.ready) return;
+    this.paintTeu(today, cap);
+    if (today >= cap) this.notice.textContent = `Hôm nay đã nhận đủ ${cap} TEU từ tĩnh tọa. Chân khí vẫn tích tiếp.`;
+  }
+
+  paintTeu(today, cap) {
+    this.teuLine.hidden = !cap;
+    this.teuLine.textContent = today >= cap ? `Đủ ${cap} TEU hôm nay` : `${today}/${cap} TEU hôm nay`;
+    this.teuLine.title = `Ngồi thiền đủ mỗi phút được 1 TEU, tối đa ${cap} TEU mỗi ngày.`;
   }
 
   paint(qi) {

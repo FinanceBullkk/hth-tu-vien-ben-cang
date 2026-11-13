@@ -214,6 +214,7 @@ export class Db {
       // nếu chỉ cộng ván thắng thì cứ cược nhiều là lên hạng dù TEU đang hao.
       teuInsert: p('INSERT INTO teu_log (player_id,amount,reason,local_date,created_at) VALUES (@pid,@amount,@reason,@date,@now)'),
       teuBump: p('UPDATE players SET teu=teu+@amount WHERE id=@pid'),
+      teuDayReason: p('SELECT COALESCE(SUM(amount), 0) teu FROM teu_log WHERE player_id=? AND local_date=? AND reason=?'),
       teuWeekTop: p(`SELECT t.player_id, pl.name, SUM(t.amount) teu FROM teu_log t
         JOIN players pl ON pl.id = t.player_id
         WHERE t.local_date >= @since AND t.reason <> 'welcome' AND (t.amount > 0 ${TABLE_GAMES.map((g) => `OR t.reason LIKE '${g}:%'`).join(' ')})
@@ -385,6 +386,11 @@ export class Db {
   addTeu(playerId, amount, reason, date, now = Date.now()) {
     this.teuTx(playerId, amount, reason, date, now);
     if (amount > 0) this.onTeu?.(playerId, this.shop.teu(playerId));
+  }
+
+  /** Tổng TEU nhận trong một ngày theo một lý do (vd. "meditate"), dùng cho trần mỗi ngày. */
+  teuToday(playerId, reason, date) {
+    return this.s.teuDayReason.get(playerId, date, reason)?.teu ?? 0;
   }
 
   fishCatch(playerId, fishId, weight, grade, date, now = Date.now()) {

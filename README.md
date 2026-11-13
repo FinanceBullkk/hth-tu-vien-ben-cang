@@ -63,7 +63,7 @@ Cập nhật lên bản mới: chép mã mới lên máy, chạy `docker build -
 - **Audition chuông:** nhập chuỗi **phím mũi tên**, rồi bấm **Space** khi vạch trắng tới tâm vùng vàng. Điện thoại có bốn phím chạm và nút **Chốt nhịp**. Có Perfect, Good, Miss và combo.
 - Login và trong game đều dùng bản *Where Winds Meet Character Creation Song*, với âm lượng giảm 50%. Server giữ một mốc phát chung trong game; mỗi máy vào sẽ phát cùng đoạn. Nhạc MP3 được phục vụ từ game. Nút **Nhạc** mở bảng phát/tạm dừng và chỉnh âm lượng; mức âm lượng được lưu trên máy. Nếu trình duyệt chặn phát tự động, bấm **Phát nhạc**. Đóng bảng không dừng nhạc. Phách minigame chạy độc lập.
 - Tới gần gác chuông, chơi 16 chuỗi trong khoảng 40 giây. Chốt đúng làm chuông ngân; đồng nghiệp chốt cùng nhịp làm âm dày hơn. Server kiểm tra cả chuỗi và thời điểm nhận Space.
-- **Thiền:** bấm **Space** để ngồi ngay tại chỗ; đứng cạnh chiếu trống trong thiền đường thì ngồi lên chiếu. Ngồi yên và thở chậm để tích Chân khí; tầng tự tăng tại 0 / 50 / 150 / 350 / 750 khí: Tụ khí, Dẫn khí, Ngưng khí, Hóa khí, Viên mãn. Bấm quả cầu hoặc di chuyển để đứng dậy; khí đã tích được giữ lại. Mất mạng ngừng tích khí, không cộng offline.
+- **Thiền:** bấm **Space** để ngồi ngay tại chỗ; đứng cạnh chiếu trống trong thiền đường thì ngồi lên chiếu. Ngồi yên và thở chậm để tích Chân khí; tầng tự tăng tại 0 / 50 / 150 / 350 / 750 khí: Tụ khí, Dẫn khí, Ngưng khí, Hóa khí, Viên mãn. Bấm quả cầu hoặc di chuyển để đứng dậy; khí đã tích được giữ lại. Mất mạng ngừng tích khí, không cộng offline. Ngồi liên tục đủ mỗi phút được thêm 1 TEU, tối đa 15 TEU mỗi ngày; đứng dậy giữa chừng thì phút đang dở không tính.
 
 ## Tỉ võ tự do
 
@@ -75,7 +75,7 @@ Màn vào game có nút **Mặc bộ Lee Sin · Long quyền** để chọn cùn
 
 ## TEU và Sạp Kim Bảo
 
-TEU là điểm chung của tu viện: câu cá, giải đố của sư chú Mặc Vũ, đầu hồ, Audition chuông và tấu nhạc đều được TEU. Số TEU đang có hiện ngay dưới số người online ở góc trái; được cộng thì số nảy lên kèm `+N`. Bảng tuần chỉ tính TEU kiếm được, tiêu bao nhiêu cũng không bị trừ hạng.
+TEU là điểm chung của tu viện: câu cá, giải đố của sư chú Mặc Vũ, đầu hồ, Audition chuông, tấu nhạc và ngồi thiền đều được TEU. Số TEU đang có hiện ngay dưới số người online ở góc trái; được cộng thì số nảy lên kèm `+N`. Bảng tuần chỉ tính TEU kiếm được, tiêu bao nhiêu cũng không bị trừ hạng.
 
 - **Sạp Kim Bảo:** quầy mái đỏ của bà chủ Kim Bảo cạnh lối đi tới quán trà. Tới gần bấm **E**, bấm vào bà chủ, hoặc bấm nút cửa hàng trên menu, bấm vào số TEU cũng được.
 - **Thử đồ miễn phí:** bấm một món là nhân vật mặc thử ngay (chỉ máy mình thấy). Đủ TEU thì bấm **Mua**, rồi **Mặc bộ này** để cả tu viện cùng thấy. Đóng bảng khi chưa lưu thì nhân vật về lại bộ đang mặc.
