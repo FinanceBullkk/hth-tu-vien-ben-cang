@@ -83,3 +83,49 @@ export function kiemVuSealInner() {
     glyph('劍', 0, 150, 0.85);
   });
 }
+
+// ===== Texture billboard "bay bổng" (vẽ trong khung 1024, tâm giữa) =====
+
+/** Tường vân: thân mây đầy mềm (gradient) + ba cuộn xoắn viền sáng kiểu mây lành. */
+export function kiemVuCloud() {
+  return canvasTexture('kiem-vu-cloud', 256, ({ c, stroke }) => {
+    const puff = (x, y, r, a) => {
+      const g = c.createRadialGradient(x, y, r * 0.1, x, y, r);
+      g.addColorStop(0, `rgba(255,255,255,${a})`); g.addColorStop(0.6, `rgba(255,255,255,${a * 0.55})`);
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill();
+    };
+    for (const [x, y, r] of [[-250, 60, 190], [-60, -40, 240], [170, 30, 210], [330, 90, 140], [-380, 120, 120]]) puff(x, y, r, 0.55);
+    c.fillStyle = '#fff';
+    for (const [x, y, r, a0] of [[-170, -10, 95, 0.4], [60, -110, 120, 0.2], [270, -10, 85, 0.6]]) {
+      stroke(() => {
+        c.arc(x, y, r, Math.PI * (1 + a0), Math.PI * (2.55 + a0));
+        c.arc(x + r * 0.32, y + r * 0.05, r * 0.55, Math.PI * (0.55 + a0), Math.PI * (2.3 + a0), false);
+      }, 6, 0.85);
+    }
+    stroke(() => { c.moveTo(-460, 190); c.bezierCurveTo(-200, 230, 150, 150, 450, 200); }, 5, 0.6);
+  });
+}
+
+/** Sao bốn cánh lấp lánh: hai tia chéo mảnh + lõi tròn. */
+export function kiemVuStar() {
+  return canvasTexture('kiem-vu-star', 128, ({ c, dot }) => {
+    for (const [w, h] of [[38, 500], [500, 38], [16, 300], [300, 16]]) {
+      c.save(); if (w === 16 || w === 300) c.rotate(Math.PI / 4);
+      const g = c.createRadialGradient(0, 0, 0, 0, 0, Math.max(w, h));
+      g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+      c.fillStyle = g; c.beginPath(); c.ellipse(0, 0, w, h, 0, 0, Math.PI * 2); c.fill(); c.restore();
+    }
+    dot(0, 0, 160, 1);
+  });
+}
+
+/** Vệt khí thẳng đứng: đầu trên sáng, thân mảnh tan dần xuống dưới. */
+export function kiemVuStreak() {
+  return canvasTexture('kiem-vu-streak', 128, ({ c }) => {
+    const g = c.createLinearGradient(0, -512, 0, 512);
+    g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.15, 'rgba(255,255,255,1)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    c.fillStyle = g; c.beginPath(); c.ellipse(0, 0, 160, 512, 0, 0, Math.PI * 2); c.fill();
+  });
+}

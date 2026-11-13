@@ -2,14 +2,19 @@ import * as THREE from 'three';
 import { swordGeometry } from './sword-geometry.js';
 import { KIEM_VU_COLORS, swordMaterial } from './kiem-vu-materials.js';
 import { createEmblemLayers } from './kiem-vu-emblem-layers.js';
-import { createArmillary, createWindStreams, createSwordRain } from './kiem-vu-ornaments.js';
+import { createSwordRain } from './kiem-vu-ornaments.js';
+import { createLightArcs } from './kiem-vu-light-arcs.js';
+import { createSilkSashes } from './kiem-vu-silk-sashes.js';
+import { createBillboards } from './kiem-vu-billboards.js';
 import { createFlyingSwords } from './kiem-vu-flying-swords.js';
 
 // Thanh Phong Kiếm Vũ (effect 12) — Vạn Kiếm Quy Tông Trận, theo công thức nhiều lớp của Kim Liên:
 //  Pháp tướng sau lưng: quầng pháp quang · mandala kiếm hoa (12 kiếm vẽ, lưới sao đan xen, vành
 //    mây, kiếm tâm 劍) · vành phù văn 24 chữ quay ngược · 12 kiếm 3D vòng ngoài + 8 vòng trong
-//    quay ngược chiều · ngọc kiếm tâm · hai vòng thiên luân nghiêng có hạt vàng.
-//  Quanh thân: ba phi kiếm kéo vệt kiếm khí và tua vàng · hai dải gió Thanh Phong xoắn · hạt khí.
+//    quay ngược chiều · ngọc kiếm tâm · tường vân đỡ hai bên · sao lấp lánh.
+//  Quanh thân: bốn dải lưu quang lượn trên các mặt phẳng trôi (thay vòng tròn cứng) · phiêu đái
+//    hai dải lụa sau vai · ba phi kiếm kéo vệt kiếm khí và tua vàng · vệt khí và hạt bay lên.
+//  Dưới chân thêm mây tường vân bồng bềnh.
 //  Dưới chân: trận đồ bát quái tám kiếm ấn, 24 chữ, sao đan xen + kiếm liên 16 cánh quay ngược.
 //  Nhịp 8 giây: tụ kiếm → xuất kiếm (kiếm luân bung, sóng sáng quét quanh mọi vành, tám kiếm
 //    hư ảnh rơi cắm vào trận đồ, xung sáng loang) → ổn định. Mọi chuyển động là hàm thuần của thời gian.
@@ -71,8 +76,9 @@ export function createKiemVuAura(lowQuality = false, reducedMotion = globalThis.
   const gem = new THREE.Mesh(gemGeo, gemMat); gem.scale.set(1, 1.5, 1); gem.position.z = 0.04; wheel.add(gem);
 
   parts.push(createEmblemLayers(wheel, group, colors, lowQuality));
-  parts.push(createArmillary(wheel, colors, lowQuality));
-  parts.push(createWindStreams(group, colors));
+  parts.push(createLightArcs(group, colors, lowQuality));
+  parts.push(createSilkSashes(group, colors, lowQuality));
+  parts.push(createBillboards(group, colors, lowQuality));
   parts.push(createFlyingSwords(group, colors, swords, lowQuality));
   if (!lowQuality) parts.push(createSwordRain(group, ink => swordMaterial(colors, ink)));
 

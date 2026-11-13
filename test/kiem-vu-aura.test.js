@@ -6,7 +6,9 @@ import { swordGeometry } from '../client/src/player/vfx/sword-geometry.js';
 import { createManifestation } from '../client/src/player/cultivation-manifestation.js';
 import { CultivationAura } from '../client/src/player/cultivation-aura.js';
 
-const instanced = aura => { const list = []; aura.points.traverse(o => { if (o.isInstancedMesh) list.push(o); }); return list; };
+// Chỉ các bộ kiếm (vật liệu có uniform ink); billboard mây/sao cũng là InstancedMesh nhưng không tính.
+const instanced = aura => { const list = []; aura.points.traverse(o => { if (o.isInstancedMesh && o.material.uniforms?.ink) list.push(o); }); return list; };
+const named = (aura, name) => { let hit = null; aura.points.traverse(o => { if (o.name === name) hit = o; }); return hit; };
 
 test('Kiếm Vũ: kiếm luân, phi kiếm và trận đồ có số liệu hữu hạn ở mọi thời điểm', () => {
   const aura = createKiemVuAura(false, { matches: false });
@@ -18,6 +20,14 @@ test('Kiếm Vũ: kiếm luân, phi kiếm và trận đồ có số liệu hữ
       else if (o.geometry) assert.ok([...o.geometry.attributes.position.array].every(Number.isFinite));
       if (o.material && o !== aura.points) assert.equal(o.material.depthWrite, false);
     });
+  }
+  for (const name of ['kiem-vu-light-arcs', 'kiem-vu-silk', 'kiem-vu-clouds', 'kiem-vu-stars', 'kiem-vu-streaks']) assert.ok(named(aura, name), name);
+  // Billboard: ma trận và độ đậm từng hạt hữu hạn, độ đậm không âm.
+  for (const name of ['kiem-vu-clouds', 'kiem-vu-stars', 'kiem-vu-streaks']) {
+    const b = named(aura, name);
+    assert.ok([...b.instanceMatrix.array].every(Number.isFinite));
+    assert.ok([...b.instanceColor.array].every(Number.isFinite));
+    assert.ok([...b.instanceColor.array].every((v, i) => i % 3 || v >= 0)); // kênh r = độ đậm
   }
   // 12 kiếm ngoài + 8 kiếm trong + 3 phi kiếm (mỗi bộ có lớp sáng và lớp mực) + 8 kiếm mưa.
   assert.deepEqual(instanced(aura).map(m => m.count).sort((a, b) => a - b), [3, 3, 8, 8, 8, 12, 12]);
@@ -66,11 +76,11 @@ test('Kiếm Vũ: giảm chuyển động làm chậm chứ không tắt hình, 
   aura.dispose();
 });
 
-test('Kiếm Vũ: dispose giải phóng tài nguyên riêng, giữ hình kiếm, dải gió và hoa văn dùng chung', () => {
+test('Kiếm Vũ: dispose giải phóng tài nguyên riêng, giữ hình kiếm, khung billboard và hoa văn dùng chung', () => {
   const aura = createKiemVuAura(false, { matches: false });
   const owned = new Set([aura.points.material]), shared = new Set([swordGeometry()]);
   aura.points.traverse(o => {
-    if (o.name === 'kiem-vu-wind') shared.add(o.geometry);
+    if (o.isInstancedMesh && o.geometry.attributes.position.count === 4) shared.add(o.geometry);
     else if (o.geometry && o.geometry !== swordGeometry()) owned.add(o.geometry);
     if (o.material) owned.add(o.material);
     if (o.material?.uniforms?.map) shared.add(o.material.uniforms.map.value);

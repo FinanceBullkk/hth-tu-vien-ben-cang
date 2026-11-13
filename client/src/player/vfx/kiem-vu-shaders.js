@@ -125,20 +125,3 @@ export const emblemFragment = `
     #include <colorspace_fragment>
   }
 `;
-
-// Dòng gió Thanh Phong: dải xoắn đứng yên, vân gió chảy dọc theo u.
-export const streamFragment = `
-  uniform vec3 edge, core;
-  uniform float time, opacity;
-  varying vec2 vUv;
-  void main() {
-    float across = 1.0 - pow(abs(vUv.y * 2.0 - 1.0), 2.0);
-    float ends = smoothstep(0.0, 0.12, vUv.x) * (1.0 - smoothstep(0.82, 1.0, vUv.x));
-    float flow = pow(0.5 + 0.5 * sin(vUv.x * 26.0 - time * 3.2), 5.0);
-    float fine = pow(0.5 + 0.5 * sin(vUv.x * 90.0 - time * 6.0 + vUv.y * 3.0), 8.0) * 0.35;
-    vec3 col = mix(edge, core, flow * 0.7);
-    gl_FragColor = vec4(col, across * ends * (0.25 + flow * 0.75 + fine) * opacity);
-    #include <tonemapping_fragment>
-    #include <colorspace_fragment>
-  }
-`;
