@@ -614,7 +614,12 @@ test('câu cá qua socket thật: quăng, cắn, giữ kim theo vùng xanh, kéo
   const res = await call(a.s, 'fish:reel');
   assert.equal(res.ok, true);
   assert.equal(res.fish.rarity, bite.rarity);
-  assert.ok(res.teu >= 1);
+  assert.ok(res.value >= 1);
+  assert.equal(res.item?.ref, res.fish.id, 'cá vào túi');
+  assert.deepEqual([a.res.snapshot.bag.capacity, a.res.snapshot.bag.items.length], [49, 0], 'snapshot có túi rỗng');
+  const sold = await call(a.s, 'bag:sell', { ids: [res.item.id] });
+  assert.deepEqual([sold.ok, sold.gained, sold.teu], [true, res.value, a.res.snapshot.teu + res.teu + res.value], 'bán cá qua socket ra TEU');
+  assert.equal((await call(b.s, 'bag:sell', { ids: [res.item.id] })).ok, false, 'không bán được cá người khác');
   const shown = await caught;
   assert.equal(shown.name, res.fish.name);
   assert.equal(shown.id, res.fish.id, 'cả phòng biết loài để dựng đúng con cá');

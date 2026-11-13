@@ -5,7 +5,7 @@ import { Fishing } from '../server/fishing.js';
 import { LAKE, PAGODA, PLACES, clampToWalkable, lakeDistance, resolveCollision } from '../shared/layout.js';
 import { lakeShot } from '../client/src/activities/fishing-camera-shot.js';
 import { LAKE_SHADOW, shadowNear, shadowsAt } from '../shared/fish-lake-shadows.js';
-import { TEU } from '../shared/protocol.js';
+import { catchTeu } from '../shared/fish-bonus.js';
 import { BAITS, FISH, FISH_BITE, FISH_FIGHT, SHADOW_WAIT, castSpot, fightGreen, fightTune, fishHint, fishRoll, isLakeNight } from '../shared/fish.js';
 
 const SHORE = { x: 19, z: 16.7 };
@@ -105,7 +105,10 @@ test('giữ kim trong vùng thì đầy vòng rồi mới kéo lên được, đ
   assert.equal(res.grade, 'perfect');
   assert.ok(res.fish.name);
   assert.equal(res.fish.rarity, bite.rarity, 'độ khó khớp đúng con cá bắt được');
-  assert.equal(res.teu, TEU.fishByRarity[res.fish.rarity] + TEU.fishPerfectBonus + (res.orderDone?.teu ?? 0));
+  const fish = FISH.find((x) => x.id === res.fish.id);
+  assert.equal(res.value, catchTeu({ fish, weight: res.fish.weight, perfect: true, ...res.bonus }), 'giá theo loài, cân và thưởng');
+  assert.deepEqual([res.item.ref, res.item.price, res.soldNow], [fish.id, res.value, false], 'cá vào túi với giá đã chốt');
+  assert.equal(res.teu, (res.orderDone?.teu ?? 0) + (res.milestone?.teu ?? 0), 'ví chỉ nhận thưởng mốc và đơn');
   assert.equal(res.isNew, true, 'lần đầu bắt loài này');
   assert.equal(a.rod, null);
   assert.equal(a.activity, 5, 'bắt xong vẫn đứng câu, người khác không thấy nhân vật giật về đứng thường');
@@ -281,7 +284,7 @@ test('Sổ cá: đủ mốc loài thưởng một lần, phá kỷ lục cân n�
   assert.equal(first.isNew, true);
   assert.equal(first.species, 5);
   assert.equal(first.milestone?.teu, 5, 'loài thứ năm chạm mốc');
-  assert.equal(first.teu, 1 + 1 + 5);
+  assert.equal(first.teu, 5, 'mốc vào ví ngay, còn con cá nằm trong túi');
   assert.equal(first.record, false, 'lần đầu không tính kỷ lục');
 
   f.fishing.cast(a, { power: 0.5 });

@@ -166,10 +166,11 @@ Bấm nút **Chơi gì?** ở góc trên rồi chọn **Câu cá**, hoặc tự 
 - **Người mới:** chưa bắt đủ 3 loài thì vùng xanh rộng và tụt rất chậm. Lần đầu chỉ cần làm theo chữ trên màn hình; mồi, bóng cá, lắc cần được giới thiệu dần sau mỗi con.
 - **Mồi:** bột, giun hoặc rau (bấm chữ dưới màn hình hoặc phím **Q**). Mỗi mồi có nhóm cá riêng.
 - **Bóng cá:** bóng đen bơi dưới mặt hồ, mọi máy thấy giống nhau. Bóng càng to càng dễ ra cá hiếm, ai thả trúng trước được. Chỗ nước gợn mạnh thường có bóng lớn.
-- **Thưởng:** thường, quý, hiếm được 1, 2, 4 TEU; ở trong vùng xanh từ 80% thời gian được thêm 1 TEU.
-- **Sạp đồ câu** (góc phải khi đang câu): Cần trúc đen 60 TEU, Cần kim long 160 TEU, mua một lần dùng mãi; cần tốt thì vùng xanh rộng hơn, cá tụt chậm hơn, và cả hồ thấy màu cần. Thính thơm 8 TEU một gói 5 nắm: bật **Thính** cạnh chọn mồi thì mỗi lần quăng rắc một nắm, cá cắn nhanh hơn và dễ ra cá quý, cá hiếm.
+- **Phẩm chất:** Thường, Quý, Hiếm, Sử thi, Huyền thoại (chữ trắng, xanh lá, xanh lam, tím, cam). Cá sử thi, huyền thoại gần như chỉ rình bóng lớn; ai câu được thì cả tu viện thấy thông báo.
+- **Túi đồ (phím B, nút Túi đồ trên HUD hoặc nút Túi khi đang câu):** cá kéo lên vào túi 49 ô với giá bán chốt ngay lúc câu: theo loài, con càng nặng càng đắt (80-120% giá loài), cá khủng và Giờ cá vàng nhân đôi, câu đẹp và chuỗi cộng thêm. Rê chuột vào ô để xem chi tiết; chọn ô rồi **Bán** hoặc **Khoá** (món khoá không bị bán nhanh). **Bán nhanh** bán hết cá chưa khoá tới phẩm chất đã chọn. Cá huyền thoại, sử thi phải bấm bán hai lần. Túi đầy thì con cá mới được bán ngay tại hồ, không mất cá. Thẻ **Đạo cụ** trong túi xem và mua cần, thính.
+- **Sạp đồ câu** (góc phải khi đang câu, hoặc thẻ Đạo cụ trong túi): Cần trúc đen 60 TEU, Cần kim long 160 TEU, Cần phượng hoàng 400 TEU, mua một lần dùng mãi; cần tốt thì vùng xanh rộng hơn, cá tụt chậm hơn, hay dính cá hiếm, sử thi, huyền thoại hơn, và cả hồ thấy màu cần. Cần tre không kéo nổi cá huyền thoại; ở bóng lớn, cần phượng hoàng ra cá huyền thoại khoảng 5 con mỗi trăm lần. Thính thơm 8 TEU một gói 5 nắm: bật **Thính** cạnh chọn mồi thì mỗi lần quăng rắc một nắm, cá cắn nhanh hơn và dễ ra cá quý, cá hiếm.
 - **Đơn bếp chùa:** mỗi ngày ba đơn chung cho cả tu viện, hiện ở góc trái: 3 con cá thường (+4 TEU), 1 con cá quý (+6 TEU), 1 con nặng ký (+8 TEU). Bắt đủ là tự cộng, mỗi đơn một lần một ngày.
-- **Sổ cá:** trong Sổ an có đủ 15 loài, mỗi loài một hình minh hoạ. Loài chưa bắt chỉ hiện bóng đen và gợi ý mồi, giờ và cỡ bóng. Đủ 5, 10 và 15 loài được thưởng 5, 10 và 25 TEU.
+- **Sổ cá:** trong Sổ an có đủ 23 loài, mỗi loài một hình minh hoạ. Loài chưa bắt chỉ hiện bóng đen và gợi ý mồi, giờ và cỡ bóng. Đủ 5, 10 và 23 loài được thưởng 5, 10 và 25 TEU (vào ví ngay). Danh hiệu ngư phủ trong túi đồ lên theo số loài.
 
 ## Trò chuyện bằng mic
 
@@ -278,6 +279,7 @@ server/
   wishes.js      Lời ước và quẻ vận đơn
   bell.js        Chuông cá nhân, lịch và sự kiện chuông
   fishing.js     Câu cá: định giờ cắn, roll loài, tự mô phỏng pha giằng co
+  bag.js         Túi đồ: bán cá lấy TEU, khoá món (bag-store.js: bảng bag_items)
   meditation.js  Giữ chỗ chiếu, nhịp thở chung
   rhythm.js      Minigame Audition chuông
   riddle.js      Đố thuật ngữ với Mặc Vũ

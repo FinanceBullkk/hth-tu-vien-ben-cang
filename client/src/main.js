@@ -5,6 +5,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { FISH_RARITY } from '../../shared/fish-catalog.js';
 import { BELL, SPAWN } from '../../shared/layout.js';
 import { AVATAR, EMOJIS } from '../../shared/protocol.js';
 import { Activities } from './activities/index.js';
@@ -31,6 +32,8 @@ import { openGraphicsPanel } from './ui/graphics-panel.js';
 import { Hud } from './ui/hud.js';
 import { applyLook, lookOf, openShop, rememberLook } from './ui/shop-panel.js';
 import { Wallet } from './ui/wallet.js';
+import { BagState } from './ui/bag-state.js';
+import { openBag } from './ui/bag-panel.js';
 import { closeTopModal, modalOpen, openModal } from './ui/modal.js';
 import { nudgePlacesMenu, openPlacesMenu } from './ui/places-menu.js';
 import { showTutorial } from './ui/tutorial.js';
@@ -43,6 +46,7 @@ import './ui/fishing.css';
 import './ui/melody.css';
 import './ui/cultivation.css';
 import './ui/shop.css';
+import './ui/bag.css';
 import './ui/table-hud.css';
 import './ui/baucua.css';
 import './ui/casino-round-hud.css';
@@ -131,6 +135,7 @@ function main() {
   app.profile = profile;
   app.hud = new Hud(app);
   app.wallet = new Wallet();
+  app.bag = new BagState();
   app.chat = new Chat(app);
   app.activities = new Activities(app);
   app.voice = new ProximityVoice(app);
@@ -214,6 +219,7 @@ function main() {
     app.activities.bell.setWait(snap.bellWait);
     app.activities.bellEvent.apply(snap.bellEvent);
     app.wallet.apply({ teu: snap.teu, owned: snap.owned });
+    app.bag.apply(snap.bag);
     app.activities.baucua.setSnapshot(snap.baucua);
     app.activities.xidach.setSnapshot(snap.xidach);
     app.activities.taixiu.setSnapshot(snap.taixiu);
@@ -357,7 +363,10 @@ function main() {
     world.fishing.showCatch(sid, id, rarity);
     // Khoe ngay trên đầu người bắt; ai đang đứng quanh hồ đều thấy.
     if (sid !== mySid) avatarOf(sid)?.say(`${trophy ? 'Cá khủng! ' : ''}${name} ${'★'.repeat(rarity)} · ${weight} kg`, 3500);
-    if (sid !== mySid && (rarity === 3 || trophy)) app.audio.chime(0.05);
+    if (sid !== mySid && (rarity >= 3 || trophy)) app.audio.chime(0.05);
+    // Cá sử thi, huyền thoại thì cả tu viện cùng biết, đứng xa hồ cũng thấy.
+    const who = app.remotes.map.get(sid)?.name;
+    if (sid !== mySid && rarity >= 4 && who) hud.toast(`${who} vừa câu được cá ${FISH_RARITY[rarity]?.name ?? ''}: ${name}!`, { ms: 4500 });
   });
 
   // ---------- Đầu hồ ----------
@@ -422,6 +431,7 @@ function main() {
   $('playBtn').addEventListener('click', () => openPlacesMenu(app));
   $('bookBtn').addEventListener('click', () => openBook(app));
   $('shopBtn').addEventListener('click', () => openShop(app, 'shop'));
+  $('bagBtn').addEventListener('click', () => openBag(app));
   $('wardrobeBtn').addEventListener('click', () => openShop(app, 'wardrobe'));
   $('walletBtn').addEventListener('click', () => openShop(app, 'shop'));
   $('boardBtn').addEventListener('click', () => openBoard(app));
@@ -444,6 +454,11 @@ function main() {
       return false;
     }
     if (app.activities.onKey(e.code, true)) return true;
+    // Túi đồ mở được cả lúc đang câu: túi đầy thì bán bớt ngay bên hồ.
+    if (e.code === 'KeyB' && !modalOpen()) {
+      openBag(app);
+      return true;
+    }
     if (modalOpen() || app.activities.current) return false;
     if (e.code === 'Space') {
       // Space ngồi thiền ngay tại chỗ; đứng cạnh chiếu trống thì ngồi lên chiếu.

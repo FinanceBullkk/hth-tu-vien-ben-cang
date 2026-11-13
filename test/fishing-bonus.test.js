@@ -4,6 +4,7 @@ import { Db } from '../server/db.js';
 import { Fishing } from '../server/fishing.js';
 import { FISH, FISH_BITE, SHADOW_WAIT, fightGreen } from '../shared/fish.js';
 import { GOLDEN_HOUR, STREAK_STEPS, TROPHY, catchTeu, goldenHour, isTrophy, streakBonus } from '../shared/fish-bonus.js';
+import { fishBasePrice } from '../shared/fish-catalog.js';
 import { TEU } from '../shared/protocol.js';
 
 const SHORE = { x: 19, z: 16.7 };
@@ -61,11 +62,15 @@ test('chuỗi câu đẹp và công thức TEU: nhân gốc, cộng câu đẹp 
   assert.equal(streakBonus(1), 0);
   for (const step of STREAK_STEPS) assert.equal(streakBonus(step.streak), step.teu);
   assert.equal(streakBonus(99), STREAK_STEPS.at(-1).teu, 'có trần');
-  assert.equal(catchTeu({ rarity: 2, perfect: false, trophy: false, golden: false, streak: 0 }), TEU.fishByRarity[2]);
+  const nham = FISH.find((f) => f.id === 'nham');
+  assert.equal(catchTeu({ fish: nham, weight: nham.minW, perfect: false, trophy: false, golden: false, streak: 0 }), Math.round(nham.price * 0.8));
+  assert.equal(catchTeu({ fish: nham, weight: nham.maxW, perfect: false, trophy: false, golden: false, streak: 0 }), Math.round(nham.price * 1.2), 'con nặng nhất giá 120%');
   assert.equal(
-    catchTeu({ rarity: 3, perfect: true, trophy: true, golden: true, streak: 4 }),
-    TEU.fishByRarity[3] * TROPHY.teuFactor * GOLDEN_HOUR.teuFactor + TEU.fishPerfectBonus + streakBonus(4),
+    catchTeu({ fish: nham, weight: 16, perfect: true, trophy: true, golden: true, streak: 4 }),
+    Math.round(fishBasePrice(nham, 16) * TROPHY.teuFactor * GOLDEN_HOUR.teuFactor) + TEU.fishPerfectBonus + streakBonus(4),
   );
+  const com = FISH.find((f) => f.id === 'com');
+  assert.equal(catchTeu({ fish: com, weight: com.minW, perfect: false, trophy: false, golden: false, streak: 0 }), 1, 'con rẻ nhất vẫn đáng 1 TEU');
 });
 
 test('server: câu đẹp liên tiếp thì chuỗi tăng và được thưởng, rút sớm làm đứt chuỗi', (t) => {
@@ -73,10 +78,14 @@ test('server: câu đẹp liên tiếp thì chuỗi tăng và được thưởng
   const first = f.catchFish('thu', 1);
   assert.equal(first.grade, 'perfect');
   assert.equal(first.bonus.streak, 1);
-  assert.equal(first.teu, TEU.fishByRarity[1] + TEU.fishPerfectBonus + (first.orderDone?.teu ?? 0));
+  const value = (bonus) => catchTeu({ fish: thu, weight: 1, perfect: true, trophy: false, golden: false, ...bonus });
+  assert.equal(first.value, value({ streak: 1 }));
+  assert.equal(first.teu, first.orderDone?.teu ?? 0, 'giá con cá nằm trong túi, chưa vào ví');
+  assert.deepEqual(first.item.tags, ['perfect']);
   const second = f.catchFish('thu', 1);
   assert.equal(second.bonus.streak, 2);
-  assert.equal(second.teu, TEU.fishByRarity[1] + TEU.fishPerfectBonus + streakBonus(2) + (second.orderDone?.teu ?? 0));
+  assert.equal(second.value, value({ streak: 2 }));
+  assert.equal(second.item.price, second.value);
 
   f.fishing.cast(f.a, { power: 0.5 });
   assert.equal(f.fishing.reel(f.a).escaped, true);
@@ -105,7 +114,8 @@ test('server: cá khủng gấp đôi phần gốc và cả phòng được báo
   const f = fixture(t);
   const res = f.catchFish('thu', bigThu);
   assert.equal(res.bonus.trophy, true);
-  assert.equal(res.teu, TEU.fishByRarity[1] * TROPHY.teuFactor + TEU.fishPerfectBonus + (res.orderDone?.teu ?? 0));
+  assert.equal(res.value, catchTeu({ fish: thu, weight: bigThu, perfect: true, trophy: true, golden: false, streak: 1 }));
+  assert.deepEqual(res.item.tags, ['trophy', 'perfect']);
   assert.equal(f.events.findLast((e) => e.event === 'fish:caught').data.trophy, true);
 });
 
@@ -117,7 +127,8 @@ test('server: quăng trong Giờ cá vàng thì cá cắn sớm hơn và TEU g�
   f.fishing.cancel(f.a);
   const res = f.catchFish('thu', 1);
   assert.equal(res.bonus.golden, true);
-  assert.equal(res.teu, TEU.fishByRarity[1] * GOLDEN_HOUR.teuFactor + TEU.fishPerfectBonus + (res.orderDone?.teu ?? 0));
+  assert.equal(res.value, catchTeu({ fish: thu, weight: 1, perfect: true, trophy: false, golden: true, streak: 1 }));
+  assert.deepEqual(res.item.tags, ['golden', 'perfect']);
 
   // Ngoài giờ: dữ liệu client kèm cờ golden hay bonus cũng không có tác dụng.
   f.jump(GOLDEN_HOUR.periodMs + 1000);

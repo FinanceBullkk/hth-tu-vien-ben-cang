@@ -241,6 +241,8 @@ export class Room {
     on('fish:cancel', (p) => this.fishing.cancel(p));
     on('fish:gear', (p) => this.fishing.supplies.info(p));
     on('fish:buy', (p, data) => this.fishing.supplies.buy(p, data));
+    on('bag:sell', (p, data) => this.fishing.bag.sell(p, data));
+    on('bag:lock', (p, data) => this.fishing.bag.lock(p, data));
     on('melody:start', (p) => this.melody.start(p));
     on('melody:hit', (p, data) => this.melody.hit(p, data));
     on('melody:finish', (p, data) => this.melody.finish(p, data));
@@ -417,6 +419,7 @@ export class Room {
         fishShadowsTaken: this.fishing.takenShadowIds(),
         owned: [...owned],
         teu: this.db.shop.teu(pid),
+        bag: this.fishing.bag.state(pid),
         welcomeGift: isNewcomer ? TEU.welcomeGift : 0,
         baucua: this.baucua.snapshot(pid),
         xidach: this.xidach.snapshot(pid),

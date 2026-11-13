@@ -19,6 +19,7 @@ export class FishingSuppliesControl {
   apply(info) {
     const { app, view } = this;
     view.apply(info);
+    app.bag.apply({ rod: info.rod, thinh: info.thinh }); // túi đồ cũng hiện đúng cần, số thính
     if (Number.isFinite(info.teu)) app.wallet.apply({ teu: info.teu });
     if (info.rod != null) app.world.fishing.setRodTier(app.sid, info.rod);
     if (!view.state.thinh) this.useThinh = false;

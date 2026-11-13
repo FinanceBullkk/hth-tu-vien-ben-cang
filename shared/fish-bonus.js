@@ -1,5 +1,6 @@
 // Thưởng thêm khi câu cá, dùng chung client + server: cá khủng, chuỗi câu đẹp và Giờ cá vàng.
-// Server tính TEU thật bằng catchTeu; client chỉ dùng để vẽ banner đếm ngược và ghi chú trên thẻ cá.
+// Server tính giá trị con cá bằng catchTeu (giá bán khi vào túi); client chỉ dùng để vẽ banner và ghi chú trên thẻ cá.
+import { fishBasePrice } from './fish-catalog.js';
 import { TEU } from './protocol.js';
 
 // Giờ cá vàng: năm phút cuối của mỗi nửa giờ (theo đồng hồ server), cá cắn nhanh và trả gấp đôi.
@@ -42,12 +43,12 @@ export function streakBonus(streak) {
 }
 
 /**
- * TEU của một con cá (chưa gồm thưởng mốc Sổ cá và đơn hàng):
- * phần gốc theo độ hiếm nhân cá khủng và Giờ cá vàng, cộng câu đẹp và chuỗi.
+ * Giá bán (TEU) của một con cá, chốt ngay lúc kéo lên và ghi vào túi đồ (chưa gồm mốc Sổ cá và đơn hàng):
+ * giá gốc theo loài và cân nặng, nhân cá khủng và Giờ cá vàng, cộng câu đẹp và chuỗi. Ít nhất 1 TEU.
  */
-export function catchTeu({ rarity, perfect, trophy, golden, streak }) {
-  const base = (TEU.fishByRarity[rarity] ?? 1)
+export function catchTeu({ fish, weight, perfect, trophy, golden, streak }) {
+  const base = Math.round(fishBasePrice(fish, weight)
     * (trophy ? TROPHY.teuFactor : 1)
-    * (golden ? GOLDEN_HOUR.teuFactor : 1);
-  return base + (perfect ? TEU.fishPerfectBonus : 0) + streakBonus(streak);
+    * (golden ? GOLDEN_HOUR.teuFactor : 1));
+  return Math.max(1, base + (perfect ? TEU.fishPerfectBonus : 0) + streakBonus(streak));
 }
