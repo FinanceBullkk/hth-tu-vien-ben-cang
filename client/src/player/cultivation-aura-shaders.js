@@ -45,6 +45,11 @@ export const groundFragment = `
     if (level >= 3.0) light += stroke(r - 0.29 - 0.08 * cos(turn * 8.0), 0.002) * seated * 0.45;
     if (level >= 4.0) light += stroke(r - 0.87, 0.018) * pow(abs(sin(a * 16.0)), 30.0) * seated * 0.55;
     if (level >= 5.0) light += stroke(r - 0.91, 0.002) * seated * 0.5;
+    // Lưu Ly: gợn nước đồng tâm loang chậm ra ngoài như mặt hồ dưới tòa sóng.
+    if (theme == 2.0) for (int k = 0; k < 3; k++) {
+      float age = fract(time * 0.06 + float(k) / 3.0);
+      light += stroke(r - 0.2 - age * 0.72, 0.003 + age * 0.006) * pow(1.0 - age, 1.5) * smoothstep(0.0, 0.15, age) * 0.5 * seated;
+    }
     light += stroke(r - 0.3 - (1.0 - burst) * 0.65, 0.012) * burst * 0.4;
     float alpha = min(0.85, light + gold * 0.5) * opacity;
     if (r > 0.98 || alpha < 0.002) discard;
