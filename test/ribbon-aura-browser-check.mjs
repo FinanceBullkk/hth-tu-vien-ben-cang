@@ -35,7 +35,8 @@ try {
     await page.type('#nameInput', 'Vân An');
     await page.click('#enterBtn');
     await page.waitForFunction(() => window.__hth.net.ready);
-    for (const effect of [9, 10, 11]) {
+    // 9 (Long Quyền) và 10 (Xích Diễm) đã có pháp tướng riêng; chỉ 11 còn dùng ribbon-aura.
+    for (const effect of [11]) {
       await page.evaluate(effect => {
         const app = window.__hth, a = app.me.avatar;
         a.setLook(0, 6, 0, 1, 0, effect);

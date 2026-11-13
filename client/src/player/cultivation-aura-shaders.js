@@ -32,6 +32,8 @@ export const groundFragment = `
     if (theme == 8.0) shape = 0.41 + 0.12 * sin(turn * 3.0 + r * 7.0);
     // Long Quyền: viền gãy khúc như mép hố chấn địa.
     if (theme == 9.0) shape = 0.4 + 0.07 * abs(sin(turn * 4.5 + sin(turn * 13.0) * 0.6));
+    // Xích Diễm: mép mây cuộn — chín múi tròn, khấc lõm nhọn giữa các múi.
+    if (theme == 10.0) shape = 0.38 + 0.15 * sqrt(abs(sin(turn * 4.5)));
     if (theme == 12.0) shape = 0.36 + 0.2 * pow(abs(cos(turn * 4.0)), 6.0);
     float motif = stroke(r - shape * breath, 0.0035);
     float veins = stroke(r - (shape * 0.83) * breath, 0.0018) * 0.32;
