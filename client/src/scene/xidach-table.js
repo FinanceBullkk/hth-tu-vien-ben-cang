@@ -1,4 +1,4 @@
-// Bàn xì dách ở sân trước thiền đường: bàn bán nguyệt phủ dạ xanh (xidach-table-model.js), Bà Năm nhà cái đứng phía đông, khách đứng phía trục.
+// Bàn xì dách ở sân trước thiền đường: bàn bán nguyệt phủ dạ xanh (xidach-table-model.js), nhà cái Mikumilu đứng phía đông, khách đứng phía trục.
 // Mỗi ghế (0..4) có một quạt bài trên mặt bàn theo hình cung phía khách; bài nhà cái nằm phía nhà cái.
 // Bài người khác úp tới lúc chấm, bài của mình ngửa (activity gửi qua setMine). Cảnh chỉ vẽ theo trạng thái server gửi.
 import * as THREE from 'three';
@@ -24,7 +24,7 @@ const TRAY = { x: 0.62, length: 0.5 }; // Khay chip nhà cái, dọc cạnh th�
 const SHOE = { x: 0.45, y: TOP_Y + 0.07, z: -0.4 }; // Mép trước hộp bài cạnh tay nhà cái; lá chia bay ra từ đây.
 const cardMaterial = (card) => (card >= 0 ? cardFaceMaterial(card) : cardBackMaterial());
 const LABEL_SHOW_DISTANCE = 22;
-const DEALER = { name: 'Bà Năm nhà cái', look: { color: 7, hair: 1, hat: 7, attire: 6 } };
+const DEALER = { name: 'Mikumilu', look: { color: 7, hair: 1, hat: 7, attire: 6 } };
 const LINES = {
   betting: ['Mời bà con vô cược, tám giây thôi!', 'Xì dách đây, ai chơi nào!'],
   playing: ['Rút hay dằn đây?', 'Non là phạt nghen!'],
