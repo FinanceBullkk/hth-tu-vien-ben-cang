@@ -1,6 +1,22 @@
 # Deployment
 
-## Current release: 2026-11-14 Xích Diễm, Long Quyền and Kim Long auras rebuilt, 01:37 UTC+7
+## Current release: 2026-11-14 Kim Long meditation base and ribbon-aura removed, 02:06 UTC+7
+
+Deploy run [43489066801](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43489066801)
+released main `f5ad2bd` as `hth:261114-0206-f5ad2bd`, replacing
+`hth:261114-0137-d9b6877`. Includes PR #88 (Kim Long gets a meditation base
+distinct from Xích Diễm; the unused `ribbon-aura.js` is removed). Public bundle
+`index-Daqf9Gck.js`, confirmed served at `https://game.hthlogistics.top/` with
+`/api/health` 200.
+
+Docker tests 395/395. Candidate passed with DB `quick_check` ok (52 players,
+23 wishes, 81 fish).
+
+Rollback container `hth-rollback-261114-0206-f5ad2bd` preserves
+`hth:261114-0137-d9b6877`. Private backup is in the data volume at
+`backups/cutover-261114-0206-f5ad2bd/`.
+
+## Previous release: 2026-11-14 Xích Diễm, Long Quyền and Kim Long auras rebuilt, 01:37 UTC+7
 
 Deploy run [43484343808](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43484343808)
 released main `d9b6877` as `hth:261114-0137-d9b6877`, replacing
