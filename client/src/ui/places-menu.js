@@ -5,7 +5,7 @@ import { inkIcon } from './ink-icons.js';
 import { openModal } from './modal.js';
 
 // Icon nét cho từng chỗ chơi (thay emoji trong PLACES để bảng đồng bộ với HUD).
-const PLACE_ICONS = { melody: 'music', fish: 'fish', bell: 'bell', mat: 'lotus', pitch: 'pot', baucua: 'dice', xidach: 'cards', taixiu: 'dice', coquay: 'wheel', trade: 'scale', tea:'sticks', tree: 'tree' };
+const PLACE_ICONS = { melody: 'music', fish: 'fish', bell: 'bell', mat: 'lotus', pitch: 'pot', baucua: 'dice', xidach: 'cards', taixiu: 'dice', coquay: 'wheel', slot: 'lever', trade: 'scale', tea:'sticks', tree: 'tree' };
 
 const SEEN_KEY = 'placesMenuSeen';
 const FADE_MS = 240;

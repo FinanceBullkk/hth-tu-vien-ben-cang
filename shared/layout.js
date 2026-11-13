@@ -83,6 +83,33 @@ export const COQUAY_ZONE = {
   seat: { x: 3.95, z: -6.6, rot: Math.PI / 2 },
   dealer: { x: 7.15, z: -6.6, rot: -Math.PI / 2, radius: 0.35 },
 };
+// Dãy máy gạt cần trong hành lang có mái phía tây, giữa hai cột ở khoang giữa: lưng máy sát mép ngoài hành lang,
+// mặt máy quay về phía đông nhìn ra sân sòng. Khách đứng giữa lối hành lang trước máy (stand), quay mặt về phía tây.
+// Máy là vật cản tròn; ai đứng trong useRadius quanh chỗ đứng của một máy thì bấm E để chơi máy đó.
+const SLOT_MACHINE_X = -12.55;
+const SLOT_STAND_GAP = 0.95; // Chỗ đứng cách tâm máy chừng này về phía đông.
+export const SLOT_ZONE = {
+  x: SLOT_MACHINE_X + SLOT_STAND_GAP, z: -5.5, rot: -Math.PI / 2,
+  useRadius: 0.9, machineRadius: 0.42,
+  machines: [-6.7, -5.5, -4.3].map((z) => ({
+    x: SLOT_MACHINE_X, z, rot: Math.PI / 2,
+    stand: { x: SLOT_MACHINE_X + SLOT_STAND_GAP, z, rot: -Math.PI / 2 },
+  })),
+};
+
+/** Máy gần chỗ (x, z) nhất mà còn trong tầm chơi (useRadius + margin quanh chỗ đứng), hoặc -1. */
+export function slotMachineAt(x, z, margin = 0) {
+  let best = -1;
+  let bestD = SLOT_ZONE.useRadius + margin;
+  SLOT_ZONE.machines.forEach((m, i) => {
+    const d = Math.hypot(x - m.stand.x, z - m.stand.z);
+    if (d <= bestD) {
+      bestD = d;
+      best = i;
+    }
+  });
+  return best;
+}
 // Hồ câu góc đông nam sân: ba vòng tròn ghép thành bờ cong tự nhiên, đi vòng quanh được.
 // Cả ba vòng nằm trong CIRCLES nên va chạm dùng chung cơ chế sẵn có. Tâm (x, z) nằm trong vòng giữa.
 export const LAKE = {
@@ -121,6 +148,7 @@ export const PLACES = [
   { key: 'xidach', icon: '🃏', name: 'Xì dách', desc: 'Rút bài đấu nhà cái, luật miền Nam', x: XIDACH_ZONE.seat.x, z: XIDACH_ZONE.seat.z },
   { key: 'taixiu', icon: '🎲', name: 'Tài xỉu', desc: 'Đoán tài hay xỉu, tay to nhất được tung', x: TAIXIU_ZONE.seat.x, z: TAIXIU_ZONE.seat.z },
   { key: 'coquay', icon: '🎡', name: 'Cò quay', desc: 'Đặt số, đỏ đen; tay to nhất búng bi', x: COQUAY_ZONE.seat.x, z: COQUAY_ZONE.seat.z },
+  { key: 'slot', icon: '🎰', name: 'Gạt cần', desc: 'Kéo cần quay ba ô; ba Rồng nổ hũ ×200', x: SLOT_ZONE.x, z: SLOT_ZONE.z },
   { key: 'trade', icon: '⚖️', name: 'Giao thương', desc: 'Trao đổi đồ và TEU với người khác', x: TRADE_POST.x, z: TRADE_POST.z + 1.5 },
   { key: 'tea', icon: '🍵', name: 'Rút xăm', desc: 'Lắc ống xăm xin lời chúc hôm nay', x: TEA.x, z: TEA.z - 2.4 },
   { key: 'tree', icon: '🌳', name: 'Treo lời ước', desc: 'Viết điều mong muốn lên cây bồ đề', x: TREE.x + 3, z: TREE.z },
@@ -225,6 +253,7 @@ export const CIRCLES = [
   { x: BAUCUA_ZONE.dealer.x, z: BAUCUA_ZONE.dealer.z, r: BAUCUA_ZONE.dealer.radius },
   { x: XIDACH_ZONE.x, z: XIDACH_ZONE.z, r: XIDACH_ZONE.tableRadius },
   { x: XIDACH_ZONE.dealer.x, z: XIDACH_ZONE.dealer.z, r: XIDACH_ZONE.dealer.radius },
+  ...SLOT_ZONE.machines.map((m) => ({ x: m.x, z: m.z, r: SLOT_ZONE.machineRadius })),
   ...[TAIXIU_ZONE, COQUAY_ZONE].flatMap((t) => [{ x: t.x, z: t.z, r: t.tableRadius }, { x: t.dealer.x, z: t.dealer.z, r: t.dealer.radius }]),
   { x: PITCH_ZONE.jar.x, z: PITCH_ZONE.jar.z, r: PITCH_ZONE.jar.r },
   { x: PITCH_ZONE.opponent.x, z: PITCH_ZONE.opponent.z, r: 0.35 },
