@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import { Color } from 'three';
 import { createBichNgocAura, bichNgocRhythm, BICH_NGOC_CYCLE } from '../client/src/player/vfx/bich-ngoc-aura.js';
 import { STALKS } from '../client/src/player/vfx/bich-ngoc-grove.js';
+import { POLE } from '../client/src/player/vfx/bich-ngoc-banner.js';
 import { BANDS, WIND_SPIN } from '../client/src/player/vfx/bich-ngoc-wind.js';
 import { bambooLeafGeometry, mossStoneGeometry, shootGeometry } from '../client/src/player/vfx/bich-ngoc-geometry.js';
 import { createManifestation } from '../client/src/player/cultivation-manifestation.js';
@@ -26,7 +27,9 @@ test('Bích Ngọc: rừng trúc, gió xoáy, chuông gió và nền đất có 
   }
   for (const name of ['bich-ngoc-culms', 'bich-ngoc-leaves', 'bich-ngoc-node-glow', 'bich-ngoc-wind', 'bich-ngoc-wind-bands',
     'bich-ngoc-whirl-leaves', 'bich-ngoc-wind-chime', 'bich-ngoc-chime-jade', 'bich-ngoc-wind-tag', 'bich-ngoc-wind-streaks',
-    'bich-ngoc-jade-motes', 'bich-ngoc-moss-carpet', 'bich-ngoc-bamboo-shadow', 'bich-ngoc-moss-stones', 'bich-ngoc-shoots']) {
+    'bich-ngoc-jade-motes', 'bich-ngoc-moss-carpet', 'bich-ngoc-bamboo-shadow', 'bich-ngoc-moss-stones', 'bich-ngoc-shoots',
+    'bich-ngoc-banner', 'bich-ngoc-banner-pole', 'bich-ngoc-wanderer-props', 'bich-ngoc-stele-carving', 'bich-ngoc-wine-gourd',
+    'bich-ngoc-ink-mist']) {
     assert.ok(one(aura, name), name);
   }
   // Thân trúc và lá có lớp thân (mực, normal blend) và lớp sáng; lá dùng chung ma trận instance.
@@ -63,6 +66,23 @@ test('Bích Ngọc: bóng dáng riêng là rừng trúc thẳng đứng cao th�
   const geo = one(aura, 'bich-ngoc-culms').geometry; geo.computeBoundingBox();
   const box = geo.boundingBox;
   assert.ok(box.min.x < -1.1 && box.max.x > 1.1 && box.min.z < -0.9 && box.max.z > 0.3 && box.max.y > 2.8);
+  aura.dispose();
+});
+
+test('Bích Ngọc: chất giang hồ — thân trúc bị chém vát, cờ phướn quay ra trước, đồ khách giang hồ ngoài vùng mặt', () => {
+  assert.ok(STALKS.filter(s => s.cut > 0.05).length >= 2, 'có thân trúc bị kiếm khí chém vát');
+  assert.ok(STALKS.filter(s => s.cut).every(s => s.h < 2), 'chỉ thân thấp bị chém, rừng trúc vẫn cao');
+  const aura = fresh();
+  aura.update(3);
+  const banner = one(aura, 'bich-ngoc-banner');
+  banner.updateWorldMatrix(true, false);
+  const normal = banner.getWorldDirection(new (banner.position.constructor)());
+  assert.ok(normal.z > 0.9, 'mặt cờ quay ra phía trước');
+  assert.ok(POLE.h > Math.max(...STALKS.map(s => s.h)), 'sào cờ cao vượt rừng trúc');
+  for (const name of ['bich-ngoc-banner', 'bich-ngoc-wine-gourd', 'bich-ngoc-stele-carving']) {
+    const p = one(aura, name).getWorldPosition(banner.position.clone());
+    assert.ok(Math.abs(p.x) > 0.8, `${name} nằm ngoài vùng mặt (x = ${p.x.toFixed(2)})`);
+  }
   aura.dispose();
 });
 
@@ -133,6 +153,7 @@ test('Bích Ngọc: chất lượng thấp bỏ lớp sáng phụ, bóng trúc, 
   assert.equal(one(low, 'bich-ngoc-node-glow'), null);
   assert.equal(named(low, 'bich-ngoc-leaves').length, 1);
   assert.equal(named(low, 'bich-ngoc-wind-bands').length, 1);
+  assert.equal(one(low, 'bich-ngoc-ink-mist'), null);
   assert.ok(low.wind.count < full.wind.count);
   full.dispose(); low.dispose();
 });
@@ -198,5 +219,7 @@ test('Bích Ngọc khi ngồi thiền: tòa rừng trúc và đá rêu riêng, k
   // Tầng 5 có trúc cao hơn đầu người ngồi; tầng 4 hở giữa ngay sau đầu.
   bamboo.layers[1].geometry.computeBoundingBox();
   assert.ok(bamboo.layers[1].geometry.boundingBox.max.y > 1.7);
+  // Đổi hình so với bản trước khi thêm đồ giang hồ: tầng 4 có nón lá và hồ lô nên nhiều đỉnh hơn tầng 3.
+  assert.ok(bamboo.layers[1].geometry.attributes.position.count > bamboo.layers[0].geometry.attributes.position.count);
   bamboo.dispose(); lotus.dispose();
 });

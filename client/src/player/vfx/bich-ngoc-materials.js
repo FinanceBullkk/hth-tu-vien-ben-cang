@@ -1,15 +1,17 @@
 import * as THREE from 'three';
 
 // Bảng màu Bích Ngọc Thanh Phong: ngọc bích đậm (mực, đọc được trên nền sáng), ngọc lục sáng, lõi
-// trắng ngọc, đốt trúc vàng lục nhạt, lá trúc, đá xám rêu, bẹ măng nâu vàng.
+// trắng ngọc, đốt trúc vàng lục nhạt, lá trúc, đá xám rêu, bẹ măng nâu vàng; đồ giang hồ: hồ lô
+// sơn mài vàng nâu, nón lá rơm, dây đỏ.
 export const BICH_NGOC_COLORS = {
   steel: new THREE.Color('#0f4a36'), edge: new THREE.Color('#5fe0a6'), core: new THREE.Color('#ecfff4'),
   gold: new THREE.Color('#d8ec8c'), jade: new THREE.Color('#2f9a6c'), leaf: new THREE.Color('#79d283'),
   stone: new THREE.Color('#7d8a80'), moss: new THREE.Color('#5d9a3e'), sheath: new THREE.Color('#b08f55'),
+  gourd: new THREE.Color('#c98a36'), straw: new THREE.Color('#d6bd84'), cord: new THREE.Color('#b8242c'),
 };
 
 /** Loại vật thể 3D (attribute kind) trong shader khối đặc. */
-export const KIND = { culm: 0, twig: 1, leaf: 2, stone: 3, shoot: 4, jade: 5 };
+export const KIND = { culm: 0, twig: 1, leaf: 2, stone: 3, shoot: 4, jade: 5, gourd: 6, straw: 7, cord: 8 };
 /** Tốc độ (rad/s) và độ lệch xuôi gió của trúc lay — shader và CPU (lá, chuông gió) dùng chung. */
 export const SWAY_SPEED = 0.55, SWAY_BIAS = 0.4;
 
@@ -37,9 +39,11 @@ const solidVertex = `
 `;
 
 // ink=1: thân normal-blend (màu thật, giữ hình trên nền sáng); ink=0: lớp sáng cộng màu — viền
-// phát quang, đốt trúc sáng và luồng linh khí chạy dọc thân với tốc độ cố định.
+// phát quang, gờ đốt sáng và luồng linh khí chạy dọc thân với tốc độ cố định.
+// Thân trúc kiểu thủy mặc: ngọc sẫm loang mực theo từng lóng, vân nét bút dọc thân, đốt là vòng
+// mực đậm kèm gờ sáng ngay trên đốt.
 const solidFragment = `
-  uniform vec3 deep, jade, core, gold, leaf, stone, moss, sheath;
+  uniform vec3 deep, jade, core, gold, leaf, stone, moss, sheath, gourd, straw, cord;
   uniform float opacity, ink, glow, time;
   varying float vPart, vAcross, vKind, vNode, vUp;
   varying vec3 vN, vEye;
@@ -47,11 +51,14 @@ const solidFragment = `
     float facing = abs(dot(normalize(vN), normalize(vEye))), rim = pow(1.0 - facing, 1.8);
     vec3 col; float a = 1.0, lit = 0.0, lift = 1.0;
     if (vKind < 0.5) {
-      float f = fract(vNode), ring = 1.0 - smoothstep(0.0, 0.05, min(f, 1.0 - f));
-      float powder = smoothstep(0.88, 0.96, f) * (1.0 - smoothstep(0.96, 0.99, f));
-      col = mix(deep, jade, 0.25 + 0.6 * vPart) * (0.86 + 0.14 * sin(vAcross * 75.4));
-      col = mix(col, gold, ring * 0.75); col = mix(col, core, powder * 0.3);
-      lit = ring + 0.55 * pow(0.5 + 0.5 * sin(vPart * 8.0 - time * 0.7 + vNode * 0.3), 14.0);
+      float f = fract(vNode), ring = 1.0 - smoothstep(0.0, 0.035, min(f, 1.0 - f));
+      float ridge = smoothstep(0.03, 0.05, f) * (1.0 - smoothstep(0.05, 0.1, f));
+      float brush = 0.76 + 0.24 * sin(vAcross * 75.4 + sin(vPart * 37.0 + vAcross * 9.0) * 2.0);
+      float wash = 0.5 + 0.5 * sin(floor(vNode) * 2.3 + vAcross * 6.2832);
+      col = mix(deep, jade, 0.18 + 0.45 * vPart + 0.17 * wash) * brush;
+      col = mix(col, deep * 0.4, ring * 0.85); col = mix(col, gold, ridge * 0.55);
+      lit = ridge * 0.8 + 0.4 * pow(0.5 + 0.5 * sin(vPart * 8.0 - time * 0.7 + vNode * 0.3), 14.0);
+      lift = 0.7;
     } else if (vKind < 1.5) {
       col = mix(deep, jade, 0.55);
     } else if (vKind < 2.5) {
@@ -68,8 +75,17 @@ const solidFragment = `
       col = mix(sheath * 0.55, sheath, band * 0.6 + 0.3);
       col = mix(col, leaf, smoothstep(0.75, 1.0, vPart));
       lift = 0.3;
-    } else {
+    } else if (vKind < 5.5) {
       col = mix(jade, core, 0.35 + 0.3 * vPart); lit = 0.25;
+    } else if (vKind < 6.5) {
+      col = mix(gourd * 0.45, gourd, facing) + core * 0.35 * pow(facing, 12.0);
+      lift = 0.2;
+    } else if (vKind < 7.5) {
+      float weave = 0.5 + 0.5 * sin(vAcross * 150.0) * sin(vPart * 60.0);
+      col = mix(straw * 0.6, straw, 0.55 + 0.45 * weave) * (0.75 + 0.25 * facing);
+      lift = 0.15;
+    } else {
+      col = cord * (0.7 + 0.3 * facing); lift = 0.2;
     }
     if (ink > 0.5) gl_FragColor = vec4(col * (0.7 + 0.3 * facing) + core * rim * 0.1, a * opacity);
     else gl_FragColor = vec4((mix(col, core, 0.4) * rim * 0.5 + gold * lit * (0.2 + 0.18 * glow)) * lift, a * opacity);
@@ -84,6 +100,7 @@ export function solidMaterial(colors, ink) {
     uniforms: { deep: { value: colors.steel }, jade: { value: colors.jade }, core: { value: colors.core },
       gold: { value: colors.gold }, leaf: { value: colors.leaf }, stone: { value: colors.stone },
       moss: { value: colors.moss }, sheath: { value: colors.sheath },
+      gourd: { value: colors.gourd }, straw: { value: colors.straw }, cord: { value: colors.cord },
       opacity: { value: 1 }, ink: { value: ink }, glow: { value: 0 }, time: { value: 0 } },
     vertexShader: solidVertex, fragmentShader: solidFragment,
     blending: ink ? THREE.NormalBlending : THREE.AdditiveBlending });

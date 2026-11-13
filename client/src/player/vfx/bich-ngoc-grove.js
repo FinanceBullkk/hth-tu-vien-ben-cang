@@ -21,6 +21,8 @@ export const STALKS = [
   S(0.7, -1.02, 2.45, 0.06, [0.06, -0.07], 0.37, 1.9, 0.07),
   S(1.12, -0.86, 2.02, 0.054, [0.09, -0.04], 0.34, 3.9, 0.055),
 ];
+// Ba thân thấp đã bị kiếm khí chém ngang: ngọn vát chéo, lộ mặt cắt ngọc.
+for (const [i, cut] of [[2, 0.13], [4, 0.12], [7, 0.12]]) STALKS[i].cut = cut;
 
 /** Cành con ở nửa trên mỗi thân, vươn ra ngoài (không bao giờ quay vào phía mặt người). */
 export function growTwigs(stalks) {
@@ -54,7 +56,7 @@ export function leafLayout(stalks, size = 1) {
   stalks.forEach((s, k) => {
     s.twigs.forEach((t, i) => spray(s, twigPath(s, t)[2], t.dir, 5 + (i % 2), 0.05, 0.3 * size, k * 100 + i * 10));
     const r = Math.hypot(s.x, s.z);
-    spray(s, culmAxis(s, s.h + 0.1), [s.x / r, s.z / r], 4, 1.4, 0.27 * size, k * 100 + 90);
+    if (!s.cut) spray(s, culmAxis(s, s.h + 0.1), [s.x / r, s.z / r], 4, 1.4, 0.27 * size, k * 100 + 90);
   });
   return leaves;
 }

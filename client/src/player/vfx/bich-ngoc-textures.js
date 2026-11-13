@@ -18,10 +18,21 @@ export function leafPath(c, len, width) {
 export function bichNgocWindBand() {
   const tex = canvasTexture('bich-ngoc-wind-band', 512, ({ c, stroke }) => {
     const wave = (y0, amp, ph) => x => y0 + Math.sin(x / 1024 * TAU * 2 + ph) * amp;
-    for (const [y0, amp, ph, w, al] of [[-250, 40, 0, 7, 0.95], [0, 55, 1.6, 10, 1], [250, 40, 3.1, 7, 0.9]]) {
+    c.lineCap = 'round';
+    [[-250, 40, 0, 70], [0, 55, 1.6, 110], [250, 40, 3.1, 70]].forEach(([y0, amp, ph, spread], k) => {
       const f = wave(y0, amp, ph);
-      stroke(() => { c.moveTo(-520, f(-520)); for (let x = -520; x <= 520; x += 16) c.lineTo(x, f(x)); }, w, al);
-    }
+      for (let b = 0; b < 9; b++) {
+        const off = (b / 8 - 0.5) * spread, w = 3 + 5 * hash(k * 20 + b);
+        c.lineWidth = w; c.strokeStyle = `rgba(255,255,255,${0.45 + 0.5 * hash(k * 20 + b + 7)})`;
+        // Sợi lông bút đứt quãng: khô mực ở vài đoạn (khoảng trống), nối liền mép khung để lặp liền.
+        for (let x = -512; x < 512; x += 64) {
+          if (hash(k * 97 + b * 13 + x) < 0.18) continue;
+          c.beginPath(); c.moveTo(x, f(x) + off);
+          for (let t = 8; t <= 64; t += 8) c.lineTo(x + t, f(x + t) + off * (1 - 0.15 * Math.sin((x + t) / 90)));
+          c.stroke();
+        }
+      }
+    });
     // Xoắn mây gió ở bốn chỗ (đối xứng tịnh tiến để nối liền khi lặp).
     for (const [x, y, s] of [[-384, -120, 1], [-128, 150, 0.85], [128, -140, 1.05], [384, 130, 0.9]]) {
       stroke(() => {
@@ -32,10 +43,13 @@ export function bichNgocWindBand() {
         }
       }, 6, 0.95);
     }
-    for (let i = 0; i < 10; i++) {
-      const x = -480 + i * 100, y = (hash(i + 3) - 0.5) * 760;
-      stroke(() => { c.moveTo(x, y); c.lineTo(x + 70, y + 6); }, 2, 0.6);
+    // Mực bắn lấm tấm dọc nét.
+    c.fillStyle = '#fff';
+    for (let i = 0; i < 60; i++) {
+      c.globalAlpha = 0.5 + 0.5 * hash(i + 300);
+      c.beginPath(); c.arc((hash(i + 301) - 0.5) * 1000, (hash(i + 302) - 0.5) * 760, 3 + 9 * hash(i + 303) ** 2, 0, TAU); c.fill();
     }
+    c.globalAlpha = 1;
   });
   tex.wrapS = THREE.RepeatWrapping;
   return tex;

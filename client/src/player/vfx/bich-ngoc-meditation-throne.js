@@ -2,12 +2,13 @@ import * as THREE from 'three';
 import { groveGeometry, bambooLeafGeometry, mossStoneGeometry, shootGeometry } from './bich-ngoc-geometry.js';
 import { makeStalk, growTwigs, leafLayout } from './bich-ngoc-grove.js';
 import { chimeGeometry } from './bich-ngoc-wind-chime.js';
+import { hatGeometry, gourdGeometry } from './bich-ngoc-wanderer-props.js';
 
 // Tòa ngồi thiền của Bích Ngọc (thay đoá sen đang mượn), dựng bằng hàm add(geo, x, y, z, sx, sy,
 // sz, rx, ry, rz) của cultivation-manifestation. Các tầng chồng lên nhau khi lên cảnh giới:
 //  tầng 3 (stage 0): ba thân trúc nhỏ có đốt, cành, lá sau lưng bên trái, cạnh một tảng đá rêu;
-//  tầng 4 (stage 1): người ngồi trên phiến đá rêu dẹt; bức trúc năm thân cao thấp lệch hai bên
-//    sau lưng, HỞ GIỮA ngay sau đầu;
+//  tầng 4 (stage 1): người ngồi trên phiến đá rêu dẹt, nón lá đặt nghiêng bên gối phải; bức trúc
+//    năm thân cao thấp lệch hai bên sau lưng, HỞ GIỮA ngay sau đầu, hồ lô rượu treo bên trái;
 //  tầng 5 (stage 2): trúc vây thêm hai bên sườn, một dải lá trúc xoắn nằm ngang quanh người như gió
 //    đang cuốn (dưới vai, chừa mặt), chuông gió ngọc treo bên phải, măng nhú cạnh đá.
 // Không vòng tròn, không đĩa sau lưng. add() nhân bản geometry nên thân trúc vừa dựng được giải
@@ -56,6 +57,8 @@ export function buildBichNgocThrone(stage, add) {
     // Phiến đá rêu dẹt làm toà ngồi: rộng hơn thân người, lộ mép quanh gối.
     add(mossStoneGeometry(), 0, -0.04, -0.05, 0.62, 0.22, 0.52, 0, 0.3, 0);
     add(mossStoneGeometry(), 0.58, 0, -0.72, 0.18, 0.18, 0.18, 0, 1.4, 0);
+    const hat = hatGeometry(); add(hat, 0.66, 0.1, 0.18, 0.85, 0.85, 0.85, 0.5, 0.4, -0.35); hat.dispose();
+    const gourd = gourdGeometry(); add(gourd, -0.7, 1.22, -0.68, 1, 1, 1, 0, 0.5, 0.05); gourd.dispose();
   } else {
     leafSpiral(add);
     // Chuông gió treo trên cần trúc bên phải, ngang tầm vai ngoài xa mặt.

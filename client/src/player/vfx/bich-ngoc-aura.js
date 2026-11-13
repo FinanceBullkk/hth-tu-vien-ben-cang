@@ -5,6 +5,8 @@ import { createGround } from './bich-ngoc-ground.js';
 import { createWind } from './bich-ngoc-wind.js';
 import { createWindChime } from './bich-ngoc-wind-chime.js';
 import { createBillboards } from './bich-ngoc-billboards.js';
+import { createBanner } from './bich-ngoc-banner.js';
+import { createWandererProps } from './bich-ngoc-wanderer-props.js';
 import { breathRhythm } from './aura-rhythm.js';
 
 // Bích Ngọc Thanh Phong (effect 6) — Trúc Lâm Phong Quyển. Theo bảng phân vai aura: bóng dáng
@@ -14,7 +16,9 @@ import { breathRhythm } from './aura-rhythm.js';
 //    và sau đầu; cành con chìa ra ngoài mang chùm lá rủ; ngọn trúc lay xuôi gió.
 //  Gió xoáy: ba dải gió xoắn vân mây cuộn quấn ngang dưới vai, lá trúc 3D cuốn vòng theo dải;
 //    vệt gió lượn trên các ngọn trúc; bụi ngọc bay lên.
-//  Chuông gió ngọc treo trên cần trúc bên phải, thẻ ngọc 風.
+//  Giang hồ: ba thân trúc thấp bị kiếm khí chém vát; cờ phướn 清風 trên sào trúc bay phần phật;
+//    hồ lô rượu dây đỏ treo trên trúc, nón lá dựa đá, bia đá khắc 竹林聽風; chuông gió ngọc 風.
+//  Thủy mặc: thân trúc ngọc sẫm vân nét bút, dải gió nét bút khô bắn mực, sương mực sát đất.
 //  Nền đất: thảm rêu dưới từng cụm, bóng trúc đổ chéo, đá rêu và măng trúc 3D.
 //  Nhịp 12 giây: thở ra thì gió dày hơn (thêm lá cuốn, dải gió đậm hơn) — không tăng tốc;
 //  mọi thứ là hàm thuần của thời gian.
@@ -35,6 +39,8 @@ export function createBichNgocAura(lowQuality = false, reducedMotion = globalThi
     createGrove(group, colors, lowQuality),
     wind,
     createWindChime(group, colors, lowQuality),
+    createBanner(group, colors),
+    createWandererProps(group, colors),
     createBillboards(group, colors, lowQuality),
   ];
   group.traverse(o => { o.frustumCulled = false; });

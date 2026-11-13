@@ -33,24 +33,34 @@ export function culmAxis(stalk, y) {
   return new THREE.Vector3(stalk.x + stalk.lean[0] * k, y, stalk.z + stalk.lean[1] * k);
 }
 
-/** Thân trúc có đốt: mỗi lóng phình ở đốt, thắt nhẹ giữa lóng, thuôn dần lên ngọn rồi khép chóp. */
+/** Thân trúc có đốt: mỗi lóng phình ở đốt, thắt nhẹ giữa lóng, thuôn dần lên ngọn rồi khép chóp.
+    stalk.cut (m): thân bị kiếm khí chém — ngọn vát chéo (thấp phía trước, cao phía sau để mặt cắt
+    ngửa về người nhìn), bịt bằng mặt cắt ngọc sáng. Trả mảng geometry. */
 function culm(stalk, sides = 10) {
-  const { h, r, node } = stalk, rows = [];
+  const { h, r, node, cut = 0 } = stalk, rows = [];
   const count = Math.max(2, Math.round(h / node));
-  for (let k = 0; k < count; k++) for (const [f, bulge] of [[0, 1.13], [0.06, 1], [0.5, 0.96], [0.94, 1]]) rows.push([(k + f) * h / count, bulge]);
-  rows.push([h, 1.1], [h + 0.04, 0.55], [h + 0.16, 0.02]);
+  for (let k = 0; k < count; k++) for (const [f, bulge] of [[0, 1.13], [0.06, 1], [0.5, 0.96], [0.94, 1]]) rows.push([(k + f) * h / count, bulge, 0]);
+  // Bỏ các hàng nằm trên đường cắt để mặt vát không cắt chéo qua lưới (gập tam giác).
+  if (cut) { rows.splice(0, rows.length, ...rows.filter(([y]) => y < h - cut - 0.01)); rows.push([h, 1, cut]); } else rows.push([h, 1.1, 0], [h + 0.04, 0.55, 0], [h + 0.16, 0.02, 0]);
   const pos = [], idx = [], meta = [], spacing = h / count;
-  rows.forEach(([y, bulge], i) => {
+  rows.forEach(([y, bulge, slant], i) => {
     const c = culmAxis(stalk, Math.min(y, h)), rad = r * (1 - 0.35 * Math.min(y, h) / h) * bulge;
     for (let s = 0; s < sides; s++) {
-      const a = s / sides * Math.PI * 2;
-      pos.push(c.x + Math.cos(a) * rad, y, c.z + Math.sin(a) * rad); meta.push([Math.min(1, y / h), s / sides, y / spacing]);
+      const a = s / sides * Math.PI * 2, yy = y - slant * Math.sin(a);
+      pos.push(c.x + Math.cos(a) * rad, yy, c.z + Math.sin(a) * rad); meta.push([Math.min(1, yy / h), s / sides, yy / spacing]);
       if (i < rows.length - 1) { const n = i * sides + s, n2 = i * sides + (s + 1) % sides; idx.push(n, n + sides, n2, n2, n + sides, n2 + sides); }
     }
   });
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
-  return tag(g, KIND.culm, i => meta[i], swayOf(stalk));
+  const body = tag(g, KIND.culm, i => meta[i], swayOf(stalk));
+  if (!cut) return [body];
+  // Mặt cắt: quạt tam giác từ tâm tới vòng đỉnh vát.
+  const top = pos.slice(-sides * 3), c = culmAxis(stalk, h), cap = [c.x, h, c.z, ...top], capIdx = [];
+  for (let s = 0; s < sides; s++) capIdx.push(0, 1 + (s + 1) % sides, 1 + s);
+  const face = new THREE.BufferGeometry();
+  face.setAttribute('position', new THREE.Float32BufferAttribute(cap, 3)); face.setIndex(capIdx); face.computeVertexNormals();
+  return [body, tag(face, KIND.jade, i => [i ? 0.15 : 0, 0, 0], swayOf(stalk))];
 }
 
 /** Cành con mảnh mọc từ đốt, vươn ra ngoài rồi vút lên; trả geometry và điểm ngọn (gắn chùm lá). */
@@ -67,7 +77,7 @@ function twig(stalk, t) {
 
 /** Cả rừng trúc (thân + cành con) gộp một geometry. */
 export function groveGeometry(stalks) {
-  const parts = stalks.flatMap(s => [culm(s), ...s.twigs.map(t => twig(s, t))]);
+  const parts = stalks.flatMap(s => [...culm(s), ...s.twigs.map(t => twig(s, t))]);
   const merged = mergeGeometries(parts); parts.forEach(p => p.dispose());
   return merged;
 }
