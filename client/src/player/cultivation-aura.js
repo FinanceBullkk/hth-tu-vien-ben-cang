@@ -9,6 +9,7 @@ const PALETTES = [
   ['#73cfa0', '#e8f4bc'], ['#c6daf5', '#fff4d9'], ['#ae83d0', '#e8bbef'],
   ['#ff693b', '#ffe6a1'],
 ];
+PALETTES[12] = ['#5fd6c4', '#e9fff9']; // Kiếm Vũ; 10–11 chưa có bảng riêng nên vẫn rơi về 0.
 
 const groundGeometry = new THREE.PlaneGeometry(2.8, 2.8);
 groundGeometry.rotateX(-Math.PI / 2);
