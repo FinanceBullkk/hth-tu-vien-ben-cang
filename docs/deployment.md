@@ -1,6 +1,26 @@
 # Deployment
 
-## Current release: 2026-11-14 slot machines and fewer redraws, 01:05 UTC+7
+## Current release: 2026-11-14 Xích Diễm, Long Quyền and Kim Long auras rebuilt, 01:37 UTC+7
+
+Deploy run [43484343808](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43484343808)
+released main `d9b6877` as `hth:261114-0137-d9b6877`, replacing
+`hth:261114-0105-f334c04`. Includes PR #83 (Xích Diễm Lưu Vân becomes Hỏa Vân
+Đài: low wide fire-cloud platform, fire ring at the waist), PR #84 (Long Quyền
+becomes Hỏa Long Thăng Quyền: fire dragon spiralling up into a fist seal,
+cracked-ground shockwave) and PR #86 (Kim Long Nguyệt Ảnh: golden dragon arching
+over the head, dragon pearl, half moon, sea of clouds). Effects 9, 10 and 11 now
+each have their own module; `ribbon-aura.js` is no longer used by any effect.
+Public bundle `index-C4w4boCC.js`, confirmed served at
+`https://game.hthlogistics.top/` with `/api/health` 200.
+
+Docker tests 398/398. Candidate passed with DB `quick_check` ok (52 players,
+23 wishes, 81 fish).
+
+Rollback container `hth-rollback-261114-0137-d9b6877` preserves
+`hth:261114-0105-f334c04`. Private backup is in the data volume at
+`backups/cutover-261114-0137-d9b6877/`.
+
+## Previous release: 2026-11-14 slot machines and fewer redraws, 01:05 UTC+7
 
 Deploy run [43479145756](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43479145756)
 released main `f334c04` as `hth:261114-0105-f334c04`, replacing
