@@ -40,7 +40,7 @@ export function createEmblemLayers(wheel, ground, colors, lowQuality) {
 
   return {
     update(time, rhythm, f) {
-      mandala.rotation.z = time * 0.05; rim.rotation.z = -time * 0.035; lotus.rotation.z = -time * 0.12;
+      mandala.rotation.z = time * 0.03; rim.rotation.z = -time * 0.02; lotus.rotation.z = -time * 0.06;
       for (const { m, base } of chasers) {
         m.uniforms.time.value = time; m.uniforms.sweep.value = rhythm.sweep; m.uniforms.sweepOn.value = rhythm.sweepOn;
         m.uniforms.opacity.value = base * (0.85 + 0.25 * rhythm.pulse) * f;

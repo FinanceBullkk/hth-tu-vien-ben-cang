@@ -21,12 +21,12 @@ export function createSilkSashes(parent, colors, lowQuality) {
 
   // Đường giữa dải lụa theo u (0 gốc sau vai → 1 ngọn), side = -1 trái, +1 phải.
   const path = (sideSign, u, time, lift, out) => {
-    const wave = Math.sin(u * 5.5 - time * 2.1 + sideSign) * u, sway = Math.sin(u * 3.2 - time * 1.4) * u;
+    const wave = Math.sin(u * 5.5 - time * 1.0 + sideSign) * u, sway = Math.sin(u * 3.2 - time * 0.65) * u;
     // Vươn ra ngoài viền kiếm luân (x tới ~1.9) và hơi về trước để nổi trên nền trời.
     return out.set(
       sideSign * (0.26 + u * 1.65 + 0.1 * sway),
       1.3 + (0.75 + lift) * Math.sin(u * Math.PI * 0.8) - 1.05 * u * u + 0.16 * wave,
-      -0.12 - 0.2 * u + 0.18 * Math.sin(u * 4.5 - time * 1.7 + sideSign * 2) * u);
+      -0.12 - 0.2 * u + 0.18 * Math.sin(u * 4.5 - time * 0.8 + sideSign * 2) * u);
   };
 
   return {
@@ -39,7 +39,7 @@ export function createSilkSashes(parent, colors, lowQuality) {
           path(s, u, time, lift, p); path(s, u + 0.01, time, lift, q);
           tangent.subVectors(q, p).normalize();
           // Bề ngang lụa xoay quanh trục dải: gốc dựng đứng ôm vai, ngọn lật theo gió.
-          const twist = 0.25 + 0.9 * u * Math.sin(u * 4 - time * 1.6 + k * 1.3);
+          const twist = 0.25 + 0.9 * u * Math.sin(u * 4 - time * 0.7 + k * 1.3);
           back.set(0, Math.cos(twist), Math.sin(twist));
           side.copy(back).addScaledVector(tangent, -back.dot(tangent)).normalize();
           const w = 0.17 * (0.5 + 0.5 * Math.sin(Math.PI * Math.min(1, u * 1.1))) * (1 - 0.3 * u);
@@ -48,7 +48,7 @@ export function createSilkSashes(parent, colors, lowQuality) {
       }
       strips.commit();
       material.uniforms.time.value = time;
-      material.uniforms.opacity.value = (1.0 + 0.3 * rhythm.release) * f;
+      material.uniforms.opacity.value = (1.0 + 0.15 * rhythm.release) * f;
     },
     dispose() { strips.geometry.dispose(); material.dispose(); },
   };

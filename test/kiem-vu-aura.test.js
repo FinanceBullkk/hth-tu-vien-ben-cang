@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { Color } from 'three';
-import { createKiemVuAura, kiemVuRhythm } from '../client/src/player/vfx/kiem-vu-aura.js';
+import { createKiemVuAura, kiemVuRhythm, KIEM_VU_CYCLE } from '../client/src/player/vfx/kiem-vu-aura.js';
 import { swordGeometry } from '../client/src/player/vfx/sword-geometry.js';
 import { createManifestation } from '../client/src/player/cultivation-manifestation.js';
 import { CultivationAura } from '../client/src/player/cultivation-aura.js';
@@ -21,9 +21,9 @@ test('Kiếm Vũ: kiếm luân, phi kiếm và trận đồ có số liệu hữ
       if (o.material && o !== aura.points) assert.equal(o.material.depthWrite, false);
     });
   }
-  for (const name of ['kiem-vu-light-arcs', 'kiem-vu-silk', 'kiem-vu-clouds', 'kiem-vu-stars', 'kiem-vu-streaks']) assert.ok(named(aura, name), name);
+  for (const name of ['kiem-vu-light-arcs', 'kiem-vu-silk', 'kiem-vu-clouds', 'kiem-vu-stars', 'kiem-vu-streaks', 'kiem-vu-petals']) assert.ok(named(aura, name), name);
   // Billboard: ma trận và độ đậm từng hạt hữu hạn, độ đậm không âm.
-  for (const name of ['kiem-vu-clouds', 'kiem-vu-stars', 'kiem-vu-streaks']) {
+  for (const name of ['kiem-vu-clouds', 'kiem-vu-stars', 'kiem-vu-streaks', 'kiem-vu-petals']) {
     const b = named(aura, name);
     assert.ok([...b.instanceMatrix.array].every(Number.isFinite));
     assert.ok([...b.instanceColor.array].every(Number.isFinite));
@@ -34,15 +34,15 @@ test('Kiếm Vũ: kiếm luân, phi kiếm và trận đồ có số liệu hữ
   aura.dispose();
 });
 
-test('Kiếm Vũ: nhịp 8 giây — mưa kiếm chỉ hiện quanh lúc xuất kiếm, tuần hoàn khép kín', () => {
+test('Kiếm Vũ: nhịp thở — mưa kiếm chỉ hiện trong pha trôi xuống, tuần hoàn khép kín', () => {
   const at = (aura, t) => { aura.update(t); let rain; aura.points.traverse(o => { if (o.name === 'kiem-vu-rain') rain = o; }); return rain; };
   const aura = createKiemVuAura(false, { matches: false });
   assert.equal(at(aura, 0).visible, false);
-  assert.equal(at(aura, 8 * 0.3).visible, true);
-  assert.equal(at(aura, 8 * 0.9).visible, false);
-  assert.equal(at(aura, 8 * 1.3).visible, true);
+  assert.equal(at(aura, KIEM_VU_CYCLE * 0.3).visible, true);
+  assert.equal(at(aura, KIEM_VU_CYCLE * 0.95).visible, false);
+  assert.equal(at(aura, KIEM_VU_CYCLE * 1.3).visible, true);
   for (const k of ['phase', 'release', 'sweepOn', 'pulse']) {
-    assert.ok(Math.abs(kiemVuRhythm(1.7)[k] - kiemVuRhythm(1.7 + 8 * 5)[k]) < 1e-9);
+    assert.ok(Math.abs(kiemVuRhythm(1.7)[k] - kiemVuRhythm(1.7 + KIEM_VU_CYCLE * 5)[k]) < 1e-9);
   }
   aura.dispose();
 });
@@ -61,6 +61,18 @@ test('Kiếm Vũ: mờ dần theo opacity Avatar ghi vào material chủ', () =>
   aura.update(1);
   const [glow] = instanced(aura).filter(m => m.material.uniforms.ink.value === 0);
   assert.ok(Math.abs(glow.material.uniforms.opacity.value - 0.85 * 0.5) < 1e-9);
+  aura.dispose();
+});
+
+test('Kiếm Vũ: không có pha tăng tốc — dải lưu quang đi với tốc độ gần như không đổi suốt nhịp', () => {
+  const aura = createKiemVuAura(false, { matches: false });
+  const head = t => {
+    aura.update(t); let m; aura.points.traverse(o => { if (o.name === 'kiem-vu-light-arcs') m = o; });
+    return [...m.geometry.attributes.position.array.slice(0, 3)];
+  };
+  const step = t => { const a = head(t), b = head(t + 0.05); return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]); };
+  const calm = step(KIEM_VU_CYCLE * 0.95), peak = step(KIEM_VU_CYCLE * 0.45);
+  assert.ok(peak < calm * 1.6, 'đỉnh nhịp ' + peak + ' so với lúc lắng ' + calm);
   aura.dispose();
 });
 

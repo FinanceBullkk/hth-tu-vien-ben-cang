@@ -17,13 +17,13 @@ export const arcFragment = `
   varying float vSeed;
   void main() {
     float u = vUv.x, across = abs(vUv.y * 2.0 - 1.0);
-    float fray = 0.18 * sin(u * 37.0 + vSeed * 7.0 - time * 3.0) + 0.12 * sin(u * 83.0 + vSeed * 3.0 + time * 2.0);
+    float fray = 0.18 * sin(u * 37.0 + vSeed * 7.0 - time * 0.9) + 0.12 * sin(u * 83.0 + vSeed * 3.0 + time * 0.6);
     float body = 1.0 - smoothstep(0.35 + fray, 1.0 + fray * 0.5, across);
     float strands = 0.55 + 0.45 * pow(0.5 + 0.5 * sin(vUv.y * 22.0 + u * 9.0 + vSeed), 3.0);
     float head = exp(-u * 9.0), tail = pow(1.0 - u, 1.3);
-    float flow = pow(0.5 + 0.5 * sin(u * 24.0 + time * 5.0 + vSeed * 2.0), 4.0) * 0.5;
+    float flow = pow(0.5 + 0.5 * sin(u * 24.0 + time * 1.4 + vSeed * 2.0), 4.0) * 0.5;
     vec3 col = mix(edge, gold, smoothstep(0.45, 1.0, u) * 0.75);
-    col = mix(col, core, clamp(head * 1.2 + flow * (1.0 - across), 0.0, 1.0));
+    col = mix(col, core, clamp(head * 0.8 + flow * 0.7 * (1.0 - across), 0.0, 1.0));
     gl_FragColor = vec4(col, body * strands * tail * (0.55 + flow + head) * opacity);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
@@ -39,7 +39,7 @@ export const silkFragment = `
   void main() {
     float u = vUv.x, v = vUv.y, across = abs(v * 2.0 - 1.0);
     float rim = smoothstep(0.7, 0.97, across) * (1.0 - smoothstep(0.97, 1.0, across));
-    float sheer = 0.3 + 0.32 * pow(0.5 + 0.5 * sin(u * 30.0 - time * 2.4 + v * 4.0), 6.0);
+    float sheer = 0.3 + 0.32 * pow(0.5 + 0.5 * sin(u * 30.0 - time * 0.9 + v * 4.0), 6.0);
     float weave = pow(0.5 + 0.5 * sin(u * 70.0 + sin(v * 9.0 + u * 5.0) * 2.0), 18.0) * 0.35;
     float fade = smoothstep(0.0, 0.06, u) * pow(1.0 - u, 0.8);
     vec3 col = mix(edge * 0.85, core, 0.12 + 0.3 * (1.0 - u) * (1.0 - across));

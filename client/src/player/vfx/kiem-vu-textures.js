@@ -129,3 +129,15 @@ export function kiemVuStreak() {
     c.fillStyle = g; c.beginPath(); c.ellipse(0, 0, 160, 512, 0, 0, Math.PI * 2); c.fill();
   });
 }
+
+/** Lá trúc / cánh kiếm hoa: thân thon hai đầu nhọn, gân giữa sáng, mép mềm. */
+export function kiemVuPetal() {
+  return canvasTexture('kiem-vu-petal', 128, ({ c, stroke }) => {
+    const g = c.createLinearGradient(0, -480, 0, 480);
+    g.addColorStop(0, 'rgba(255,255,255,0.15)'); g.addColorStop(0.45, 'rgba(255,255,255,0.85)');
+    g.addColorStop(1, 'rgba(255,255,255,0.2)');
+    c.fillStyle = g; c.beginPath(); c.moveTo(0, -480);
+    c.bezierCurveTo(170, -200, 150, 260, 0, 480); c.bezierCurveTo(-150, 260, -170, -200, 0, -480); c.fill();
+    stroke(() => { c.moveTo(0, -430); c.lineTo(0, 430); }, 10, 0.9);
+  });
+}

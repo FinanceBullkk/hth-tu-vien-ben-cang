@@ -5,9 +5,9 @@ import { trailVertex, trailFragment } from './kiem-vu-shaders.js';
 // Ba phi kiếm của Kiếm Vũ bay trên ba quỹ đạo nghiêng quanh thân, mỗi thanh kéo vệt kiếm khí
 // và một tua kiếm (kiếm tuệ) vàng đung đưa sau núm chuôi.
 const ORBITS = [
-  { r: 0.95, h: 0.62, tilt: 0.38, yaw: 0, speed: 1.05 },
-  { r: 0.88, h: 1.02, tilt: -0.28, yaw: 2.1, speed: -0.85 },
-  { r: 1.0, h: 1.4, tilt: 0.18, yaw: 4.2, speed: 1.25 },
+  { r: 0.95, h: 0.62, tilt: 0.38, yaw: 0, speed: 0.38 },
+  { r: 0.88, h: 1.02, tilt: -0.28, yaw: 2.1, speed: -0.3 },
+  { r: 1.0, h: 1.4, tilt: 0.18, yaw: 4.2, speed: 0.44 },
 ];
 const SCALE = 0.5, TASSEL_SEG = 7;
 
@@ -48,7 +48,8 @@ export function createFlyingSwords(parent, colors, makeSword, lowQuality) {
   return {
     update(time, rhythm, f) {
       ORBITS.forEach((o, k) => {
-        const dir = Math.sign(o.speed), theta = time * o.speed * (1 + 0.6 * rhythm.release) + o.yaw;
+        // Lượn chậm đều, không tăng tốc theo nhịp.
+        const dir = Math.sign(o.speed), theta = time * o.speed + o.yaw;
         orbitPoint(o, theta, p); orbitPoint(o, theta + dir * 0.01, q);
         tangent.subVectors(q, p).normalize();
         dummy.position.copy(p); dummy.quaternion.setFromUnitVectors(up, tangent);
@@ -57,14 +58,14 @@ export function createFlyingSwords(parent, colors, makeSword, lowQuality) {
         knot.copy(p).addScaledVector(tangent, -0.29 * SCALE);
         normal.crossVectors(tangent, up).normalize();
         for (let j = 0; j <= TASSEL_SEG; j++) {
-          const u = j / TASSEL_SEG, sway = Math.sin(time * 5 + k * 2 + u * 3) * 0.03 * u;
+          const u = j / TASSEL_SEG, sway = Math.sin(time * 1.8 + k * 2 + u * 3) * 0.035 * u;
           q.copy(knot).addScaledVector(tangent, -0.12 * u).addScaledVector(normal, sway);
           q.y -= 0.16 * u * u;
           quad(tassel.pos, ((k * (TASSEL_SEG + 1) + j) * 2) * 3, q, normal, 0.018 * (1 - u * 0.4));
         }
         // Vệt kiếm khí: dải đứng vuông góc mặt phẳng quỹ đạo, nhìn ngang thấy rõ.
         for (let j = 0; j <= seg; j++) {
-          orbitPoint(o, theta - dir * j * 0.065, p);
+          orbitPoint(o, theta - dir * j * 0.05, p);
           normal.set(0, 1, 0).applyEuler(euler);
           quad(trail.pos, ((k * (seg + 1) + j) * 2) * 3, p, normal, 0.06 * (1 - j / seg * 0.6));
         }

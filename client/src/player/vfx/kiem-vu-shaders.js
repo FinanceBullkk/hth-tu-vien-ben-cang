@@ -32,7 +32,7 @@ export const swordFragment = `
   void main() {
     float fres = pow(1.0 - abs(dot(normalize(vN), normalize(vEye))), 1.6);
     float blade = step(0.0, vPart), v = max(vPart, 0.0);
-    float run = exp(-pow((v - fract(time * 0.32 + vAng * 0.159)) * 7.0, 2.0)) * blade;
+    float run = exp(-pow((v - fract(time * 0.2 + vAng * 0.159)) * 7.0, 2.0)) * blade;
     float d = mod(sweep - vAng + 3.14159265, 6.2831853) - 3.14159265;
     float wave = exp(-d * d * 4.0) * sweepOn * blade;
     float tipGlow = smoothstep(0.7, 1.0, v) * blade;
@@ -113,7 +113,7 @@ export const emblemFragment = `
     if (lines < 0.01) discard;
     vec2 p = vUv * 2.0 - 1.0;
     float a = atan(p.x, p.y), r = length(p);
-    float qi = pow(0.5 + 0.5 * cos(a * chase - time * 0.9), 16.0);
+    float qi = pow(0.5 + 0.5 * cos(a * chase - time * 0.45), 16.0);
     float d = mod(sweep - a + 3.14159265, 6.2831853) - 3.14159265;
     float wave = exp(-d * d * 3.0) * sweepOn;
     vec3 base = mix(edge, gold, goldMix * smoothstep(0.55, 0.95, r));

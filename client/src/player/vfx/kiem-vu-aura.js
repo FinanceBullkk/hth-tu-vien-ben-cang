@@ -16,9 +16,11 @@ import { createFlyingSwords } from './kiem-vu-flying-swords.js';
 //    hai dải lụa sau vai · ba phi kiếm kéo vệt kiếm khí và tua vàng · vệt khí và hạt bay lên.
 //  Dưới chân thêm mây tường vân bồng bềnh.
 //  Dưới chân: trận đồ bát quái tám kiếm ấn, 24 chữ, sao đan xen + kiếm liên 16 cánh quay ngược.
-//  Nhịp 8 giây: tụ kiếm → xuất kiếm (kiếm luân bung, sóng sáng quét quanh mọi vành, tám kiếm
-//    hư ảnh rơi cắm vào trận đồ, xung sáng loang) → ổn định. Mọi chuyển động là hàm thuần của thời gian.
-const BASE_OPACITY = 0.9, CYCLE = 8;
+//  Nhịp 12 giây êm như hơi thở: tụ khí → kiếm luân nở ra chậm, sóng sáng lướt quanh các vành, tám
+//    kiếm hư ảnh trôi nhẹ xuống đáp vào trận đồ → lắng. Không có pha tăng tốc; mọi thứ là hàm thuần của thời gian.
+const BASE_OPACITY = 0.9;
+/** Chu kỳ nhịp (giây): dài và êm — mọi thay đổi là phồng/xẹp mềm, không có pha tăng tốc. */
+export const KIEM_VU_CYCLE = 12;
 const sstep = (a, b, x) => { const k = Math.max(0, Math.min(1, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
 const bell = (c, w, x) => Math.exp(-((x - c) * (x - c)) / (w * w));
 
@@ -34,13 +36,13 @@ function dot() {
   return dotTexture;
 }
 
-/** Nhịp 8 giây, hàm thuần của thời gian. */
+/** Nhịp thở của trận, hàm thuần của thời gian. */
 export function kiemVuRhythm(time) {
-  const phase = ((time / CYCLE) % 1 + 1) % 1;
-  return { phase, gather: bell(0.22, 0.1, phase),
-    release: sstep(0.3, 0.37, phase) * (1 - sstep(0.4, 0.75, phase)),
-    sweepOn: sstep(0.3, 0.36, phase) * (1 - sstep(0.62, 0.72, phase)),
-    sweep: sstep(0.32, 0.68, phase) * Math.PI * 2, pulse: bell(0.36, 0.08, phase) };
+  const phase = ((time / KIEM_VU_CYCLE) % 1 + 1) % 1;
+  // Hít vào (gather) rồi thở ra rất chậm (release ~4 giây), sóng sáng quét một vòng trong ~7 giây.
+  return { phase, gather: bell(0.15, 0.12, phase), release: bell(0.45, 0.17, phase),
+    sweepOn: sstep(0.25, 0.38, phase) * (1 - sstep(0.75, 0.9, phase)),
+    sweep: sstep(0.25, 0.85, phase) * Math.PI * 2, pulse: bell(0.45, 0.14, phase) };
 }
 
 /** reducedMotion: đối tượng `{ matches }` (đã tính nút "Hiệu ứng động đầy đủ"); mặc định
@@ -108,19 +110,19 @@ export function createKiemVuAura(lowQuality = false, reducedMotion = globalThis.
     update(t) {
       const time = reducedMotion?.matches ? t * 0.35 : t;
       const f = group.material.opacity / BASE_OPACITY, rhythm = kiemVuRhythm(time);
-      const push = 0.08 * rhythm.release - 0.035 * rhythm.gather;
+      const push = 0.045 * rhythm.release - 0.025 * rhythm.gather;
       layRing(outer.mesh, 0.42, 0.62, 0, time, push, 0);
       layRing(inner.mesh, 0.58, 0.32, -0.14, time, -push * 0.6, 0.5, true);
-      outer.rotation.z = time * 0.1; inner.rotation.z = -time * 0.16;
-      wheel.position.y = 1.42 + 0.03 * Math.sin(time * 0.7);
-      gem.rotation.y = time * 1.2; gemMat.opacity = (0.6 + 0.4 * rhythm.pulse) * f;
+      outer.rotation.z = time * 0.045; inner.rotation.z = -time * 0.07;
+      wheel.position.y = 1.42 + 0.04 * Math.sin(time * 0.45);
+      gem.rotation.y = time * 0.4; gemMat.opacity = (0.6 + 0.4 * rhythm.pulse) * f;
       for (const m of [glowMat, inkMat]) {
         m.uniforms.time.value = time; m.uniforms.sweep.value = rhythm.sweep; m.uniforms.sweepOn.value = rhythm.sweepOn;
       }
       glowMat.uniforms.opacity.value = 0.85 * f; inkMat.uniforms.opacity.value = 0.55 * f;
       parts.forEach(p => p.update(time, rhythm, f));
       for (let i = 0; i < moteCount; i++) {
-        const u = ((i / moteCount + time * 0.09) % 1 + 1) % 1, a = i * 2.39996 + time * 0.2;
+        const u = ((i / moteCount + time * 0.05) % 1 + 1) % 1, a = i * 2.39996 + time * 0.1;
         const r = 0.75 + 0.3 * Math.sin(u * Math.PI);
         motePos.set([Math.cos(a) * r, 0.1 + u * 2.2, Math.sin(a) * r], i * 3);
       }
