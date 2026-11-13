@@ -5,7 +5,7 @@ import * as THREE from 'three';
 export const NGUYET_BACH_COLORS = {
   steel: new THREE.Color('#2c3a5e'), edge: new THREE.Color('#b9d4ff'),
   core: new THREE.Color('#f4f8ff'), gold: new THREE.Color('#ecdcaa'),
-  lacquer: new THREE.Color('#171a28'), pearl: new THREE.Color('#dfe8f6'),
+  lacquer: new THREE.Color('#222b46'), pearl: new THREE.Color('#dfe8f6'),
   water: new THREE.Color('#1c2a48'), sky: new THREE.Color('#5f7aa8'),
 };
 

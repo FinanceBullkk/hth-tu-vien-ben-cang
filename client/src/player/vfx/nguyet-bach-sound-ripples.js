@@ -27,7 +27,7 @@ export function createSoundRipples(parent, colors) {
         const a = waveAge(time, k, RIPPLE_COUNT, RIPPLE_LIFE);
         age.value[k] = a; strength.value[k] = humAt(time - a * RIPPLE_LIFE);
       }
-      material.uniforms.time.value = time; material.uniforms.opacity.value = 0.85 * f;
+      material.uniforms.time.value = time; material.uniforms.opacity.value = f;
     },
     dispose() { geometry.dispose(); material.dispose(); },
   };

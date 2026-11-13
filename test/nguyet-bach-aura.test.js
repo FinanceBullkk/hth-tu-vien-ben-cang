@@ -37,7 +37,9 @@ test('Nguyệt Bạch: trăng, cổ cầm, sóng âm và gương nước có s�
   for (const name of ['nguyet-bach-moon', 'nguyet-bach-moon-disc', 'nguyet-bach-moon-face', 'nguyet-bach-moon-rim', 'nguyet-bach-moon-glow',
     'nguyet-bach-cloud-band', 'nguyet-bach-moon-stars', 'nguyet-bach-guqin', 'nguyet-bach-guqin-body', 'nguyet-bach-guqin-rim', 'nguyet-bach-hui',
     'nguyet-bach-strings', 'nguyet-bach-inscription', 'nguyet-bach-tassel', 'nguyet-bach-sound-ripples', 'nguyet-bach-water-mirror',
-    'nguyet-bach-moon-reflection', 'nguyet-bach-moon-rays', 'nguyet-bach-notes', 'nguyet-bach-mist', 'nguyet-bach-moon-dust']) {
+    'nguyet-bach-moon-reflection', 'nguyet-bach-moon-rays', 'nguyet-bach-notes', 'nguyet-bach-mist', 'nguyet-bach-moon-dust',
+    'nguyet-bach-moon-corona', 'nguyet-bach-crescent-blade', 'nguyet-bach-crescent', 'nguyet-bach-crescent-carving', 'nguyet-bach-sky-strings',
+    'nguyet-bach-guqin-inlay', 'nguyet-bach-sound-blades', 'nguyet-bach-rocks', 'nguyet-bach-frost']) {
     assert.ok(one(aura, name), name);
   }
   assert.equal(one(aura, 'nguyet-bach-hui').count, 13);
@@ -70,6 +72,22 @@ test('Nguyệt Bạch: bóng dáng riêng — trăng tròn lớn treo cao LỆCH
   assert.ok(Math.max(...ys) > 2.0 && Math.min(...ys) < 0.15, 'cao từ mặt nước lên quá đầu');
   assert.ok(Math.max(...xs) - Math.min(...xs) < 0.55, 'thân hẹp, dựng đứng');
   assert.ok(Math.max(...xs) < -0.3, 'toàn bộ thân đàn ở một bên');
+  // Nguyệt nhận ôm mép ngoài trăng, cả lưỡi nằm phía trăng; dây sáng phóng lên trời phía đàn.
+  assert.ok(worldPoints(aura, one(aura, 'nguyet-bach-crescent')).every(p => p.x > 0.2), 'nguyệt nhận một bên');
+  const sky = worldPoints(aura, one(aura, 'nguyet-bach-sky-strings'));
+  assert.ok(Math.max(...sky.map(p => p.y)) > 3.2 && sky.every(p => p.x < -0.5), 'dây sáng lên trời phía đàn');
+  aura.dispose();
+});
+
+test('Nguyệt Bạch: âm nhận bay đều ra phía ngoài, xa mặt nhân vật', () => {
+  const aura = make();
+  const at = t => { aura.update(t); return [...one(aura, 'nguyet-bach-sound-blades').instanceMatrix.array]; };
+  for (const t of [1, PEAK, CALM]) {
+    const m = at(t);
+    for (let k = 0; k < m.length / 16; k++) assert.ok(m[k * 16 + 12] < -0.7, `lưỡi ${k} ở x ${m[k * 16 + 12]}`);
+  }
+  const move = t => { const a = at(t), b = at(t + 0.1); return Math.hypot(a[12] - b[12], a[14] - b[14]); };
+  assert.ok(Math.abs(move(PEAK) - move(CALM)) < 1e-6, 'tốc độ bay không đổi');
   aura.dispose();
 });
 
@@ -78,7 +96,7 @@ test('Nguyệt Bạch: vùng quanh đầu để trống — trăng, đàn, dây 
   for (const t of [0, 4, PEAK, 11]) {
     aura.update(t);
     assert.ok(fromHead(MOON.x, one(aura, 'nguyet-bach-moon').position.y) - MOON.r - 0.04 > 0.45, 'trăng');
-    for (const name of ['nguyet-bach-guqin-body', 'nguyet-bach-strings']) {
+    for (const name of ['nguyet-bach-guqin-body', 'nguyet-bach-strings', 'nguyet-bach-sky-strings', 'nguyet-bach-crescent', 'nguyet-bach-rocks']) {
       assert.ok(worldPoints(aura, one(aura, name)).every(p => fromHead(p.x, p.y) > 0.45), name);
     }
     const notes = one(aura, 'nguyet-bach-notes'), m = notes.instanceMatrix.array, c = notes.instanceColor.array;
@@ -141,6 +159,9 @@ test('Nguyệt Bạch: chất lượng thấp bỏ lớp mực, viền sáng, tu
   assert.ok(draws(low) <= draws(full) - 6, `thấp ${draws(low)} so với đủ ${draws(full)}`);
   for (const name of ['nguyet-bach-guqin-rim', 'nguyet-bach-tassel', 'nguyet-bach-moon-rays', 'nguyet-bach-mist']) assert.equal(one(low, name), null, name);
   assert.equal(named(low, 'nguyet-bach-notes').length, 1);
+  assert.equal(named(low, 'nguyet-bach-rocks').length, 1);
+  assert.equal(named(low, 'nguyet-bach-crescent').length, 1);
+  assert.ok(one(low, 'nguyet-bach-sound-blades').count < one(full, 'nguyet-bach-sound-blades').count);
   assert.ok(one(low, 'nguyet-bach-moon-face') && one(low, 'nguyet-bach-guqin-body') && one(low, 'nguyet-bach-water-mirror'));
   full.dispose(); low.dispose();
 });
@@ -172,7 +193,8 @@ test('Nguyệt Bạch: dispose giải phóng tài nguyên riêng, giữ texture 
   const aura = make();
   const owned = new Set([aura.points.material]), shared = new Set();
   aura.points.traverse(o => {
-    if (o.isInstancedMesh && o.geometry.attributes.position.count === 4) shared.add(o.geometry);
+    // Khung billboard dùng chung chỉ thuộc các lớp billboardLayer (ShaderMaterial có uniform map).
+    if (o.isInstancedMesh && o.material.uniforms?.map && o.geometry.attributes.position.count === 4) shared.add(o.geometry);
     else if (o.geometry) owned.add(o.geometry);
     if (o.material) owned.add(o.material);
     if (o.material?.uniforms?.map) shared.add(o.material.uniforms.map.value);

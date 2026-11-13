@@ -5,13 +5,14 @@
 // Dây cầm (dải từ aura-ribbon-strips): lõi trắng bạc mảnh, quầng lam mềm, hai đầu tắt dần.
 export const stringFragment = `
   uniform vec3 edge, core;
-  uniform float opacity;
+  uniform float opacity, fade;
   varying vec2 vUv;
   varying float vSeed;
   void main() {
     float across = abs(vUv.y * 2.0 - 1.0);
     float halo = exp(-across * across * 5.0), line = 1.0 - smoothstep(0.0, 0.3, across);
     float ends = smoothstep(0.0, 0.025, vUv.x) * smoothstep(1.0, 0.975, vUv.x);
+    ends *= mix(1.0, pow(1.0 - vUv.x, 1.6), fade); // fade = 1: dây sáng tan dần về ngọn
     gl_FragColor = vec4(mix(edge, core, line), (halo * 0.45 + line * 0.85) * ends * opacity);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>

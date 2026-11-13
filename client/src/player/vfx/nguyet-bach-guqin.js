@@ -4,18 +4,21 @@ import { ribbonVertex } from './aura-flow-shaders.js';
 import { stringFragment } from './nguyet-bach-shaders.js';
 import { solidMaterial, pictureMaterial } from './nguyet-bach-materials.js';
 import { nguyetBachInscription } from './nguyet-bach-textures.js';
+import { nguyetBachGuqinInlay } from './nguyet-bach-ornament-textures.js';
+import { createEmblemKit } from './aura-emblem-materials.js';
 import { guqinGeometry, stringEnds, huiPoint, stringLift, HUI, STRINGS } from './nguyet-bach-geometry.js';
 import { stringOffset } from './nguyet-bach-rhythm.js';
 
 // Cổ cầm dựng đứng sau vai phải nhân vật (phía -x), cao hơn đầu — vật thể chủ đề thứ hai, đối
 // trọng bất đối xứng với vầng trăng bên kia. Thân sơn mài đen ánh lam dày có vân đoạn văn và viền
 // bạc; mười ba phím huy ngọc trai; bảy dây bạc NGÂN (rung đứng sóng, tần số cố định); mặt sau khắc
-// "高山流水" và triện 知音; dải tua ngọc rủ bên đầu đàn lay nhẹ.
-export const GUQIN = { x: -0.76, y: 0.05, z: -0.5, len: 2.15, width: 0.34, depth: 0.07, tilt: 0.06, yaw: 0.28 };
-const SEG = 20, TASSEL_SEG = 12;
+// "高山流水" và triện 知音; dải tua ngọc rủ bên đầu đàn lay nhẹ. Mặt đàn khảm viền bạc đôi, mây rồng
+// ở đầu, sóng ở đuôi. Từ nhạc sơn, bảy DÂY SÁNG phóng thẳng lên trời, xoè nhẹ, ngân cùng dây đàn.
+export const GUQIN = { x: -0.88, y: 0.05, z: -0.52, len: 2.5, width: 0.42, depth: 0.085, tilt: 0.06, yaw: 0.28 };
+const SEG = 20, TASSEL_SEG = 12, SKY_SEG = 12, SKY = 1.35;
 
-function stripMaterial(colors, color) {
-  return new THREE.ShaderMaterial({ uniforms: { edge: { value: color }, core: { value: colors.core }, opacity: { value: 1 } },
+function stripMaterial(colors, color, fade = 0) {
+  return new THREE.ShaderMaterial({ uniforms: { edge: { value: color }, core: { value: colors.core }, opacity: { value: 1 }, fade: { value: fade } },
     vertexShader: ribbonVertex, fragmentShader: stringFragment, transparent: true, depthWrite: false,
     side: THREE.DoubleSide, blending: THREE.AdditiveBlending });
 }
@@ -52,6 +55,16 @@ export function createGuqin(parent, colors, lowQuality) {
   const c = new THREE.Vector3(), side = new THREE.Vector3(1, 0, 0);
   const lift = stringLift(depth);
 
+  // Dây sáng phóng lên trời: nối tiếp dây đàn từ nhạc sơn, ngọn tan dần.
+  const sky = createRibbonStrips(STRINGS, SKY_SEG); geometries.push(sky.geometry);
+  const skyMat = stripMaterial(colors, colors.edge, 1); materials.push(skyMat);
+  const skyMesh = new THREE.Mesh(sky.geometry, skyMat); skyMesh.name = 'nguyet-bach-sky-strings'; skyMesh.renderOrder = 7; group.add(skyMesh);
+
+  // Khảm bạc mặt đàn (nét sáng + mực).
+  const kit = createEmblemKit(colors, lowQuality);
+  const inlay = kit.lines(group, kit.plane(len), nguyetBachGuqinInlay(len, width), depth * 1.3, 6, { opacity: 0.95, goldMix: 0.55, chase: 2, inkScale: 0.8 });
+  inlay.name = 'nguyet-bach-guqin-inlay'; inlay.position.y = len / 2;
+
   // Lạc khoản mặt sau: chỉ thấy khi nhìn từ phía sau (một mặt, quay về -z), vẽ sau thân đàn.
   const [inscGeo, inscMat] = own(new THREE.PlaneGeometry(0.95, 0.95), pictureMaterial(nguyetBachInscription()));
   inscMat.side = THREE.FrontSide;
@@ -81,8 +94,18 @@ export function createGuqin(parent, colors, lowQuality) {
         }
       }
       strips.commit();
+      for (let k = 0; k < STRINGS; k++) {
+        const [, [x1, y1]] = ends[k], sway = stringOffset(k, 0.5, time, rhythm.hum);
+        for (let j = 0; j <= SKY_SEG; j++) {
+          const u = j / SKY_SEG;
+          c.set(x1 * (1 + 1.8 * u) + sway * u * 1.4, y1 + (len - y1 + SKY) * u, lift * (1 - u * 0.5));
+          sky.write(k, j, c, side, 0.016);
+        }
+      }
+      sky.commit(); kit.tick(time, rhythm, f);
+      skyMat.uniforms.opacity.value = (0.55 + 0.45 * rhythm.hum) * f;
       stringMat.uniforms.opacity.value = (0.75 + 0.35 * rhythm.hum) * f;
-      body.uniforms.opacity.value = 0.95 * f; rim.uniforms.opacity.value = 0.8 * f; rim.uniforms.glow.value = rhythm.hum;
+      body.uniforms.opacity.value = 0.95 * f; rim.uniforms.opacity.value = 0.45 * f; rim.uniforms.glow.value = rhythm.hum;
       huiMat.opacity = 0.95 * f; inscMat.opacity = 0.95 * f;
       if (tassel) {
         const sway = 0.06 * Math.sin(time * 0.42) + 0.02 * Math.sin(time * 0.71 + 1);
@@ -96,6 +119,6 @@ export function createGuqin(parent, colors, lowQuality) {
         tassel.mat.uniforms.opacity.value = 0.85 * f; tassel.jadeMat.uniforms.opacity.value = 0.95 * f;
       }
     },
-    dispose() { meshes.forEach(m => m.dispose()); geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); },
+    dispose() { kit.dispose(); meshes.forEach(m => m.dispose()); geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); },
   };
 }
