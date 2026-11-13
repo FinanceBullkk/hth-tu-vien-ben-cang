@@ -1,6 +1,26 @@
 # Deployment
 
-## Current release: 2026-11-13 Kiếm Vũ aura rebuilt as Vạn Kiếm Quy Tông Trận, 18:42 UTC+7
+## Current release: 2026-11-13 four auras rebuilt with distinct forms, 20:27 UTC+7
+
+Deploy run [43433806435](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43433806435)
+released main `2a1d28e` as `hth:261113-2027-2a1d28e`, replacing
+`hth:261113-1842-0d65438`. Includes PR #69 (shared aura modules split out of
+Kiếm Vũ), PR #72 (Lưu Ly Vân Thủy as a whirlpool water wheel of glass drops,
+lily pond with koi, wave-crest meditation seat), PR #73 (Tinh Hà as a
+multi-axis celestial sphere), PR #71 (Đào Hoa as a moon gate with peach
+branch) and PR #70 (Hồng Liên as spread vermilion-bird wings). Each aura now
+has its own silhouette instead of sharing Kiếm Vũ's back-disc layout. Public
+bundle `index-g46ZYfjs.js`, confirmed served at `https://game.hthlogistics.top/`
+with `/api/health` 200.
+
+Docker tests 297/297. Candidate passed with DB `quick_check` ok (52 players,
+23 wishes, 69 fish).
+
+Rollback container `hth-rollback-261113-2027-2a1d28e` preserves
+`hth:261113-1842-0d65438`. Private backup is in the data volume at
+`backups/cutover-261113-2027-2a1d28e/`.
+
+## Previous release: 2026-11-13 Kiếm Vũ aura rebuilt as Vạn Kiếm Quy Tông Trận, 18:42 UTC+7
 
 Deploy run [43419140054](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43419140054)
 released main `0d65438` (PR #67) as `hth:261113-1842-0d65438`, replacing
