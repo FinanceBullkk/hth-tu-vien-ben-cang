@@ -156,6 +156,7 @@ export class Db {
     this.xidach = new TableStakeStore(this.db, 'xidach');
     this.taixiu = new TableStakeStore(this.db, 'taixiu');
     this.coquay = new TableStakeStore(this.db, 'coquay');
+    this.slot = new TableStakeStore(this.db, 'slot');
     /** Gán từ Room: báo số dư TEU mới để đẩy ví cho người chơi. */
     this.onTeu = null;
   }
