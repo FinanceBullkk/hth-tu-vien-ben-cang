@@ -4,6 +4,7 @@ import { swordGeometry } from './vfx/sword-geometry.js';
 import { dropGeometry } from './vfx/drop-geometry.js';
 import { buildDaoHoaThrone } from './vfx/dao-hoa-meditation-throne.js';
 import { buildHongLienThrone } from './vfx/hong-lien-throne.js';
+import { buildNguyetBachThrone } from './vfx/nguyet-bach-throne.js';
 import { buildHuyenDaThrone } from './vfx/huyen-da-meditation-throne.js';
 
 const cache = new Map();
@@ -104,12 +105,15 @@ function build(effect, stage) {
     tinhHa(stage);
   } else if (effect === 4) {
     buildHongLienThrone(add, stage);
-  } else if (effect === 5) {
-    // Đào Hoa: tòa cành đào và nguyệt môn riêng, không mượn đoá sen.
-    buildDaoHoaThrone(stage, add);
+  } else if (effect === 7) {
+    // Nguyệt Bạch: cổ cầm trước gối, trăng tròn lệch vai trái, đàn dựng đứng bên phải.
+    buildNguyetBachThrone(stage, add);
   } else if (effect === 8) {
     // Huyền Dạ: tòa nhật thực đen và lông quạ riêng, không mượn đôi cánh.
     buildHuyenDaThrone(stage, add);
+  } else if (effect === 5) {
+    // Đào Hoa: tòa cành đào và nguyệt môn riêng, không mượn đoá sen.
+    buildDaoHoaThrone(stage, add);
   } else if (stage === 0) {
   // Tier three is a small spirit seed; later tiers introduce a new silhouette.
     if (effect === 1 || effect === 0) bloom(0, 0.18, -0.42, 0.42, 8);
@@ -147,14 +151,6 @@ function build(effect, stage) {
       stem([[x, 0.1, -0.65], [x, height * 0.5, -0.68], [x - side * 0.15, height, -0.65]], 0.018);
       for (let j = 0; j < 4; j++) add(petal, x, 0.5 + j * 0.28, -0.65, 0.14, 0.45, 0.4, 0.2, 0, (j % 2 ? -1 : 1) * 1.0);
     }
-  } else if (effect === 7) {
-    const shape = new THREE.Shape();
-    shape.absarc(0, 0, 1, Math.PI * 0.25, Math.PI * 1.75, false);
-    shape.bezierCurveTo(-0.4, -0.55, -0.4, 0.55, Math.SQRT1_2, Math.SQRT1_2);
-    const moon = new THREE.ShapeGeometry(shape, 40);
-    if (stage === 1) add(moon, 0, 1.5, -0.7, 0.65, 0.65, 1, 0, 0, -0.25);
-    else for (let i = 0; i < 5; i++) add(crystal, (i - 2) * 0.38, 1.85 - Math.abs(i - 2) * 0.25, -0.6, 0.06, 0.17, 0.04, 0, 0, (i - 2) * 0.3);
-    moon.dispose();
   }
   const geometry = mergeGeometries(pieces);
   pieces.forEach(g => g.dispose());
