@@ -1,6 +1,29 @@
 # Deployment
 
-## Current release: 2026-11-13 tài xỉu and cò quay tables, 15:24 UTC+7
+## Current release: 2026-11-13 meditation earns TEU, fishing shop and kitchen orders, 16:02 UTC+7
+
+Deploy run [43397934568](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43397934568)
+released main `66944f5` as `hth:261113-1602-66944f5`, replacing
+`hth:261113-1524-d3207a8`. Includes three PRs merged since the last release:
+#59 (fish leaps out of the water onto the rod, per-species art in cards and
+the fish book, bobber dips and fish shadow under it), #60 (fishing gear stall
+with rods and bait, daily kitchen fish orders) and #61 (meditation earns TEU:
+1 TEU per full minute seated, max 15 TEU per day, counted from `teu_log`
+reason `meditate`; partial minutes are dropped on standing up and time while
+offline or with the server stalled over 15 s does not count; HUD line
+"x/15 TEU hôm nay" under the cultivation orb). Public bundle:
+`index-D-Q4lBmX.js`, confirmed served at `https://game.hthlogistics.top/`
+with `/api/health` 200.
+
+Docker tests 235/235. Candidate passed with DB `quick_check` ok (52 players,
+23 wishes, 62 fish). Meditation TEU checked in a local browser (100 → 101 TEU
+after one minute), not on the public site.
+
+Rollback container `hth-rollback-261113-1602-66944f5` preserves
+`hth:261113-1524-d3207a8`. Private backup is in the data volume at
+`backups/cutover-261113-1602-66944f5/`.
+
+## Previous release: 2026-11-13 tài xỉu and cò quay tables, 15:24 UTC+7
 
 Deploy run [43392988121](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43392988121)
 released main `d3207a8` (PR #56) as `hth:261113-1524-d3207a8`, replacing
