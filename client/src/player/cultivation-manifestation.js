@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { swordGeometry } from './vfx/sword-geometry.js';
 import { dropGeometry } from './vfx/drop-geometry.js';
+import { buildDaoHoaThrone } from './vfx/dao-hoa-meditation-throne.js';
 import { buildHongLienThrone } from './vfx/hong-lien-throne.js';
 
 const cache = new Map();
@@ -38,8 +39,7 @@ function build(effect, stage) {
     const transformed = geo.clone().applyMatrix4(matrix);
     const copy = transformed.index ? transformed.toNonIndexed() : transformed;
     if (copy !== transformed) transformed.dispose();
-    copy.deleteAttribute('uv');
-    copy.deleteAttribute('part');
+    for (const name of ['uv', 'part', 'across', 'kind']) copy.deleteAttribute(name);
     pieces.push(copy);
   };
   const stem = (points, radius = 0.025) => {
@@ -100,8 +100,7 @@ function build(effect, stage) {
       for (let i = 0; i < 5; i++) star4((i - 2) * 0.24, 2.02 - Math.abs(i - 2) * 0.09, -0.55, i === 2 ? 0.2 : 0.13);
     }
   };
-  if (effect === 4) buildHongLienThrone(add, stage);
-  else if (effect === 12) {
+  if (effect === 12) {
     if (stage === 0) plant(3, 0.7, 0.45, 0.2, 0.5);
     else if (stage === 1) plant(8, 0.62, 0.75, 0.38);
     else for (let i = 0; i < 7; i++) {
@@ -110,9 +109,14 @@ function build(effect, stage) {
     }
   } else if (effect === 3) {
     tinhHa(stage);
+  } else if (effect === 4) {
+    buildHongLienThrone(add, stage);
+  } else if (effect === 5) {
+    // Đào Hoa: tòa cành đào và nguyệt môn riêng, không mượn đoá sen.
+    buildDaoHoaThrone(stage, add);
   } else if (stage === 0) {
   // Tier three is a small spirit seed; later tiers introduce a new silhouette.
-    if (effect === 1 || effect === 0 || effect === 5) bloom(0, 0.18, -0.42, 0.42, effect === 5 ? 5 : 8);
+    if (effect === 1 || effect === 0) bloom(0, 0.18, -0.42, 0.42, 8);
     else if (effect === 2) for (let i = 0; i < 3; i++) {
       const a = i * Math.PI * 2 / 3;
       add(dropGeometry(), Math.cos(a) * 0.62, 0.45 + i * 0.12, Math.sin(a) * 0.52, 0.32, 0.32, 0.32);
@@ -144,10 +148,6 @@ function build(effect, stage) {
   } else if (effect === 8) {
     wings(true);
     if (stage === 2) for (let i = 0; i < 3; i++) add(petal, (i - 1) * 0.12, 1.65, -0.5, 0.15, 0.55 - Math.abs(i - 1) * 0.15, 0.4, 0, 0, (i - 1) * -0.3);
-  } else if (effect === 5) {
-    const side = stage === 1 ? -1 : 1;
-    stem([[side * 0.45, 0.1, -0.65], [side * 0.85, 0.75, -0.65], [side * 0.65, 1.5, -0.65], [side * 0.25, 1.85, -0.65]], 0.018);
-    for (let i = 0; i < 5; i++) bloom(side * (0.35 + Math.sin(i * 1.3) * 0.4), 0.55 + i * 0.3, -0.6, 0.18 + i % 2 * 0.07);
   } else if (effect === 6) {
     for (let i = 0; i < 3; i++) {
       const side = stage === 1 ? -1 : 1, x = side * (0.45 + i * 0.25), height = 1.2 + i * 0.3;
