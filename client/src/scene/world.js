@@ -14,6 +14,7 @@ import { GateMonk } from './gate-monk.js';
 import { ShopStall } from './shop-stall.js';
 import { TradePost } from './trade-post.js';
 import { createMonastery } from './monastery.js';
+import { createCasinoQuarter } from './casino-quarter.js';
 import { Particles } from './particles.js';
 import { PitchPotCourt } from './pitch-pot-court.js';
 import { createPort } from './port.js';
@@ -39,6 +40,7 @@ export class World {
     scene.add(createTerrain(lowQuality));
     scene.add(createForest(lowQuality));
     this.monastery = createMonastery(scene);
+    createCasinoQuarter(scene);
     this.port = createPort(scene, this.sky.uniforms, lowQuality);
     this.particles = new Particles(scene, this.monastery.lanterns.positions, this.monastery.hall.candles, lowQuality);
     this.animals = new Animals(scene, lowQuality);

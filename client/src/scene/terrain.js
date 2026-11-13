@@ -2,6 +2,10 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { flatMaterial, rng } from './builders.js';
+import { SITE } from '../../../shared/layout.js';
+
+// Mép mặt gò phẳng: vừa ra ngoài tường bao một chút, phía nam kéo dài qua bậc thềm trước cổng.
+const PLATEAU = { minX: SITE.minX - 0.7, maxX: SITE.maxX + 0.9, minZ: SITE.minZ - 0.7, maxZ: 41 };
 
 const smooth = (a, b, x) => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -31,8 +35,8 @@ export const SEA_Y = -19;
 
 /** Độ cao mặt đất tại (x, z) bên ngoài sân. */
 export function terrainHeight(x, z) {
-  const dx = Math.max(Math.abs(x) - 31, 0);
-  const dz = Math.max(z > 0 ? z - 41 : -z - 31, 0);
+  const dx = Math.max(x - PLATEAU.maxX, PLATEAU.minX - x, 0);
+  const dz = Math.max(z - PLATEAU.maxZ, PLATEAU.minZ - z, 0);
   const d = Math.hypot(dx, dz);
   if (d === 0) return -0.06;
 
@@ -137,7 +141,7 @@ export function createForest(lowQuality) {
   while (placed < N && guard++ < 5000) {
     const x = -300 + rand() * 340;
     const z = -420 + rand() * 840;
-    if (Math.abs(x) < 36 && z > -36 && z < 46) continue;
+    if (x > PLATEAU.minX - 5 && x < PLATEAU.maxX + 5 && z > PLATEAU.minZ - 5 && z < PLATEAU.maxZ + 5) continue;
     if (x > 30 && x < 56 && rand() < 0.6) continue;
     if (Math.abs(x) < 8 && z > 40 && z < 70) continue;
     const y = terrainHeight(x, z);

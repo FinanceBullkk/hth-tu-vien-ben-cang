@@ -14,8 +14,12 @@ import { localDate, zonedToTs } from '../server/time.js';
 import { fightGreen } from '../shared/fish.js';
 import { rhythmPattern, roundTargetAt } from '../shared/rhythm.js';
 import {
-  ABBOT, BELL, BOUNDS, BOXES, CIRCLES, CONTAINERS, MATS, PLAYER_RADIUS, POND, SPAWN, TEA, TREE, clampToWalkable, inBox, resolveCollision,
+  ABBOT, BAUCUA_ZONE, BELL, BOUNDS, BOXES, CASINO, CIRCLES, CONTAINERS, COQUAY_ZONE, HALL, MATS, PLAYER_RADIUS, POND, SHOP, SLOT_ZONE, SPAWN,
+  TAIXIU_ZONE, TEA, TRADE_POST, TREE, XIDACH_ZONE, clampToWalkable, inBox, resolveCollision,
 } from '../shared/layout.js';
+
+// Chỗ đứng trong thiền đường, ngay phía nam chiếu số 0.
+const NEAR_MAT0 = [HALL.x, HALL.z + 4.5];
 
 const PORT = 3911;
 const URL_BASE = `http://127.0.0.1:${PORT}`;
@@ -177,10 +181,20 @@ test('đi hết sân: từ điểm vào tới được mọi hoạt động, kh�
   assert.ok(near(POND.x, POND.z, POND.actionRadius), 'tới được hồ sen');
   assert.ok(near(TEA.x, TEA.z, TEA.radius), 'tới được quán trà');
   assert.ok(near(ABBOT.x, ABBOT.z, ABBOT.actionRadius), 'tới được chỗ thầy trụ trì');
-  assert.ok(near(0, -14, 1), 'thầy trụ trì không chắn cửa thiền đường');
+  assert.ok(near(HALL.x, HALL.z + HALL.halfD, 1), 'thầy trụ trì không chắn cửa thiền đường');
   assert.ok(reached.some(([x, z]) => inBox(x, z, CONTAINERS, CONTAINERS.actionMargin)), 'tới được container');
   MATS.forEach((m, i) => assert.ok(near(m.x, m.z, 2.1), `tới được chiếu ${i}`));
-  assert.ok(near(-25, 25, 1) && near(25, -25, 1), 'tới được các góc sân');
+  for (const zone of [BAUCUA_ZONE, XIDACH_ZONE, TAIXIU_ZONE, COQUAY_ZONE]) {
+    assert.ok(near(zone.seat.x, zone.seat.z, 0.5), `tới được chỗ ngồi bàn ở ${zone.x},${zone.z}`);
+  }
+  SLOT_ZONE.machines.forEach((m, i) => assert.ok(near(m.stand.x, m.stand.z, 0.5), `tới được máy gạt cần ${i}`));
+  assert.ok(near(SHOP.x, SHOP.z - 2, 0.6), 'tới được quầy Sạp Kim Bảo');
+  assert.ok(near(TRADE_POST.x, TRADE_POST.z + 1.5, 0.6), 'tới được trạm giao thương');
+  const corners = [
+    [BOUNDS.minX + 1, BOUNDS.minZ + 1], [BOUNDS.maxX - 1, BOUNDS.minZ + 1], [BOUNDS.minX + 1, 28.5],
+    [CASINO.minX + 1.5, CASINO.minZ + 1.5],
+  ];
+  for (const [x, z] of corners) assert.ok(near(x, z, 1), `tới được góc sân ${x},${z}`);
 });
 
 test('hai người vào phòng thấy nhau, trùng tên tự thêm số', async () => {
@@ -486,8 +500,8 @@ test('thiền: giữ chỗ chiếu, chat bình thường và không còn minigam
   const a = await join('Thiền A');
   const b = await join('Thiền B');
   // Đi vào gần chiếu số 0 ở phía nam vòng tròn.
-  a.s.emit('move', [0, -15.5, 0, 0]);
-  b.s.emit('move', [0, -15.5, 0, 0]);
+  a.s.emit('move', [...NEAR_MAT0, 0, 0]);
+  b.s.emit('move', [...NEAR_MAT0, 0, 0]);
   await new Promise((r) => setTimeout(r, 60));
   const r1 = await call(a.s, 'action:start', { kind: 'meditate', mat: 0 });
   assert.equal(r1.ok, true);
@@ -824,7 +838,7 @@ test('dội sự kiện: phần vượt bị bỏ, dội quá mạnh thì bị n
   await withServer({}, async ({ connectAs }) => {
     const a = await connectAs('198.51.100.3');
     assert.equal((await call(a, 'hello', { name: 'Dội' })).ok, true);
-    a.emit('move', [0, -15.5, 0, 0]);
+    a.emit('move', [...NEAR_MAT0, 0, 0]);
     await new Promise((r) => setTimeout(r, 100));
     const viewer = await connectAs('198.51.100.4');
     assert.equal((await call(viewer, 'hello', { name: 'Xem' })).ok, true);

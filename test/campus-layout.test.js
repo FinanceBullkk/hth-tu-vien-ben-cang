@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { CatmullRomCurve3, Vector3 } from 'three';
-import { BELL, BRIDGE, COURT_PATHS, GALLERIES, HALL, PAGODA, PLACES, POND, TREE, floorHeight, resolveCollision } from '../shared/layout.js';
+import {
+  BAUCUA_ZONE, BELL, BRIDGE, CASINO, COQUAY_ZONE, COURT_PATHS, GALLERIES, HALL, PAGODA, PLACES, POND, TAIXIU_ZONE, TREASURE_BASIN, TREE,
+  XIDACH_ZONE, floorHeight, resolveCollision,
+} from '../shared/layout.js';
 
 test('main axis stays clear from the gate through the hall entrance', () => {
   for (const x of [-1, 0, 1]) {
@@ -43,4 +46,27 @@ test('relocated activities and bridge stay aligned with collision and floor heig
   assert.equal(floorHeight(BELL.x, BELL.z), 0.2);
   assert.ok(Math.abs(BELL.x - HALL.x) > 8, 'bell roof leaves the central sightline open');
   assert.ok(PAGODA.z < -15, 'pagoda belongs to the northern garden');
+});
+
+test('Kim Ngân Phường: hai cổng đi qua được, bàn không chồng nhau và nằm gọn trong tường', () => {
+  const { gateEast, gateSouth } = CASINO;
+  for (let x = CASINO.maxX - 2; x <= CASINO.maxX + 2; x += 0.1) {
+    const result = resolveCollision(x, gateEast.z);
+    assert.ok(Math.hypot(result.x - x, result.z - gateEast.z) < 1e-6, `cổng đông chặn tại ${x}`);
+  }
+  for (let z = CASINO.maxZ - 2; z <= CASINO.maxZ + 2; z += 0.1) {
+    const result = resolveCollision(gateSouth.x, z);
+    assert.ok(Math.hypot(result.x - gateSouth.x, result.z - z) < 1e-6, `cổng nam chặn tại ${z}`);
+  }
+  const tables = [BAUCUA_ZONE, XIDACH_ZONE, TAIXIU_ZONE, COQUAY_ZONE];
+  tables.forEach((a, i) => {
+    assert.ok(a.x - a.radius > CASINO.minX && a.x + a.radius < CASINO.maxX, 'bàn nằm trong tường đông tây');
+    assert.ok(a.z - a.radius > CASINO.minZ && a.z + a.radius < CASINO.maxZ, 'bàn nằm trong tường nam bắc');
+    assert.ok(Math.hypot(a.x - TREASURE_BASIN.x, a.z - TREASURE_BASIN.z) > a.radius + TREASURE_BASIN.r, 'bàn không đè Tụ Bảo Bồn');
+    for (const b of tables.slice(i + 1)) {
+      assert.ok(Math.hypot(a.x - b.x, a.z - b.z) > a.radius + b.radius + 4, 'hai bàn cách nhau ít nhất 4 m');
+    }
+    // Khách đứng phía lối giữa, nhà cái đứng mép ngoài.
+    assert.ok(Math.abs(a.seat.x - CASINO.aisleX) < Math.abs(a.dealer.x - CASINO.aisleX));
+  });
 });

@@ -1,6 +1,6 @@
 // Hiệu ứng hạt: cánh hoa, đom đóm, khói, quầng đèn, sóng âm chuông. Dùng pool, không cấp phát mỗi khung.
 import * as THREE from 'three';
-import { BELL, GARDEN, HALL, POND, TREE } from '../../../shared/layout.js';
+import { BELL, BOUNDS, GARDEN, HALL, POND, TREE } from '../../../shared/layout.js';
 import { glowTexture, rng } from './builders.js';
 
 function makePoints(count, material) {
@@ -120,8 +120,8 @@ export class Particles {
       x = TREE.x + Math.sin(a) * d;
       z = TREE.z + Math.cos(a) * d;
     } else {
-      x = -30 + r() * 60;
-      z = -30 + r() * 62;
+      x = BOUNDS.minX + r() * (BOUNDS.maxX - BOUNDS.minX);
+      z = BOUNDS.minZ + r() * (30 - BOUNDS.minZ);
     }
     const y = anywhere ? r() * 9 : 8 + r() * 2.5;
     this.petals.pos[i * 3] = x;

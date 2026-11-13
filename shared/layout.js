@@ -1,15 +1,18 @@
 // Bố cục sân tu viện dùng chung client + server: ranh giới, vật cản, điểm hoạt động.
 // Quy ước: mặt đất là mặt phẳng XZ, đơn vị mét. Hướng rot: (sin rot, cos rot).
 
-export const BOUNDS = { minX: -29.5, maxX: 29.4, minZ: -29.5, maxZ: 40 };
+// Tường bao gò (tâm tường): phía đông là tường chắn dốc xuống cảng nên giữ nguyên, gò nới về tây và bắc.
+// Nội viện tu ở trục giữa và phía bắc, Kim Ngân Phường (sòng) phía tây, phố chợ tây nam, hồ câu phía đông.
+export const SITE = { minX: -66.3, maxX: 30.1, minZ: -46.3, maxZ: 30 };
+export const BOUNDS = { minX: SITE.minX + 0.8, maxX: 29.4, minZ: SITE.minZ + 0.8, maxZ: 40 };
 export const LANDING = { minX: -4.2, maxX: 4.2, minZ: 30, maxZ: 40 };
 export const SPAWN = { x: 0, z: 36.5, rot: Math.PI };
 export const PLAYER_RADIUS = 0.4;
 
-export const BELL = { x: -21, z: -1, radius: 3.6, yardRadius: 12 };
-export const HALL = { x: 0, z: -20, halfW: 8, halfD: 6, doorHalf: 2.2, height: 4.6 };
+export const BELL = { x: -15, z: 4, radius: 3.6, yardRadius: 12 };
+export const HALL = { x: 0, z: -32, halfW: 8, halfD: 6, doorHalf: 2.2, height: 4.6 };
 // radius: vùng tương tác treo lời ước, nới đúng tới rìa dải lụa trên cành.
-export const TREE = { x: -10, z: 12, radius: 5.4 };
+export const TREE = { x: -14, z: 19, radius: 5.4 };
 // 8 cành tỏa ngang để treo dải lụa: dùng chung cho scene (monastery) và vị trí ribbon (wishes3d)
 // để lời ước bám đúng cành thay vì lơ lửng. Cành nghiêng nhẹ lên về phía ngọn (0.1206/m ngang).
 export const TREE_BRANCHES = Array.from({ length: 8 }, (_, i) => ({
@@ -17,12 +20,13 @@ export const TREE_BRANCHES = Array.from({ length: 8 }, (_, i) => ({
   len: 4.3 + (i % 4) * 0.42,
   y: 4.9 + (i % 3) * 0.14,
 }));
-export const POND = { x: -19, z: -17, radius: 5.5, actionRadius: 7.6 };
+export const POND = { x: -21, z: -34, radius: 5.5, actionRadius: 7.6 };
 export const CONTAINERS = { minX: 26.6, maxX: 29.2, minZ: 0, maxZ: 12, actionMargin: 2.4 };
-export const TEA = { x: -21, z: 23, radius: 3.4 };
-export const GARDEN = { minX: 12, maxX: 25, minZ: -12, maxZ: -6 };
+// Quán trà rút xăm đứng đầu phố chợ, cạnh cây bồ đề.
+export const TEA = { x: -30, z: 22, radius: 3.4 };
+export const GARDEN = { minX: 15, maxX: 27, minZ: -26, maxZ: -18 };
 // Asset võ hiệp dựng bằng Blender (tools/blender/): bảo tháp, cầu vòm, cờ băng, đèn đá, non bộ.
-export const PAGODA = { x: 21, z: -22, radius: 3.9, roofY: 12.5 };
+export const PAGODA = { x: 21, z: -36, radius: 3.9, roofY: 12.5 };
 export const BRIDGE = { x1: POND.x - 5.6, x2: POND.x + 5.6, z: POND.z, halfW: 0.95, peak: 1.15 };
 export const BANNERS = [
   { x: -5.6, z: 28, ry: 0 }, { x: 5.6, z: 28, ry: Math.PI },
@@ -36,62 +40,71 @@ export const STONE_LANTERNS = [
   { x: 9.6, z: 19, ry: 0.6 }, { x: 28.4, z: 20, ry: -0.6 },
 ];
 export const NONBO = [
-  { x: -26, z: -26, s: 0.75, ry: 0.6, r: 1.5 },
-  { x: 26, z: -26, s: 0.75, ry: 2.2, r: 1.5 },
+  { x: -62, z: -42, s: 0.75, ry: 0.6, r: 1.5 },
+  { x: 26, z: -42, s: 0.75, ry: 2.2, r: 1.5 },
 ];
 // Thầy trụ trì đứng ở hiên thiền đường, bên phải cửa, dưới một chiếc đèn lồng.
-export const ABBOT = { x: 5.2, z: -12.4, rot: 0, radius: 0.35, actionRadius: 2.6 };
-export const ZOEYY = { x: -5.2, z: -12.4, rot: 0, radius: 0.35, actionRadius: 2.6 };
+export const ABBOT = { x: 5.2, z: HALL.z + 7.6, rot: 0, radius: 0.35, actionRadius: 2.6 };
+export const ZOEYY = { x: -5.2, z: HALL.z + 7.6, rot: 0, radius: 0.35, actionRadius: 2.6 };
 // Sư chú giữ cổng: đứng trong sân cạnh tam quan, đưa câu đố cho người vào.
-// Sạp Kim Bảo: bà chủ đứng sau quầy quay mặt ra lối đi tới quán trà; khách đứng phía nam quầy bấm E mở cửa hàng.
+// Sạp Kim Bảo ở phố chợ: bà chủ đứng sau quầy, quầy quay về phía phố; khách đứng phía phố bấm E mở cửa hàng.
+const SHOP_X = -42;
+const SHOP_Z = 23;
 export const SHOP = {
-  x: -12, z: 23, rot: Math.PI, radius: 0.35, actionRadius: 2.9,
-  counter: { minX: -13.3, maxX: -10.7, minZ: 21.7, maxZ: 22.3 },
-  shelf: { minX: -13.3, maxX: -10.7, minZ: 23.6, maxZ: 24 },
+  x: SHOP_X, z: SHOP_Z, rot: Math.PI, radius: 0.35, actionRadius: 2.9,
+  counter: { minX: SHOP_X - 1.3, maxX: SHOP_X + 1.3, minZ: SHOP_Z - 1.3, maxZ: SHOP_Z - 0.7 },
+  shelf: { minX: SHOP_X - 1.3, maxX: SHOP_X + 1.3, minZ: SHOP_Z + 0.6, maxZ: SHOP_Z + 1 },
 };
-// Trạm giao thương: bảng gỗ có mái nhỏ bên lối đi từ trục chính sang Sạp Kim Bảo, mặt bảng quay về phía nam.
+// Trạm giao thương: bảng gỗ có mái nhỏ ở cuối phố chợ, gần cổng nam Kim Ngân Phường, mặt bảng quay về phía nam.
 // Hai người cùng đứng trong radius quanh bảng thì mời nhau trao đổi đồ và TEU; board là vật cản.
+const TRADE_X = -50;
+const TRADE_Z = 18;
 export const TRADE_POST = {
-  x: -5.5, z: 18.5, rot: 0, radius: 3.2,
-  board: { minX: -6.4, maxX: -4.6, minZ: 18.38, maxZ: 18.62 },
+  x: TRADE_X, z: TRADE_Z, rot: 0, radius: 3.2,
+  board: { minX: TRADE_X - 0.9, maxX: TRADE_X + 0.9, minZ: TRADE_Z - 0.12, maxZ: TRADE_Z + 0.12 },
 };
 export const GATE_MONK = { x: 3.2, z: 28.4, rot: 0, radius: 0.35, actionRadius: 2.6 };
-// Hai bàn đỏ đen ở sân trước thiền đường, đối xứng hai bên trục chính: bầu cua phía tây, xì dách phía đông.
+
+// Kim Ngân Phường: khu sòng có tường riêng phía tây, hai cổng (đông nhìn sang gác chuông, nam ra phố chợ).
+// aisle là lối giữa chạy bắc–nam; hai cột bàn hai bên lối, khách luôn đứng phía lối, nhà cái đứng mép ngoài.
+export const CASINO = {
+  minX: -64, maxX: -28, minZ: -28, maxZ: 10, wallT: 0.4, wallTop: 2.15,
+  aisleX: -46,
+  gateEast: { z: -4, half: 3 },
+  gateSouth: { x: -46, half: 3 },
+};
 // Bàn là vật cản tròn; ai đứng trong radius quanh bàn thì bấm E để chơi, đứng đâu quanh bàn cũng được.
-// Nhà cái đứng ở mép bàn xa trục, quay mặt về phía trục; seat là chỗ menu "Chơi gì?" đưa tới (mép bàn phía trục).
-// Bầu cua: đĩa xóc ở phía nhà cái, tấm bạt ở phía khách.
-export const BAUCUA_ZONE = {
-  x: -5.5, z: 0, radius: 2.6, tableRadius: 0.95,
-  seat: { x: -4.05, z: 0, rot: -Math.PI / 2 },
-  dealer: { x: -6.85, z: 0, rot: Math.PI / 2, radius: 0.35 },
-};
-// Xì dách: tối đa 5 khách, bài từng người chia ra trước chỗ họ theo hình cung phía trục; bài nhà cái ở phía nhà cái.
-export const XIDACH_ZONE = {
-  x: 5.5, z: 0, radius: 2.6, tableRadius: 0.95,
-  seat: { x: 4.05, z: 0, rot: Math.PI / 2 },
-  dealer: { x: 6.85, z: 0, rot: -Math.PI / 2, radius: 0.35 },
-};
-// Hai bàn mới ngay sau hai bàn cũ, phía thiền đường, giữa hai hành lang: tài xỉu phía tây, cò quay phía đông.
-// Khách đứng phía trục chính; nhà cái đứng mép xa trục. Bàn cò quay to hơn vì có bánh xe và mặt bạt số.
-export const TAIXIU_ZONE = {
-  x: -5.5, z: -6.6, radius: 2.6, tableRadius: 0.95,
-  seat: { x: -4.05, z: -6.6, rot: -Math.PI / 2 },
-  dealer: { x: -6.85, z: -6.6, rot: Math.PI / 2, radius: 0.35 },
-};
-export const COQUAY_ZONE = {
-  x: 5.6, z: -6.6, radius: 2.8, tableRadius: 1.15,
-  seat: { x: 3.95, z: -6.6, rot: Math.PI / 2 },
-  dealer: { x: 7.15, z: -6.6, rot: -Math.PI / 2, radius: 0.35 },
-};
-// Dãy máy gạt cần trong hành lang có mái phía tây, giữa hai cột ở khoang giữa: lưng máy sát mép ngoài hành lang,
-// mặt máy quay về phía đông nhìn ra sân sòng. Khách đứng giữa lối hành lang trước máy (stand), quay mặt về phía tây.
+// seat là chỗ menu "Chơi gì?" đưa tới. Cột tây (bầu cua, tài xỉu): khách phía đông, nhà cái phía tây.
+// Cột đông (xì dách, cò quay): khách phía tây, nhà cái phía đông. Bầu cua: đĩa xóc phía nhà cái, bạt phía khách.
+function casinoTable(x, z, tableRadius, radius, seatGap, dealerGap) {
+  // dir = +1 khi khách đứng phía đông bàn (cột tây), -1 khi khách đứng phía tây (cột đông).
+  const dir = x < CASINO.aisleX ? 1 : -1;
+  return {
+    x, z, radius, tableRadius,
+    seat: { x: x + dir * seatGap, z, rot: -dir * Math.PI / 2 },
+    dealer: { x: x - dir * dealerGap, z, rot: dir * Math.PI / 2, radius: 0.35 },
+  };
+}
+export const BAUCUA_ZONE = casinoTable(-52, -14, 0.95, 2.6, 1.45, 1.35);
+// Xì dách: tối đa 5 khách, bài từng người chia ra trước chỗ họ theo hình cung phía khách; bài nhà cái ở phía nhà cái.
+export const XIDACH_ZONE = casinoTable(-40, -14, 0.95, 2.6, 1.45, 1.35);
+export const TAIXIU_ZONE = casinoTable(-52, 0, 0.95, 2.6, 1.45, 1.35);
+// Bàn cò quay to hơn vì có bánh xe và mặt bạt số.
+export const COQUAY_ZONE = casinoTable(-40, 0, 1.15, 2.8, 1.65, 1.55);
+// Tụ Bảo Bồn: chậu tụ bảo giữa lối, giữa bốn bàn; vật cản tròn.
+export const TREASURE_BASIN = { x: CASINO.aisleX, z: -7, r: 1.5 };
+
+// Hành lang có mái của Kim Ngân Phường, sát tường tây; dãy máy gạt cần đứng giữa hai cột ở khoang giữa:
+// lưng máy sát mép ngoài hành lang, mặt máy quay về phía đông nhìn ra sân sòng.
+// Khách đứng giữa lối hành lang trước máy (stand), quay mặt về phía tây.
 // Máy là vật cản tròn; ai đứng trong useRadius quanh chỗ đứng của một máy thì bấm E để chơi máy đó.
-const SLOT_MACHINE_X = -12.55;
+const SLOT_GALLERY = { x: -62, z: -7 };
 const SLOT_STAND_GAP = 0.95; // Chỗ đứng cách tâm máy chừng này về phía đông.
+const SLOT_MACHINE_X = SLOT_GALLERY.x - SLOT_STAND_GAP;
 export const SLOT_ZONE = {
-  x: SLOT_MACHINE_X + SLOT_STAND_GAP, z: -5.5, rot: -Math.PI / 2,
+  x: SLOT_MACHINE_X + SLOT_STAND_GAP, z: SLOT_GALLERY.z, rot: -Math.PI / 2,
   useRadius: 0.9, machineRadius: 0.42,
-  machines: [-6.7, -5.5, -4.3].map((z) => ({
+  machines: [-1.2, 0, 1.2].map((dz) => SLOT_GALLERY.z + dz).map((z) => ({
     x: SLOT_MACHINE_X, z, rot: Math.PI / 2,
     stand: { x: SLOT_MACHINE_X + SLOT_STAND_GAP, z, rot: -Math.PI / 2 },
   })),
@@ -142,7 +155,7 @@ export const PLACES = [
   { key: 'melody', icon: '♫', name: 'Tấu nhạc', desc: 'Độc tấu đàn nhị · sáu phím theo nhạc', x: 8, z: 21.5 },
   { key: 'fish', icon: '🎣', name: 'Câu cá', desc: 'Thả câu ở hồ, gom đủ các loài cá', x: 19, z: 16.7 },
   { key: 'bell', icon: '🔔', name: 'Audition chuông', desc: 'Nhập chuỗi mũi tên, chốt đúng nhịp', x: BELL.x, z: BELL.z + 3.2 },
-  { key: 'mat', icon: '🪷', name: 'Ngồi thiền', desc: 'Ngồi yên, thở chậm và tích Chân khí', x: 0, z: -15.6 },
+  { key: 'mat', icon: '🪷', name: 'Ngồi thiền', desc: 'Ngồi yên, thở chậm và tích Chân khí', x: HALL.x, z: HALL.z + 4.4 },
   { key: 'pitch', icon: '🏺', name: 'Đầu hồ', desc: 'Ném tên vào bình, so tài cùng cao thủ', x: 23.4, z: 3 },
   { key: 'baucua', icon: '🎲', name: 'Bầu cua', desc: 'Đặt TEU, xóc đĩa cùng cả sân', x: BAUCUA_ZONE.seat.x, z: BAUCUA_ZONE.seat.z },
   { key: 'xidach', icon: '🃏', name: 'Xì dách', desc: 'Rút bài đấu nhà cái, luật miền Nam', x: XIDACH_ZONE.seat.x, z: XIDACH_ZONE.seat.z },
@@ -165,43 +178,57 @@ export const MATS = Array.from({ length: MAT_COUNT }, (_, i) => {
 });
 
 export const LANTERN_POSTS = [
-  { x: -3, z: 25 }, { x: 6, z: 20 }, { x: 5, z: 9 },
-  { x: -7, z: 3 }, { x: 7, z: -9 },
-  { x: -16, z: 19 }, { x: -18, z: -5 }, { x: 26, z: 14 },
+  { x: -3, z: 25 }, { x: 6, z: 20 }, { x: 4, z: 9.6 },
+  { x: -3.5, z: 11.5 }, { x: -6, z: -6 }, { x: 6, z: -6 },
+  { x: -22, z: 10 }, { x: -24, z: -8 }, { x: -36, z: 16.6 }, { x: 26, z: 14 },
 ];
 
 export const COURT_TREES = [
   { x: -9, z: 26, s: 1.2 }, { x: 7.5, z: 27, s: 1.4, blossom: '#e8b9b1' },
-  { x: 8, z: 11, s: 1.15 }, { x: 14, z: -13, s: 1.3 },
-  { x: -27, z: 10, s: 1.3 }, { x: -27, z: -6, s: 1.1 },
-  { x: -12, z: -27, s: 1.5, blossom: '#e8b9b1' }, { x: 27, z: -14, s: 1.3 },
-  { x: 26, z: 17.6, s: 0.85 },
+  { x: 8, z: 11, s: 1.15 }, { x: -24, z: 4, s: 1.3 }, { x: -22, z: -14, s: 1.1 },
+  { x: -12, z: -42, s: 1.5, blossom: '#e8b9b1' }, { x: 13, z: -42, s: 1.4, blossom: '#e8b9b1' },
+  { x: -36, z: -38, s: 1.4 }, { x: -50, z: -40, s: 1.2 }, { x: 27, z: -14, s: 1.3 },
+  { x: -58, z: 24, s: 1.2 }, { x: 26, z: 17.6, s: 0.85 },
 ];
 
 export const GARDEN_ROCKS = [
-  { x: 16, z: -9, r: 1.6 }, { x: 24, z: -12, r: 1.1 },
-  { x: -26, z: 5, r: 1.2 }, { x: 7.8, z: 14, r: 1.1 },
+  { x: 16.5, z: -21, r: 1.6 }, { x: 25, z: -25, r: 1.1 },
+  { x: 24.5, z: -17, r: 1.0 }, { x: 7.8, z: 14, r: 1.1 },
 ];
 
 export const TEA_TABLES = [[0, 0], [-3.4, 2.6], [3.4, 2.6]]
   .map(([dx, dz]) => ({ x: TEA.x + dx, z: TEA.z + dz }));
 
 // Đường men theo cụm cảnh; tọa độ được kiểm tra với va chạm dùng chung.
+const CASINO_EAST_GATE_X = CASINO.maxX;
 export const COURT_PATHS = [
-  { width: 3.8, points: [[0, 40], [0, 30], [2.5, 23], [3, 16], [1, 8], [0, 2]] },
-  { width: 2.5, points: [[1, 8], [-4, 6], [-12, 5], [-17, 3], [BELL.x, BELL.z + 3.2]] },
-  { width: 2.2, points: [[-4, 6], [-5, 12], [-9, 18], [-16, 18], [TEA.x, TEA.z - 2.4]] },
-  { width: 2.1, points: [[-17, 3], [-16, -5], [-15, -10], [BRIDGE.x2 + 1, BRIDGE.z]] },
-  { width: 2.3, points: [[3, 16], [8, 17], [13, 15.7], [19, 15.7], [24, 14]] },
-  { width: 2.6, points: [[1, 8], [9, 6], [14, 5.5], [19, 6.6], [24.8, 6.4], [25, 3]] },
-  { width: 2.1, points: [[14, 4], [18, -1], [20, -7], [21, -13], [PAGODA.x, PAGODA.z + 5]] },
+  // Trục chính từ tam quan tới chân sân đạo trường.
+  { width: 3.8, points: [[0, 40], [0, 30], [0, 16], [0, 4], [0, -3]] },
+  // Lối ngang phía tây: trục chính → cổng đông Kim Ngân Phường → Tụ Bảo Bồn.
+  { width: 2.6, points: [[0, -4], [-8, -3.5], [-16, -3], [-22, -4], [CASINO_EAST_GATE_X - 1, -4], [-36, -4.5], [TREASURE_BASIN.x + 2.4, TREASURE_BASIN.z + 0.4]] },
+  // Lối vào gác chuông.
+  { width: 2.2, points: [[0, 7], [-7, 7.4], [BELL.x + 3.6, BELL.z + 3.2]] },
+  // Phố chợ: trục chính → quán trà, sạp, trạm → cổng nam Kim Ngân Phường.
+  { width: 2.6, points: [[0, 14], [-8, 14.5], [-20, 13.8], [-30, 14], [-40, 14], [CASINO.gateSouth.x, 13], [CASINO.gateSouth.x, 7]] },
+  // Lên hồ sen, qua cầu vòm.
+  { width: 2.1, points: [[-16, -3], [-17, -12], [-16, -22], [-14.6, -29], [BRIDGE.x2 + 1, BRIDGE.z]] },
+  { width: 2.3, points: [[0, 16], [8, 17], [13, 15.7], [19, 15.7], [24, 14]] },
+  { width: 2.6, points: [[0, 8], [9, 6], [14, 5.5], [19, 6.6], [24.8, 6.4], [25, 3]] },
+  // Lên vườn đá và bảo tháp.
+  { width: 2.1, points: [[14, 4], [18, -1], [20, -7], [21, -13], [21, -24], [PAGODA.x, PAGODA.z + 5]] },
 ];
 
-export const GALLERIES = [-11.6, 11.6].map(x => ({ x, z: -5.5, w: 3.2, d: 14, floor: 0.16, roof: 3.15 }));
+// Hai hành lang có mái kẹp sân đạo trường, và một hành lang máy gạt cần trong Kim Ngân Phường.
+const GALLERY_BASE = { w: 3.2, d: 14, floor: 0.16, roof: 3.15 };
+export const GALLERIES = [
+  { x: -11.6, z: HALL.z + 17 },
+  { x: 11.6, z: HALL.z + 17 },
+  SLOT_GALLERY,
+].map((g) => ({ ...GALLERY_BASE, x: g.x, z: g.z }));
 export const GALLERY_POSTS = GALLERIES.flatMap(g => [-1.1, 1.1].flatMap(dx =>
   [-6, -2, 2, 6].map(dz => ({ x: g.x + dx, z: g.z + dz, r: 0.19 }))));
 export const BAMBOO_CLUMPS = [
-  { x: -27, z: 15, r: 0.8 }, { x: -27, z: 18, r: 0.8 },
+  { x: -21, z: 26, r: 0.8 }, { x: -23, z: 27.8, r: 0.8 },
   { x: -7, z: 22, r: 0.7 }, { x: -5, z: 24, r: 0.7 },
   { x: 16, z: -15, r: 0.8 }, { x: 17, z: -12, r: 0.7 },
   { x: 26, z: -4, r: 0.8 }, { x: 27, z: -7, r: 0.7 },
@@ -210,11 +237,33 @@ export const BAMBOO_CLUMPS = [
 const WALL_T = 0.4;
 const h = HALL;
 
+/** Tường Kim Ngân Phường thành các đoạn hộp, chừa cổng đông và cổng nam. */
+function casinoWallBoxes() {
+  const { minX, maxX, minZ, maxZ, wallT: t, gateEast: ge, gateSouth: gs } = CASINO;
+  const half = t / 2;
+  return [
+    { minX, maxX, minZ: minZ - half, maxZ: minZ + half },
+    { minX: minX - half, maxX: minX + half, minZ, maxZ },
+    { minX, maxX: gs.x - gs.half, minZ: maxZ - half, maxZ: maxZ + half },
+    { minX: gs.x + gs.half, maxX, minZ: maxZ - half, maxZ: maxZ + half },
+    { minX: maxX - half, maxX: maxX + half, minZ, maxZ: ge.z - ge.half },
+    { minX: maxX - half, maxX: maxX + half, minZ: ge.z + ge.half, maxZ },
+  ];
+}
+export const CASINO_WALLS = casinoWallBoxes();
+// Hai cột son mỗi cổng, đứng ở đầu đoạn tường chừa cổng.
+export const CASINO_GATE_POSTS = [
+  [CASINO.maxX, CASINO.gateEast.z - CASINO.gateEast.half], [CASINO.maxX, CASINO.gateEast.z + CASINO.gateEast.half],
+  [CASINO.gateSouth.x - CASINO.gateSouth.half, CASINO.maxZ], [CASINO.gateSouth.x + CASINO.gateSouth.half, CASINO.maxZ],
+].map(([x, z]) => ({ x, z, r: 0.3 }));
+
 /** Hộp va chạm. cam: true thì camera cũng không xuyên qua. */
 export const BOXES = [
   // Tường rào nam, hai bên cổng
-  { minX: -31, maxX: -4.6, minZ: 30 - WALL_T, maxZ: 30 + WALL_T, cam: true },
+  { minX: SITE.minX - 0.7, maxX: -4.6, minZ: 30 - WALL_T, maxZ: 30 + WALL_T, cam: true },
   { minX: 4.6, maxX: 31, minZ: 30 - WALL_T, maxZ: 30 + WALL_T, cam: true },
+  // Tường Kim Ngân Phường
+  ...CASINO_WALLS.map((w) => ({ ...w, cam: true })),
   // Thiền đường: tường bắc, đông, tây, hai mảng tường trước (chừa cửa)
   { minX: h.x - h.halfW, maxX: h.x + h.halfW, minZ: h.z - h.halfD - 0.25, maxZ: h.z - h.halfD + 0.25, cam: true },
   { minX: h.x - h.halfW - 0.25, maxX: h.x - h.halfW + 0.25, minZ: h.z - h.halfD, maxZ: h.z + h.halfD, cam: true },
@@ -255,6 +304,8 @@ export const CIRCLES = [
   { x: XIDACH_ZONE.dealer.x, z: XIDACH_ZONE.dealer.z, r: XIDACH_ZONE.dealer.radius },
   ...SLOT_ZONE.machines.map((m) => ({ x: m.x, z: m.z, r: SLOT_ZONE.machineRadius })),
   ...[TAIXIU_ZONE, COQUAY_ZONE].flatMap((t) => [{ x: t.x, z: t.z, r: t.tableRadius }, { x: t.dealer.x, z: t.dealer.z, r: t.dealer.radius }]),
+  TREASURE_BASIN,
+  ...CASINO_GATE_POSTS,
   { x: PITCH_ZONE.jar.x, z: PITCH_ZONE.jar.z, r: PITCH_ZONE.jar.r },
   { x: PITCH_ZONE.opponent.x, z: PITCH_ZONE.opponent.z, r: 0.35 },
   ...PITCH_ZONE.pots.map((p) => ({ x: p.x, z: p.z, r: 0.28 })),
