@@ -109,8 +109,8 @@ Bàn bầu cua ở sân trước thiền đường, phía tây trục chính (b�
 Bàn xì dách ở sân trước thiền đường, phía đông trục chính. Bấm **Chơi gì?** rồi chọn **Xì dách**, hoặc đứng quanh bàn bấm **E**. Tối đa 5 người cùng đấu với Bà Năm nhà cái, luật miền Nam.
 
 - **Cược:** bấm chip +1/+5/+10 (hoặc phím **1–3**) trong 8 giây nhận cược, tối đa 20 TEU một tay. Server giữ **gấp đôi** tiền cược phòng nhà cái ăn x2, chấm xong hoàn phần dư.
-- **Nặn bài:** bài tới tay úp; kéo lá lên để hé dần, kéo quá nửa hoặc chạm một cái là lật hẳn.
-- **Rút / dằn:** lần lượt từng người theo ghế, mỗi người 10 giây (vòng giờ vàng chạy quanh người đang tới lượt): rút (**R**) hoặc dằn (**F**). Dưới 16 là non, không được dằn; hết giờ mà vẫn non thì thua.
+- **Nặn bài:** chia hai lá, lá đầu ngửa, lá thứ hai úp; kéo lá úp lên để hé dần, kéo quá nửa hoặc chạm một cái là lật hẳn. Lá rút thêm tới tay là ngửa luôn.
+- **Rút / dằn:** lần lượt từng người theo ghế, mỗi người 15 giây (vòng giờ vàng chạy quanh người đang tới lượt): rút (**R**) hoặc dằn (**F**). Dưới 16 là non, không được dằn; hết giờ mà vẫn non thì thua.
 - **Xét bài:** nhà cái rút xong thì đi xét từng nhà: lật bài, đóng dấu (THẮNG, THUA, QUẮC, XÌ DÁCH…), chip của người thua về nhà cái, người thắng được đẩy chip sang và nhận tiền ngay.
 - **Át:** 2 lá tính 11, 10 hoặc 1; 3 lá tính 10 hoặc 1; từ 4 lá chỉ tính 1.
 - **Bài đặc biệt:** xì bàn (đôi Át) > xì dách (Át + 10/J/Q/K) > ngũ linh (5 lá không quá 21). Thắng bằng bài đặc biệt ăn x2; nhà cái thắng bằng bài đặc biệt cũng thu x2.

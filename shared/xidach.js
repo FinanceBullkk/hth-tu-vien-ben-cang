@@ -26,7 +26,7 @@ export const XIDACH = {
   dealerSoftHitMax: 18, // ...và rút tiếp khi điểm mềm còn từ mức này trở xuống.
   maxCards: 5,
   betMs: 8_000, // Nhận cược, tính từ người cược đầu tiên.
-  turnMs: 10_000, // Lượt của mỗi khách (lần lượt theo ghế); hết giờ coi như dằn.
+  turnMs: 15_000, // Lượt của mỗi khách (lần lượt theo ghế); đủ để nặn lá úp rồi rút/dằn. Hết giờ coi như dằn.
   dealerStepMs: 700, // Nhà cái lật/rút từng lá cách nhau chừng này.
   checkStepMs: 1_000, // Nhà cái xét từng nhà cách nhau chừng này.
   resultMs: 3_000,

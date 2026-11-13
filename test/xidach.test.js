@@ -213,12 +213,15 @@ test('một ván đủ pha: lần lượt từng nhà, nhà cái rút, xét từ
   db.close();
 });
 
-test('dưới 16 không được dằn; hết giờ lượt thì coi như dằn, báo cả bàn và bị non', () => {
+test('lượt 15 giây; dưới 16 không được dằn; hết giờ lượt thì coi như dằn, báo cả bàn và bị non', () => {
   // A: 10, 3 = 13. Cái: 10, 8 = 18.
   const { db, game, events, player, act } = fixture([C[10], C.K, C[3], C[8]]);
   const a = player(A, 100);
   act(a, 'bet', { amount: 10 });
-  game.sweep(game.endsAt);
+  const dealtAt = game.endsAt;
+  game.sweep(dealtAt);
+  assert.equal(game.endsAt - dealtAt, XIDACH.turnMs, 'mỗi lượt kéo dài đúng turnMs');
+  assert.ok(XIDACH.turnMs >= 15_000, 'đủ thời gian nặn lá úp rồi mới rút/dằn');
   assert.match(act(a, 'stand').error, /non/);
   game.sweep(game.endsAt); // Hết lượt mà không làm gì.
   assert.deepEqual(events.filter(([n]) => n === 'xidach:act').map(([, d]) => d.action), ['timeout']);

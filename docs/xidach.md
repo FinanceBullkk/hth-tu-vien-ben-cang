@@ -31,7 +31,7 @@ Cấu hình đầu là máy in TEU. Test `nhà cái có lợi thế` trong `test
 ## Vòng đời một ván
 
 `idle` -> có người cược -> `betting` (8 giây, khách khác vào thêm, tối đa 5 ghế) -> chia 2 lá mỗi người và nhà cái
--> `playing` (lần lượt từng khách theo ghế, mỗi người 10 giây; dằn, quắc, đủ 5 lá hay hết giờ thì sang người kế;
+-> `playing` (lần lượt từng khách theo ghế, mỗi người 15 giây; dằn, quắc, đủ 5 lá hay hết giờ thì sang người kế;
 khách xì bàn/xì dách được bỏ qua) -> `dealer` (nhà cái lật lá úp, rút từng lá cách 0,7 giây)
 -> `checking` (nhà cái xét từng nhà theo ghế, mỗi giây một nhà: lật bài, chấm, trả tiền ngay người đó) -> `result` (3 giây) -> `idle`.
 Nhà cái có xì bàn/xì dách thì lật ngay sau khi chia, không ai được rút, đi xét luôn. Cược lúc `idle` hoặc `result` mở ván mới.
@@ -74,8 +74,8 @@ Hello trả thêm `snapshot.xidach` (kèm `mine` là ghế, tiền cược và b
 - Mặt bàn 3D (`scene/xidach-table-fx.js`): chồng chip cược trước chỗ từng khách; vòng giờ nổi trên chỗ người đang tới lượt;
   khi xét thì dấu mộc (THẮNG, THUA, HOÀ, XÌ DÁCH, NGŨ LINH, QUẮC, NON) đóng trên tay bài, chip người thua trượt về nhà cái,
   nhà cái đẩy chip thưởng sang người thắng.
-- Nặn bài (`ui/xidach-cards.js`): bài của mình tới tay úp; kéo lá lên thì hé dần từ dưới lên, quá 60% thì lật hẳn, chạm một cái
-  cũng lật. Điểm hiện "Nặn bài" tới khi nặn hết; bàn 3D chỉ ngửa những lá đã nặn. Tới lúc xét thì tự lật hết.
+- Nặn bài (`ui/xidach-cards.js`): chia hai lá thì lá đầu ngửa, lá thứ hai úp; lá rút thêm ngửa luôn. Kéo lá úp lên thì hé dần từ dưới lên, quá 60% thì lật hẳn, chạm một cái
+  cũng lật. Điểm hiện "Nặn bài" tới khi nặn xong; bàn 3D chỉ ngửa những lá đã thấy. Tới lúc xét thì tự lật hết.
 - Bảng chơi: vòng giờ vàng chạy quanh ô người đang tới lượt (và quanh dòng "Bạn"), ô ghế khác hiện "chờ lượt / đang rút / đã dằn",
   nháy xanh khi họ rút, đỏ khi họ dằn; dấu mộc đóng lên ô khi được xét; tiếng chuông nhỏ khi tới lượt mình.
 
