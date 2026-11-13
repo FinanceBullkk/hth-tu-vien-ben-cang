@@ -77,7 +77,8 @@ test('all manifestations have bounded distinct tier geometry, shared safely acro
     }
     for (let level = 1; level <= 5; level++) {
       a.update(level, 1, 2, 1);
-      const replaced = level === 5 && [0, 1, 3, 4, 8].includes(effect);
+      // Tinh Hà (3) giữ Bắc Đẩu ở tầng 5 nên không bị thay.
+      const replaced = level === 5 && [0, 1, 4, 8].includes(effect);
       assert.equal(a.layers.filter(mesh => mesh.visible).length, Math.max(0, level - 2) - Number(replaced));
     }
     a.update(5, 0, 2, 1);
