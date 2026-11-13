@@ -1,8 +1,8 @@
-// Shader của Hồng Liên Hỏa Vũ (effect 4): lông vũ chu tước và cánh sen lửa (instanced), phượng vĩ (dải động).
+// Shader của Hồng Liên Hỏa Vũ (effect 4): lông vũ chu tước (instanced), phượng vĩ (dải động).
 // Lửa ở đây mềm như lụa và lông vũ: không có lưỡi lửa bùng, chỉ có sắc đỏ son ngả cam rồi vàng
 // ở đầu lông, mép xơ như nét bút và một luồng sáng trôi chậm từ gốc ra ngọn.
 
-// Lông/cánh sen instanced: uv.x ngang (0..1), uv.y dọc (0 gốc → 1 ngọn). Seed lấy theo gl_InstanceID.
+// Lông vũ instanced: uv.x ngang (0..1), uv.y dọc (0 gốc → 1 ngọn). Seed lấy theo gl_InstanceID.
 export const featherVertex = `
   varying vec2 vUv;
   varying float vSeed;
@@ -23,11 +23,11 @@ export const featherVertex = `
   }
 `;
 
-// kind 0 = lông vũ (trục sáng, tơ lông chéo, mép xơ); kind 1 = cánh sen lửa (gân dọc, đầu cánh tan như khói).
+// Lông vũ: trục sáng, tơ lông chéo, mép xơ như nét bút, luồng sáng trôi chậm từ gốc ra ngọn.
 // ink 1 = lớp mực đỏ son normal blend để giữ hình trên nền sáng.
 export const featherFragment = `
   uniform vec3 steel, edge, core, gold;
-  uniform float time, opacity, ink, kind, pulse;
+  uniform float time, opacity, ink, pulse;
   varying vec2 vUv;
   varying float vSeed;
   varying vec3 vN, vEye;
@@ -37,17 +37,10 @@ export const featherFragment = `
     float fray = 0.1 * sin(u * 47.0 + vSeed * 5.0 + time * 0.35) + 0.07 * sin(u * 91.0 + vSeed * 2.0);
     float body = 1.0 - smoothstep(0.62 + fray, 0.98 + fray * 0.4, across);
     float flow = exp(-pow((u - fract(time * 0.07 + vSeed * 0.21)) * 5.0, 2.0));
-    float a, glow;
-    if (kind < 0.5) {
-      float rachis = exp(-across * across * 260.0) * smoothstep(0.0, 0.08, u) * (1.0 - smoothstep(0.85, 1.0, u));
-      float barbs = 0.5 + 0.5 * pow(0.5 + 0.5 * sin(across * 26.0 - u * 58.0 + vSeed), 2.0);
-      a = body * barbs * smoothstep(0.0, 0.1, u) * (1.0 - smoothstep(0.9, 1.0, u)) * 0.55 + rachis * 0.5;
-      glow = rachis * 0.7 + flow * 0.45 * (1.0 - across);
-    } else {
-      float veins = 0.6 + 0.4 * pow(0.5 + 0.5 * cos(across * 18.0), 3.0);
-      a = body * veins * (1.0 - smoothstep(0.7, 1.0, u) * 0.75) * 0.7;
-      glow = (1.0 - u) * 0.5 + flow * 0.4;
-    }
+    float rachis = exp(-across * across * 260.0) * smoothstep(0.0, 0.08, u) * (1.0 - smoothstep(0.85, 1.0, u));
+    float barbs = 0.5 + 0.5 * pow(0.5 + 0.5 * sin(across * 26.0 - u * 58.0 + vSeed), 2.0);
+    float a = body * barbs * smoothstep(0.0, 0.1, u) * (1.0 - smoothstep(0.9, 1.0, u)) * 0.55 + rachis * 0.5;
+    float glow = rachis * 0.7 + flow * 0.45 * (1.0 - across);
     // Gốc đỏ son đậm → thân hồng cam → đầu lông vàng; lõi ngà chỉ ở trục và luồng sáng.
     vec3 col = mix(steel * 1.5, edge, smoothstep(0.0, 0.45, u));
     col = mix(col, gold, smoothstep(0.6, 1.0, u) * 0.85);

@@ -1,37 +1,37 @@
-import { featherGeometry, petalGeometry } from './hong-lien-materials.js';
+import { featherGeometry } from './hong-lien-materials.js';
+import { WING, PRIMARIES, SECONDARIES, COVERTS } from './hong-lien-wing-frame.js';
 
-// Tòa ngồi thiền của Hồng Liên (effect 4), riêng khỏi cánh pha lê của Hắc Ám (8).
+// Tòa ngồi thiền của Hồng Liên (effect 4): đôi cánh chu tước lớn dần theo tầng, không đài sen
+// (đài sen là của Kim Liên), không cánh pha lê như Hắc Ám (8).
 // add(geo, x, y, z, sx, sy, sz, rx, ry, rz, order) là bộ gộp hình của cultivation-manifestation.
-//  Tầng 3 (stage 0): búp hỏa liên sáu cánh quanh người + ba lông vũ lửa nhỏ lơ lửng.
-//  Tầng 4 (stage 1): đài sen lửa hai tầng 8 + 8 cánh dưới người ngồi.
-//  Tầng 5 (stage 2): đôi cánh chu tước xoè sau lưng (mỗi bên chín lông) + phượng vĩ năm lông rủ sau tòa.
-const lotusRing = (add, n, r, len, lean, offset = 0) => {
-  for (let i = 0; i < n; i++) {
-    const a = (i + offset) * Math.PI * 2 / n;
-    add(petalGeometry(), Math.sin(a) * r, 0.04, Math.cos(a) * r, len * 1.7, len, -len, lean, a, 0, 'YXZ');
+//  Tầng 3 (stage 0): phượng vĩ năm lông xoè trên đất sau lưng + ba lông vũ lơ lửng.
+//  Tầng 4 (stage 1): đôi cánh khép hờ dựng sau vai, ngọn ôm về trước.
+//  Tầng 5 (stage 2): đôi cánh giang ngang chữ V rộng (thay cho tầng 4), phượng vĩ tầng 3 vẫn trải sau.
+const ROOT_Y = 0.92, ROOT_Z = -0.42;
+
+// Một bên cánh: lông xoè từ cánh tay góc armA, ngả về sau/trước theo yaw, thu nhỏ theo scale.
+function wing(add, side, feathers, armA, yaw, scale) {
+  for (const [s, ang, len, dz] of feathers) {
+    const d = s * WING.arm * scale, lx = side * Math.sin(armA) * d, ly = Math.cos(armA) * d, l = len * scale;
+    const a = ang + (armA - WING.base);
+    add(featherGeometry(), side * 0.2 + lx * Math.cos(yaw), ROOT_Y + ly, ROOT_Z + dz - lx * Math.sin(side * yaw),
+      side * l * 1.8, l, l, 0, side * yaw, -side * a, 'YXZ');
   }
-};
+}
 
 export function buildHongLienThrone(add, stage) {
   if (stage === 0) {
-    lotusRing(add, 6, 0.5, 0.36, 0.55, 0.5);
-    for (const [x, y, z, rz] of [[-0.62, 0.62, -0.25, 0.7], [0.66, 0.78, -0.3, -0.8], [0.1, 1.45, -0.55, -0.25]]) {
+    for (let k = 0; k < 5; k++) {
+      const spread = (k - 2) * 0.36, len = 1.25 - Math.abs(k - 2) * 0.14;
+      add(featherGeometry(), 0, 0.12, -0.42, len * 1.8, len, len, -1.42, spread, 0, 'YXZ');
+    }
+    for (const [x, y, z, rz] of [[-0.66, 0.7, -0.2, 0.9], [0.7, 0.85, -0.25, -1.0], [-0.2, 1.55, -0.45, 0.35]]) {
       add(featherGeometry(), x, y, z, 0.55, 0.32, 0.32, 0.2, 0, rz);
     }
   } else if (stage === 1) {
-    lotusRing(add, 8, 0.42, 0.55, 0.55);
-    lotusRing(add, 8, 0.6, 0.45, 1.0, 0.5);
+    const folded = [...PRIMARIES, ...SECONDARIES.slice(0, 4)].map(([s, ang, len, dz]) => [s, ang * 0.55, len * 0.7, dz]);
+    for (const side of [-1, 1]) wing(add, side, folded, 0.45, -0.45, 0.75);
   } else {
-    const armA = 0.95, yaw = 0.42;
-    for (const side of [-1, 1]) for (let i = 0; i < 9; i++) {
-      const d = (0.1 + i * 0.09) * 0.8, ang = 1.9 - i * 0.2, len = 0.62 + i * 0.07;
-      const lx = side * Math.sin(armA) * d, ly = Math.cos(armA) * d;
-      add(featherGeometry(), side * 0.22 + lx * Math.cos(yaw), 0.88 + ly, -0.5 - Math.abs(lx) * Math.sin(yaw),
-        side * len * 1.8, len, len, 0, side * yaw, -side * ang, 'YXZ');
-    }
-    for (let k = 0; k < 5; k++) {
-      const spread = (k - 2) * 0.32, len = 1.15 - Math.abs(k - 2) * 0.12;
-      add(featherGeometry(), 0, 0.32, -0.45, len * 1.8, len, len, -1.25, spread, 0, 'YXZ');
-    }
+    for (const side of [-1, 1]) wing(add, side, [...PRIMARIES, ...SECONDARIES, ...COVERTS], WING.base, WING.yaw, 0.85);
   }
 }

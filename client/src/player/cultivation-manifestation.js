@@ -156,8 +156,7 @@ export function createManifestation(effect, tint, accent, lowQuality = false) {
     update(level, sit, time, fading) {
       group.visible = level >= 3 && sit > 0.1 && fading > 0;
       layers.forEach((mesh, i) => {
-        // Hồng Liên (4) giữ đài sen tầng 4 dưới đôi cánh tầng 5.
-        const replacesCrown = [0, 1, 3, 8].includes(theme);
+        const replacesCrown = [0, 1, 3, 4, 8].includes(theme);
         mesh.visible = level >= i + 3 && !(i === 1 && level >= 5 && replacesCrown);
         mesh.position.y = i ? Math.sin(time * 0.7 + i) * 0.035 : Math.sin(time) * 0.06;
         mesh.rotation.y = Math.sin(time * 0.35 + i) * (i ? 0.08 : 0.15);

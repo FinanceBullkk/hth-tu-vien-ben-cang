@@ -1,91 +1,105 @@
 import * as THREE from 'three';
 import { featherGeometry, featherMaterial, featherSet } from './hong-lien-materials.js';
 import { createRibbonStrips } from './aura-ribbon-strips.js';
-import { ribbonVertex } from './aura-flow-shaders.js';
-import { plumeFragment } from './hong-lien-shaders.js';
+import { ribbonVertex, arcFragment } from './aura-flow-shaders.js';
+import { hongLienWingGlow, WING_GLOW_ROOT, WING_GLOW_SIZE } from './hong-lien-textures.js';
+import { WING, PRIMARIES, SECONDARIES, COVERTS, wingStroke, wingMatrix, armPoint } from './hong-lien-wing-frame.js';
 
-// Đôi cánh chu tước và phượng vĩ của Hồng Liên — factory trả { update(time, rhythm, f), dispose }.
-// Cánh mọc từ sau vai, ba tầng lông: lông bay dài chĩa lên-ra ở đầu cánh, lông giữa chĩa ra-xuống
-// dọc cánh tay, lông phủ ngắn nằm trên. Cả cánh ngả về sau (yaw) để chừa trống quanh đầu.
-// Nhịp thở chỉ làm cánh xoè/khép vài độ — không vỗ, không tăng tốc.
-// Mỗi lông: [vị trí dọc cánh tay s, góc so với phương đứng (rad), dài, lệch z].
-const PRIMARIES = Array.from({ length: 7 }, (_, i) => [0.6 + i * 0.07, 0.12 + i * 0.2, 1.45 - i * 0.07, 0]);
-const SECONDARIES = Array.from({ length: 7 }, (_, i) => [0.06 + i * 0.085, 2.1 - i * 0.12, 1.0 - i * 0.02, -0.02]);
-const COVERTS = Array.from({ length: 6 }, (_, i) => [0.1 + i * 0.12, 1.55 - i * 0.17, 0.44, 0.035]);
-const ARM = 0.9;
-
-/** Phượng vĩ: 5 lông đuôi dài rủ sau lưng, uốn chữ S, mắt lông ở ngọn. */
-function createPlumes(parent, colors, lowQuality) {
-  const n = lowQuality ? 3 : 5, seg = lowQuality ? 16 : 28;
-  const strips = createRibbonStrips(n, seg);
-  const make = ink => new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide,
-    uniforms: { steel: { value: colors.steel }, edge: { value: colors.edge }, core: { value: colors.core },
-      gold: { value: colors.gold }, time: { value: 0 }, opacity: { value: 1 }, ink: { value: ink } },
-    vertexShader: ribbonVertex, fragmentShader: plumeFragment, blending: ink ? THREE.NormalBlending : THREE.AdditiveBlending });
-  const mats = lowQuality ? [make(0)] : [make(0), make(1)];
-  mats.forEach((m, i) => {
-    const mesh = new THREE.Mesh(strips.geometry, m); mesh.name = i ? 'hong-lien-plumes-ink' : 'hong-lien-plumes';
-    mesh.frustumCulled = false; mesh.renderOrder = 6 - i; parent.add(mesh);
-  });
-  const p = new THREE.Vector3(), q = new THREE.Vector3(), tangent = new THREE.Vector3(), side = new THREE.Vector3();
-  const up = new THREE.Vector3(0, 1, 0);
-  const path = (k, u, time, lift, out) => {
-    const sk = n === 1 ? 0 : (k / (n - 1)) * 2 - 1, mid = 1 - Math.abs(sk);
-    return out.set(sk * (0.15 * u + 0.8 * u * u) + 0.06 * Math.sin(u * 5 - time * 0.5 + k) * u,
-      0.95 + (0.3 + lift) * Math.sin(u * Math.PI) - 0.78 * u * u,
-      -0.36 - (0.6 + 0.25 * mid) * u + 0.08 * Math.sin(u * 4 - time * 0.45 + k * 1.3) * u);
-  };
-  return {
-    update(time, rhythm, f) {
-      const lift = 0.08 * rhythm.release - 0.03 * rhythm.gather;
-      for (let k = 0; k < n; k++) for (let j = 0; j <= seg; j++) {
-        const u = j / seg;
-        path(k, u, time, lift, p); path(k, u + 0.01, time, lift, q);
-        tangent.subVectors(q, p).normalize();
-        side.crossVectors(tangent, up).normalize();
-        strips.write(k, j, p, side, 0.028 + 0.09 * Math.exp(-(((u - 0.84) / 0.11) ** 2)));
-      }
-      strips.commit();
-      mats.forEach(m => { m.uniforms.time.value = time; m.uniforms.opacity.value = (m.uniforms.ink.value ? 0.5 : 0.75) * f; });
-    },
-    dispose() { strips.geometry.dispose(); mats.forEach(m => m.dispose()); },
-  };
-}
+// Đôi cánh chu tước của Hồng Liên — bóng dáng chính: chữ V rộng giang ngang hai bên vai.
+// Các lớp đi cùng nhịp vỗ chậm (wingStroke): lông vũ lửa 3D (sáng + mực) · cánh hư ảnh lớn hơn,
+// trong hơn, vỗ trễ nhịp như dư ảnh · quầng lửa mềm vẽ theo bố cục lông · mép cánh là một sợi lửa
+// lụa chạy từ vai ra ngọn lông bay. Lông ngoài trễ nhịp một chút như bị gió ép, nên cánh uốn mềm
+// chứ không quay cứng như bản lề. tips: vị trí ngọn lông bay/lông giữa (thế giới) cho lưỡi lửa.
+const ECHO_SCALE = 1.32, ECHO_LAG = 0.7;
+const glowPlane = new THREE.PlaneGeometry(WING_GLOW_SIZE, WING_GLOW_SIZE) // dùng chung, không dispose
+  .translate(-WING_GLOW_ROOT[0] / 1024 * WING_GLOW_SIZE, WING_GLOW_ROOT[1] / 1024 * WING_GLOW_SIZE, -0.03);
 
 export function createWings(parent, colors, lowQuality) {
   const feathers = lowQuality ? [...PRIMARIES.filter((_, i) => i % 2 === 0), ...SECONDARIES.filter((_, i) => i % 2 === 0)]
     : [...PRIMARIES, ...SECONDARIES, ...COVERTS];
-  const glowMat = featherMaterial(colors, 0, 0), inkMat = featherMaterial(colors, 1, 0);
+  const glowMat = featherMaterial(colors, 0), inkMat = featherMaterial(colors, 1);
   const set = featherSet(parent, featherGeometry(), feathers.length * 2, glowMat, inkMat, lowQuality, 'hong-lien-wings');
-  const plumes = createPlumes(parent, colors, lowQuality);
-  const dummy = new THREE.Object3D(), wing = new THREE.Matrix4(), m = new THREE.Matrix4();
-  const euler = new THREE.Euler(), quat = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1);
-  const root = new THREE.Vector3();
+  // Cánh hư ảnh: chỉ lớp sáng, bỏ ở chất lượng thấp.
+  const echoMat = lowQuality ? null : featherMaterial(colors, 0);
+  const echo = lowQuality ? null : featherSet(parent, featherGeometry(), feathers.length * 2, echoMat, null, true, 'hong-lien-wing-echo');
+  if (echo) echo.glow.renderOrder = 5;
+  const tipFeathers = feathers.filter(f => PRIMARIES.includes(f) || SECONDARIES.includes(f));
+  const tips = Array.from({ length: tipFeathers.length * 2 }, () => new THREE.Vector3());
+
+  const auraMat = new THREE.MeshBasicMaterial({ map: hongLienWingGlow(), color: colors.edge, transparent: true, opacity: 0.5,
+    depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, toneMapped: false });
+  const auras = [-1, 1].map(() => {
+    const mesh = new THREE.Mesh(glowPlane, auraMat); mesh.name = 'hong-lien-wing-glow';
+    mesh.matrixAutoUpdate = false; mesh.renderOrder = 4; mesh.frustumCulled = false; parent.add(mesh); return mesh;
+  });
+
+  const seg = lowQuality ? 14 : 26, edge = createRibbonStrips(2, seg);
+  const edgeMat = new THREE.ShaderMaterial({ uniforms: { edge: { value: colors.edge }, core: { value: colors.core },
+    gold: { value: colors.gold }, time: { value: 0 }, opacity: { value: 0.8 } },
+  vertexShader: ribbonVertex, fragmentShader: arcFragment,
+  transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending });
+  const edgeMesh = new THREE.Mesh(edge.geometry, edgeMat); edgeMesh.name = 'hong-lien-wing-edge';
+  edgeMesh.frustumCulled = false; edgeMesh.renderOrder = 7; parent.add(edgeMesh);
+
+  const frame = new THREE.Matrix4(), m = new THREE.Matrix4(), dummy = new THREE.Object3D();
+  const p = new THREE.Vector3(), q = new THREE.Vector3(), normal = new THREE.Vector3(), tangent = new THREE.Vector3(), across = new THREE.Vector3();
+  // Điểm u (0 vai → 0.55 cổ tay → 1 ngọn lông bay đầu) trên mép cánh, toạ độ khung.
+  const edgePoint = (side, u, armA, lag, out) => {
+    if (u <= 0.55) return armPoint(side, (u / 0.55) * 0.98, armA, out).setZ(0.03);
+    const [s, ang, len] = PRIMARIES[0], a = ang + (armA - WING.base) + lag, d = ((u - 0.55) / 0.45) * len * 0.95;
+    return armPoint(side, s, armA, out).add(q.set(side * Math.sin(a) * d, Math.cos(a) * d, 0.03));
+  };
+
+  // Đặt lông một bên cánh vào bộ target theo nhịp stroke, phóng to scale; ghi ngọn lông vào tips nếu có.
+  const lay = (target, stroke, scale, k, side, time, spread, tipsOut) => {
+    const lagWave = Math.sin(stroke.phase * Math.PI * 2 - 0.9);
+    let t = 0;
+    feathers.forEach(([s, ang, len, dz], i) => {
+      const lag = 0.08 * lagWave * s, a = ang * (1 + spread) + stroke.delta + lag + 0.02 * Math.sin(time * 0.6 + i * 1.3 + k);
+      armPoint(side, s * scale, stroke.armA, dummy.position).z = dz - 0.02 * s - (scale - 1) * 0.25;
+      dummy.rotation.set(0.1 * Math.sin(time * 0.3 + i), 0, -side * a);
+      const l = len * scale; dummy.scale.set(side * l, l, l); dummy.updateMatrix();
+      target.setMatrixAt(k * feathers.length + i, m.multiplyMatrices(frame, dummy.matrix));
+      if (tipsOut && tipFeathers.includes(feathers[i])) {
+        tipsOut[k * tipFeathers.length + t++].set(side * Math.sin(a) * l * 0.92, Math.cos(a) * l * 0.92, 0).add(dummy.position).applyMatrix4(frame);
+      }
+    });
+  };
 
   return {
+    tips,
     update(time, rhythm, f) {
-      const spread = 1 + 0.07 * rhythm.release - 0.04 * rhythm.gather;
-      const armA = 0.95 + 0.04 * Math.sin(time * 0.45) + 0.06 * rhythm.release - 0.03 * rhythm.gather;
+      const stroke = wingStroke(time), { phase, armA, delta } = stroke, echoStroke = wingStroke(time - ECHO_LAG);
+      const lagWave = Math.sin(phase * Math.PI * 2 - 0.9), spread = 0.05 * rhythm.release - 0.03 * rhythm.gather;
       for (let k = 0; k < 2; k++) {
         const side = k ? 1 : -1;
-        // Khung cánh: gốc sau vai, ngả về sau theo trục đứng.
-        euler.set(0, side * 0.42, 0); quat.setFromEuler(euler);
-        wing.compose(root.set(side * 0.2, 1.3, -0.32), quat, one);
-        feathers.forEach(([s, ang, len, dz], i) => {
-          const sway = 0.025 * Math.sin(time * 0.6 + i * 1.3 + k);
-          const a = ang * spread + sway, d = s * ARM;
-          dummy.position.set(side * Math.sin(armA) * d, Math.cos(armA) * d, dz - 0.02 * s);
-          dummy.rotation.set(0.12 * Math.sin(time * 0.3 + i), 0, -side * a);
-          dummy.scale.set(side * len, len, len); dummy.updateMatrix();
-          m.multiplyMatrices(wing, dummy.matrix);
-          set.glow.setMatrixAt(k * feathers.length + i, m);
-        });
+        wingMatrix(side, frame);
+        lay(set.glow, stroke, 1, k, side, time, spread, tips);
+        if (echo) lay(echo.glow, echoStroke, ECHO_SCALE, k, side, time - ECHO_LAG, spread * 1.5);
+        // Quầng cánh xoay theo cánh tay; bên trái lật gương.
+        dummy.position.set(0, 0, 0); dummy.rotation.set(0, 0, -side * delta); dummy.scale.set(side, 1, 1); dummy.updateMatrix();
+        auras[k].matrix.multiplyMatrices(frame, dummy.matrix);
+        // Mép lửa: dải nằm trong mặt phẳng cánh, thon dần ra ngọn.
+        normal.set(0, 0, 1).transformDirection(frame);
+        // Đầu sáng của dải ở ngọn lông bay (u = 0), đuôi tan dần về vai — không lóe sát đầu nhân vật.
+        for (let j = 0; j <= seg; j++) {
+          const u = 1 - j / seg;
+          edgePoint(side, u, armA, 0.08 * lagWave, p).applyMatrix4(frame);
+          const back = u >= 0.01 ? u - 0.01 : u + 0.01;
+          edgePoint(side, back, armA, 0.08 * lagWave, tangent).applyMatrix4(frame);
+          tangent.sub(p).normalize(); if (back > u) tangent.negate();
+          across.crossVectors(normal, tangent).normalize();
+          edge.write(k, j, p, across, 0.012 + 0.035 * Math.sin(Math.PI * Math.min(1, (1 - u) * 1.4 + 0.15)));
+        }
       }
-      set.glow.instanceMatrix.needsUpdate = true;
-      for (const mat of [glowMat, inkMat]) { mat.uniforms.time.value = time; mat.uniforms.pulse.value = rhythm.pulse; }
+      set.glow.instanceMatrix.needsUpdate = true; edge.commit();
+      if (echo) echo.glow.instanceMatrix.needsUpdate = true;
+      for (const mat of [glowMat, inkMat, echoMat]) if (mat) { mat.uniforms.time.value = time; mat.uniforms.pulse.value = rhythm.pulse; }
+      if (echoMat) echoMat.uniforms.opacity.value = (0.28 + 0.12 * rhythm.release) * f;
       glowMat.uniforms.opacity.value = (0.85 + 0.15 * rhythm.release) * f; inkMat.uniforms.opacity.value = 0.6 * f;
-      plumes.update(time, rhythm, f);
+      auraMat.opacity = (0.5 + 0.3 * rhythm.release) * f;
+      edgeMat.uniforms.time.value = time; edgeMat.uniforms.opacity.value = (0.6 + 0.25 * rhythm.release) * f;
     },
-    dispose() { set.dispose(); glowMat.dispose(); inkMat.dispose(); plumes.dispose(); },
+    dispose() { set.dispose(); echo?.dispose(); glowMat.dispose(); inkMat.dispose(); echoMat?.dispose(); auraMat.dispose(); edge.geometry.dispose(); edgeMat.dispose(); },
   };
 }

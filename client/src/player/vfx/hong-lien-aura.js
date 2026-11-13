@@ -2,24 +2,26 @@ import * as THREE from 'three';
 import { HONG_LIEN_COLORS } from './hong-lien-materials.js';
 import { createEmblemLayers } from './hong-lien-emblem-layers.js';
 import { createWings } from './hong-lien-wings.js';
-import { createLotusSeat } from './hong-lien-lotus-seat.js';
+import { createPlumes } from './hong-lien-plumes.js';
+import { createShedFeathers } from './hong-lien-shed-feathers.js';
+import { createWingFlames } from './hong-lien-wing-flames.js';
 import { createBillboards } from './hong-lien-billboards.js';
-import { createRisingFeathers, createLotusLanterns } from './hong-lien-rising-feathers-lotus-lanterns.js';
+import { HONG_LIEN_CYCLE } from './hong-lien-wing-frame.js';
 import { breathRhythm, softDot } from './aura-rhythm.js';
 
-// Hồng Liên Hỏa Vũ (effect 4) — Chu Tước Hồng Liên. Cố ý tách dáng khỏi các aura pháp tướng khác
-// (Kiếm Vũ...): KHÔNG có đĩa mandala tròn, vành chữ, trận đồ tròn, dải lưu quang hay phiêu đái.
-// Ngôn ngữ hình chỉ gồm lông vũ, cánh chim, đuôi phượng và cánh sen nhọn; không bánh xe, không mây
-// (đó là Xích Diễm Lưu Vân). Lửa mềm như lụa và lông vũ, không bùng gắt.
-//  Sau lưng: quạt đuôi phượng xoè nửa vòng (13 lông có mắt lông) · đôi cánh chu tước 3D ba tầng lông
-//    · phượng vĩ năm lông rủ sau lưng · hỏa tinh lấp lánh.
-//  Quanh thân: lông vũ lửa xoắn ốc bay lên · hoa đăng sen trôi ngang hông · lông vũ rơi lả tả · sợi lửa lụa.
-//  Dưới chân: đóa hồng liên 16 + 12 cánh (mép là mũi cánh, không có vòng tròn) · lõi gương sen quay ngược
-//    · đài sen lửa 3D quanh bàn chân.
-//  Nhịp 12 giây: hít vào cánh khép, sen thu búp → thở ra cánh và quạt xoè, sen nở.
-//  Không có pha tăng tốc; mọi thứ là hàm thuần của thời gian.
+// Hồng Liên Hỏa Vũ (effect 4) — Chu Tước Giang Dực, theo bảng phân vai aura:
+//  bóng dáng chính là đôi cánh chu tước GIANG NGANG thành chữ V rộng hai bên vai; khối thứ hai là
+//  phượng vĩ dài rủ từ thắt lưng xuống đất. Sau đầu để trống: không đĩa mandala, không vòng tròn,
+//  không vành chữ, không bát quái (khuôn của Kiếm Vũ); không dải lưu quang hay phiêu đái làm lớp chính;
+//  không mây, không vòng lửa ngang eo (của Xích Diễm); không đài sen dựng (của Kim Liên).
+//  Động từ: VỖ CÁNH rất chậm (một nhịp mỗi 14 giây); lông vũ lửa RỤNG khỏi mép cánh rồi BAY LÊN.
+//  Lớp: lông cánh 3D ba tầng (sáng + mực) · cánh hư ảnh vỗ trễ nhịp · lưỡi lửa lụa ở ngọn mỗi lông ·
+//    quầng lửa theo bố cục lông · mép cánh lửa lụa ·
+//    phượng vĩ có mắt lông · lông rụng 3D · hỏa tinh dọc sải cánh · sợi lửa lụa từ mũi cánh sen ·
+//    tàn hồng bay lên · dưới chân đóa sen lửa phẳng nở theo nhịp.
+//  Lửa mềm như lụa và lông vũ, không bùng gắt; tốc độ trơn và chậm, mọi thứ là hàm thuần của thời gian.
 const BASE_OPACITY = 0.9;
-export const HONG_LIEN_CYCLE = 12;
+export { HONG_LIEN_CYCLE };
 export const hongLienRhythm = time => breathRhythm(time, HONG_LIEN_CYCLE);
 
 /** reducedMotion: `{ matches }` (đã tính nút "Hiệu ứng động đầy đủ"); giảm chuyển động = chậm 3 lần. */
@@ -28,15 +30,14 @@ export function createHongLienAura(lowQuality = false, reducedMotion = globalThi
   const group = new THREE.Group(); group.name = 'hong-lien-aura';
   // Bộ điều khiển opacity mà Avatar ghi khi mờ dần.
   group.material = new THREE.MeshBasicMaterial({ transparent: true, opacity: BASE_OPACITY });
-  // Gốc quạt đuôi phượng: sau vai, thấp hơn đầu để quạt xoè quanh chứ không đè lên đầu.
-  const fanAnchor = new THREE.Group(); fanAnchor.position.set(0, 1.22, -0.62); group.add(fanAnchor);
 
+  const wings = createWings(group, colors, lowQuality); // cập nhật trước để lưỡi lửa đọc ngọn lông mới
   const parts = [
-    createEmblemLayers(fanAnchor, group, colors, lowQuality),
-    createWings(group, colors, lowQuality),
-    createLotusSeat(group, colors, lowQuality),
-    createRisingFeathers(group, colors, lowQuality),
-    createLotusLanterns(group, colors, lowQuality),
+    wings,
+    createWingFlames(group, colors, wings.tips),
+    createPlumes(group, colors, lowQuality),
+    createShedFeathers(group, colors, lowQuality),
+    createEmblemLayers(group, colors, lowQuality),
     createBillboards(group, colors, lowQuality),
   ];
 
@@ -53,7 +54,6 @@ export function createHongLienAura(lowQuality = false, reducedMotion = globalThi
     update(t) {
       const time = reducedMotion?.matches ? t * 0.35 : t;
       const f = group.material.opacity / BASE_OPACITY, rhythm = hongLienRhythm(time);
-      fanAnchor.position.y = 1.22 + 0.025 * Math.sin(time * 0.4);
       parts.forEach(p => p.update(time, rhythm, f));
       for (let i = 0; i < moteCount; i++) {
         const u = ((i / moteCount + time * 0.045) % 1 + 1) % 1, a = i * 2.39996 + time * 0.08;

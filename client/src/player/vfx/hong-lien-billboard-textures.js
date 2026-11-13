@@ -2,21 +2,6 @@ import { canvasTexture } from './aura-canvas-kit.js';
 
 // Texture billboard "bay bổng" của Hồng Liên, vẽ trắng trong khung 1024 (tâm giữa), shader tô màu sau.
 
-/** Lông vũ nhỏ rơi: trục cong, phiến mềm hai bên, mép tơ xơ. */
-export function hongLienFeather() {
-  return canvasTexture('hong-lien-feather', 128, ({ c, stroke }) => {
-    const g = c.createLinearGradient(0, 470, 0, -470);
-    g.addColorStop(0, 'rgba(255,255,255,0.1)'); g.addColorStop(0.5, 'rgba(255,255,255,0.75)'); g.addColorStop(1, 'rgba(255,255,255,0.25)');
-    c.fillStyle = g; c.beginPath(); c.moveTo(0, 440);
-    c.bezierCurveTo(230, 200, 200, -260, 40, -470); c.bezierCurveTo(-160, -260, -230, 200, 0, 440); c.fill();
-    for (let i = 0; i < 12; i++) {
-      const y = 330 - i * 62;
-      for (const s of [-1, 1]) stroke(() => { c.moveTo(s * 4, y); c.quadraticCurveTo(s * 90, y - 30, s * 175 * Math.sin(Math.PI * (0.1 + i / 13)), y - 90); }, 3, 0.45);
-    }
-    stroke(() => { c.moveTo(0, 500); c.quadraticCurveTo(30, 0, 40, -460); }, 9, 0.95);
-  });
-}
-
 /** Sợi lửa lụa bay lên: nét chữ S mềm, đầu trên nhọn tan, thân mảnh như dải lụa. */
 export function hongLienWisp() {
   return canvasTexture('hong-lien-wisp', 128, ({ c }) => {
@@ -39,5 +24,21 @@ export function hongLienSpark() {
       c.fillStyle = g; c.beginPath(); c.ellipse(0, 0, w, h, 0, 0, Math.PI * 2); c.fill(); c.restore();
     }
     dot(0, 0, 150, 1);
+  });
+}
+
+/** Lưỡi lửa lụa ở ngọn lông: chân tròn đầy, thân thắt lại, ngọn cong nhọn tan như khói; lõi sáng ở chân. */
+export function hongLienFlameTongue() {
+  return canvasTexture('hong-lien-flame-tongue', 128, ({ c, dot }) => {
+    for (const [w, a] of [[1, 0.35], [0.62, 0.7], [0.3, 1]]) {
+      const g = c.createLinearGradient(0, 480, 0, -500);
+      g.addColorStop(0, `rgba(255,255,255,${a})`); g.addColorStop(0.55, `rgba(255,255,255,${a * 0.7})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+      c.fillStyle = g; c.beginPath(); c.moveTo(0, 470);
+      c.bezierCurveTo(-330 * w, 380, -260 * w, 60, -40 * w, -120);
+      c.bezierCurveTo(90 * w, -260, -40, -380, 70, -500);
+      c.bezierCurveTo(200 * w, -330, 330 * w, -40, 250 * w, 220);
+      c.bezierCurveTo(200 * w, 400, 90 * w, 470, 0, 470); c.fill();
+    }
+    dot(0, 300, 170, 0.9);
   });
 }
