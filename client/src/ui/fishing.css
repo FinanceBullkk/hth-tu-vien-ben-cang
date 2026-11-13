@@ -18,7 +18,7 @@
 .fish-shop-open:hover, .fish-shop-open:focus-visible { opacity: 1; text-decoration: underline; text-underline-offset: 5px; }
 
 /* Đơn bếp chùa: ba dòng nhỏ dưới số cá trong chuyến */
-.fish-orders { margin: 10px 0 0; padding: 0; list-style: none; font-size: 13.5px; line-height: 1.5; }
+.fish-orders { margin: 74px 0 0; /* chừa chỗ hai nút tròn góc trái của game */ padding: 0; list-style: none; font-size: 13.5px; line-height: 1.5; }
 .fish-orders li { display: flex; gap: 8px; align-items: baseline; }
 .fish-orders small { font-size: 12px; opacity: .78; font-variant-numeric: tabular-nums; }
 .fish-orders .fish-orders-title { font-size: 12px; letter-spacing: .08em; opacity: .7; }
