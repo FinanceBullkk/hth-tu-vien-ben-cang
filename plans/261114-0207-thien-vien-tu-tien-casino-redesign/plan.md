@@ -18,8 +18,8 @@ Ngày 14/11/2026. Chủ dự án thấy sân chật (cả sòng lẫn các cụm
 |---|---|---|
 | 1 | [Nới gò, dời các cụm theo sơ đồ](phase-01-noi-go-va-doi-cum.md) | Đã merge (#90) |
 | 2 | [Kiến trúc nội viện kiểu tiên môn](phase-02-kien-truc-noi-vien.md) | Đã merge (#91) |
-| 3 | [Kim Ngân Phường vàng–đỏ](phase-03-kim-ngan-phuong.md) | PR mở |
-| 4 | Cảnh xa: núi đá dựng, biển mây, đảo bay, thác, hạc, linh khí, trận pháp | Chờ |
+| 3 | [Kim Ngân Phường vàng–đỏ](phase-03-kim-ngan-phuong.md) | Đã merge (#92) |
+| 4 | [Cảnh xa tiên hiệp](phase-04-canh-xa-tien-hiep.md) | PR mở |
 
 Mỗi PR: `npm test`, `npm run build`, chụp `campus-preview.html` trước khi merge. Deploy hỏi riêng.
 

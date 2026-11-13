@@ -15,6 +15,7 @@ import { ShopStall } from './shop-stall.js';
 import { TradePost } from './trade-post.js';
 import { createMonastery } from './monastery.js';
 import { createCasinoQuarter } from './casino-quarter.js';
+import { createXianxiaBackdrop } from './xianxia-backdrop.js';
 import { Particles } from './particles.js';
 import { PitchPotCourt } from './pitch-pot-court.js';
 import { createPort } from './port.js';
@@ -41,6 +42,7 @@ export class World {
     scene.add(createForest(lowQuality));
     this.monastery = createMonastery(scene);
     this.casino = createCasinoQuarter(scene);
+    this.backdrop = createXianxiaBackdrop(scene, lowQuality);
     this.port = createPort(scene, this.sky.uniforms, lowQuality);
     this.particles = new Particles(scene, this.monastery.lanterns.positions, this.monastery.hall.candles, lowQuality);
     this.animals = new Animals(scene, lowQuality);
@@ -98,6 +100,7 @@ export class World {
     this.port.update(nowMs, night);
     this.animals.update(nowMs, night);
     this.celestial.update(dt, nowMs, night);
+    this.backdrop.update(dt, night);
     this.wishes.update(dt, nowMs, night);
     this.meditation.update(nowMs);
     this.wuxia.update(dt, night);

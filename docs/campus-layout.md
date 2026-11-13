@@ -18,6 +18,14 @@ phía đông là tường chắn dốc xuống cảng nên giữ nguyên. Kế h
   phía lối giữa, nhà cái mép ngoài. Hành lang máy gạt cần sát tường tây.
 - Phía đông giữ nguyên: hồ câu, tấu nhạc, đầu hồ, bảng ước, sư chú giữ cổng.
 
+## Cảnh xa tiên hiệp
+
+Gò là mặt bàn cao hơn thung lũng quanh nó chừng 16 m. Biển mây đặt dưới mặt gò lấp thung lũng; núi đá dựng mọc
+từ thung lũng nhô khỏi mây; đảo bay có đình và thác lơ lửng phía tây và bắc; đàn hạc lượn vòng trên cao; trận pháp
+bát quái phát sáng giữa sân đạo trường, linh khí bốc lên quanh đài đại điện. Chừa phía đông (cảng container) và lối lên
+cổng phía nam. Chỗ đặt dùng chung ở `client/src/scene/xianxia-backdrop-layout.js`, ghép ở `xianxia-backdrop.js`.
+Máy cảm ứng (lowQuality) dựng ít núi, mây, đảo, hạc và đốm linh khí hơn.
+
 ## Nguồn và ràng buộc
 
 `shared/layout.js` giữ tọa độ, đường đi, va chạm, vùng mái và điểm đến trong menu; `SITE` là tường bao,
