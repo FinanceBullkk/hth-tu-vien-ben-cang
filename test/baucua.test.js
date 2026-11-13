@@ -95,8 +95,9 @@ test('một ván đủ pha: đặt cược, xóc, chia tiền, nghỉ; bảng tu
   assert.equal(bet(a, CA, 5).teu, 85);
   assert.equal(bet(b, GA, 10).ok, true);
   assert.equal(bet(c, TOM, 10).ok, true);
-  assert.deepEqual(game.totals(), [0, 0, 10, 5, 10, 10]);
+  assert.deepEqual(game.totals(), { totals: [0, 0, 10, 5, 10, 10], crowd: [0, 0, 1, 1, 1, 1] });
   assert.equal(game.publicState().bettors, 3);
+  assert.deepEqual(game.publicState().history, [], 'chưa ván nào xong thì lịch sử trống');
 
   const endsAt = game.endsAt;
   game.sweep(endsAt - 1);
@@ -126,6 +127,7 @@ test('một ván đủ pha: đặt cược, xóc, chia tiền, nghỉ; bảng tu
   // Tin phát chung không chứa playerId.
   assert.equal(JSON.stringify(events).includes(A), false);
   assert.deepEqual(events.at(-1)[1].dice, [CUA, CUA, GA]);
+  assert.deepEqual(events.at(-1)[1].history, [[CUA, CUA, GA]], 'mở bát thì ván vừa xong vào lịch sử');
 
   game.sweep(game.endsAt);
   assert.equal(game.phase, 'idle');
@@ -178,6 +180,46 @@ test('cược giả mạo và vượt mức bị từ chối, không trừ một
   const broke = bet(poor, NAI, 1);
   assert.deepEqual([broke.ok, broke.teu], [false, 0]);
   assert.equal(game.mine(B)[NAI], 3);
+  db.close();
+});
+
+test('cược lại cả gói: cộng vào cược hiện có, trừ tiền một lần, sai hay vượt mức thì không trừ đồng nào', () => {
+  const { db, game, player } = fixture();
+  const a = player(A, 100);
+  const rebet = (p, data) => {
+    p.lastBaucua = 0;
+    return game.rebet(p, data);
+  };
+  for (const bad of [null, {}, { bets: 'x' }, { bets: [1, 2, 3] }, { bets: bets({}) }, { bets: bets({ [CUA]: -1 }) },
+    { bets: bets({ [CUA]: 1.5 }) }, { bets: bets({ [CUA]: '5' }) }, { bets: bets({ [CUA]: 31 }) }, { bets: [...bets({ [CUA]: 5 }), 5] }]) {
+    assert.equal(rebet(a, bad).ok, false, `phải loại ${JSON.stringify(bad)}`);
+  }
+  assert.equal(game.phase, 'idle', 'gói hỏng không được mở ván');
+  assert.equal(db.shop.teu(A), 100);
+
+  const first = rebet(a, { bets: bets({ [CUA]: 7, [CA]: 3 }) });
+  assert.deepEqual([first.ok, first.teu, first.bets], [true, 90, bets({ [CUA]: 7, [CA]: 3 })], 'mệnh giá lẻ vẫn nhận được trong gói');
+  assert.equal(game.phase, 'betting', 'cược lại lúc bàn nghỉ mở ván mới');
+  // Gấp đôi: gửi lại đúng cược đang có.
+  assert.deepEqual(rebet(a, { bets: first.bets }).bets, bets({ [CUA]: 14, [CA]: 6 }));
+  assert.match(rebet(a, { bets: bets({ [CUA]: 17 }) }).error, /tối đa 30/, 'vượt mức một mặt thì từ chối cả gói');
+  assert.match(rebet(a, { bets: bets({ [NAI]: 20, [GA]: 11 }) }).error, /tối đa 50/);
+  assert.equal(db.shop.teu(A), 80);
+  assert.deepEqual(game.totals().crowd, [0, 0, 0, 1, 1, 0], 'số người cược từng mặt, không có tên');
+
+  const poor = player(B, 5);
+  const broke = rebet(poor, { bets: bets({ [TOM]: 6 }) });
+  assert.deepEqual([broke.ok, broke.teu], [false, 5], 'thiếu tiền thì không trừ');
+  assert.deepEqual(game.mine(B), bets({}));
+  assert.equal(rebet(a, { bets: bets({ [TOM]: 1 }) }).ok, true);
+  assert.match(game.rebet(a, { bets: bets({ [TOM]: 1 }) }).error, /Từ từ/, 'cũng bị giãn nhịp như cược thường');
+
+  // Lịch sử giữ tối đa historySize ván, mới nhất trước.
+  game.history = Array.from({ length: BAUCUA.historySize }, () => [NAI, NAI, NAI]);
+  game.sweep(game.endsAt);
+  game.sweep(game.endsAt);
+  assert.equal(game.history.length, BAUCUA.historySize);
+  assert.deepEqual(game.history[0], [CUA, CUA, GA]);
   db.close();
 });
 
@@ -418,9 +460,16 @@ test('bầu cua qua socket: chỉ cược được khi đứng ở bàn, cả ph
     for (const bad of [null, 'cua', { symbol: 'x', amount: 5 }, { symbol: CUA, amount: 1e9 }]) {
       assert.equal((await call(a, 'baucua:bet', bad)).ok, false);
     }
+    for (const bad of [null, { bets: 'x' }, { bets: [1e9, 0, 0, 0, 0, 0] }]) {
+      assert.equal((await call(a, 'baucua:rebet', bad)).ok, false);
+    }
+    await new Promise((r) => setTimeout(r, BAUCUA.betIntervalMs));
+    const again1 = await call(a, 'baucua:rebet', { bets: [0, 0, 0, 0, 2, 1] });
+    assert.deepEqual([again1.ok, again1.teu, again1.bets[CUA]], [true, 32, 7], 'cược lại cả gói qua socket');
     assert.equal((await call(a, 'baucua:clear')).teu, 40, 'rút cược hoàn đủ');
 
     // Vào lại giữa ván: snapshot trả cược đang đặt.
+    await new Promise((r) => setTimeout(r, BAUCUA.betIntervalMs));
     await call(a, 'baucua:bet', { symbol: GA, amount: 10 });
     a.disconnect();
     const a2 = await connect();

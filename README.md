@@ -98,7 +98,7 @@ Tới sân cạnh bãi container, bấm **Chơi đầu hồ** rồi chọn đố
 
 Bàn bầu cua ở sân trước thiền đường, phía tây trục chính (bàn xì dách đối xứng phía đông). Bấm **Chơi gì?** rồi chọn **Bầu cua**, hoặc đứng quanh bàn bấm **E**. Cả sân chơi chung một bàn: ai đặt cược đầu tiên thì mở ván, có 8 giây cho mọi người đặt, rồi Chú Tư nhà cái xóc đĩa 2 giây và mở bát cho cả bàn. Ba viên xúc xắc hiện to giữa màn hình kèm số TEU thắng/thua; ván mới mở ngay khi có người cược tiếp.
 
-- **Đặt cược:** chọn chip 1, 5 hoặc 10 TEU rồi bấm ô Nai, Bầu, Gà, Cá, Cua, Tôm (hoặc phím **1–6**). Tối đa 30 TEU một mặt và 50 TEU một ván. Còn đang đếm ngược thì **Xoá cược** hoàn lại đủ.
+- **Đặt cược:** chọn chip 1, 5 hoặc 10 TEU rồi bấm ô Nai, Bầu, Gà, Cá, Cua, Tôm (hoặc phím **1–6**). Tối đa 30 TEU một mặt và 50 TEU một ván. Còn đang đếm ngược thì **Rút cược** hoàn lại đủ. **Cược lại** đặt đúng như ván trước, **Gấp đôi** đặt thêm bằng cược đang có. Đầu bảng có đồng hồ đếm ngược và kết quả các ván trước.
 - **Trả thưởng:** ra `n` viên trùng mặt bạn cược thì nhận lại tiền cược cộng `n` lần tiền cược. Không trùng là mất. Nhà cái lợi khoảng 8%, nên chơi lâu thì TEU có xu hướng hao dần.
 - **Bảng tuần:** bầu cua tính lãi/lỗ ròng cả tuần: thắng cộng, thua trừ. Cược nhiều không tự đẩy ai lên hạng.
 - Đi ra xa bàn là tự thôi chơi; cược đã đặt vẫn được chấm và trả vào ví. Server có khởi động lại giữa ván thì tiền cược được hoàn.
@@ -108,7 +108,7 @@ Bàn bầu cua ở sân trước thiền đường, phía tây trục chính (b�
 
 Bàn xì dách ở sân trước thiền đường, phía đông trục chính. Bấm **Chơi gì?** rồi chọn **Xì dách**, hoặc đứng quanh bàn bấm **E**. Tối đa 5 người cùng đấu với Bà Năm nhà cái, luật miền Nam.
 
-- **Cược:** bấm chip +1/+5/+10 (hoặc phím **1–3**) trong 8 giây nhận cược, tối đa 20 TEU một tay. Server giữ **gấp đôi** tiền cược phòng nhà cái ăn x2, chấm xong hoàn phần dư.
+- **Cược:** bấm chip +1/+5/+10 (hoặc phím **1–3**) trong 8 giây nhận cược, tối đa 20 TEU một tay. **Cược lại** đặt đúng tiền ván trước. Server giữ **gấp đôi** tiền cược phòng nhà cái ăn x2, chấm xong hoàn phần dư.
 - **Nặn bài:** chia hai lá, lá đầu ngửa, lá thứ hai úp; kéo lá úp lên để hé dần, kéo quá nửa hoặc chạm một cái là lật hẳn. Lá rút thêm tới tay là ngửa luôn.
 - **Rút / dằn:** lần lượt từng người theo ghế, mỗi người 15 giây (vòng giờ vàng chạy quanh người đang tới lượt): rút (**R**) hoặc dằn (**F**). Dưới 16 là non, không được dằn; hết giờ mà vẫn non thì thua.
 - **Xét bài:** nhà cái rút xong thì đi xét từng nhà: lật bài, đóng dấu (THẮNG, THUA, QUẮC, XÌ DÁCH…), chip của người thua về nhà cái, người thắng được đẩy chip sang và nhận tiền ngay.

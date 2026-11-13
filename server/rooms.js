@@ -244,6 +244,7 @@ export class Room {
     on('wish:delete', (p, data) => this.wishes.remove(p, data));
     on('fortune:draw', (p) => this.wishes.drawFortune(p));
     on('baucua:bet', (p, data) => this.baucua.bet(p, data));
+    on('baucua:rebet', (p, data) => this.baucua.rebet(p, data));
     on('baucua:clear', (p) => this.baucua.clear(p));
     on('xidach:bet', (p, data) => this.xidach.bet(p, data));
     on('xidach:clear', (p) => this.xidach.clear(p));

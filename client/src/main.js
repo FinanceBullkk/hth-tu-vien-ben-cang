@@ -41,6 +41,7 @@ import './ui/fishing.css';
 import './ui/melody.css';
 import './ui/cultivation.css';
 import './ui/shop.css';
+import './ui/table-hud.css';
 import './ui/baucua.css';
 import './ui/casino-round-hud.css';
 import './ui/xidach.css';
