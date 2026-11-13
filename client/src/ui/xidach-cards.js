@@ -1,14 +1,17 @@
 // Lá bài DOM cho bảng xì dách: vẽ một lá, nhãn điểm của một tay, và đồng bộ một hàng bài theo kiểu "chia thêm":
 // lá mới thì bay vào, lá úp vừa lật thì lật, lá cũ đứng yên (không vẽ lại cả tay mỗi lần trạng thái đổi).
-import { KIND_LABEL, RANKS, RED_SUITS, SUITS, handKind, handTotal, rankOf, suitOf } from '../../../shared/xidach.js';
+import { KIND_LABEL, RANKS, SUITS, handKind, handTotal, rankOf, suitOf } from '../../../shared/xidach.js';
+import { cardImageUrl } from '../scene/card-textures.js';
 import { h } from './dom.js';
 
-/** Một lá bài DOM; id âm là lá úp. */
+/** Một lá bài DOM (ảnh vẽ chung với lá trên bàn 3D); id âm là lá úp. */
 export function cardEl(card, small = false) {
-  if (!(card >= 0)) return h('span', { class: `xd-card back${small ? ' small' : ''}`, 'aria-label': 'Lá úp' });
-  const red = RED_SUITS.has(suitOf(card));
-  return h('span', { class: `xd-card${red ? ' red' : ''}${small ? ' small' : ''}`, 'aria-label': `${RANKS[rankOf(card)]}${SUITS[suitOf(card)]}` },
-    h('b', {}, RANKS[rankOf(card)]), h('i', {}, SUITS[suitOf(card)]));
+  const face = card >= 0;
+  const label = face ? `${RANKS[rankOf(card)]}${SUITS[suitOf(card)]}` : 'Lá úp';
+  return h('span', {
+    class: `xd-card${face ? '' : ' back'}${small ? ' small' : ''}`, role: 'img', 'aria-label': label,
+    style: `background-image: url(${cardImageUrl(card)})`,
+  });
 }
 
 /** Nhãn điểm của một tay: "Xì dách", "Quắc 25", "Non 13", hay chỉ số điểm. */
@@ -42,6 +45,7 @@ function squeezeCardEl(card, onOpen) {
   el.classList.add('squeeze');
   const cover = document.createElement('span');
   cover.className = 'xd-cover';
+  cover.style.backgroundImage = `url(${cardImageUrl(-1)})`;
   el.append(cover);
   let startY = null;
   let peel = 0;

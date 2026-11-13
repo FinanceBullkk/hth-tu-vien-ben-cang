@@ -4,14 +4,13 @@
 import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { XIDACH } from '../../../shared/xidach.js';
+import { chipMaterials } from './casino-chip-materials.js';
 import { h } from '../ui/dom.js';
 import { stampOf } from '../ui/xidach-cards.js';
 
 const CHIP = { r: 0.034, h: 0.011, max: 6 };
-const CHIP_COLORS = { 1: 0xf5f0e6, 5: 0xc0392b, 10: 0xe2a72e };
 const FLY_S = 0.55;
-const chipGeometry = new THREE.CylinderGeometry(CHIP.r, CHIP.r, CHIP.h, 14);
-const chipMaterials = Object.fromEntries(Object.entries(CHIP_COLORS).map(([k, color]) => [k, new THREE.MeshLambertMaterial({ color })]));
+const chipGeometry = new THREE.CylinderGeometry(CHIP.r, CHIP.r, CHIP.h, 24);
 
 /** Mệnh giá từng chip để xếp một số TEU (chip lớn trước), tối đa CHIP.max chip cho gọn. */
 function chipsFor(amount) {
@@ -64,7 +63,7 @@ export class XiDachTableFx {
     const stack = this.stacks[seat];
     stack.clear();
     chipsFor(amount).forEach((v, i) => {
-      const chip = new THREE.Mesh(chipGeometry, chipMaterials[v]);
+      const chip = new THREE.Mesh(chipGeometry, chipMaterials(v));
       chip.position.set((i % 2) * 0.006, this.spots.top + CHIP.h * (i + 0.5), 0);
       chip.castShadow = true;
       stack.add(chip);
@@ -75,7 +74,7 @@ export class XiDachTableFx {
   #fly(amount, from, to, done) {
     const chips = chipsFor(amount);
     chips.forEach((v, i) => {
-      const mesh = new THREE.Mesh(chipGeometry, chipMaterials[v]);
+      const mesh = new THREE.Mesh(chipGeometry, chipMaterials(v));
       mesh.position.copy(from);
       mesh.visible = false;
       this.group.add(mesh);

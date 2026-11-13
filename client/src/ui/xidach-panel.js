@@ -78,6 +78,7 @@ export class XiDachPanel {
       h('div', { class: 'baucua-timer', 'aria-hidden': 'true' }, this.bar),
       h('div', { class: 'xd-felt' },
         h('div', { class: 'xd-row' }, h('span', { class: 'xd-who' }, 'Nhà cái'), this.dealerCards, this.dealerTotal),
+        h('div', { class: 'xd-print', 'aria-hidden': 'true' }, 'Xì bàn · xì dách · ngũ linh ăn gấp đôi'),
         this.seats,
         this.meRow,
         this.banner),
