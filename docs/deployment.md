@@ -1,6 +1,35 @@
 # Deployment
 
-## Current release: 2026-11-13 renamed casino table dealers, 16:35 UTC+7
+## Current release: 2026-11-13 Kiếm Vũ aura rebuilt as Vạn Kiếm Quy Tông Trận, 18:42 UTC+7
+
+Deploy run [43419140054](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43419140054)
+released main `0d65438` (PR #67) as `hth:261113-1842-0d65438`, replacing
+`hth:261113-1701-55867be`. Thanh Phong Kiếm Vũ (effect 12) now has its own
+layered form: sword wheel with hand-drawn mandala and counter-rotating rune rim,
+drifting light arcs, silk sashes, xiangyun clouds, falling sword petals, three
+orbiting swords, bagua ground seal and a gentle 12 s breathing cycle with a
+slow sword rain; seated it shows a sword throne instead of the borrowed lotus.
+Public bundle `index-Db0tOR3-.js`, confirmed served at
+`https://game.hthlogistics.top/` with `/api/health` 200 and the Kiếm Vũ code
+present in the bundle.
+
+Docker tests 254/254. Candidate passed with DB `quick_check` ok (52 players,
+23 wishes, 67 fish).
+
+Rollback container `hth-rollback-261113-1842-0d65438` preserves
+`hth:261113-1701-55867be`. Private backup is in the data volume at
+`backups/cutover-261113-1842-0d65438/`.
+
+## Previous release: 2026-11-13 trading post and fishing additions, 17:01 UTC+7
+
+Deploy run [43405842466](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43405842466)
+released main `55867be` as `hth:261113-1701-55867be`, replacing
+`hth:261113-1635-2ba3e4c`. Includes PR #65 (big fish, catch streaks, Giờ cá
+vàng) and PR #66 (trading post for direct look and TEU trades). Recorded
+afterwards from the run history; test counts and candidate details were not
+written down at the time.
+
+## Previous release: 2026-11-13 renamed casino table dealers, 16:35 UTC+7
 
 Deploy run [43402508930](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43402508930)
 released main `2ba3e4c` (PR #63) as `hth:261113-1635-2ba3e4c`, replacing
