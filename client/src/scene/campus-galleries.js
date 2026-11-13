@@ -12,7 +12,7 @@ export function buildCampusGalleries(b) {
       b.box(0.18, 0.22, g.d, PALACE.redDark, g.x + side * 1.1, g.roof - 0.1, g.z);
       bracketBand(b, g.d, g.x + side * 1.1, g.roof + 0.12, g.z, { ry: Math.PI / 2, depth: 0.3 });
     }
-    palaceRoof(b, g.d + 1, g.w + 0.7, 0.95, g.x, g.roof + 0.25, g.z, { ry: Math.PI / 2, lift: 0.3 });
+    palaceRoof(b, g.d + 1, g.w + 0.7, 0.95, g.x, g.roof + 0.25, g.z, { ry: Math.PI / 2, lift: 0.3, gold: g.gold });
   }
   for (const p of GALLERY_POSTS) redColumn(b, p.x, p.z, 3.05, 0.16, 0.14);
   const random = rng(182);

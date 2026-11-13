@@ -14,12 +14,23 @@ export const PALACE = {
   marble: '#ece6d8',
   marbleShade: '#d6cfbf',
   marbleDeep: '#bfb8a8',
+  goldTile: '#dcab35', // ngói lưu ly vàng của Kim Ngân Phường
+  goldTileDark: '#b98a22',
+  ridgeRed: '#9b2f1f',
 };
 
-/** Mái lưu ly xanh ngọc, nóc và đầu đao vàng, góc hất cao kiểu cung điện. */
-export function palaceRoof(b, w, d, h, x, y, z, { ry = 0, lift } = {}) {
+/**
+ * Mái cung điện góc hất cao. Mặc định lưu ly xanh ngọc nóc vàng (nội viện);
+ * gold: true là lưu ly vàng nóc son (Kim Ngân Phường).
+ */
+export function palaceRoof(b, w, d, h, x, y, z, { ry = 0, lift, gold = false } = {}) {
   addRoof(b, w, d, h, x, y, z, {
-    ry, lift: lift ?? Math.min(w, d) * 0.16, curve: 2.1, a: PALACE.jade, b: PALACE.jadeDark, ridge: PALACE.gold,
+    ry,
+    lift: lift ?? Math.min(w, d) * 0.16,
+    curve: 2.1,
+    a: gold ? PALACE.goldTile : PALACE.jade,
+    b: gold ? PALACE.goldTileDark : PALACE.jadeDark,
+    ridge: gold ? PALACE.ridgeRed : PALACE.gold,
   });
 }
 

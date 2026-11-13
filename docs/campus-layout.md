@@ -11,7 +11,9 @@ phía đông là tường chắn dốc xuống cảng nên giữ nguyên. Kế h
   hai hành lang có mái kẹp hai bên. Hồ sen và cầu vòm bên tây, bảo tháp và vườn đá bên đông.
 - Tiền sân phía tây trục: gác chuông, cây bồ đề.
 - Phố chợ (tây nam, lát đá): quán trà rút xăm, Sạp Kim Bảo, trạm giao thương.
-- Kim Ngân Phường (phía tây, tường riêng gờ son): cổng đông nhìn sang gác chuông, cổng nam ra phố chợ.
+- Kim Ngân Phường (phía tây, tường son mũ lưu ly vàng): cổng bài lâu phía đông nhìn sang gác chuông, phía nam ra phố chợ.
+  Kim Ngân Lâu hai tầng sát tường bắc (chỉ để nhìn, có hộp va chạm `CASINO_HALL`), thảm đỏ viền vàng dọc lối giữa,
+  dây đèn lồng đỏ trên bốn cột cờ (`CASINO_POLES`), nguyên bảo vàng bay vòng trên Tụ Bảo Bồn.
   Lối giữa bắc–nam có Tụ Bảo Bồn; cột tây bầu cua và tài xỉu, cột đông xì dách và cò quay; khách luôn đứng
   phía lối giữa, nhà cái mép ngoài. Hành lang máy gạt cần sát tường tây.
 - Phía đông giữ nguyên: hồ câu, tấu nhạc, đầu hồ, bảng ước, sư chú giữ cổng.

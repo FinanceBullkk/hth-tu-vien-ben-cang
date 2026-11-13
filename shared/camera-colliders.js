@@ -2,7 +2,7 @@
 // quét một quả cầu từ điểm xoay sau đầu nhân vật ra vị trí camera mong muốn, gặp vật cản thì co lại.
 // Chỉ những khối to đủ che nhân vật mới chặn camera. Lan can cầu, cột, cây, đèn đá cố tình không có
 // ở đây: chặn những vật thấp/mảnh đó làm camera sập vào người mỗi lần xoay qua ("vướng").
-import { CASINO, CASINO_WALLS, HALL, PAGODA, ROOF_ZONES, SITE, TERRACE } from './layout.js';
+import { CASINO, CASINO_HALL, CASINO_WALLS, HALL, PAGODA, ROOF_ZONES, SITE, TERRACE } from './layout.js';
 
 /** Bán kính quả cầu quét: camera luôn cách mặt vật cản chừng này, không thấy xuyên qua mép tường. */
 export const CAMERA_RADIUS = 0.3;
@@ -23,6 +23,9 @@ export const CAMERA_COLLIDERS = [
   box(4.6, 31, -1, YARD_WALL_TOP, 29.7, 30.3),
   // Tường Kim Ngân Phường, cao ngang tường rào.
   ...CASINO_WALLS.map((w) => box(w.minX, w.maxX, -1, CASINO.wallTop, w.minZ, w.maxZ)),
+  // Kim Ngân Lâu: khối lầu hai tầng cao tới nóc mái trên.
+  box(CASINO_HALL.x - CASINO_HALL.halfW, CASINO_HALL.x + CASINO_HALL.halfW, -1, 9.5,
+    CASINO_HALL.z - CASINO_HALL.halfD, CASINO_HALL.z + CASINO_HALL.halfD),
   // Thân đài cẩm thạch: đứng dưới sân xoay camera qua đài thì camera không chui vào khối đá.
   box(h.x - TERRACE.halfW, h.x + TERRACE.halfW, -1, TERRACE.y, TERRACE.backZ, TERRACE.frontZ),
   // Thiền đường trên đài: tường bắc, tây, đông và hai mảng tường trước chừa cửa.
