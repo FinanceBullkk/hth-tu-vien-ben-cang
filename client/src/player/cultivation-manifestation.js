@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { swordGeometry } from './vfx/sword-geometry.js';
+import { dropGeometry } from './vfx/drop-geometry.js';
 import { buildHongLienThrone } from './vfx/hong-lien-throne.js';
 
 const cache = new Map();
@@ -13,6 +14,20 @@ for (let i = 0; i < p.count; i++) {
 petal.computeVertexNormals();
 const crystal = new THREE.OctahedronGeometry(1);
 const sphere = new THREE.SphereGeometry(1, 10, 6);
+
+// Ngọn sóng cuộn (Lưu Ly): tấm mỏng dâng lên rồi cuộn xoáy về phía +z, chân rộng, ngọn thuôn.
+// Đường giữa là xoắn ốc bán kính co dần cộng độ dâng theo chiều dài.
+function waveCrest() {
+  const geo = new THREE.PlaneGeometry(1, 1, 4, 28), pos = geo.attributes.position, uvs = geo.attributes.uv;
+  for (let i = 0; i < pos.count; i++) {
+    const t = uvs.getY(i), across = uvs.getX(i) - 0.5;
+    const phi = t * Math.PI * 1.3, R = 0.5 - 0.3 * t;
+    const w = Math.pow(1 - t, 0.7) * Math.min(1, t * 6 + 0.35);
+    pos.setXYZ(i, across * w, R * Math.sin(phi) + 0.62 * t, R * (1 - Math.cos(phi)) * 0.8);
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
 
 function build(effect, stage) {
   const pieces = [];
@@ -51,6 +66,40 @@ function build(effect, stage) {
       add(swordGeometry(), Math.sin(a) * r, 0.08, Math.cos(a) * r, len, len, len, lean, a, 0, 'YXZ');
     }
   };
+  // Tinh Hà (3): tầng 3 ba sao bốn cánh quanh vai; tầng 4 Bắc Đẩu thất tinh sau lưng nối nét;
+  // tầng 5 thiên cầu thu nhỏ — ba cung kinh vĩ hở đầu BAO QUANH người ngồi, mặt phẳng nghiêng sao
+  // cho nửa trước thấp (ngang đùi) và nửa sau cao, kèm vương miện năm sao. Chừa trống khuôn mặt.
+  const star4 = (x, y, z, s, rz = 0) => {
+    add(crystal, x, y, z, s * 0.28, s, s * 0.18, 0, 0, rz);
+    add(crystal, x, y, z, s * 0.28, s * 0.62, s * 0.18, 0, 0, rz + Math.PI / 2);
+  };
+  // Cung kinh vĩ hở đầu, cứ mỗi đoạn lại có một hạt chia độ như vòng hồn thiên nghi.
+  const orbit = (r, rx, ry, a0, a1, cy = 0.55, cz = 0) => {
+    const euler = new THREE.Euler(rx, ry, 0, 'YXZ');
+    const points = Array.from({ length: 25 }, (_, i) => {
+      const a = a0 + (a1 - a0) * i / 24, v = new THREE.Vector3(Math.cos(a) * r, Math.sin(a) * r, 0).applyEuler(euler);
+      return [v.x, cy + v.y, cz + v.z];
+    });
+    stem(points, 0.012);
+    for (let i = 3; i < 24; i += 4) add(sphere, ...points[i], 0.03, 0.03, 0.03);
+  };
+  const tinhHa = level => {
+    if (level === 0) {
+      star4(-0.62, 0.78, -0.3, 0.2, 0.2); star4(0.64, 0.86, -0.32, 0.18, -0.3); star4(0, 1.5, -0.55, 0.24);
+    } else if (level === 1) {
+      const dipper = [[-0.78, 1.38], [-0.85, 1.06], [-0.55, 0.98], [-0.46, 1.3], [-0.16, 1.45], [0.16, 1.52], [0.5, 1.7]];
+      dipper.forEach(([x, y], i) => star4(x, y, -0.7, i === 0 || i === 6 ? 0.2 : 0.15, i * 0.3));
+      for (const [i, j] of [[0, 1], [1, 2], [2, 3], [3, 0], [3, 4], [4, 5], [5, 6]]) {
+        stem([[...dipper[i], -0.7], [...dipper[j], -0.7]], 0.007);
+      }
+    } else {
+      // rx = -(π/2 - nghiêng): mặt vòng gần nằm ngang, nửa trước (z > 0) thấp hơn nửa sau.
+      orbit(1.05, -Math.PI / 2, 0, 0.4, Math.PI * 1.8, 0.4);
+      orbit(0.95, -(Math.PI / 2 - 0.4), 0.6, Math.PI * 0.2, Math.PI * 1.75);
+      orbit(0.95, -(Math.PI / 2 - 0.4), -0.6, Math.PI * 1.2, Math.PI * 2.75);
+      for (let i = 0; i < 5; i++) star4((i - 2) * 0.24, 2.02 - Math.abs(i - 2) * 0.09, -0.55, i === 2 ? 0.2 : 0.13);
+    }
+  };
   if (effect === 4) buildHongLienThrone(add, stage);
   else if (effect === 12) {
     if (stage === 0) plant(3, 0.7, 0.45, 0.2, 0.5);
@@ -59,10 +108,15 @@ function build(effect, stage) {
       const a = (i - 3) * 0.33;
       add(swordGeometry(), Math.sin(a) * 0.32, 0.95 + Math.cos(a) * 0.32, -0.62, 0.78, 0.78, 0.78, 0, 0, -a);
     }
+  } else if (effect === 3) {
+    tinhHa(stage);
   } else if (stage === 0) {
   // Tier three is a small spirit seed; later tiers introduce a new silhouette.
     if (effect === 1 || effect === 0 || effect === 5) bloom(0, 0.18, -0.42, 0.42, effect === 5 ? 5 : 8);
-    else for (let i = 0; i < 3; i++) {
+    else if (effect === 2) for (let i = 0; i < 3; i++) {
+      const a = i * Math.PI * 2 / 3;
+      add(dropGeometry(), Math.cos(a) * 0.62, 0.45 + i * 0.12, Math.sin(a) * 0.52, 0.32, 0.32, 0.32);
+    } else for (let i = 0; i < 3; i++) {
       const a = i * Math.PI * 2 / 3;
       add(crystal, Math.cos(a) * 0.65, 0.5 + i * 0.12, Math.sin(a) * 0.55, 0.08, 0.2, 0.08, 0, 0, -a);
     }
@@ -74,32 +128,19 @@ function build(effect, stage) {
         stage === 1 ? 0.85 : 1.4, 0.8, -0.2, 0, a);
     }
   } else if (effect === 2) {
-    const side = stage === 1 ? -1 : 1;
-    const points = Array.from({ length: 33 }, (_, i) => {
-      const t = i / 32, a = t * Math.PI * 1.45;
-      return [side * (0.35 + Math.sin(a) * 0.72), 0.2 + t * 1.65, -0.65 + Math.cos(a) * 0.35];
-    });
-    stem(points, 0.065);
-    const head = points.at(-1);
-    add(sphere, ...head, 0.14, 0.13, 0.22, -0.3);
-    add(sphere, head[0], head[1] - 0.025, head[2] + 0.2, 0.11, 0.065, 0.15);
-    for (const horn of [-1, 1]) {
-      const x = head[0] + horn * 0.09, y = head[1], z = head[2];
-      stem([[x, y + 0.08, z], [x + horn * 0.06, y + 0.26, z - 0.08], [x + horn * 0.14, y + 0.34, z - 0.12]], 0.015);
-      stem([[x, y + 0.05, z + 0.18], [x + horn * 0.18, y - 0.04, z + 0.35], [x + horn * 0.27, y + 0.07, z + 0.4]], 0.008);
-      add(crystal, x, y + 0.03, z + 0.12, 0.035, 0.025, 0.04);
+    // Lưu Ly (2): tòa sóng lưu ly — tầng 4 tám ngọn sóng cuộn theo một chiều quanh người ngồi như
+    // xoáy nước; tầng 5 quạt bảy ngọn sóng sau lưng cuộn ra hai bên, đầu ngọn đọng giọt lưu ly.
+    // Ngọn sóng xoay để mặt cắt xoắn ốc hướng về người nhìn — thấy rõ nét cuộn thay vì tấm phẳng.
+    const crest = waveCrest();
+    if (stage === 1) for (let i = 0; i < 8; i++) {
+      const a = (i + 0.5) * Math.PI * 2 / 8;
+      add(crest, Math.sin(a) * 0.7, 0.04, Math.cos(a) * 0.7, 0.26, 0.55, 0.5, -0.1, a + Math.PI / 2, 0, 'YXZ');
+    } else for (let i = 0; i < 7; i++) {
+      const a = (i - 3) * 0.36, s = 1 - Math.abs(i - 3) * 0.1, side = i < 3 || (i === 3) ? -1 : 1;
+      add(crest, Math.sin(a) * 0.36, 0.55 + Math.cos(a) * 0.36, -0.66, 0.3 * s, 1.2 * s, 0.75 * s, 0, side * Math.PI / 2, -a, 'ZYX');
+      add(dropGeometry(), Math.sin(a) * (0.36 + 1.05 * s), 0.6 + Math.cos(a) * (0.36 + 1.05 * s), -0.62, 0.14, 0.14, 0.14, 0, 0, -a);
     }
-    for (let i = 3; i < 29; i += 3) add(petal, ...points[i], 0.16, 0.28, 0.3, -0.5, 0, side * -0.7);
-  } else if (effect === 3) {
-    const points = [];
-    for (let i = 0; i < 7; i++) {
-      const a = i * Math.PI * 2 / 7;
-      const x = Math.cos(a) * (stage === 1 ? 0.7 : 1.15), y = 1.05 + Math.sin(a) * 0.8;
-      points.push([x, y, -0.7]);
-      add(crystal, x, y, -0.7, 0.08, 0.14, 0.06, 0, 0, a);
-    }
-    stem([...points, points[0]], 0.008);
-    if (stage === 2) for (let i = 0; i < 5; i++) add(petal, (i - 2) * 0.3, 1.7, -0.8, 0.08, 0.65, 0.2, 0, 0, (i - 2) * -0.2);
+    crest.dispose();
   } else if (effect === 8) {
     wings(true);
     if (stage === 2) for (let i = 0; i < 3; i++) add(petal, (i - 1) * 0.12, 1.65, -0.5, 0.15, 0.55 - Math.abs(i - 1) * 0.15, 0.4, 0, 0, (i - 1) * -0.3);
@@ -156,7 +197,8 @@ export function createManifestation(effect, tint, accent, lowQuality = false) {
     update(level, sit, time, fading) {
       group.visible = level >= 3 && sit > 0.1 && fading > 0;
       layers.forEach((mesh, i) => {
-        const replacesCrown = [0, 1, 3, 4, 8].includes(theme);
+        // Tinh Hà giữ Bắc Đẩu ở tầng 5 (hồn thiên nghi ôm lấy chòm sao).
+        const replacesCrown = [0, 1, 4, 8].includes(theme);
         mesh.visible = level >= i + 3 && !(i === 1 && level >= 5 && replacesCrown);
         mesh.position.y = i ? Math.sin(time * 0.7 + i) * 0.035 : Math.sin(time) * 0.06;
         mesh.rotation.y = Math.sin(time * 0.35 + i) * (i ? 0.08 : 0.15);
