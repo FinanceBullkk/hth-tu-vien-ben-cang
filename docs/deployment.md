@@ -1,6 +1,31 @@
 # Deployment
 
-## Current release: 2026-11-13 xì dách table and centre-court gambling tables, 01:38 UTC+7
+## Current release: 2026-11-13 xì dách turns, dealer checks, card squeeze and effects, 06:58 UTC+7
+
+Deploy run [43333211851](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43333211851)
+released main `92c1a2e` (PR #48 and #49) as `hth:261113-0658-92c1a2e`, replacing
+`hth:261113-0138-4aa0cfa`. Server and client change for the xì dách table:
+players now act one at a time in seat order (10 s each, `turn` in state,
+`xidach:act` with `hit|stand|timeout`); after drawing, the dealer checks each
+seat in turn (new phase `checking`, one seat per second, paid at its check).
+Dealer drawing rules and house edge are unchanged. Client: cards fly from the
+shoe and flip on reveal, avatars hold cards and reach when hitting, bubbles for
+hit/stand/result, a timer ring on the active seat, card squeeze for one's own
+cards, result stamps and chip stacks that move to the dealer or the winner.
+Public bundle: `index-C1h2Ztsd.js`, confirmed served at
+`https://game.hthlogistics.top/` with `/api/health` ok.
+
+Local suite 205/205 and Vite build passed on Node 24; Docker tests 205/205.
+Candidate passed with DB `quick_check` ok (50 players, 23 wishes, 48 fish).
+Checked in a browser on a temporary DB with a socket bot as second player;
+not yet checked with two real players after the cutover.
+
+Rollback container `hth-rollback-261113-0658-92c1a2e` preserves
+`hth:261113-0138-4aa0cfa`. Private backup is in the data volume at
+`backups/cutover-261113-0658-92c1a2e/`. A round open during rollback is
+refunded from `xidach_pending` on the next start.
+
+## Previous release: 2026-11-13 xì dách table and centre-court gambling tables, 01:38 UTC+7
 
 Deploy run [43281849549](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43281849549)
 released main `4aa0cfa` (PR #46) as `hth:261113-0138-4aa0cfa`, replacing
