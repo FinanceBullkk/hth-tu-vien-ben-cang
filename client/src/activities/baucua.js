@@ -1,10 +1,12 @@
 // Bầu cua: bàn chung ở góc chợ. Đứng quanh bàn bấm E để mở bảng đặt cược; luật, tiền và xúc xắc đều do server chấm.
 // Client chỉ gửi mặt và mệnh giá, rồi vẽ lại đúng trạng thái server phát. Rời khỏi bàn thì tự thôi chơi,
-// cược đã đặt vẫn được chấm và trả thưởng vào ví như thường.
-import { BAUCUA, emptyBets } from '../../../shared/baucua.js';
+// cược đã đặt vẫn được chấm và trả thưởng vào ví như thường. Lúc chơi camera khoá nhìn bàn (tableShot).
+import { BAUCUA, emptyBets, sumBets } from '../../../shared/baucua.js';
 import { BAUCUA_ZONE, dist2d } from '../../../shared/layout.js';
 import { BauCuaPanel } from '../ui/baucua-panel.js';
 import { BauCuaReveal } from '../ui/baucua-reveal.js';
+import { Callout } from '../ui/table-hud-parts.js';
+import { tableShot } from './table-camera-shot.js';
 
 const RATTLE_EVERY_S = 0.11; // Tiếng xúc xắc lắc trong đĩa khi nhà cái xóc.
 const LEAVE_MARGIN = 0.9; // Đi xa hơn bán kính bàn chừng này thì tự rời (server cho dung sai rộng hơn).
@@ -19,11 +21,13 @@ export class BauCuaActivity {
     this.state = null;
     this.round = 0;
     this.mine = emptyBets();
+    this.last = emptyBets(); // Cược của ván gần nhất mình có đặt, cho nút "Cược lại".
     this.chip = DEFAULT_CHIP;
     this.lastBet = 0;
     this.payout = null; // Kết quả riêng của ván gần nhất { round, net }, tới ngay trước tin mở bát.
     this.rattleT = 0;
     this.reveal = new BauCuaReveal();
+    this.callout = new Callout();
     this.panel = new BauCuaPanel({
       onBet: (symbol) => this.bet(symbol),
       onChip: (amount) => {
@@ -31,6 +35,8 @@ export class BauCuaActivity {
         this.#render();
       },
       onClear: () => this.clear(),
+      onRepeat: () => this.rebet(this.#lastBets()),
+      onDouble: () => this.rebet(this.mine),
       onExit: () => app.activities.exit(),
     });
     app.wallet.onChange(() => this.#render());
@@ -39,16 +45,19 @@ export class BauCuaActivity {
   start() {
     const { app } = this;
     if (!app.activities.enter(this, 'baucua')) return;
-    // Quay mặt vào bàn. Camera để nguyên cho người chơi tự xoay: góc chợ này chật, camera ép sẵn dễ bị cây và mái sạp chắn.
+    // Quay mặt vào bàn; camera khoá góc nhìn bàn từ phía khách.
     app.me.placeAt(app.me.x, app.me.z, Math.atan2(BAUCUA_ZONE.x - app.me.x, BAUCUA_ZONE.z - app.me.z));
+    app.follow.shot = tableShot(BAUCUA_ZONE);
     this.panel.show();
     this.panel.setMessage('Chọn chip, bấm ô (hoặc phím 1–6) để cược. Trùng mấy viên ăn mấy lần.');
     this.#render();
   }
 
   cancel() {
+    this.app.follow.shot = null;
     this.panel.hide();
     this.reveal.hide();
+    this.callout.hide();
   }
 
   update(dt) {
@@ -94,7 +103,13 @@ export class BauCuaActivity {
   applyState(state) {
     if (!state) return;
     const opening = state.phase === 'result' && (this.state?.phase !== 'result' || this.state?.round !== state.round);
+    const playing = this.app.activities.current === this;
+    if (playing && state.phase !== this.state?.phase) {
+      if (state.phase === 'betting') this.callout.show('Đặt cược!', 'go');
+      else if (state.phase === 'rolling') this.callout.show('Ngừng cược', 'stop');
+    }
     if (state.round !== this.round) {
+      if (sumBets(this.mine) > 0) this.last = this.mine;
       this.round = state.round;
       this.mine = emptyBets();
       this.panel.setMessage('');
@@ -102,7 +117,7 @@ export class BauCuaActivity {
     this.state = state;
     this.app.world.baucuaTable.setState(state);
     this.#render();
-    if (opening && state.dice && this.app.activities.current === this) this.#open(state);
+    if (opening && state.dice && playing) this.#open(state);
   }
 
   /** Mở bát: ba viên to giữa màn hình, kèm lãi/lỗ của mình nếu ván này mình có cược. */
@@ -111,7 +126,10 @@ export class BauCuaActivity {
     const net = this.payout?.round === state.round ? this.payout.net : null;
     this.reveal.show(state.dice, net);
     app.audio.pop();
-    if (net > 0) app.audio.chime(0.09);
+    if (net > 0) {
+      app.audio.chime(0.09);
+      this.panel.collect(state.dice, this.mine);
+    }
   }
 
   async bet(symbol) {
@@ -125,11 +143,36 @@ export class BauCuaActivity {
       if (Number.isFinite(res?.teu)) app.wallet.apply({ teu: res.teu });
       return;
     }
-    // Ack có thể mở ván mới: áp trạng thái trước, rồi mới ghi cược của mình để không bị xoá nhầm.
+    this.#placed(res);
+    this.panel.flyBet(symbol, this.chip);
+    app.audio.tick();
+  }
+
+  /** Cược nhiều mặt một lần: "Cược lại" (cược ván trước) hoặc "Gấp đôi" (thêm đúng bằng cược đang có). */
+  async rebet(bets) {
+    if (sumBets(bets) <= 0) return;
+    const now = performance.now();
+    if (now - this.lastBet < BET_GAP_MS) return;
+    this.lastBet = now;
+    const { app } = this;
+    const add = [...bets];
+    const res = await app.net.call('baucua:rebet', { bets: add });
+    if (!res?.ok) {
+      this.panel.setMessage(res?.error || 'Chưa cược được, thử lại nhé.', 'error');
+      if (Number.isFinite(res?.teu)) app.wallet.apply({ teu: res.teu });
+      return;
+    }
+    this.#placed(res);
+    add.forEach((amount, symbol) => amount > 0 && this.panel.flyBet(symbol, amount));
+    app.audio.tick();
+  }
+
+  /** Ack cược thành công. Ack có thể mở ván mới: áp trạng thái trước, rồi mới ghi cược của mình để không bị xoá nhầm. */
+  #placed(res) {
     this.applyState(res.state);
     this.mine = res.bets;
     this.panel.setMessage('');
-    app.wallet.apply({ teu: res.teu });
+    this.app.wallet.apply({ teu: res.teu });
     this.#render();
   }
 
@@ -161,7 +204,13 @@ export class BauCuaActivity {
     }
   }
 
+  /** Cược của ván trước để "Cược lại": ván vừa mở bát mà mình có cược thì chính là cược đó (chưa sang ván mới). */
+  #lastBets() {
+    const settled = this.state?.phase === 'result' || this.state?.phase === 'idle';
+    return settled && sumBets(this.mine) > 0 ? this.mine : this.last;
+  }
+
   #render() {
-    this.panel.render({ state: this.state, mine: this.mine, chip: this.chip, teu: this.app.wallet.teu });
+    this.panel.render({ state: this.state, mine: this.mine, chip: this.chip, teu: this.app.wallet.teu, last: this.#lastBets() });
   }
 }

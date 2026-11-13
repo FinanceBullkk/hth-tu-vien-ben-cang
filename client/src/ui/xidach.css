@@ -1,5 +1,11 @@
-/* Xì dách: dùng chung khung đỏ viền vàng, đầu bảng, chip, thanh thời gian của bầu cua (baucua.css); ở đây chỉ có mặt dạ,
-   lá bài, hàng ghế, nút rút/dằn và chữ kết quả. Bảng mang cả lớp .baucua-hud nên lớp phủ cũng để chuột lọt qua như bầu cua. */
+/* Xì dách: dùng chung khung đỏ viền vàng và chip của bầu cua (baucua.css), đầu bảng / khay / ví của table-hud.css; ở đây có
+   bài nhà cái thu nhỏ trên đầu bảng, mặt dạ, lá bài, hàng ghế, nút rút/dằn và chữ kết quả.
+   Bảng mang cả lớp .baucua-hud nên lớp phủ cũng để chuột lọt qua như bầu cua. */
+
+/* Bài nhà cái thu nhỏ ở đầu bảng (bàn 3D phía trên cũng có, đây là bản đọc cho rõ). */
+.xd-dealer { flex: none; display: flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 8px; background: rgba(0, 0, 0, .28); }
+.xd-dealer > small { font: 700 10.5px var(--sans); letter-spacing: .06em; color: #f1d9a8; }
+.xd-dealer .xd-total { margin-left: 0; padding: 1px 8px; font-size: 13px; }
 
 /* Mặt dạ: thớ vải lấm tấm (nhiễu SVG), sáng ở giữa như dưới đèn bàn, viền đệm da nâu bọc quanh. */
 .xd-felt {
@@ -29,7 +35,9 @@
 .xidach-hud .baucua-chip.gold { --c: #d39a22; }
 .xidach-hud .baucua-chip.ivory span { color: #6e140e; }
 .xd-row { display: flex; align-items: center; gap: 10px; min-height: 58px; }
-.xd-row.me { min-height: 76px; padding-top: 6px; border-top: 1px dashed rgba(233, 196, 106, .45); }
+.xd-row.me { min-height: 84px; padding: 6px 6px 0; border-top: 1px dashed rgba(233, 196, 106, .45); }
+.xd-row.me.empty .xd-hand::before { content: attr(data-hint); font: 600 13px var(--sans); color: rgba(255, 232, 168, .65); }
+.xd-seats:not([hidden]) + .xd-row.me { margin-top: 2px; }
 .xd-who { width: 70px; flex: none; display: flex; flex-direction: column; font: 700 13px var(--serif); letter-spacing: .06em; color: #ffe8a8; }
 .xd-bet { font: 600 10.5px var(--sans); letter-spacing: 0; color: #d9f0df; }
 .xd-hand { display: flex; gap: 4px; flex-wrap: nowrap; min-width: 0; }
@@ -95,7 +103,7 @@
 .xd-seat.flash[data-act='stand'] { animation-name: xdFlashStand; }
 
 /* Lượt của mình: nhãn vàng đập nhẹ để khỏi bỏ lỡ. */
-.xd-turn { margin-top: 2px; padding: 1px 6px; border-radius: 8px; background: #ffd46e; color: #3a1d06; font: 800 10.5px var(--sans); letter-spacing: 0; text-align: center; animation: baucuaPulse .6s ease-in-out infinite alternate; }
+.xd-turn { margin-top: 2px; padding: 1px 6px; white-space: nowrap; border-radius: 8px; background: #ffd46e; color: #3a1d06; font: 800 10.5px var(--sans); letter-spacing: 0; text-align: center; animation: tblPulse .6s ease-in-out infinite alternate; }
 .xd-turn[hidden] { display: none; }
 
 /* Lá úp vừa lật ra (nhà cái lật bài, lúc chấm lật bài khách). */
@@ -125,7 +133,7 @@
 .xd-banner[data-tone='win'] { color: #ffe08a; }
 .xd-banner[data-tone='push'] { background: rgba(30, 60, 40, .94); }
 
-.xd-betbox { display: flex; align-items: center; gap: 10px; flex: 1; }
+.xd-betbox { display: flex; align-items: center; gap: 10px; flex: 1; flex-wrap: wrap; }
 .xd-betbox[hidden], .xd-actions[hidden] { display: none; }
 .xd-betbox .baucua-chip span { font-size: 13px; }
 .baucua-chip:disabled { opacity: .45; cursor: default; transform: none; }
@@ -138,6 +146,11 @@
 .xd-action.hit { background: linear-gradient(180deg, #2f8a55, #1e5e39); }
 .xd-action.stand { background: linear-gradient(180deg, #b52a1e, #7a1510); }
 .xd-action:disabled { opacity: .4; cursor: default; }
+.xd-action span { font-size: 18px; line-height: 1; }
+.xd-action { white-space: nowrap; }
+/* Tới lượt mình: hai nút sáng lên, viền đập nhẹ để khỏi bỏ lỡ. */
+.xidach-hud.my-turn .xd-action:not(:disabled) { animation: xdReady 1s ease-in-out infinite alternate; }
+@keyframes xdReady { to { box-shadow: 0 0 0 3px #ffd46e, 0 3px 14px rgba(255, 212, 110, .6); } }
 .xd-action kbd { padding: 0 5px; border-radius: 4px; background: rgba(0, 0, 0, .3); font: 700 11px var(--sans); }
 
 @keyframes xdDeal { from { opacity: 0; transform: translate(40px, -18px) rotate(-14deg) scale(.7); } to { opacity: 1; transform: none; } }
@@ -155,8 +168,15 @@
   .xd-hand.big .xd-card { width: 48px; height: 67px; }
   .xd-banner { font-size: 21px; }
   .xd-action kbd { display: none; }
+  .xd-dealer { padding: 2px 5px; gap: 4px; }
+  .xd-dealer > small { display: none; }
+  .xd-who { width: 60px; }
+  .xd-betbox > .tbl-actions { flex: 1 1 100%; }
+  .xd-turn { font-size: 9.5px; padding: 1px 4px; }
+  .xd-actions { gap: 6px; }
+  .xd-action { min-height: 46px; padding: 0 8px; gap: 5px; font-size: 15px; letter-spacing: .02em; }
 }
 @keyframes xdStamp { from { opacity: 0; transform: translateY(-50%) rotate(-12deg) scale(2.6); } to { opacity: 1; transform: translateY(-50%) rotate(-12deg); } }
 /* Lá chờ nặn nhích nhẹ lên như mời kéo. */
 @keyframes xdNudge { 0%, 70%, 100% { clip-path: inset(0 0 0 0); } 85% { clip-path: inset(0 0 12% 0); } }
-@media (prefers-reduced-motion: reduce) { .xd-card, .xd-banner, .xd-seat.flash, .xd-turn, .xd-seat.turn small::before, .xd-stamp, .xd-cover { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .xd-card, .xd-banner, .xd-seat.flash, .xd-turn, .xd-seat.turn small::before, .xd-stamp, .xd-cover, .xidach-hud.my-turn .xd-action { animation: none; } }

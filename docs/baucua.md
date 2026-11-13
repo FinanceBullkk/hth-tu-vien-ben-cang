@@ -23,7 +23,13 @@ Mọi mốc thời gian và giới hạn nằm trong `BAUCUA` ở `shared/baucua
   hô theo pha, hai tay nhấc đĩa xóc khi `rolling`.
 - Mở bát: bát nhấc lên nghiêng về phía khách, ô trúng trên bạt sáng vàng; người đang chơi thấy ba viên to giữa màn hình
   (`ui/baucua-reveal.js`) kèm lãi/lỗ của mình, nghe tiếng lắc xúc xắc khi xóc.
-- Bảng cược (`ui/baucua-panel.js`) vẽ như tấm bạt đỏ: chip tròn 1/5/10, chồng chip trên ô mình đã cược, thanh thời gian chạy lùi.
+- Đang chơi thì camera khoá góc nhìn bàn từ phía khách (`activities/table-camera-shot.js`, dùng chung với xì dách): thấy
+  nhà cái, đĩa xóc và tấm bạt ở nửa trên màn hình, nửa dưới là bảng cược.
+- Bảng cược (`ui/baucua-panel.js`) bố cục theo các trang cược: đầu bảng có vòng đếm ngược to, pha, số người và tổng tiền
+  trên bàn, dải kết quả các ván trước; sáu ô một hàng (màn hẹp 3×2), mỗi ô ghi số người và tổng tiền đang cược, chồng chip
+  của mình; đáy là chip 1/5/10, **Rút cược**, **Cược lại** (đúng cược ván trước), **Gấp đôi** và ví chạy số.
+- Chữ báo pha giữa màn hình ("Đặt cược!", "Ngừng cược"), chip bay từ khay tới ô khi đặt và từ ô trúng về ví khi thắng
+  (`ui/table-hud-parts.js`, `ui/table-hud.css`, dùng chung với xì dách).
 
 ## TEU và bảng tuần
 
@@ -42,8 +48,9 @@ Mọi mốc thời gian và giới hạn nằm trong `BAUCUA` ở `shared/baucua
 | Sự kiện | Hướng | Nội dung |
 | --- | --- | --- |
 | `baucua:bet` | client -> server | `{ symbol: 0..5, amount: 1\|5\|10 }`, ack `{ ok, bets, teu, state }` |
+| `baucua:rebet` | client -> server | `{ bets: [6 số nguyên ≥ 0] }` cộng cả gói vào cược hiện có (nút Cược lại, Gấp đôi); cùng giới hạn, cả gói qua hoặc cả gói bị từ chối; ack như `baucua:bet` |
 | `baucua:clear` | client -> server | rút toàn bộ cược của mình khi còn đang đặt |
-| `baucua:state` | server -> cả phòng | `{ phase, round, endsAt, dice, totals, bettors }`, không có tên hay `playerId` |
+| `baucua:state` | server -> cả phòng | `{ phase, round, endsAt, dice, totals, crowd, bettors, history }`: `crowd` là số người cược từng mặt, `history` là 12 ván gần nhất (mới trước); không có tên hay `playerId` |
 | `baucua:payout` | server -> người cược | `{ round, dice, stake, payout, net, teu }` |
 
 Hello trả thêm `snapshot.baucua` (trạng thái bàn kèm `mine` là cược đang đặt của người đó) để vào lại giữa ván vẫn khớp.

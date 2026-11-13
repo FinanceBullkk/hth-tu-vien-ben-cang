@@ -3,7 +3,9 @@
 // "xidach:hand". Rời khỏi bàn thì tự thôi chơi; tay bài đã cược vẫn được chấm (hết giờ coi như dằn) và trả vào ví.
 import { XIDACH_ZONE, dist2d } from '../../../shared/layout.js';
 import { KIND_LABEL, XIDACH } from '../../../shared/xidach.js';
+import { Callout } from '../ui/table-hud-parts.js';
 import { XiDachPanel } from '../ui/xidach-panel.js';
+import { tableShot } from './table-camera-shot.js';
 import { actEffect, checkEffect, newlyChecked } from './xidach-effects.js';
 
 const EFFECT_DISTANCE = 20; // Đứng trong tầm này mới nghe tiếng bài và thấy hiệu ứng chấm bài.
@@ -20,9 +22,12 @@ export class XiDachActivity {
     this.mine = null; // { round, seat, bet, cards, stood }
     this.payout = null; // { round, net, outcome, kind }
     this.lastAction = 0;
+    this.lastBet = 0; // Tiền cược ván gần nhất mình có chơi, cho nút "Cược lại".
+    this.callout = new Callout();
     this.panel = new XiDachPanel({
       onChip: (amount) => this.bet(amount),
       onClear: () => this.clear(),
+      onRepeat: () => this.rebet(),
       onHit: () => this.hit(),
       onStand: () => this.stand(),
       onExit: () => app.activities.exit(),
@@ -56,13 +61,16 @@ export class XiDachActivity {
     const { app } = this;
     if (!app.activities.enter(this, 'xidach')) return;
     app.me.placeAt(app.me.x, app.me.z, Math.atan2(XIDACH_ZONE.x - app.me.x, XIDACH_ZONE.z - app.me.z));
+    app.follow.shot = tableShot(XIDACH_ZONE);
     this.panel.show();
     this.panel.setMessage('Bấm chip để cược (giữ gấp đôi phòng cái ăn x2). Dưới 16 là non, phải rút.');
     this.#render();
   }
 
   cancel() {
+    this.app.follow.shot = null;
     this.panel.hide();
+    this.callout.hide();
   }
 
   update() {
@@ -109,6 +117,7 @@ export class XiDachActivity {
     const prev = this.state;
     const playing = app.activities.current === this;
     if (state.round !== this.round) {
+      if (this.mine?.bet) this.lastBet = this.mine.bet;
       this.round = state.round;
       this.mine = null;
       this.payout = null;
@@ -123,9 +132,17 @@ export class XiDachActivity {
       if (this.#near()) checkEffect(app, seat);
       if (seat.sid === app.sid && playing) this.#showResult();
     }
-    if (playing && state.phase === 'playing' && state.turn === app.sid && prev?.turn !== app.sid) {
+    const myTurn = state.phase === 'playing' && state.turn === app.sid && prev?.turn !== app.sid;
+    if (playing && myTurn) {
       app.audio.chime(0.05);
-      this.panel.setMessage('Tới lượt bạn: nặn bài, rồi Rút (R) hoặc Dằn (F).');
+      this.callout.show('Tới lượt bạn', 'turn');
+      this.panel.setMessage('Nặn lá úp (kéo lên), rồi Rút (R) hoặc Dằn (F).');
+    } else if (playing && prev?.turn === app.sid && state.turn !== app.sid) {
+      this.panel.setMessage(''); // Hết lượt mình: bỏ dòng nhắc rút/dằn.
+    }
+    if (playing && !myTurn && state.phase !== prev?.phase) {
+      if (state.phase === 'betting') this.callout.show('Đặt cược!', 'go');
+      else if (state.phase === 'playing') this.callout.show('Chia bài', 'stop');
     }
   }
 
@@ -151,14 +168,14 @@ export class XiDachActivity {
     return true;
   }
 
-  async bet(amount) {
-    if (!this.#gap()) return;
+  async bet(amount, { quiet = false } = {}) {
+    if (!this.#gap()) return false;
     const { app } = this;
     const res = await app.net.call('xidach:bet', { amount });
     if (!res?.ok) {
       this.panel.setMessage(res?.error || 'Chưa cược được, thử lại nhé.', 'error');
       if (Number.isFinite(res?.teu)) app.wallet.apply({ teu: res.teu });
-      return;
+      return false;
     }
     this.applyState(res.state); // Có thể vừa mở ván mới.
     this.mine = { round: res.state.round, seat: res.seat, bet: res.bet, cards: this.mine?.cards ?? [], stood: false };
@@ -166,6 +183,30 @@ export class XiDachActivity {
     app.wallet.apply({ teu: res.teu });
     this.#render();
     this.#syncTableMine();
+    this.panel.flyBet(amount);
+    if (!quiet) app.audio.tick();
+    return true;
+  }
+
+  /** "Cược lại": đặt đúng tiền ván trước, tách thành các chip (server chỉ nhận đúng mệnh giá chip), từng chip cách nhịp. */
+  async rebet() {
+    let left = this.#repeatAmount();
+    if (!left || this.rebetting) return;
+    this.rebetting = true;
+    try {
+      const chips = [...XIDACH.chips].sort((a, b) => b - a);
+      for (const chip of chips) {
+        while (left >= chip) {
+          const wait = ACTION_GAP_MS - (performance.now() - this.lastAction);
+          if (wait > 0) await new Promise((r) => setTimeout(r, wait + 5));
+          if (!(await this.bet(chip, { quiet: true }))) return;
+          left -= chip;
+        }
+      }
+      this.app.audio.tick();
+    } finally {
+      this.rebetting = false;
+    }
   }
 
   async clear() {
@@ -222,6 +263,12 @@ export class XiDachActivity {
   }
 
   #render() {
-    this.panel.render({ state: this.state, mine: this.mine, mySid: this.app.sid, teu: this.app.wallet.teu });
+    this.panel.render({ state: this.state, mine: this.mine, mySid: this.app.sid, teu: this.app.wallet.teu, last: this.#repeatAmount() });
+  }
+
+  /** Tiền cho "Cược lại": ván vừa chấm mà mình có chơi thì lấy luôn tiền cược ván đó (chưa sang ván mới). */
+  #repeatAmount() {
+    const settled = this.state?.phase === 'result' || this.state?.phase === 'idle';
+    return settled && this.mine?.bet ? this.mine.bet : this.lastBet;
   }
 }

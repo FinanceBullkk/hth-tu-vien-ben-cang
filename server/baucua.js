@@ -5,7 +5,7 @@
 // Vòng đời một ván: idle -> (có người đặt cược) betting -> rolling -> result -> idle.
 // Đặt cược lúc bàn nghỉ (idle) hoặc đang hiện kết quả (result) sẽ mở ván mới ngay.
 import crypto from 'node:crypto';
-import { BAUCUA, emptyBets, isChip, isSymbol, settle } from '../shared/baucua.js';
+import { BAUCUA, emptyBets, isChip, isSymbol, settle, sumBets } from '../shared/baucua.js';
 import { BAUCUA_ZONE, dist2d } from '../shared/layout.js';
 import { ACTIVITY } from '../shared/protocol.js';
 import { localDate } from './time.js';
@@ -20,6 +20,7 @@ export class BauCua {
     this.roundDate = ''; // Mọi dòng TEU của một ván ghi cùng ngày, để ván vắt qua nửa đêm không bị tách đôi trên bảng tuần.
     this.endsAt = 0;
     this.dice = null; // Ba mặt của ván gần nhất; giữ trên bàn đến khi mở ván mới.
+    this.history = []; // Kết quả các ván gần đây, mới nhất trước (mỗi phần tử là 3 mặt).
     this.bets = new Map(); // pid -> mảng 6 số TEU theo từng mặt (chỉ của ván đang chạy)
     this.dirty = false; // Tổng cược đổi: gom lại, phát tối đa 2 lần/giây.
     /** Gán từ Room: gửi kết quả riêng cho một người chơi theo pid. */
@@ -38,11 +39,17 @@ export class BauCua {
     return this.phase === 'betting' && now < this.endsAt;
   }
 
-  /** Tổng TEU đang cược vào từng mặt. Không có tên người cược: chỉ số tổng. */
+  /** Tổng TEU và số người đang cược vào từng mặt. Không có tên người cược: chỉ số đếm. */
   totals() {
     const totals = emptyBets();
-    for (const bets of this.bets.values()) for (let i = 0; i < totals.length; i++) totals[i] += bets[i];
-    return totals;
+    const crowd = emptyBets();
+    for (const bets of this.bets.values()) {
+      for (let i = 0; i < totals.length; i++) {
+        totals[i] += bets[i];
+        if (bets[i] > 0) crowd[i]++;
+      }
+    }
+    return { totals, crowd };
   }
 
   publicState() {
@@ -51,8 +58,9 @@ export class BauCua {
       round: this.round,
       endsAt: this.endsAt,
       dice: this.dice ? [...this.dice] : null,
-      totals: this.totals(),
+      ...this.totals(),
       bettors: this.bets.size,
+      history: this.history.map((d) => [...d]),
     };
   }
 
@@ -82,20 +90,46 @@ export class BauCua {
   }
 
   bet(p, data) {
+    // Chỉ nhận đúng số nguyên: chuỗi, boolean, mảng đều bị loại, không ép kiểu.
+    const symbol = data?.symbol;
+    const amount = data?.amount;
+    if (!isSymbol(symbol) || !isChip(amount)) return this.#refuse(p) ?? { ok: false, error: 'Cược không hợp lệ.' };
+    const add = emptyBets();
+    add[symbol] = amount;
+    return this.#place(p, add);
+  }
+
+  /**
+   * Đặt nhiều mặt một lần (nút "Cược lại" và "Gấp đôi"): bets là mảng 6 số nguyên không âm, cộng thêm vào cược hiện có.
+   * Cả gói qua hoặc cả gói bị từ chối, trừ tiền một lần.
+   */
+  rebet(p, data) {
+    const add = data?.bets;
+    const valid = Array.isArray(add) && add.length === BAUCUA.symbols
+      && add.every((v) => Number.isInteger(v) && v >= 0 && v <= BAUCUA.maxPerSymbol) && sumBets(add) > 0;
+    if (!valid) return this.#refuse(p) ?? { ok: false, error: 'Cược không hợp lệ.' };
+    return this.#place(p, [...add]);
+  }
+
+  /** Lý do chặn chung cho mọi lần đặt (sai chỗ, bấm dồn, hết giờ), hoặc null nếu được đặt. */
+  #refuse(p, now = Date.now()) {
     if (p.activity !== ACTIVITY.baucua || !this.nearTable(p)) return { ok: false, error: 'Đến bàn bầu cua trước nhé.' };
-    const now = Date.now();
     if (now - (p.lastBaucua ?? 0) < BAUCUA.betIntervalMs) return { ok: false, error: 'Từ từ thôi, nhà cái đang đếm tiền.' };
     if (this.phase === 'rolling' || (this.phase === 'betting' && !this.#open(now))) {
       return { ok: false, error: 'Hết giờ đặt cược, chờ ván sau nhé.' };
     }
+    return null;
+  }
 
-    // Chỉ nhận đúng số nguyên: chuỗi, boolean, mảng đều bị loại, không ép kiểu.
-    const symbol = data?.symbol;
-    const amount = data?.amount;
-    if (!isSymbol(symbol) || !isChip(amount)) return { ok: false, error: 'Cược không hợp lệ.' };
+  /** Cộng add (6 số) vào cược của p sau khi kiểm tra giới hạn và trừ tiền. */
+  #place(p, add) {
+    const now = Date.now();
+    const refused = this.#refuse(p, now);
+    if (refused) return refused;
     const mine = this.bets.get(p.pid) ?? emptyBets();
-    if (mine[symbol] + amount > BAUCUA.maxPerSymbol) return { ok: false, error: `Mỗi mặt cược tối đa ${BAUCUA.maxPerSymbol} TEU.` };
-    if (mine.reduce((s, v) => s + v, 0) + amount > BAUCUA.maxPerRound) return { ok: false, error: `Mỗi ván cược tối đa ${BAUCUA.maxPerRound} TEU.` };
+    if (add.some((v, i) => mine[i] + v > BAUCUA.maxPerSymbol)) return { ok: false, error: `Mỗi mặt cược tối đa ${BAUCUA.maxPerSymbol} TEU.` };
+    const amount = sumBets(add);
+    if (sumBets(mine) + amount > BAUCUA.maxPerRound) return { ok: false, error: `Mỗi ván cược tối đa ${BAUCUA.maxPerRound} TEU.` };
 
     p.lastBaucua = now;
     const date = this.phase === 'betting' ? this.roundDate : localDate(now, this.config.timezone);
@@ -104,7 +138,7 @@ export class BauCua {
 
     // Chỉ mở ván khi cược đã trừ tiền thành công: cược hỏng không được làm bàn chạy.
     if (this.phase !== 'betting') this.#startRound(now);
-    mine[symbol] += amount;
+    add.forEach((v, i) => { mine[i] += v; });
     this.bets.set(p.pid, mine);
     this.dirty = true;
     return { ok: true, bets: [...mine], teu: paid.teu, state: this.publicState() };
@@ -122,6 +156,7 @@ export class BauCua {
   /** Gieo ba viên. Gọi một lần mỗi ván, lúc hết giờ đặt cược. */
   #roll(now) {
     this.dice = Array.from({ length: BAUCUA.dice }, () => this.random(BAUCUA.symbols));
+    // Lịch sử thêm lúc mở bát (#payout): dải lịch sử trên màn hình đổi cùng lúc bát mở, không sớm hơn.
     this.phase = 'rolling';
     this.endsAt = now + BAUCUA.rollMs;
     this.#broadcast();
@@ -140,6 +175,7 @@ export class BauCua {
       }
     }
     this.bets.clear();
+    this.history = [[...this.dice], ...this.history].slice(0, BAUCUA.historySize);
     this.phase = 'result';
     this.endsAt = now + BAUCUA.resultMs;
     this.#broadcast();
