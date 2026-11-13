@@ -13,7 +13,7 @@ const TRAY = { x: 0.42, r: 0.3 };
 const HAND = { x: -0.62, y: TOP_Y + 0.32 }; // Chỗ ba viên chờ trong tay người tung.
 const SPOTS = [[0.08, -0.1], [-0.07, 0.02], [0.06, 0.12]]; // Chỗ dừng trong khay, lệch nhau cho tự nhiên.
 const FLY_S = 1.7; // Thời gian bay + nảy; phần còn lại của pha rolling là nằm yên cho mọi người nhìn.
-const DEALER = { name: 'Cô Sáu nhà cái', look: { color: 3, hair: 1, hat: 0, attire: 7 } };
+const DEALER = { name: 'SnowLe', look: { color: 3, hair: 1, hat: 0, attire: 7 } };
 const LINES = {
   betting: ['Tài hay xỉu, đặt lẹ nào!', 'Cầu đang bệt đó nha!', 'Ai tài ai xỉu đây!'],
 };

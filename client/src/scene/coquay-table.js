@@ -6,7 +6,7 @@ import { CasinoFeltTable, TOP_Y } from './casino-felt-table.js';
 import { CoQuayWheel } from './coquay-wheel.js';
 import { pickLine } from './table-dealer.js';
 
-const DEALER = { name: 'Anh Bảy hồ lì', look: { color: 6, hair: 3, hat: 0, attire: 7 } };
+const DEALER = { name: 'TheEm', look: { color: 6, hair: 3, hat: 0, attire: 7 } };
 const LINES = { betting: ['Đặt đi, đỏ hay đen!', 'Số đơn ăn ba lăm nha!', 'Mời quý khách đặt cược!'] };
 // Bố cục bạt theo pixel canvas 1200 × 480.
 const ZERO_W = 90;
