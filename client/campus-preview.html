@@ -33,6 +33,7 @@
   import { createTerrain, createForest } from '/src/scene/terrain.js';
   import { DayNight } from '/src/scene/sky.js';
   import { createCasinoQuarter } from '/src/scene/casino-quarter.js';
+  import { createXianxiaBackdrop } from '/src/scene/xianxia-backdrop.js';
   import { BauCuaTable } from '/src/scene/baucua-table.js';
   import { XiDachTable } from '/src/scene/xidach-table.js';
   import { TaiXiuTable } from '/src/scene/taixiu-table.js';
@@ -59,6 +60,7 @@
   new FishingScene(scene);
   new PitchPotCourt(scene);
   createCasinoQuarter(scene);
+  createXianxiaBackdrop(scene, false);
   for (const Piece of [BauCuaTable, XiDachTable, TaiXiuTable, CoQuayTable, SlotMachines, ShopStall, TradePost]) new Piece(scene);
   const cx = (SITE.minX + SITE.maxX) / 2;
   const cz = (SITE.minZ + SITE.maxZ) / 2;
