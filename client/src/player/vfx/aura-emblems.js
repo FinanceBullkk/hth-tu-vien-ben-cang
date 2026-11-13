@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
-const colors = [[0xc62e16, 0xffce68], [0xb47c29, 0xffec9c], [0x347b80, 0xc3fff0]];
+const colors = [[0xc62e16, 0xffce68], [0xb47c29, 0xffec9c]];
 
 function petal(angle, length, radius) {
   const p = [], indices = [], uv = [];
@@ -24,18 +24,6 @@ function petal(angle, length, radius) {
   g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
   g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
   g.setIndex(indices); g.computeVertexNormals();
-  return g;
-}
-
-function sword() {
-  const shape = new THREE.Shape();
-  shape.moveTo(0, .94); shape.lineTo(-.075, .66); shape.lineTo(-.055, .03);
-  shape.lineTo(-.18, -.02); shape.lineTo(-.18, -.065); shape.lineTo(-.035, -.04);
-  shape.lineTo(-.035, -.27); shape.lineTo(.035, -.27); shape.lineTo(.035, -.04);
-  shape.lineTo(.18, -.065); shape.lineTo(.18, -.02); shape.lineTo(.055, .03);
-  shape.lineTo(.075, .66); shape.closePath();
-  const g = new THREE.ExtrudeGeometry(shape, { depth: .035, bevelEnabled: false });
-  g.translate(0, 0, -.0175);
   return g;
 }
 
@@ -90,7 +78,7 @@ export function createAuraEmblems(kind, lowQuality) {
     const merged = mergeGeometries(crown); crown.forEach(g => g.dispose());
     const fan = mesh(merged, body);
     anim.push(t => { fan.scale.y = 1 + .06 * Math.sin(t * 1.6); });
-  } else if (kind === 1) {
+  } else {
     const dragon = new THREE.Group(); group.add(dragon);
     const spine = [];
     for (let i = 0; i <= 40; i++) {
@@ -114,20 +102,6 @@ export function createAuraEmblems(kind, lowQuality) {
       tube([V(side * .08, -.04, .31), V(side * .35, -.08, .3), V(side * .5, .06, .1), V(side * .53, .19, -.1)], .013, bright, head);
     }
     anim.push(t => { dragon.rotation.y = t * .18; dragon.position.y = .05 * Math.sin(t * .8); });
-  } else {
-    const halo = new THREE.Group(); group.add(halo); halo.position.set(0, 1.15, -.62);
-    const bladeGeo = sword(); geometries.push(bladeGeo);
-    const edgeGeo = new THREE.EdgesGeometry(bladeGeo); geometries.push(edgeGeo);
-    const edgeMat = new THREE.LineBasicMaterial({ color: colors[kind][1], transparent: true, opacity: .95, depthWrite: false });
-    materials.push({ m: edgeMat, opacity: .95 });
-    for (let i = 0; i < 7; i++) {
-      const a = (i - 3) * .43;
-      const blade = new THREE.Mesh(bladeGeo, body); halo.add(blade);
-      blade.position.set(Math.sin(a) * 1.03, Math.cos(a) * .88, -.12 * Math.abs(i - 3));
-      blade.rotation.z = -a;
-      blade.add(new THREE.LineSegments(edgeGeo, edgeMat));
-      anim.push(t => { blade.position.y = Math.cos(a) * .88 + .045 * Math.sin(t * 1.5 + i * .5); });
-    }
   }
   const sealMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide,
     uniforms: { color: { value: new THREE.Color(colors[kind][1]) }, time: { value: 0 }, opacity: { value: .65 } },

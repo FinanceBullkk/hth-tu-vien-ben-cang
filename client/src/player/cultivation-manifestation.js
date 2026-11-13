@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { swordGeometry } from './vfx/sword-geometry.js';
 
 const cache = new Map();
 const petal = new THREE.PlaneGeometry(1, 1, 8, 12);
@@ -15,13 +16,14 @@ const sphere = new THREE.SphereGeometry(1, 10, 6);
 function build(effect, stage) {
   const pieces = [];
   const matrix = new THREE.Matrix4(), rotation = new THREE.Quaternion();
-  const add = (geo, x, y, z, sx, sy, sz, rx = 0, ry = 0, rz = 0) => {
-    rotation.setFromEuler(new THREE.Euler(rx, ry, rz));
+  const add = (geo, x, y, z, sx, sy, sz, rx = 0, ry = 0, rz = 0, order = 'XYZ') => {
+    rotation.setFromEuler(new THREE.Euler(rx, ry, rz, order));
     matrix.compose(new THREE.Vector3(x, y, z), rotation, new THREE.Vector3(sx, sy, sz));
     const transformed = geo.clone().applyMatrix4(matrix);
     const copy = transformed.index ? transformed.toNonIndexed() : transformed;
     if (copy !== transformed) transformed.dispose();
     copy.deleteAttribute('uv');
+    copy.deleteAttribute('part');
     pieces.push(copy);
   };
   const stem = (points, radius = 0.025) => {
@@ -40,8 +42,23 @@ function build(effect, stage) {
         -0.28, side * 0.25, -side * (0.4 + f * 1.0));
     }
   };
+  // Kiếm Vũ (12): tòa kiếm — kiếm cắm quanh người ngồi, mũi hướng trời, ngả ra ngoài như
+  // cánh sen; tầng cuối thêm quạt kiếm sau lưng. Order YXZ: ngả trước rồi xoay quanh trục đứng.
+  const plant = (n, r, len, lean, offset = 0) => {
+    for (let i = 0; i < n; i++) {
+      const a = (i + offset) * Math.PI * 2 / n;
+      add(swordGeometry(), Math.sin(a) * r, 0.08, Math.cos(a) * r, len, len, len, lean, a, 0, 'YXZ');
+    }
+  };
+  if (effect === 12) {
+    if (stage === 0) plant(3, 0.7, 0.45, 0.2, 0.5);
+    else if (stage === 1) plant(8, 0.62, 0.75, 0.38);
+    else for (let i = 0; i < 7; i++) {
+      const a = (i - 3) * 0.33;
+      add(swordGeometry(), Math.sin(a) * 0.32, 0.95 + Math.cos(a) * 0.32, -0.62, 0.78, 0.78, 0.78, 0, 0, -a);
+    }
+  } else if (stage === 0) {
   // Tier three is a small spirit seed; later tiers introduce a new silhouette.
-  if (stage === 0) {
     if (effect === 1 || effect === 0 || effect === 5) bloom(0, 0.18, -0.42, 0.42, effect === 5 ? 5 : 8);
     else for (let i = 0; i < 3; i++) {
       const a = i * Math.PI * 2 / 3;
@@ -112,7 +129,7 @@ function build(effect, stage) {
 }
 
 export function createManifestation(effect, tint, accent, lowQuality = false) {
-  const theme = Number.isInteger(effect) && effect >= 0 && effect <= 8 ? effect : 0;
+  const theme = Number.isInteger(effect) && ((effect >= 0 && effect <= 8) || effect === 12) ? effect : 0;
   if (!cache.has(theme)) cache.set(theme, [0, 1, 2].map(stage => {
     const geometry = build(theme, stage);
     geometry.userData.outline = new THREE.EdgesGeometry(geometry, 35);

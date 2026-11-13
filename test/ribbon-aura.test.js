@@ -8,11 +8,11 @@ test('new aura IDs append without changing saved legacy choices', () => {
   assert.deepEqual(EFFECT_NAMES.slice(0, 9), ['Không', 'Sen kim', 'Lưu ly', 'Tinh hà', 'Hỏa diễm', 'Đào hoa', 'Bích ngọc', 'Nguyệt bạch', 'Hắc ám']);
   assert.equal(AVATAR.effects, AURA_TITLES.length);
   assert.equal(AVATAR.effects, EFFECT_NAMES.length);
-  for (const bad of [0, 8, 12, 9.5, NaN, '9']) assert.throws(() => createRibbonAura(bad), RangeError);
+  for (const bad of [0, 8, 11, 12, 9.5, NaN, '9']) assert.throws(() => createRibbonAura(bad), RangeError);
 });
 
 test('ribbon geometry, quality, fading and disposal stay valid', () => {
-  for (const effect of [9, 10, 11]) {
+  for (const effect of [9, 10]) {
     const full = createRibbonAura(effect), low = createRibbonAura(effect, true);
     const mesh = full.points.children[0];
     assert.ok(low.points.children[0].geometry.attributes.position.count < mesh.geometry.attributes.position.count);

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { createAuraEmblems } from './aura-emblems.js';
 
 // Authored silhouettes inspired by the references in docs/vfx-reference-direction.md.
-const PALETTES = [[0xa51e18, 0xffb440], [0xb47720, 0xffedac], [0x1b786e, 0xd9fff2]];
+const PALETTES = [[0xa51e18, 0xffb440], [0xb47720, 0xffedac]];
 const vertexShader = `
   uniform float time;
   uniform float motion;
@@ -78,7 +78,7 @@ function pathsFor(kind) {
         return v(Math.cos(a) * r, .12 + u * height, Math.sin(a) * r);
       } });
     }
-  } else if (kind === 1) {
+  } else {
     for (let i = 0; i < 3; i++) paths.push({ width: i ? .035 : .07, vertical: true, curve: u => {
       const a = u * Math.PI * 2.5 + i * .65;
       return v(Math.sin(a) * (1.02 + i * .12), .28 + u * 1.9, Math.cos(a) * .78);
@@ -88,18 +88,12 @@ function pathsFor(kind) {
       const a = -.8 + u * 4.5;
       return v(Math.cos(a) * .49, 2.25 + Math.sin(a) * .49, -.52);
     } });
-  } else {
-    for (let i = 0; i < 3; i++) paths.push({ width: .045, vertical: true, curve: u => {
-      const a = -.3 + u * 3.5, tilt = (i - 1) * 1.05;
-      const x = Math.cos(a) * 1.3, y = Math.sin(a) * .55;
-      return v(x * Math.cos(tilt) - y * Math.sin(tilt), 1.2 + x * Math.sin(tilt) + y * Math.cos(tilt), -.45 + i * .38 + .25 * Math.sin(a));
-    } });
   }
   return paths;
 }
 
 export function createRibbonAura(effect, lowQuality = false) {
-  if (!Number.isInteger(effect) || effect < 9 || effect > 11) throw new RangeError('Ribbon aura supports effects 9..11');
+  if (!Number.isInteger(effect) || effect < 9 || effect > 10) throw new RangeError('Ribbon aura supports effects 9..10');
   const kind = effect - 9, group = new THREE.Group();
   group.name = 'ribbon-aura';
   group.material = new THREE.MeshBasicMaterial({ transparent: true, opacity: .9 });

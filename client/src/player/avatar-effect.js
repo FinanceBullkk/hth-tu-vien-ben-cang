@@ -14,6 +14,7 @@
 // theo rìa sóng, chân ngôn 龍.
 import * as THREE from 'three';
 import { createRibbonAura } from './vfx/ribbon-aura.js';
+import { createKiemVuAura } from './vfx/kiem-vu-aura.js';
 import { createAuraSignature } from './aura-signature.js';
 import { store } from '../ui/dom.js';
 
@@ -827,8 +828,8 @@ function fillSeeds(seed, count) {
 const BREATH = [8, 13, 14, 9, 10, 12, 16, 8.5]; // V10: hệ 1 thở cùng chu kỳ 8 s của signature
 
 export function createEffect(effect, lowQuality = false) {
-  // 10..12: ba aura dải lụa (ribbon-aura.js đánh số nội bộ 9..11); 9 là Long quyền của bản prod.
-  if (Number.isInteger(effect) && effect >= 10 && effect <= 12) return createRibbonAura(effect - 1, lowQuality);
+  // 10..11: aura dải lụa (ribbon-aura.js đánh số nội bộ 9..10); 9 là Long quyền của bản prod.
+  if (Number.isInteger(effect) && effect >= 10 && effect <= 11) return createRibbonAura(effect - 1, lowQuality);
   if (!effect) return { points: null, update() {}, setColor() {} };
   // Người chơi đè "giảm chuyển động" của hệ điều hành bằng toggle "Hiệu ứng động đầy đủ"
   // trong Đổi trang phục (localStorage fullFx=1) — đọc lại mỗi khung nên đổi là áp ngay.
@@ -836,6 +837,8 @@ export function createEffect(effect, lowQuality = false) {
   const reducedMotion = reduceQuery ? {
     get matches() { return reduceQuery.matches && store.get('fullFx') !== '1'; },
   } : null;
+  // 12: Thanh Phong Kiếm Vũ có pháp tướng riêng (kiếm luân, phi kiếm, trận đồ).
+  if (effect === 12) return createKiemVuAura(lowQuality, reducedMotion);
 
   const colors = PALETTES[effect - 1] ?? PALETTES[0];
   const group = new THREE.Group();
