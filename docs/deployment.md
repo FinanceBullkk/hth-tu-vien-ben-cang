@@ -1,6 +1,28 @@
 # Deployment
 
-## Current release: 2026-11-14 Kim Long meditation base and ribbon-aura removed, 02:06 UTC+7
+## Current release: 2026-11-14 Xianxia monastery and casino redesign, 05:08 UTC+7
+
+Deploy run [43516697923](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43516697923)
+released main `127a9aa` as `hth:261114-0508-127a9aa`, replacing
+`hth:261114-0206-f5ad2bd`. Includes PR #90 (site widened west and north to
+about 96×76 m; casino tables and slots moved into the walled Kim Ngân Phường;
+market quarter for shop, trade post and tea house), PR #91 (inner court restyled:
+great hall on a 1.6 m marble terrace with stairs and rails, red columns, jade
+roofs, red palace walls, mountain gate with stone lions), PR #92 (Kim Ngân Phường
+in gold and red: Kim Ngân Lâu, pailou gates, lantern strings, red carpet,
+floating ingots) and PR #93 (backdrop: karst peaks, cloud sea, floating islands
+with waterfalls, cranes, bagua formation and rising qi). Public bundle
+`index-CwuO0GGO.js`, confirmed served at `https://game.hthlogistics.top/` with
+`/api/health` 200.
+
+Docker tests 399/399. Candidate passed with DB `quick_check` ok (55 players,
+24 wishes, 95 fish).
+
+Rollback container `hth-rollback-261114-0508-127a9aa` preserves
+`hth:261114-0206-f5ad2bd`. Private backup is in the data volume at
+`backups/cutover-261114-0508-127a9aa/`.
+
+## Previous release: 2026-11-14 Kim Long meditation base and ribbon-aura removed, 02:06 UTC+7
 
 Deploy run [43489066801](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43489066801)
 released main `f5ad2bd` as `hth:261114-0206-f5ad2bd`, replacing
