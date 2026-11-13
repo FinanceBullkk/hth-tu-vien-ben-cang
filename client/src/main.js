@@ -347,11 +347,11 @@ function main() {
     world.fishing.setRod(sid, pos ? { x: pos.x, z: pos.z, on: true } : { on: false });
   });
   net.on('fish:escaped', ({ reason }) => app.activities.fishing.escaped(reason));
-  net.on('fish:caught', ({ sid, id, name, rarity, weight }) => {
+  net.on('fish:caught', ({ sid, id, name, rarity, weight, trophy }) => {
     world.fishing.showCatch(sid, id, rarity);
     // Khoe ngay trên đầu người bắt; ai đang đứng quanh hồ đều thấy.
-    if (sid !== mySid) avatarOf(sid)?.say(`${name} ${'★'.repeat(rarity)} · ${weight} kg`, 3500);
-    if (sid !== mySid && rarity === 3) app.audio.chime(0.05);
+    if (sid !== mySid) avatarOf(sid)?.say(`${trophy ? 'Cá khủng! ' : ''}${name} ${'★'.repeat(rarity)} · ${weight} kg`, 3500);
+    if (sid !== mySid && (rarity === 3 || trophy)) app.audio.chime(0.05);
   });
 
   // ---------- Đầu hồ ----------
