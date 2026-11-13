@@ -9,6 +9,7 @@ const PATHS = {
   book: '<path d="M4 5.5c2.6-1 5.4-1 8 .6 2.6-1.6 5.4-1.6 8-.6v13c-2.6-1-5.4-1-8 .6-2.6-1.6-5.4-1.6-8-.6z"/><path d="M12 6.1v13"/>',
   wish: '<path d="M12 2.5v3"/><path d="M8.2 5.5h7.6v11.2L12 20.5l-3.8-3.8z"/><path d="M10.4 9.5h3.2M10.4 12.5h3.2"/>',
   camera: '<rect x="3.5" y="7" width="17" height="12" rx="2"/><path d="M8.5 7 10 4.5h4L15.5 7"/><circle cx="12" cy="13" r="3.2"/>',
+  sliders: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
   music: '<path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/>',
   sound: '<path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>',
   mute: '<path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="m16 9.5 5 5M21 9.5l-5 5"/>',

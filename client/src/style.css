@@ -373,6 +373,18 @@ kbd { font: inherit; }
 .modal-body { padding: 4px 18px 18px; overflow-y: auto; }
 .modal-body h3 { margin: 16px 0 6px; font: 700 17px var(--serif); color: #5a1f14; }
 
+/* Hộp Đồ hoạ: mỗi mức một dòng bấm được cả dòng, dòng đang chọn viền vàng. */
+.graphics-options { display: grid; gap: 6px; margin: 4px 0 10px; padding: 0; border: 0; }
+.graphics-options legend { margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+.graphics-option { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding: 8px 10px; border: 1px solid #cdbda2; border-radius: 8px; background: #fffdf8; cursor: pointer; }
+.graphics-option:has(input:checked) { border-color: #b8832f; background: #fbefd2; box-shadow: inset 0 0 0 1px #b8832f; }
+.graphics-option:has(input:focus-visible) { outline: 3px solid var(--gold); outline-offset: 2px; }
+.graphics-option input { margin: 3px 0 0; accent-color: #8a3a1c; }
+.graphics-option span { display: grid; gap: 2px; }
+.graphics-option small { color: var(--muted); font-size: 12.5px; line-height: 1.35; }
+.graphics-status { margin: 0 0 6px; font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; color: #5a1f14; }
+.graphics-note { margin: 0; font-size: 12.5px; color: var(--muted); }
+
 .wish-box { position: relative; margin: 8px 0 4px; }
 .wish-input { display: block; width: 100%; padding: 10px 12px 24px; border: 1px solid #cdbda2; border-radius: 10px; background: #fffdf8; resize: vertical; min-height: 86px; }
 .wish-counter { position: absolute; right: 10px; bottom: 7px; font-size: 12px; color: var(--muted); }
@@ -453,11 +465,16 @@ body:has(#onlineList:not([hidden])) #voicePanel { visibility: hidden; }
   #menu { gap: 4px; right: 8px; top: calc(8px + var(--safe-t)); }
   #presence { left: 8px; top: calc(8px + var(--safe-t)); }
   .icon-btn { height: 38px; padding: 0 9px; }
-  #menu .icon-btn { width: 38px; padding: 0; justify-content: center; }
+  #menu .icon-btn { width: 38px; min-width: 38px; padding: 0; justify-content: center; }
   #toasts { top: calc(104px + var(--safe-t)); left: 8px; }
   #musicPanel { top: calc(104px + var(--safe-t)); right: 8px; }
   #banner { top: calc(104px + var(--safe-t)); padding: 7px 12px; font-size: 13.5px; }
   #banner.big #bannerText { font-size: 18px; }
+}
+/* Điện thoại hẹp (360-420px): 9 nút menu thu lại để không tràn khỏi mép trái. */
+@media (max-width: 420px) {
+  #menu { gap: 2px; }
+  #menu .icon-btn { width: 34px; min-width: 34px; }
 }
 
 /* Điện thoại dọc: thẻ chào nằm dưới, nhân vật ở trên. */

@@ -6,11 +6,22 @@ import { BAUCUA_SYMBOLS } from '../../../shared/baucua.js';
 const EMOJI_FONT = '"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
 const SERIF = '"Palatino Linotype", "Book Antiqua", Georgia, serif';
 
+// Camera khoá nhìn thẳng bàn nên bạt chiếm gần cả màn hình: vẽ gấp đôi số điểm ảnh để emoji và chữ không nhoè.
+const SCALE = 2;
+
 function canvasTexture(canvas) {
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 4;
+  texture.anisotropy = 8;
   return texture;
+}
+
+/** Canvas có kích thước logic w×h nhưng thật sự nhiều điểm ảnh gấp SCALE lần mỗi chiều. */
+function scaledCanvas(w, h) {
+  const canvas = document.createElement('canvas');
+  canvas.width = w * SCALE;
+  canvas.height = h * SCALE;
+  return canvas;
 }
 
 function roundRect(g, x, y, w, h, r) {
@@ -26,10 +37,9 @@ function roundRect(g, x, y, w, h, r) {
 /** Mặt xúc xắc: nền ngà, viền màu của con vật, biểu tượng chiếm gần hết mặt. */
 export function diceFaceTexture(symbol) {
   const s = BAUCUA_SYMBOLS[symbol];
-  const canvas = document.createElement('canvas');
-  canvas.width = 128;
-  canvas.height = 128;
+  const canvas = scaledCanvas(128, 128);
   const g = canvas.getContext('2d');
+  g.setTransform(SCALE, 0, 0, SCALE, 0, 0);
   g.fillStyle = '#efe4c8';
   g.fillRect(0, 0, 128, 128);
   g.fillStyle = '#fbf5e6';
@@ -55,8 +65,9 @@ export const MAT_ROWS = 2;
 /** Vẽ tấm bạt: nền đỏ, khung vàng, sáu ô theo thứ tự mặt (hàng trên Nai Bầu Gà, hàng dưới Cá Cua Tôm). Ô trúng sáng vàng. */
 export function drawMat(canvas, winners = new Set()) {
   const g = canvas.getContext('2d');
-  const w = canvas.width;
-  const h = canvas.height;
+  g.setTransform(SCALE, 0, 0, SCALE, 0, 0);
+  const w = canvas.width / SCALE;
+  const h = canvas.height / SCALE;
   const bg = g.createLinearGradient(0, 0, 0, h);
   bg.addColorStop(0, '#a3241a');
   bg.addColorStop(1, '#7c1711');
@@ -99,9 +110,7 @@ export function drawMat(canvas, winners = new Set()) {
 
 /** Canvas + texture tấm bạt; gọi drawMat(canvas, winners) rồi texture.needsUpdate = true để đổi ô sáng. */
 export function createMat() {
-  const canvas = document.createElement('canvas');
-  canvas.width = CELL * MAT_COLS;
-  canvas.height = CELL * MAT_ROWS;
+  const canvas = scaledCanvas(CELL * MAT_COLS, CELL * MAT_ROWS);
   drawMat(canvas);
   return { canvas, texture: canvasTexture(canvas) };
 }
