@@ -85,7 +85,10 @@ test('cá cắn là vào giằng co luôn, không cần móc; lộ độ hiếm 
   assert.ok([1, 2, 3].includes(bite.rarity));
   assert.equal(bite.name, undefined);
   assert.ok(bite.startAt > Date.now(), 'có một nhịp chuẩn bị');
-  assert.ok(f.events.find((e) => e.event === 'fish:struck'), 'cả phòng thấy phao giật');
+  const struck = f.events.find((e) => e.event === 'fish:struck');
+  assert.ok(struck, 'cả phòng thấy phao giật');
+  assert.equal(struck.data.rarity, bite.rarity, 'cả phòng thấy bóng cá to nhỏ đúng độ hiếm');
+  assert.equal(struck.data.name, undefined, 'chưa lộ tên cá');
 });
 
 test('giữ kim trong vùng thì đầy vòng rồi mới kéo lên được, được TEU và câu đẹp', (t) => {

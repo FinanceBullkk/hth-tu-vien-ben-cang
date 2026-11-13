@@ -335,8 +335,8 @@ function main() {
   });
   net.on('fish:bite', (bite) => app.activities.fishing.onBite(bite));
   // Ai dính cá thì phao người đó giật liên tục, cả phòng đều thấy.
-  net.on('fish:struck', ({ sid }) => {
-    world.fishing.strike(sid);
+  net.on('fish:struck', ({ sid, rarity }) => {
+    world.fishing.strike(sid, rarity);
     avatarOf(sid)?.say('!', 1100);
   });
   net.on('fish:shadow', ({ id }) => world.fishing.shadows.markTaken(id));
@@ -346,8 +346,8 @@ function main() {
     world.fishing.setRod(sid, pos ? { x: pos.x, z: pos.z, on: true } : { on: false });
   });
   net.on('fish:escaped', ({ reason }) => app.activities.fishing.escaped(reason));
-  net.on('fish:caught', ({ sid, name, rarity, weight }) => {
-    world.fishing.splashAtBobber(sid);
+  net.on('fish:caught', ({ sid, id, name, rarity, weight }) => {
+    world.fishing.showCatch(sid, id, rarity);
     // Khoe ngay trên đầu người bắt; ai đang đứng quanh hồ đều thấy.
     if (sid !== mySid) avatarOf(sid)?.say(`${name} ${'★'.repeat(rarity)} · ${weight} kg`, 3500);
     if (sid !== mySid && rarity === 3) app.audio.chime(0.05);

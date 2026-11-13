@@ -1,6 +1,7 @@
 // "Sổ an của tôi": bốn thẻ Tổng quan, Tu luyện, Sổ cá, Kỷ niệm. Bảng ước + bảng tuần ở board.js.
 // Mua sắm đã chuyển sang Sạp Kim Bảo (shop-panel.js); Sổ an chỉ còn ghi chép, có lối tắt sang sạp.
 import { FISH, FISH_BOOK_MILESTONES, fishHint } from '../../../shared/fish.js';
+import { fishPortraitSvg } from './fish-portrait.js';
 import { cultivation } from '../../../shared/cultivation.js';
 import { PLACE_LABELS } from '../../../shared/protocol.js';
 import { h, store, timeAgo } from './dom.js';
@@ -137,7 +138,10 @@ export async function openBook(app, tab = store.get('bookTab') || 'overview') {
         : `Đã bắt đủ ${FISH.length} loài. Tay câu cứng nhất tu viện!`),
       h('ul', { class: 'fish-book' }, FISH.map((fish) => {
         const row = caught.get(fish.id);
+        const art = h('span', { class: 'fish-book-art' });
+        art.innerHTML = fishPortraitSvg(fish.id, { dark: !row });
         return h('li', { class: row ? 'caught' : '' },
+          art,
           h('b', {}, row ? fish.name : '???'),
           h('span', { class: 'fish-book-stars' }, '★'.repeat(fish.rarity)),
           h('small', {}, row ? `×${row.count} · nặng nhất ${row.best} kg` : fishHint(fish)));

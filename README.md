@@ -133,13 +133,13 @@ Hai bàn ngay sau bầu cua và xì dách, phía thiền đường: tài xỉu p
 Bấm nút **Chơi gì?** ở góc trên rồi chọn **Câu cá**, hoặc tự đi tới bờ hồ góc đông nam sân. Không tốn gì, ai đứng bờ nào cũng thấy nhau câu. Bấm **Về bờ**, **Esc** hoặc phím đi để rời hồ.
 
 - **Thả câu:** chạm vào mặt nước chỗ muốn thả. Chạm đâu cũng được, kể cả hơi lệch ra bờ.
-- **Chờ:** cá sẽ tự cắn. Chạm thêm để lắc cần thì cá cắn sớm hơn.
-- **Giữ cá:** cá cắn là vòng cung hiện ra, điện thoại rung nhẹ. Rê chuột hoặc kéo ngón tay để giữ chấm trắng trong vùng xanh. Lệch lâu sẽ có chữ nhắc kéo về bên nào. Đầy vòng là cá tự về tay.
+- **Chờ:** cá sẽ tự cắn; phao thỉnh thoảng nhấp nhẹ như cá rỉa mồi. Chạm thêm để lắc cần thì cá cắn sớm hơn.
+- **Giữ cá:** cá cắn là vòng cung hiện ra, điện thoại rung nhẹ. Rê chuột hoặc kéo ngón tay để giữ chấm trắng trong vùng xanh. Lệch lâu sẽ có chữ nhắc kéo về bên nào. Bóng cá quẫy ngay dưới phao, cá càng hiếm bóng càng to. Đầy vòng là cá vọt khỏi nước, treo trên ngọn cần cho cả hồ thấy, kèm thẻ có hình con cá vừa bắt.
 - **Người mới:** chưa bắt đủ 3 loài thì vùng xanh rộng và tụt rất chậm. Lần đầu chỉ cần làm theo chữ trên màn hình; mồi, bóng cá, lắc cần được giới thiệu dần sau mỗi con.
 - **Mồi:** bột, giun hoặc rau (bấm chữ dưới màn hình hoặc phím **Q**). Mỗi mồi có nhóm cá riêng.
 - **Bóng cá:** bóng đen bơi dưới mặt hồ, mọi máy thấy giống nhau. Bóng càng to càng dễ ra cá hiếm, ai thả trúng trước được. Chỗ nước gợn mạnh thường có bóng lớn.
 - **Thưởng:** thường, quý, hiếm được 1, 2, 4 TEU; ở trong vùng xanh từ 80% thời gian được thêm 1 TEU.
-- **Sổ cá:** trong Sổ an có đủ 15 loài. Loài chưa bắt hiện gợi ý mồi, giờ và cỡ bóng. Đủ 5, 10 và 15 loài được thưởng 5, 10 và 25 TEU.
+- **Sổ cá:** trong Sổ an có đủ 15 loài, mỗi loài một hình minh hoạ. Loài chưa bắt chỉ hiện bóng đen và gợi ý mồi, giờ và cỡ bóng. Đủ 5, 10 và 15 loài được thưởng 5, 10 và 25 TEU.
 
 ## Trò chuyện bằng mic
 
