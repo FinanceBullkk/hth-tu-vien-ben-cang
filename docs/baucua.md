@@ -19,7 +19,7 @@ Mọi mốc thời gian và giới hạn nằm trong `BAUCUA` ở `shared/baucua
 ## Hình ảnh
 
 - Bàn tròn: tấm bạt 3×2 (Nai Bầu Gà / Cá Cua Tôm) trải nửa phía khách, đĩa sứ và bát úp nửa phía nhà cái.
-- Chú Tư nhà cái (NPC `scene/table-dealer.js` dùng chung với xì dách, đứng ở `BAUCUA_ZONE.dealer`, là vật cản)
+- Nhà cái PhucGay (NPC `scene/table-dealer.js` dùng chung với xì dách, đứng ở `BAUCUA_ZONE.dealer`, là vật cản)
   hô theo pha, hai tay nhấc đĩa xóc khi `rolling`.
 - Mở bát: bát nhấc lên nghiêng về phía khách, ô trúng trên bạt sáng vàng; người đang chơi thấy ba viên to giữa màn hình
   (`ui/baucua-reveal.js`) kèm lãi/lỗ của mình, nghe tiếng lắc xúc xắc khi xóc.

@@ -9,8 +9,8 @@ import { h } from '../ui/dom.js';
 import { createMat, diceFaceTexture, drawMat } from './baucua-textures.js';
 import { TableDealer, pickLine } from './table-dealer.js';
 
-// Chú Tư: áo đỏ, nón lá, áo dài cách tân cho ra dáng nhà cái chợ Tết.
-const DEALER = { name: 'Chú Tư nhà cái', look: { color: 0, hair: 2, hat: 4, attire: 7 } };
+// PhucGay: áo đỏ, nón lá, áo dài cách tân cho ra dáng nhà cái chợ Tết.
+const DEALER = { name: 'PhucGay', look: { color: 0, hair: 2, hat: 4, attire: 7 } };
 const LINES = {
   betting: ['Đặt đi bà con, tám giây thôi!', 'Bầu cua cá cọp đây!', 'Ai cua ai tôm, đặt lẹ nào!'],
   rolling: ['Xóc nè… xóc nè!', 'Dừng tay! Xóc đây!'],
