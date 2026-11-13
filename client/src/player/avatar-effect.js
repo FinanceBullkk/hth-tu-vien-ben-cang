@@ -2,7 +2,7 @@
 // đài sen nhiều lớp, vòng rune chữ triện xoay ngược, long khí quấn thân, sáo lụa chảy UV.
 // Toàn bộ texture vẽ bằng canvas nên không cần asset ngoài.
 // 1 Sen kim — Kim đài liên hoa, pháp trận kép, chân ngôn 禪, cánh sen dâng kèm hoa rơi;
-// 2 Lưu ly — long khí bơi quanh người, gợn nước loang từ chân, đá lưu ly lấp lánh, chân ngôn 水;
+// 2 Lưu ly — module riêng vfx/luu-ly-aura.js (thủy luân xoáy nước, song lý, mặt hồ);
 // 3 Tinh hà — dải ngân hà nghiêng, ba vòng hào quang, sao chổi quanh vành, chân ngôn 星;
 // 4 Hỏa diễm — hỏa liên cháy dưới chân, trụ hỏa dâng, tàn lửa bay ngược lên trời, chân ngôn 炎;
 // 5 Đào hoa — mưa cánh đào hồng rơi li ti, trận đào, trụ hoa, sương hồng, chân ngôn 桃;
@@ -16,6 +16,7 @@ import * as THREE from 'three';
 import { createRibbonAura } from './vfx/ribbon-aura.js';
 import { createKiemVuAura } from './vfx/kiem-vu-aura.js';
 import { createTinhHaAura } from './vfx/tinh-ha-aura.js';
+import { createLuuLyAura } from './vfx/luu-ly-aura.js';
 import { createAuraSignature } from './aura-signature.js';
 import { store } from '../ui/dom.js';
 
@@ -821,6 +822,8 @@ export function createEffect(effect, lowQuality = false) {
   if (effect === 12) return createKiemVuAura(lowQuality, reducedMotion);
   // 3: Tinh Hà có pháp tướng riêng (Chu Thiên Tinh Đồ, Bắc Đẩu, lưu tinh, tinh bàn).
   if (effect === 3) return createTinhHaAura(lowQuality, reducedMotion);
+  // 2: Lưu Ly Vân Thủy có pháp tướng riêng (thủy luân xoáy nước, song lý, mặt hồ).
+  if (effect === 2) return createLuuLyAura(lowQuality, reducedMotion);
 
   const colors = PALETTES[effect - 1] ?? PALETTES[0];
   const group = new THREE.Group();
@@ -1072,172 +1075,6 @@ export function createEffect(effect, lowQuality = false) {
       }
       sparks.geo.attributes.position.needsUpdate = true;
       sparks.geo.attributes.color.needsUpdate = true;
-      updateGlyphs(glyphs, t);
-    };
-  } else if (effect === 2) {
-    // LƯU LY — rồng khí bơi quanh người là chính, gợn nước loang từ chân, đá lưu ly lấp lánh, chân ngôn 水.
-    const count = lowQuality ? 6 : 10;
-    const crysCount = lowQuality ? 4 : 8;
-    fillSeeds(seed, count);
-    const pool = sprite(glowTexture(), colors[0], 1.05, 1.05, 0, 0.04, 0, 0.2);
-    const mantra = flatMesh(runeRingTexture('rune-shui', '水'), colors[0], 1.45, 0.05, 0.85);
-    const counterRing = flatMesh(ringTexture(), colors[0], 0.95, 0.04, 0.3);
-
-    // vòm kết giới: ống khí mỏng bao toàn thân, vệt khí cuộn lên chậm rãi
-    const domeTex = domeTexture();
-    domeTex.wrapS = THREE.RepeatWrapping;
-    domeTex.wrapT = THREE.RepeatWrapping;
-    const domeEntry = dynMat(() => new THREE.MeshBasicMaterial({
-      map: domeTex, color: colors[0], transparent: true, depthWrite: false,
-      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.15,
-    }), 0.15);
-    const dome = new THREE.Mesh(track(new THREE.CylinderGeometry(0.92, 1.0, 1.95, 48, 1, true)), domeEntry.mat);
-    dome.position.y = 0.97;
-    group.add(dome);
-
-    // gợn nước: vành sáng loang từ chân ra rồi tan, hai vòng lệch pha nhau.
-    const ripples = [];
-    for (let k = 0; k < 3; k++) {
-      const entry = dynMat(() => new THREE.MeshBasicMaterial({
-        map: ringTexture(), color: colors[0], transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0,
-      }), 0);
-      const mesh = new THREE.Mesh(track(new THREE.PlaneGeometry(1, 1)), entry.mat);
-      mesh.rotation.x = -Math.PI / 2;
-      mesh.position.y = 0.025;
-      mesh.userData.entry = entry;
-      mesh.userData.k = k;
-      group.add(mesh);
-      ripples.push(mesh);
-    }
-
-    // rồng khí: thân ống liền có vây lưng, râu rồng, mũi nhọn — uốn theo đường bơi mỗi khung.
-    const dragon = createDragon(colors, lowQuality);
-    dragon.geos.forEach((g) => track(g));
-    for (const [mat, base] of dragon.mats) parts.push({ mat, base });
-    group.add(dragon.group);
-
-    // đá lưu ly: múi kim trôi chậm quanh vai, xoay và lấp lánh riêng từng viên.
-    const crystalTex = crystalTexture();
-    const crystals = [];
-    for (let i = 0; i < crysCount; i++) {
-      const entry = dynMat(() => new THREE.SpriteMaterial({
-        map: crystalTex, color: colors[i % colors.length], transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, opacity: 0.8,
-      }), 0.8);
-      const sp = new THREE.Sprite(entry.mat);
-      group.add(sp);
-      crystals.push({
-        sp, entry,
-        a0: (i / crysCount) * Math.PI * 2,
-        r: 0.55 + ((i * 23) % 18) / 18 * 0.2,
-        y: 0.6 + ((i * 41) % 30) / 30 * 0.85,
-        tw: ((i * 29) % 10) / 10,
-      });
-    }
-
-    const wispTex = wispTexture();
-    const wispMats = colors.map((col, k) => childMat(new THREE.SpriteMaterial({
-      map: wispTex, color: col, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-      opacity: 0.75, rotation: k === 0 ? 0.1 : -0.12, // nghiêng nhẹ cho khỏi đứng như cột
-    }), 0.75));
-    const wisps = [];
-    for (let i = 0; i < count; i++) {
-      const sp = new THREE.Sprite(wispMats[i % wispMats.length]);
-      group.add(sp);
-      wisps.push(sp);
-    }
-
-    const glyphs = makeGlyphs(lowQuality ? 2 : 3, 0.7);
-
-    // trụ khí: 4 cột sáng dâng lên quanh người rồi tan, lệch pha
-    const pillars = [];
-    for (let i = 0; i < (lowQuality ? 2 : 4); i++) {
-      const entry = dynMat(() => new THREE.SpriteMaterial({
-        map: wispTexture(), color: colors[i % colors.length], transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, opacity: 0, rotation: 0.04 * (i - 1.5),
-      }), 0);
-      const sp = new THREE.Sprite(entry.mat);
-      group.add(sp);
-      pillars.push({ sp, entry, a0: (i / 4) * Math.PI * 2, r: 0.85 + ((i * 13) % 10) / 10 * 0.18, tw: ((i * 29) % 10) / 10 });
-    }
-
-    // linh quang xa: đốm ngọc lớn bay vòng ngoài cùng, thở chậm
-    const orbs = [];
-    for (let i = 0; i < (lowQuality ? 3 : 5); i++) {
-      const entry = dynMat(() => new THREE.SpriteMaterial({
-        map: glowTexture(), color: colors[i % colors.length], transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, opacity: 0.7,
-      }), 0.7);
-      const sp = new THREE.Sprite(entry.mat);
-      group.add(sp);
-      orbs.push({ sp, entry, a0: (i / 5) * Math.PI * 2, r: 1.05 + ((i * 7) % 10) / 10 * 0.2, y: 0.5 + ((i * 19) % 30) / 30 * 1.1, tw: ((i * 29) % 10) / 10 });
-    }
-
-    // ngọc mưa: bụi ngọc rơi lác đác từ trên cao, tan trước khi chạm đất
-    const motes = [];
-    for (let i = 0; i < (lowQuality ? 6 : 14); i++) {
-      const entry = dynMat(() => new THREE.SpriteMaterial({
-        map: glowTexture(), color: colors[i % colors.length], transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, opacity: 0, rotation: ((i * 29) % 10) / 10 * 3,
-      }), 0);
-      const sp = new THREE.Sprite(entry.mat);
-      group.add(sp);
-      motes.push({ sp, entry, a0: (i / 14) * 6.283, r: 0.3 + ((i * 37) % 20) / 20 * 0.75, tw: ((i * 29) % 10) / 10, fall: 0.5 + ((i * 61) % 10) / 10 });
-    }
-
-    variantUpdate = (t) => {
-      pool.scale.setScalar(1.05 * (1 + Math.sin(t * 1.8) * 0.06));
-      pool.scale.y = pool.scale.x;
-      mantra.rotation.z = -t * 0.2;
-      counterRing.rotation.z = t * 0.5;
-      dome.rotation.y = t * 0.06;
-      domeTex.offset.y = -(t * 0.06) % 1; // khí trong vòm cuộn lên
-      domeEntry.base = 0.09 + 0.04 * (0.5 + 0.5 * Math.sin(t * 1.1));
-      for (const pl of pillars) {
-        const yn = (t * 0.22 + pl.tw) % 1; // trụ khí dâng lên rồi tan
-        const life = Math.sin(yn * Math.PI);
-        const a = pl.a0 + t * 0.15;
-        pl.sp.position.set(Math.cos(a) * pl.r, 0.1 + yn * 1.5, Math.sin(a) * pl.r);
-        pl.sp.scale.set(0.16, Math.max(0.001, life * 1.15), 1);
-        pl.entry.base = life * 0.3;
-      }
-      for (const ob of orbs) {
-        const a = ob.a0 + t * 0.12;
-        ob.sp.position.set(Math.cos(a) * ob.r, ob.y + Math.sin(t * 0.8 + ob.tw * 7) * 0.08, Math.sin(a) * ob.r);
-        ob.sp.scale.setScalar((0.12 + ob.tw * 0.06) * (1 + 0.15 * Math.sin(t * 2 + ob.tw * 8)));
-        ob.entry.base = 0.5 + 0.3 * (0.55 + 0.45 * Math.sin(t * 1.7 + ob.tw * 10));
-      }
-      for (const mo of motes) {
-        const yn = (t * 0.12 * mo.fall + mo.tw) % 1; // ngọc rơi từ trời xuống
-        const a = mo.a0 + t * 0.08;
-        mo.sp.position.set(Math.cos(a) * mo.r + Math.sin(t + mo.tw * 9) * 0.04, 1.95 - yn * 1.85, Math.sin(a) * mo.r);
-        mo.sp.scale.setScalar(0.035 + mo.tw * 0.02);
-        mo.entry.base = Math.min(1, yn * 5, (1 - yn) * 4) * 0.5;
-      }
-      for (const rp of ripples) {
-        const p = (t * 0.3 + rp.userData.k * 0.33) % 1; // gợn loang từ chân rồi tan
-        rp.scale.setScalar(0.35 + p * 1.05);
-        rp.userData.entry.base = (1 - p) * 0.32;
-      }
-      dragon.update(t);
-      for (const cr of crystals) {
-        const a = cr.a0 + t * 0.1;
-        cr.sp.position.set(Math.cos(a) * cr.r, cr.y + Math.sin(t * 0.9 + cr.tw * 7) * 0.06, Math.sin(a) * cr.r);
-        cr.sp.material.rotation = cr.tw * 6.28 + t * 0.4;
-        cr.sp.scale.setScalar(0.13 + cr.tw * 0.05);
-        cr.entry.base = 0.55 + 0.4 * (0.7 + 0.3 * Math.sin(t * 2.4 + cr.tw * 12.6));
-      }
-      for (let i = 0; i < count; i++) {
-        const a0 = seed[i * 4], r0 = seed[i * 4 + 1], speed = seed[i * 4 + 2], tw = seed[i * 4 + 3];
-        const yn = (t * 0.22 * speed + tw * 1.7) % 1;
-        const a = a0 + t * 0.22 * speed;
-        const r = 0.06 + r0 * 0.52 + Math.sin(t * 0.7 + tw * 9) * 0.035; // ôm sát thân
-        const life = Math.sin(yn * Math.PI);
-        const sway = Math.sin(t * 2.2 + tw * 12.6);
-        wisps[i].position.set(Math.cos(a) * r, 0.04 + yn * 1.3, Math.sin(a) * r);
-        wisps[i].scale.set((0.05 + tw * 0.03) * (1 + sway * 0.2), Math.max(0.001, life * (0.24 + tw * 0.16)), 1);
-      }
       updateGlyphs(glyphs, t);
     };
   } else if (effect === 4) {
