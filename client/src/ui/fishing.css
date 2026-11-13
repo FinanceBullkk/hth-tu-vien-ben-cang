@@ -43,8 +43,11 @@
 .fish-baits button:hover { opacity: .9; }
 .fish-baits button.on { opacity: 1; color: #f0dcae; text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1px; }
 
-/* Thành quả: chữ lớn giữa cảnh, không khung */
-.fish-catch { position: absolute; left: 50%; top: 30%; width: min(460px, 92vw); padding: 26px 20px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; pointer-events: none; background: radial-gradient(closest-side, rgba(10, 8, 6, .55), transparent); animation: fishRise .35s ease-out; }
+/* Thành quả: hình con cá, tên lớn, không khung. Hiện sau một nhịp để mắt kịp theo con cá vọt khỏi nước. */
+.fish-catch { position: absolute; left: 50%; bottom: calc(118px + var(--safe-b, 0px)); width: min(460px, 92vw); padding: 22px 20px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; pointer-events: none; background: radial-gradient(closest-side, rgba(10, 8, 6, .6), transparent); animation: fishRise .4s .55s ease-out both; }
+.fish-catch-art svg { display: block; width: 132px; height: auto; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, .55)); animation: fishFlop .9s .55s ease-out both; }
+.fish-catch[data-rarity="3"] .fish-catch-art svg { filter: drop-shadow(0 0 10px rgba(255, 210, 110, .75)) drop-shadow(0 3px 6px rgba(0, 0, 0, .5)); }
+.fish-catch-new { padding: 2px 10px; border: 1px solid #f0cd78; border-radius: 3px; color: #ffe2a0; font-size: 12.5px; letter-spacing: .14em; text-transform: uppercase; animation: fishStamp .45s .75s ease-out both; }
 .fish-catch b { font-size: 30px; font-weight: 500; letter-spacing: .02em; color: #fff4dc; overflow-wrap: anywhere; }
 .fish-catch span { font-size: 15.5px; font-variant-numeric: tabular-nums; }
 .fish-catch small { margin-top: 2px; font-size: 13px; color: #bff0d6; }
@@ -54,6 +57,8 @@
 @keyframes fishFade { from { opacity: 0; } }
 @keyframes fishRise { from { opacity: 0; transform: translate(-50%, 10px); } }
 @keyframes fishBreath { to { opacity: .78; } }
+@keyframes fishFlop { 0% { transform: rotate(-14deg) scale(.6); } 40% { transform: rotate(9deg) scale(1.08); } 70% { transform: rotate(-4deg); } }
+@keyframes fishStamp { from { opacity: 0; transform: scale(1.6); } }
 
 /* Menu Chơi gì? */
 /* Lưới ô icon: biểu tượng lớn + tên ngắn, mô tả trong tooltip. */
@@ -78,10 +83,11 @@
 @media (max-height: 460px) {
   .fish-gauge { width: min(170px, 40vw); top: 6px; }
   .fish-dock { bottom: 8px; gap: 3px; }
-  .fish-catch { top: 16%; }
+  .fish-catch { bottom: 46px; padding: 8px 16px; }
+  .fish-catch-art svg { width: 86px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .fish-gauge, .fish-catch { animation: none; }
+  .fish-gauge, .fish-catch, .fish-catch-art svg, .fish-catch-new { animation: none; }
   .fish-hint.coach, #playBtn.nudge { animation: none; }
 }
 

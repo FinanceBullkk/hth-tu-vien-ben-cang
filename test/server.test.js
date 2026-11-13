@@ -601,7 +601,9 @@ test('câu cá qua socket thật: quăng, cắn, giữ kim theo vùng xanh, kéo
   assert.equal(res.ok, true);
   assert.equal(res.fish.rarity, bite.rarity);
   assert.ok(res.teu >= 1);
-  assert.equal((await caught).name, res.fish.name);
+  const shown = await caught;
+  assert.equal(shown.name, res.fish.name);
+  assert.equal(shown.id, res.fish.id, 'cả phòng biết loài để dựng đúng con cá');
   assert.equal((await rodOff).sid, a.res.sid);
   assert.equal((await call(a.s, 'fish:pull', { x: 0.5 })).ok, false, 'kéo xong là hết lượt');
   a.s.disconnect();
