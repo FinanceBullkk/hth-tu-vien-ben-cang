@@ -88,7 +88,7 @@ export class Fishing {
     rod.fight = fightNew({ seed, rarity, startAt, assist });
     rod.fightEndsAt = startAt + FISH_FIGHT.maxMs;
     player.socket?.emit('fish:bite', { seed, rarity, startAt, assist });
-    this.io.emit('fish:struck', { sid: player.sid });
+    this.io.emit('fish:struck', { sid: player.sid, rarity }); // cả phòng thấy bóng cá to nhỏ dưới phao
   }
 
   /** Cập nhật mô phỏng tới hiện tại. Trả false nếu cá đã tuột và cần đã được dọn. */
@@ -142,7 +142,7 @@ export class Fishing {
     this.db.fishCatch(player.pid, fish.id, weight, grade, date, Date.now());
     this.db.addTeu(player.pid, teu, 'fish', date);
     // Báo trước khi dọn để mọi máy còn thấy nước văng đúng chỗ phao.
-    this.io.emit('fish:caught', { sid: player.sid, name: fish.name, rarity: fish.rarity, weight });
+    this.io.emit('fish:caught', { sid: player.sid, id: fish.id, name: fish.name, rarity: fish.rarity, weight });
     this.clear(player, true);
     return { ok: true, grade, fish: { id: fish.id, name: fish.name, rarity: fish.rarity, weight }, teu, isNew, record, species, milestone };
   }

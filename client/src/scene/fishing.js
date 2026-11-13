@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { LAKE_SHADOW } from '../../../shared/fish-lake-shadows.js';
 import { LAKE } from '../../../shared/layout.js';
+import { CatchShows } from './fishing-catch-show.js';
 import { buildLake } from './fishing-lake.js';
 import { LakeShadows } from './fishing-lake-shadows.js';
 import { makeRodRig, updateRodRig } from './fishing-rod-rig.js';
@@ -16,6 +17,7 @@ export class FishingScene {
     this.lake = buildLake(scene);
     this.shadows = new LakeShadows(scene);
     this.effects = new WaterEffects(this.group);
+    this.catches = new CatchShows(this.group, this.effects);
     this.rods = new Map(); // sid -> Group (cần + dây + phao)
     this.nextAmbient = 0;
 
@@ -89,10 +91,12 @@ export class FishingScene {
     Object.assign(data, { cast: true, bx, bz });
   }
 
-  /** Cá của người này vừa cắn: phao quẫy cho tới khi hết lượt, cả phòng đều thấy. */
-  strike(sid) {
+  /** Cá của người này vừa cắn: phao quẫy cho tới khi hết lượt, cả phòng đều thấy. rarity: cỡ bóng cá dưới phao. */
+  strike(sid, rarity) {
     const rig = this.rods.get(sid);
-    if (rig) rig.userData.struck = true;
+    if (!rig) return;
+    rig.userData.struck = true;
+    if (rarity) rig.userData.rarity = rarity;
   }
 
   /** Lắc cần dụ cá: ngọn cần giật nhẹ, phao gợn sóng. */
@@ -109,9 +113,12 @@ export class FishingScene {
     if (rig) rig.userData.fight = { fishOffset, needleOffset };
   }
 
-  splashAtBobber(sid) {
+  /** Cá về tay: vọt khỏi nước ở chỗ phao rồi treo dưới ngọn cần của người đó. */
+  showCatch(sid, fishId, rarity) {
     const data = this.rods.get(sid)?.userData;
-    if (data?.cast) this.effects.splash(data.bx, data.bz);
+    if (!data?.cast) return;
+    const from = data.bobberAt ?? { x: data.bx, z: data.bz };
+    this.catches.play({ fishId, rarity, from, tipOf: () => this.rods.get(sid)?.userData.tip ?? null });
   }
 
   /** Mặt hồ không bao giờ đứng yên: thỉnh thoảng một vòng sóng nhỏ từ cá ngoi lên. */
@@ -134,6 +141,7 @@ export class FishingScene {
     this.shadows.update(now);
     for (const rig of this.rods.values()) if (rig.userData.anchor) updateRodRig(rig, dt, now, this.effects);
     this.#stirWater(dt, now);
+    this.catches.update(dt, now);
     this.effects.update(dt);
   }
 }

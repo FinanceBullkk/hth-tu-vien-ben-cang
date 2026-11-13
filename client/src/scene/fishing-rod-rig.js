@@ -1,6 +1,7 @@
 // Bộ cần câu của một người: cần tre, dây và phao. Dựng hình và cập nhật mỗi khung, không giữ danh sách người câu.
 import * as THREE from 'three';
 import { LAKE, lakeDistance } from '../../../shared/layout.js';
+import { fishShapeGeometry } from './fishing-lake-shadows.js';
 
 const RIG_Y = 0.04; // mặt sân
 const ROD_TILT = 0.7; // ngọn cần chúc ra phía nước
@@ -8,6 +9,7 @@ const ROD_LEN = 2.6;
 const HAND = { forward: 0.25, y: 1.05 }; // chỗ tay cầm, tính từ chân người câu
 const TIP = { forward: Math.sin(ROD_TILT) * ROD_LEN, y: Math.cos(ROD_TILT) * ROD_LEN };
 const CAST_FLIGHT_S = 0.55;
+const NIBBLE_GAP_S = [1.4, 4.2]; // lúc chờ, phao thỉnh thoảng nhấp nhẹ như cá rỉa mồi
 
 // Hình và vật liệu dùng chung; riêng dây mỗi người một geometry vì toạ độ khác nhau.
 const rodGeo = new THREE.CylinderGeometry(0.012, 0.03, ROD_LEN, 5);
@@ -15,6 +17,9 @@ const rodMat = new THREE.MeshLambertMaterial({ color: 0x8a6a3c, flatShading: tru
 const lineMat = new THREE.LineBasicMaterial({ color: 0xf5eeda, transparent: true, opacity: 0.55 });
 const bobberGeo = new THREE.SphereGeometry(0.09, 8, 6);
 const bobberMat = new THREE.MeshLambertMaterial({ color: 0xd94f35, emissive: 0x7a1f10, flatShading: true });
+// Bóng cá đang giằng co ngay dưới phao: cá quý to hơn, quẫy theo hướng nó đang kéo.
+const fightFishGeo = fishShapeGeometry();
+const fightFishMat = new THREE.MeshBasicMaterial({ color: 0x06141a, transparent: true, opacity: 0.75, side: THREE.DoubleSide, depthWrite: false });
 
 export function makeRodRig() {
   const rig = new THREE.Group();
@@ -31,8 +36,12 @@ export function makeRodRig() {
   line.frustumCulled = false;
   const bobber = new THREE.Mesh(bobberGeo, bobberMat);
   bobber.name = 'bobber';
-  rig.add(pivot, line, bobber);
-  Object.assign(rig.userData, { dip: 0, shake: 0, cast: false, castT: 1, fight: null, struck: false, dirX: 1, dirZ: 0 });
+  const fightFish = new THREE.Mesh(fightFishGeo, fightFishMat);
+  fightFish.name = 'fightFish';
+  fightFish.renderOrder = 1;
+  fightFish.visible = false;
+  rig.add(pivot, line, bobber, fightFish);
+  Object.assign(rig.userData, { dip: 0, nibble: 0, nibbleIn: 2, shake: 0, cast: false, castT: 1, fight: null, struck: false, rarity: 2, dirX: 1, dirZ: 0 });
   return rig;
 }
 
@@ -42,6 +51,7 @@ export function updateRodRig(rig, dt, now, effects) {
   const line = rig.getObjectByName('line');
   const bobber = rig.getObjectByName('bobber');
   const pivot = rig.getObjectByName('pivot');
+  const fightFish = rig.getObjectByName('fightFish');
   line.visible = data.cast;
   bobber.visible = data.cast;
 
@@ -58,11 +68,14 @@ export function updateRodRig(rig, dt, now, effects) {
   pivot.rotation.y += yawDelta * Math.min(1, dt * 12);
   pivot.rotation.z = Math.sin(now * 0.03) * data.shake * 0.09 - (fighting ? 0.1 : 0);
   pivot.position.set(data.dirX * HAND.forward, HAND.y, data.dirZ * HAND.forward);
-  if (!data.cast) return;
 
   const tipX = pivot.position.x + TIP.forward * Math.cos(pivot.rotation.y);
   const tipY = HAND.y + TIP.y;
   const tipZ = pivot.position.z - TIP.forward * Math.sin(pivot.rotation.y);
+  // Toạ độ thế giới của ngọn cần, để cá vừa kéo lên treo đúng chỗ.
+  data.tip = { x: data.anchor.x + tipX, y: RIG_Y + tipY, z: data.anchor.z + tipZ };
+  fightFish.visible = false;
+  if (!data.cast) return;
 
   // Phao chạy ngang theo cá nhưng không bao giờ lên bờ.
   let bx = data.bx;
@@ -77,7 +90,17 @@ export function updateRodRig(rig, dt, now, effects) {
     if (Math.random() < dt * 2) effects.splash(bx, bz);
   }
   data.dip = fighting ? 0.55 + Math.sin(now * 0.02) * 0.3 : Math.max(0, data.dip - dt * 2.4);
-  const bobY = LAKE.y + 0.05 + Math.sin(now * 0.002 + bx) * 0.02 - data.dip * 0.06;
+  // Cá rỉa mồi: phao nhấp xuống rồi nổi lên, gợn một vòng sóng nhỏ.
+  data.nibble = Math.max(0, data.nibble - dt * 5);
+  if (!fighting && data.castT === 1) {
+    data.nibbleIn -= dt;
+    if (data.nibbleIn <= 0) {
+      data.nibbleIn = NIBBLE_GAP_S[0] + Math.random() * (NIBBLE_GAP_S[1] - NIBBLE_GAP_S[0]);
+      data.nibble = 0.6 + Math.random() * 0.4;
+      effects.ripple(bx, bz, 0.45, 0.5);
+    }
+  }
+  const bobY = LAKE.y + 0.05 + Math.sin(now * 0.002 + bx) * 0.02 - data.dip * 0.06 - data.nibble * 0.07;
 
   // Phao bay vòng cung từ ngọn cần xuống nước rồi mới đậu.
   let px = bx - data.anchor.x;
@@ -92,6 +115,17 @@ export function updateRodRig(rig, dt, now, effects) {
     if (data.castT === 1) effects.ripple(bx, bz, 1);
   }
   bobber.position.set(px, py, pz);
+  data.bobberAt = { x: data.anchor.x + px, z: data.anchor.z + pz };
+  if (fighting) {
+    // Cá bơi ngang theo hướng nó đang kéo phao, đầu chúi ra xa người câu.
+    const sideways = Math.sign(fishOffset - (data.lastFish ?? fishOffset)) || data.swimDir || 1;
+    data.swimDir = sideways;
+    data.lastFish = fishOffset;
+    fightFish.visible = true;
+    fightFish.position.set(px + data.dirX * 0.15, LAKE.y - RIG_Y + 0.012, pz + data.dirZ * 0.15);
+    fightFish.rotation.y = Math.atan2(-data.dirZ * sideways, data.dirX * sideways) + Math.sin(now * 0.025) * 0.35;
+    fightFish.scale.setScalar(0.75 + data.rarity * 0.4);
+  }
   const pos = line.geometry.attributes.position;
   pos.setXYZ(0, tipX, tipY, tipZ);
   pos.setXYZ(1, px, py + 0.09, pz);

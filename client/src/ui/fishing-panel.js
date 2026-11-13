@@ -2,11 +2,12 @@
 // Không có nút hành động: chạm ở đâu trên màn hình cũng được, kể cả trên điện thoại.
 import { BAITS, FISH, fishForBait } from '../../../shared/fish.js';
 import { $, h } from './dom.js';
+import { fishPortraitSvg } from './fish-portrait.js';
 import { FishingArcGauge } from './fishing-arc-gauge.js';
 
 const NEEDLE_SPAN_PX = 520; // quãng kéo tương ứng toàn bộ vòng cung
 const BAIT_NOTE_MS = 3500;
-const CATCH_MS = 4200;
+const CATCH_MS = 4600;
 
 const pointerOf = (e) => ({ x: e.clientX, y: e.clientY, clientX: e.clientX, touch: e.pointerType === 'touch' });
 
@@ -122,14 +123,18 @@ export class FishingPanel {
 
   showCatch({ fish, teu, isNew, record, species, milestone, grade }) {
     const notes = [
-      isNew ? `Loài mới · Sổ cá ${species}/${FISH.length}` : '',
+      isNew ? `Sổ cá ${species}/${FISH.length}` : '',
       record ? 'Kỷ lục mới' : '',
       milestone ? `Đủ ${milestone.count} loài, thưởng ${milestone.teu} TEU` : '',
       grade === 'perfect' ? 'Câu đẹp' : '',
     ].filter(Boolean);
     this.catchEl.hidden = false;
     this.catchEl.dataset.rarity = String(fish.rarity);
+    const art = h('span', { class: 'fish-catch-art' });
+    art.innerHTML = fishPortraitSvg(fish.id);
     this.catchEl.replaceChildren(
+      isNew ? h('span', { class: 'fish-catch-new' }, 'Loài mới') : '',
+      art,
       h('span', { class: 'fish-catch-stars' }, '★'.repeat(fish.rarity)),
       h('b', {}, fish.name),
       h('span', {}, `${fish.weight.toLocaleString('vi-VN')} kg · +${teu} TEU`),
