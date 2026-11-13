@@ -31,12 +31,14 @@ function bladeGeometry(rings) {
   return g;
 }
 
-function fitting(geo, x, y, z) {
+// part = -1: đồ đồng (chắn, chuôi, núm, cuộn mây) mạ vàng; -2: viên ngọc giữa chắn.
+function fitting(geo, x, y, z, part = -1, rz = 0) {
+  if (rz) geo.rotateZ(rz);
   geo.translate(x, y, z);
   const flat = geo.index ? geo.toNonIndexed() : geo;
   if (flat !== geo) geo.dispose();
   flat.deleteAttribute('uv');
-  flat.setAttribute('part', new THREE.Float32BufferAttribute(new Float32Array(flat.attributes.position.count).fill(-1), 1));
+  flat.setAttribute('part', new THREE.Float32BufferAttribute(new Float32Array(flat.attributes.position.count).fill(part), 1));
   return flat;
 }
 
@@ -45,12 +47,18 @@ let cached = null;
 export function swordGeometry() {
   if (cached) return cached;
   const pieces = [
-    bladeGeometry(10),
-    fitting(new THREE.BoxGeometry(0.26, 0.032, 0.05), 0, -0.016, 0),
-    fitting(new THREE.OctahedronGeometry(0.032), 0.14, -0.016, 0),
-    fitting(new THREE.OctahedronGeometry(0.032), -0.14, -0.016, 0),
-    fitting(new THREE.CylinderGeometry(0.02, 0.024, 0.19, 6), 0, -0.13, 0),
-    fitting(new THREE.OctahedronGeometry(0.036), 0, -0.25, 0),
+    bladeGeometry(12),
+    // Chắn tay cong như cánh mây: thân giữa + hai cuộn xoắn ở đầu, ngọc ở tâm.
+    fitting(new THREE.BoxGeometry(0.2, 0.03, 0.05), 0, -0.016, 0),
+    fitting(new THREE.TorusGeometry(0.04, 0.011, 4, 10, Math.PI * 1.5), 0.13, 0.012, 0, -1, -Math.PI * 0.25),
+    fitting(new THREE.TorusGeometry(0.04, 0.011, 4, 10, Math.PI * 1.5), -0.13, 0.012, 0, -1, Math.PI * 1.75),
+    fitting(new THREE.OctahedronGeometry(0.03), 0, -0.012, 0.022, -2),
+    fitting(new THREE.OctahedronGeometry(0.03), 0, -0.012, -0.022, -2),
+    // Chuôi quấn ba đốt + núm hình hoa.
+    fitting(new THREE.CylinderGeometry(0.019, 0.023, 0.19, 6), 0, -0.13, 0),
+    ...[-0.07, -0.13, -0.19].map(y => fitting(new THREE.TorusGeometry(0.024, 0.006, 3, 8).rotateX(Math.PI / 2), 0, y, 0)),
+    fitting(new THREE.OctahedronGeometry(0.04), 0, -0.255, 0),
+    fitting(new THREE.TorusGeometry(0.03, 0.007, 3, 10), 0, -0.29, 0),
   ];
   cached = mergeGeometries(pieces);
   pieces.forEach(p => p.dispose());

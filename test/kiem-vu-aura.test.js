@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { Color } from 'three';
-import { createKiemVuAura } from '../client/src/player/vfx/kiem-vu-aura.js';
+import { createKiemVuAura, kiemVuRhythm } from '../client/src/player/vfx/kiem-vu-aura.js';
 import { swordGeometry } from '../client/src/player/vfx/sword-geometry.js';
 import { createManifestation } from '../client/src/player/cultivation-manifestation.js';
 import { CultivationAura } from '../client/src/player/cultivation-aura.js';
@@ -19,14 +19,29 @@ test('Kiếm Vũ: kiếm luân, phi kiếm và trận đồ có số liệu hữ
       if (o.material && o !== aura.points) assert.equal(o.material.depthWrite, false);
     });
   }
-  // 12 kiếm ngoài + 8 kiếm trong + 3 phi kiếm, mỗi bộ có lớp sáng và lớp mực.
-  assert.deepEqual(instanced(aura).map(m => m.count).sort((a, b) => a - b), [3, 3, 8, 8, 12, 12]);
+  // 12 kiếm ngoài + 8 kiếm trong + 3 phi kiếm (mỗi bộ có lớp sáng và lớp mực) + 8 kiếm mưa.
+  assert.deepEqual(instanced(aura).map(m => m.count).sort((a, b) => a - b), [3, 3, 8, 8, 8, 12, 12]);
+  aura.dispose();
+});
+
+test('Kiếm Vũ: nhịp 8 giây — mưa kiếm chỉ hiện quanh lúc xuất kiếm, tuần hoàn khép kín', () => {
+  const at = (aura, t) => { aura.update(t); let rain; aura.points.traverse(o => { if (o.name === 'kiem-vu-rain') rain = o; }); return rain; };
+  const aura = createKiemVuAura(false, { matches: false });
+  assert.equal(at(aura, 0).visible, false);
+  assert.equal(at(aura, 8 * 0.3).visible, true);
+  assert.equal(at(aura, 8 * 0.9).visible, false);
+  assert.equal(at(aura, 8 * 1.3).visible, true);
+  for (const k of ['phase', 'release', 'sweepOn', 'pulse']) {
+    assert.ok(Math.abs(kiemVuRhythm(1.7)[k] - kiemVuRhythm(1.7 + 8 * 5)[k]) < 1e-9);
+  }
   aura.dispose();
 });
 
 test('Kiếm Vũ: chất lượng thấp bớt kiếm và bỏ lớp mực', () => {
   const low = createKiemVuAura(true, { matches: false });
   assert.deepEqual(instanced(low).map(m => m.count).sort((a, b) => a - b), [3, 6, 12]);
+  let rain = null; low.points.traverse(o => { if (o.name === 'kiem-vu-rain') rain = o; });
+  assert.equal(rain, null);
   low.dispose();
 });
 
@@ -51,16 +66,19 @@ test('Kiếm Vũ: giảm chuyển động làm chậm chứ không tắt hình, 
   aura.dispose();
 });
 
-test('Kiếm Vũ: dispose giải phóng tài nguyên riêng, giữ hình kiếm dùng chung', () => {
+test('Kiếm Vũ: dispose giải phóng tài nguyên riêng, giữ hình kiếm, dải gió và hoa văn dùng chung', () => {
   const aura = createKiemVuAura(false, { matches: false });
-  const owned = new Set([aura.points.material]);
+  const owned = new Set([aura.points.material]), shared = new Set([swordGeometry()]);
   aura.points.traverse(o => {
-    if (o.geometry && o.geometry !== swordGeometry()) owned.add(o.geometry);
+    if (o.name === 'kiem-vu-wind') shared.add(o.geometry);
+    else if (o.geometry && o.geometry !== swordGeometry()) owned.add(o.geometry);
     if (o.material) owned.add(o.material);
+    if (o.material?.uniforms?.map) shared.add(o.material.uniforms.map.value);
   });
   let disposed = 0, sharedDisposed = 0;
   owned.forEach(o => o.addEventListener('dispose', () => disposed++));
-  swordGeometry().addEventListener('dispose', () => sharedDisposed++);
+  shared.forEach(o => o.addEventListener('dispose', () => sharedDisposed++));
+  assert.ok(shared.size >= 6);
   aura.dispose();
   assert.equal(disposed, owned.size);
   assert.equal(sharedDisposed, 0);
