@@ -105,7 +105,7 @@ test('giữ kim trong vùng thì đầy vòng rồi mới kéo lên được, đ
   assert.equal(res.grade, 'perfect');
   assert.ok(res.fish.name);
   assert.equal(res.fish.rarity, bite.rarity, 'độ khó khớp đúng con cá bắt được');
-  assert.equal(res.teu, TEU.fishByRarity[res.fish.rarity] + TEU.fishPerfectBonus);
+  assert.equal(res.teu, TEU.fishByRarity[res.fish.rarity] + TEU.fishPerfectBonus + (res.orderDone?.teu ?? 0));
   assert.equal(res.isNew, true, 'lần đầu bắt loài này');
   assert.equal(a.rod, null);
   assert.equal(a.activity, 5, 'bắt xong vẫn đứng câu, người khác không thấy nhân vật giật về đứng thường');

@@ -233,6 +233,8 @@ export class Room {
     on('fish:pull', (p, data) => this.fishing.pull(p, data));
     on('fish:reel', (p) => this.fishing.reel(p));
     on('fish:cancel', (p) => this.fishing.cancel(p));
+    on('fish:gear', (p) => this.fishing.supplies.info(p));
+    on('fish:buy', (p, data) => this.fishing.supplies.buy(p, data));
     on('melody:start', (p) => this.melody.start(p));
     on('melody:hit', (p, data) => this.melody.hit(p, data));
     on('melody:finish', (p, data) => this.melody.finish(p, data));

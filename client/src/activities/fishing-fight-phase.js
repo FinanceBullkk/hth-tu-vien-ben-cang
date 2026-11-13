@@ -18,11 +18,11 @@ export class FishingFightPhase {
     this.keyRight = false;
   }
 
-  begin({ seed, rarity, startAt, assist }, total) {
+  begin({ seed, rarity, startAt, assist, rod = 0 }, total) {
     const token = ++this.token;
     this.running = true;
     this.total = total;
-    this.fight = fightNew({ seed, rarity, startAt, assist });
+    this.fight = fightNew({ seed, rarity, startAt, assist, rod });
     this.needle = 0.5;
     this.aimX = 0.5;
     this.dragX = null;
@@ -72,8 +72,8 @@ export class FishingFightPhase {
 
   render(ready = false) {
     const { fight, needle } = this;
-    const { half } = fightTune(fight.rarity, fight.assist);
-    const center = fightGreen(this.app.net.now() - fight.startAt, fight.seed, fight.rarity, fight.assist);
+    const { half } = fightTune(fight.rarity, fight.assist, fight.rod);
+    const center = fightGreen(this.app.net.now() - fight.startAt, fight.seed, fight.rarity, fight.assist, fight.rod);
     this.panel.gauge.render({ center, half, needle, progress: fight.progress, ready });
     return { center, half };
   }

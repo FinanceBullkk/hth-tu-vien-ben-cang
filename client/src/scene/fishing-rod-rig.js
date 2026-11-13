@@ -1,6 +1,7 @@
 // Bộ cần câu của một người: cần tre, dây và phao. Dựng hình và cập nhật mỗi khung, không giữ danh sách người câu.
 import * as THREE from 'three';
 import { LAKE, lakeDistance } from '../../../shared/layout.js';
+import { FISH_RODS } from '../../../shared/fish-gear.js';
 import { fishShapeGeometry } from './fishing-lake-shadows.js';
 
 const RIG_Y = 0.04; // mặt sân
@@ -13,7 +14,7 @@ const NIBBLE_GAP_S = [1.4, 4.2]; // lúc chờ, phao thỉnh thoảng nhấp nh�
 
 // Hình và vật liệu dùng chung; riêng dây mỗi người một geometry vì toạ độ khác nhau.
 const rodGeo = new THREE.CylinderGeometry(0.012, 0.03, ROD_LEN, 5);
-const rodMat = new THREE.MeshLambertMaterial({ color: 0x8a6a3c, flatShading: true });
+const rodMats = FISH_RODS.map((r) => new THREE.MeshLambertMaterial({ color: r.color, flatShading: true, emissive: r.tier === 2 ? 0x3a2600 : 0 }));
 const lineMat = new THREE.LineBasicMaterial({ color: 0xf5eeda, transparent: true, opacity: 0.55 });
 const bobberGeo = new THREE.SphereGeometry(0.09, 8, 6);
 const bobberMat = new THREE.MeshLambertMaterial({ color: 0xd94f35, emissive: 0x7a1f10, flatShading: true });
@@ -25,7 +26,8 @@ export function makeRodRig() {
   const rig = new THREE.Group();
   const pivot = new THREE.Group();
   pivot.name = 'pivot';
-  const rod = new THREE.Mesh(rodGeo, rodMat);
+  const rod = new THREE.Mesh(rodGeo, rodMats[0]);
+  rod.name = 'rod';
   rod.position.set(Math.sin(ROD_TILT) * (ROD_LEN / 2), Math.cos(ROD_TILT) * (ROD_LEN / 2), 0);
   rod.rotation.z = -ROD_TILT;
   pivot.add(rod);
@@ -43,6 +45,11 @@ export function makeRodRig() {
   rig.add(pivot, line, bobber, fightFish);
   Object.assign(rig.userData, { dip: 0, nibble: 0, nibbleIn: 2, shake: 0, cast: false, castT: 1, fight: null, struck: false, rarity: 2, dirX: 1, dirZ: 0 });
   return rig;
+}
+
+/** Đổi cần theo bậc đồ câu của người cầm. */
+export function setRigTier(rig, tier) {
+  rig.getObjectByName('rod').material = rodMats[tier] ?? rodMats[0];
 }
 
 export function updateRodRig(rig, dt, now, effects) {

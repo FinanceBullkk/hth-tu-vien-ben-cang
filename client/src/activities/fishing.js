@@ -8,6 +8,7 @@ import { FishingAimPhase, SHADOW_TALK_FROM } from './fishing-aim-phase.js';
 import { lakeShot } from './fishing-camera-shot.js';
 import { baitUnlocked, catchesSoFar, coachLines, noteCatch } from './fishing-coach.js';
 import { FishingFightPhase } from './fishing-fight-phase.js';
+import { FishingSuppliesControl } from './fishing-supplies-control.js';
 
 const COMPANY_INTERVAL_S = 1;
 const LEFT_KEYS = new Set(['KeyA', 'ArrowLeft']);
@@ -34,7 +35,10 @@ export class FishingActivity {
       onRelease: () => this.release(),
       onBait: (id) => this.setBait(id),
       onExit: () => app.activities.exit(),
+      onBuy: (item) => this.supplies.buy(item),
+      onThinh: () => this.supplies.toggle(),
     });
+    this.supplies = new FishingSuppliesControl({ app, panel: this.panel });
     const phase = { app, panel: this.panel, lines: this.lines };
     this.aiming = new FishingAimPhase(phase);
     this.fighting = new FishingFightPhase({ ...phase, onFull: () => this.reel() });
@@ -53,6 +57,8 @@ export class FishingActivity {
     this.panel.setTally(0, 0);
     this.aiming.reset();
     this.aim();
+    const generation = this.generation;
+    this.supplies.load(() => generation === this.generation);
     if (app.chat.open) app.chat.close();
     const { me, world, follow } = app;
     me.rot = Math.atan2(LAKE.x - me.x, LAKE.z - me.z);
@@ -113,12 +119,13 @@ export class FishingActivity {
     app.world.fishing.setAim(null);
     app.me.rot = Math.atan2(bx - app.me.x, bz - app.me.z);
     app.audio.rodCast();
-    const res = await app.net.call('fish:cast', { tx: bx, tz: bz, bait: this.bait }).catch(() => null);
+    const res = await app.net.call('fish:cast', { tx: bx, tz: bz, bait: this.bait, thinh: this.supplies.useThinh }).catch(() => null);
     if (generation !== this.generation) return;
     if (!res?.ok) {
       this.aim(res?.error ?? 'Chưa thả được, thử lại nhé');
       return;
     }
+    if (res.thinh) this.supplies.apply({ thinh: res.thinhLeft });
     this.state = 'waiting';
     this.panel.mode('waiting');
     const waiting = this.lines.waiting(this.total);
@@ -163,6 +170,8 @@ export class FishingActivity {
     this.total = noteCatch();
     this.panel.setTally(this.caught, this.earned);
     this.panel.showCatch(res);
+    if (res.orders) this.panel.supplies.apply({ orders: res.orders });
+    if (res.orderDone) app.audio.chime(0.08);
     app.audio.splash(1);
     app.audio.chime(0.06);
     buzz([60, 40, 90]);

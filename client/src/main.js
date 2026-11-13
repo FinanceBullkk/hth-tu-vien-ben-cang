@@ -327,10 +327,11 @@ function main() {
   net.on('meditation:scene', (data) => world.meditation.apply(data));
 
   // ---------- Câu cá ----------
-  net.on('fish:bobber', ({ sid, bx, bz }) => {
+  net.on('fish:bobber', ({ sid, bx, bz, rod, thinh }) => {
     // Người vừa thả cần: đặt bộ cần + phao tại chỗ họ đứng (của mình thì activity đã đặt).
     const pos = sid === mySid ? { x: me.x, z: me.z } : remotePos(sid);
-    if (pos) world.fishing.setRod(sid, { x: pos.x, z: pos.z, on: true, bx, bz });
+    if (pos) world.fishing.setRod(sid, { x: pos.x, z: pos.z, on: true, bx, bz, tier: rod });
+    if (thinh) setTimeout(() => world.fishing.sprinkle(bx, bz), 600); // đợi phao rơi xuống nước
   });
   net.on('fish:bite', (bite) => app.activities.fishing.onBite(bite));
   // Ai dính cá thì phao người đó giật liên tục, cả phòng đều thấy.
