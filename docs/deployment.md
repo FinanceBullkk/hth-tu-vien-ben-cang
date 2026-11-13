@@ -1,6 +1,29 @@
 # Deployment
 
-## Current release: 2026-11-13 100 TEU welcome gift for new players, 11:30 UTC+7
+## Current release: 2026-11-13 casino-style layout for bầu cua and xì dách, 15:12 UTC+7
+
+Deploy run [43391379530](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43391379530)
+released main `9ba0faf` (PR #55) as `hth:261113-1512-9ba0faf`, replacing
+`hth:261113-1130-2d1b1c4`. Client: while playing at either table the camera
+locks to a fixed view from the guest side (dealer and table in the top half);
+shared table HUD with a large countdown ring, phase callouts, chips flying on
+bet and win, animated wallet. Bầu cua: six tiles in one row with bettor count
+and pot per tile, last 12 results strip, Repeat and Double buttons. Xì dách:
+dealer cards in the header, large Hit/Stand buttons lit only on one's turn,
+Repeat split into chips. Server: new `baucua:rebet` (whole bundle accepted or
+refused, charged once); `baucua:state` adds `crowd` and `history`. Public
+bundle: `index-CLl16pAY.js`, confirmed served at
+`https://game.hthlogistics.top/` with `/api/health` 200.
+
+Local suite 207/207 and Vite build passed on Node 24; Docker tests 207/207.
+Candidate passed with DB `quick_check` ok (52 players, 23 wishes, 48 fish).
+UI checked in a local browser at desktop and 375x812, not on the public site.
+
+Rollback container `hth-rollback-261113-1512-9ba0faf` preserves
+`hth:261113-1130-2d1b1c4`. Private backup is in the data volume at
+`backups/cutover-261113-1512-9ba0faf/`.
+
+## Previous release: 2026-11-13 100 TEU welcome gift for new players, 11:30 UTC+7
 
 Deploy run [43365987558](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43365987558)
 released main `2d1b1c4` (PR #52) as `hth:261113-1130-2d1b1c4`, replacing
