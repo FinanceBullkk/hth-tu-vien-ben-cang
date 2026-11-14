@@ -3,6 +3,8 @@ import { createThanBaiGround } from './than-bai-ground.js';
 import { createThanBaiCards } from './than-bai-cards.js';
 import { createThanBaiChips } from './than-bai-chips.js';
 import { createThanBaiDice } from './than-bai-dice.js';
+import { createThanBaiLightning } from './than-bai-lightning.js';
+import { createThanBaiFootprints } from './than-bai-footprints.js';
 import { createLightArcs } from './aura-light-arcs.js';
 import { breathRhythm } from './aura-rhythm.js';
 
@@ -14,7 +16,9 @@ import { breathRhythm } from './aura-rhythm.js';
 //  Nền đất: bàn cò quay pháp trận — vành ô đỏ đen quay, phím ngăn vàng, bi ngà chạy rãnh, bốn chất bài
 //    đúc vàng bay vòng ngoài, cột kim quang quanh vành.
 //  Cao trào "TẤT TAY" mỗi nhịp 9 giây: quạt lật sóng từng lá và lóe sáng, ấn triện 賭神 đóng xuống trên đỉnh
-//    quạt, xúc xắc nảy vọt, phỉnh nổ hũ toả bốn phía, sóng chấn vàng loang khỏi bàn.
+//    quạt, lốc bài tụ thành vòng trận bài ("Vạn Bài Quy Tông") rồi xoè bung, sét vàng giật từ ấn xuống trận,
+//    xúc xắc nảy vọt, phỉnh nổ hũ toả bốn phía, mưa tiền vàng trút xuống, sóng chấn vàng loang khỏi bàn.
+//  Bước đi: mỗi bước một lá bài xoay tròn rơi xuống nằm ngửa trên đất rồi mờ dần.
 //  Bảng màu: vàng kim + đỏ son + mực đen, khác Kim Long (vàng mây) ở chỗ có đỏ đen của sòng bài.
 const BASE_OPACITY = 0.9;
 export const THAN_BAI_CYCLE = 9;
@@ -42,6 +46,8 @@ export function createThanBaiAura(lowQuality = false, reducedMotion = globalThis
     createThanBaiCards(group, c, lowQuality),
     createThanBaiDice(group, c, lowQuality),
     createThanBaiChips(group, c, lowQuality),
+    createThanBaiLightning(group, c, lowQuality),
+    createThanBaiFootprints(group, c),
     createLightArcs(group, { edge: c.edge, core: c.core, gold: c.arcTail }, lowQuality,
       { arcs: lowQuality ? ARCS.slice(0, 2) : ARCS, name: 'than-bai-light-arcs' }),
   ];
@@ -49,10 +55,10 @@ export function createThanBaiAura(lowQuality = false, reducedMotion = globalThis
 
   return {
     points: group,
-    update(t) {
+    update(t, walk = 0) {
       const time = reducedMotion?.matches ? t / 3 : t;
       const f = group.material.opacity / BASE_OPACITY, rhythm = thanBaiRhythm(time);
-      parts.forEach(p => p.update(time, rhythm, f));
+      parts.forEach(p => p.update(time, rhythm, f, walk));
     },
     beginFade() {}, // Avatar ghi thẳng group.material.opacity.
     setColor() {},

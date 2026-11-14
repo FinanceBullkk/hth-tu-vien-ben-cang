@@ -8,19 +8,20 @@ import { chipMaskTexture } from './than-bai-textures.js';
 // đỏ son / đen / ngọc bích:
 //  - Mạch phỉnh: phỉnh tung từ quanh chân lên cao, lộn nhào, chậm dần rồi tan.
 //  - Nổ hũ: lúc "tất tay" một vòng phỉnh bung từ tâm toả ra bốn phía theo đường parabol.
+//  - Mưa tiền: đồng vàng khảm 財 đỏ rơi lộn nhào từ trên cao xuống quanh người, dày nhất lúc tất tay.
 //  - Kim quang: hạt vàng li ti xoắn lên quanh thân, dày lên lúc nổ hũ.
-const CHIP_LIFE = 3.2, SPARK_LIFE = 4.2;
+const CHIP_LIFE = 3.2, SPARK_LIFE = 4.2, RAIN_FALL = 1.5;
 const chipGeo = new THREE.CylinderGeometry(0.5, 0.5, 1, 28, 1); // dùng chung, không dispose
-const CHIP = new THREE.Vector3(0.13, 0.022, 0.13);
+const CHIP = new THREE.Vector3(0.13, 0.022, 0.13), COIN = new THREE.Vector3(0.1, 0.014, 0.1);
 
 export function createThanBaiChips(parent, colors, lowQuality) {
-  const stream = lowQuality ? 8 : 16, jackpot = lowQuality ? 10 : 20, sparkCount = lowQuality ? 14 : 34;
+  const stream = lowQuality ? 8 : 16, jackpot = lowQuality ? 10 : 20, rain = lowQuality ? 8 : 18, sparkCount = lowQuality ? 14 : 34;
   const chips = instancedLayer(parent, 'than-bai-chips', chipGeo, litMaterial(chipFragment, {
     map: { value: chipMaskTexture() }, white: { value: new THREE.Color('#fff6e4') }, gold: { value: colors.gold }, light: { value: colors.light },
-  }), stream + jackpot, 7);
+  }), stream + jackpot + rain, 7);
   const sparks = billboardLayer(parent, 'than-bai-gold-sparks', softDot(), sparkCount, colors.light.clone(), THREE.AdditiveBlending);
-  const seeds = Array.from({ length: stream + jackpot }, (_, i) => ({
-    a: i / (i < stream ? stream : jackpot) * Math.PI * 2 + hash(i + 1) * 0.5, off: hash(i + 11), h: 1.3 + 0.6 * hash(i + 21),
+  const seeds = Array.from({ length: stream + jackpot + rain }, (_, i) => ({
+    a: i / (i < stream ? stream : i < stream + jackpot ? jackpot : rain) * Math.PI * 2 + hash(i + 1) * 0.5, off: hash(i + 11), h: 1.3 + 0.6 * hash(i + 21),
     spin: 2 + 3 * hash(i + 31), yaw: hash(i + 41) * 6.28, reach: 1.3 + 0.6 * hash(i + 51), lift: 1.9 + 0.8 * hash(i + 61),
   }));
   const sparkSeeds = Array.from({ length: sparkCount }, (_, i) => ({ a: hash(i + 71) * Math.PI * 2, off: hash(i + 81), r: 0.4 + 0.65 * hash(i + 91) }));
@@ -29,6 +30,7 @@ export function createThanBaiChips(parent, colors, lowQuality) {
   return {
     update(time, rhythm, f) {
       const b = sstep(0.43, 0.66, rhythm.phase), boom = bell(0.45, 0.05, rhythm.phase);
+      const pour = 0.25 + 0.75 * sstep(0.44, 0.5, rhythm.phase) * (1 - sstep(0.72, 0.9, rhythm.phase));
       seeds.forEach((s, i) => {
         let alpha;
         if (i < stream) {
@@ -36,6 +38,12 @@ export function createThanBaiChips(parent, colors, lowQuality) {
           p.set(Math.sin(ang) * r, 0.08 + s.h * (1 - (1 - u) * (1 - u)), Math.cos(ang) * r);
           e.set(u * Math.PI * s.spin, s.yaw + u * 2, u * Math.PI * 1.5);
           alpha = Math.min(1, u * 8) * Math.pow(1 - u, 0.6);
+        } else if (i >= stream + jackpot) {
+          // Mưa tiền: rơi nhanh dần từ trên cao, lộn nhào, chạm đất thì tan.
+          const u = ((time / RAIN_FALL + s.off) % 1 + 1) % 1, r = 0.35 + 0.95 * s.off;
+          p.set(Math.sin(s.a + s.off) * r, 2.7 - 2.65 * u * u, Math.cos(s.a + s.off) * r);
+          e.set(time * s.spin + s.yaw, s.yaw, time * 1.3 + s.off * 6);
+          alpha = pour * Math.min(1, u * 6) * Math.min(1, (1 - u) * 8);
         } else {
           // Nổ hũ: bay theo parabol ra xa, chỉ hiện trong cửa sổ cao trào.
           const r = 0.15 + s.reach * b;
@@ -44,7 +52,7 @@ export function createThanBaiChips(parent, colors, lowQuality) {
           alpha = b > 0.001 && b < 0.999 ? Math.min(1, (1 - b) * 4) : 0;
         }
         q.setFromEuler(e);
-        chips.set(i, m.compose(p, q, CHIP), alpha * f, i % 3);
+        chips.set(i, m.compose(p, q, i >= stream + jackpot ? COIN : CHIP), alpha * f, i >= stream + jackpot ? 3 : i % 3);
       });
       chips.commit();
       chips.material.uniforms.time.value = time;

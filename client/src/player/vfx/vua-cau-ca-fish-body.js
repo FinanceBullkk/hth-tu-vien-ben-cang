@@ -73,9 +73,10 @@ export function createFishBodies(parent, specs, colors, lowQuality) {
     count: n,
     /**
      * Đặt dáng con cá f. spine(u, out) trả điểm sống lưng; up là hướng lưng gợi ý; phase lệch nhịp vẫy đuôi.
-     * hidden = true thì thu cá về một điểm dưới mặt nước (không vẽ).
+     * hidden = true thì thu cá về một điểm dưới mặt nước (không vẽ). dragon (0..1): "hoá rồng" — râu dài gấp
+     * ba, vây lưng vươn cao như bờm, vây đuôi xoè dài.
      */
-    pose(f, spine, up, time, phase = 0, hidden = false) {
+    pose(f, spine, up, time, phase = 0, hidden = false, dragon = 0) {
       const spec = specs[f], base = f * per;
       if (hidden) {
         pos.fill(0, base * 3, (base + per) * 3);
@@ -107,11 +108,11 @@ export function createFishBodies(parent, specs, colors, lowQuality) {
       for (let j = 0; j <= FSEG; j++) {
         const t = j / FSEG;
         frameAt(SEG, up);
-        c.copy(spineP[SEG]).addScaledVector(T[SEG], -t * L * 0.32).addScaledVector(Lt, Math.sin(time * 7 + phase - t * 2) * 0.05 * L * t);
-        strips.write(f * FINS, j, c, D, L * 0.2 * (0.15 + 0.85 * Math.pow(t, 0.8)));
+        c.copy(spineP[SEG]).addScaledVector(T[SEG], -t * L * 0.32 * (1 + 0.5 * dragon)).addScaledVector(Lt, Math.sin(time * 7 + phase - t * 2) * 0.05 * L * t);
+        strips.write(f * FINS, j, c, D, L * 0.2 * (1 + 0.3 * dragon) * (0.15 + 0.85 * Math.pow(t, 0.8)));
         const du = 0.25 + 0.45 * t, di = Math.round(du * SEG);
         frameAt(di, up);
-        const fh = spec.height * 0.5 * Math.pow(Math.sin(Math.PI * t), 0.6);
+        const fh = spec.height * 0.5 * (1 + 1.1 * dragon) * Math.pow(Math.sin(Math.PI * t), 0.6);
         c.copy(spineP[di]).addScaledVector(D, spec.height / 2 * bodyProfile(du) + fh * 0.45);
         strips.write(f * FINS + 1, j, c, D, Math.max(0.001, fh * 0.5));
         const pi = Math.round(0.24 * SEG);
@@ -128,8 +129,8 @@ export function createFishBodies(parent, specs, colors, lowQuality) {
           const t = j / FSEG;
           q.copy(T[0]).multiplyScalar(-0.35).addScaledVector(Lt, side * 0.75).addScaledVector(D, -0.45).normalize();
           s.copy(spineP[0]).addScaledVector(D, -spec.height * 0.12).addScaledVector(Lt, side * spec.width * 0.2)
-            .addScaledVector(q, t * L * 0.26).addScaledVector(D, Math.sin(time * 3 + phase + t * 4) * 0.03 * L * t);
-          strips.write(f * FINS + (side < 0 ? 4 : 5), j, s, D, L * 0.006 * (1 - t) + 0.0015);
+            .addScaledVector(q, t * L * 0.26 * (1 + 2 * dragon)).addScaledVector(D, Math.sin(time * 3 + phase + t * 4) * 0.03 * L * t * (1 + 2 * dragon));
+          strips.write(f * FINS + (side < 0 ? 4 : 5), j, s, D, L * 0.006 * (1 + dragon) * (1 - t) + 0.0015);
         }
       } else {
         strips.collapse(f * FINS + 4); strips.collapse(f * FINS + 5);

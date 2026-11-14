@@ -10,9 +10,12 @@ import { CARD_ATLAS, CARD_CELLS, cardAtlas, sealStampTexture, sunburstTexture } 
 //    từng lá một vòng, lóe sáng, ấn triện 賭神 đóng xuống trên đỉnh quạt rồi tan.
 //  Hào quang tia vàng xoay chậm sau quạt.
 //  Lốc bài — hai dải bài xoắn ốc ngược pha cuộn từ chân lên quá đầu, lá lộn nhào để lộ lưng sơn mài.
+//    "VẠN BÀI QUY TÔNG" lúc tất tay: mọi lá trong lốc bay về xếp thành một vòng trận bài đứng quanh người
+//    (mặt bài hướng ra, mép trên nhấp nhô như vương miện), xoay vòng, xoè bung rộng ra rồi tung trở lại lốc.
 // Không có: rồng, mây, trăng, kiếm, sen, cánh.
 export const FAN = { x: 0, y: 0.98, z: -0.58, radius: 0.62, spread: 0.42 };
 export const STORM = { life: 5.5, height: 2.1, turns: 1.25 };
+export const FORMATION = { radius: 1.02, y: 0.95, spin: 0.9 };
 const FAN_CELLS = [CARD_CELLS.tenSpade, CARD_CELLS.jackSpade, CARD_CELLS.queenSpade, CARD_CELLS.kingSpade, CARD_CELLS.aceSpade];
 const FAN_SIZE = new THREE.Vector3(0.46, 0.644, 0.012), STORM_SIZE = new THREE.Vector3(0.2, 0.28, 0.006);
 const box = new THREE.BoxGeometry(1, 1, 1); // dùng chung, không dispose
@@ -36,6 +39,7 @@ export function createThanBaiCards(parent, colors, lowQuality) {
     off: i / stormCount, strand: i % 2, cell: i % 11, tumble: 1.2 + (i * 37 % 10) / 10 * 1.6, tilt: ((i * 53) % 10) / 10 - 0.5,
   }));
   const m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), p = new THREE.Vector3();
+  const q2 = new THREE.Quaternion(), p2 = new THREE.Vector3();
 
   return {
     update(time, rhythm, f) {
@@ -61,14 +65,24 @@ export function createThanBaiCards(parent, colors, lowQuality) {
       fan.commit();
       fan.material.uniforms.flash.value = 0.55 * flash + 0.12 * hit;
 
-      // Lốc bài: hai dải xoắn ốc ngược pha, lá lộn nhào quanh trục tiếp tuyến.
+      // Lốc bài: hai dải xoắn ốc ngược pha, lá lộn nhào quanh trục tiếp tuyến. Lúc tất tay (hit) mỗi lá
+      // trượt về chỗ của mình trong vòng trận bài; nửa sau cao trào vòng xoè rộng (spread) rồi trả lá về lốc.
+      const ringOpen = sstep(0.5, 0.62, rhythm.phase);
       seeds.forEach(({ off, strand, cell, tumble, tilt }, i) => {
         const u = ((time / STORM.life + off) % 1 + 1) % 1;
         const th = strand * Math.PI + u * Math.PI * 2 * STORM.turns + off * 9;
         const r = 0.55 + 0.42 * Math.pow(Math.sin(Math.PI * u), 0.7) + 0.08 * hit;
         p.set(Math.sin(th) * r, 0.08 + STORM.height * u, Math.cos(th) * r);
         q.setFromEuler(e.set(u * Math.PI * 2 * tumble + tilt, th + Math.PI / 2, 0.5 * tilt + 0.3 * Math.sin(time + i), 'YXZ'));
-        const alpha = Math.min(1, u * 10) * Math.min(1, (1 - u) * 6);
+        let alpha = Math.min(1, u * 10) * Math.min(1, (1 - u) * 6);
+        if (hit > 0.001) {
+          const phi = i / stormCount * Math.PI * 2 + time * FORMATION.spin, rf = FORMATION.radius + 0.7 * ringOpen;
+          p2.set(Math.sin(phi) * rf, FORMATION.y + 0.1 * Math.sin(phi * 3 + time * 2) + 0.25 * ringOpen, Math.cos(phi) * rf);
+          q2.setFromEuler(e.set(-0.18 - 0.3 * ringOpen, phi, 0, 'YXZ'));
+          const k = hit * hit * (3 - 2 * hit);
+          p.lerp(p2, k); q.slerp(q2, k);
+          alpha += (1 - alpha) * k;
+        }
         storm.set(i, m.compose(p, q, STORM_SIZE), alpha * f, cell, CARD_CELLS.back);
       });
       storm.commit();

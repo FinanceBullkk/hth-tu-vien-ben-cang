@@ -4,11 +4,13 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { Color, Matrix4, Vector3 } from 'three';
 import { createThanBaiAura, thanBaiRhythm, THAN_BAI_CYCLE } from '../client/src/player/vfx/than-bai-aura.js';
-import { FAN, STORM, allIn } from '../client/src/player/vfx/than-bai-cards.js';
+import { FAN, FORMATION, STORM, allIn } from '../client/src/player/vfx/than-bai-cards.js';
+import { thunder } from '../client/src/player/vfx/than-bai-lightning.js';
 import { createVuaCauCaAura } from '../client/src/player/vfx/vua-cau-ca-aura.js';
 import { LEAP, leapPoint } from '../client/src/player/vfx/vua-cau-ca-leaping-fish.js';
 import { ROD_POINTS } from '../client/src/player/vfx/vua-cau-ca-rod.js';
-import { CARP, DIVE_ANGLE, EMERGE_ANGLE, LOOP, loopPoint } from '../client/src/player/vfx/vua-cau-ca-giant-carp.js';
+import { CARP, CLIMAX_TIME, DIVE_ANGLE, EMERGE_ANGLE, LOOP, dragonize, loopPoint } from '../client/src/player/vfx/vua-cau-ca-giant-carp.js';
+import { rainbowShow } from '../client/src/player/vfx/vua-cau-ca-rainbow.js';
 import { VUA_CAU_CA_CYCLE, vuaCauCaRhythm } from '../client/src/player/vfx/vua-cau-ca-aura.js';
 import { surge } from '../client/src/player/vfx/vua-cau-ca-geyser.js';
 import { createEffect } from '../client/src/player/avatar-effect.js';
@@ -21,13 +23,15 @@ const AURAS = [
   { effect: 13, make: low => createThanBaiAura(low, { matches: false }), name: 'than-bai-aura',
     layers: ['than-bai-roulette', 'than-bai-roulette-rims', 'than-bai-roulette-frets', 'than-bai-roulette-ball', 'than-bai-ball-trail',
       'than-bai-gold-suit-0', 'than-bai-gold-suit-3', 'than-bai-gold-pillars', 'than-bai-shockwave', 'than-bai-sunburst', 'than-bai-seal-stamp',
-      'than-bai-royal-fan', 'than-bai-card-storm', 'than-bai-dice', 'than-bai-chips', 'than-bai-gold-sparks', 'than-bai-light-arcs'],
+      'than-bai-royal-fan', 'than-bai-card-storm', 'than-bai-dice', 'than-bai-chips', 'than-bai-gold-sparks', 'than-bai-light-arcs',
+      'than-bai-lightning', 'than-bai-footprint-cards'],
     lowSkip: /pillars/ },
   { effect: 14, make: low => createVuaCauCaAura(low, { matches: false }), name: 'vua-cau-ca-aura',
     layers: ['vua-cau-ca-ocean', 'vua-cau-ca-wave-crests', 'vua-cau-ca-ripples', 'vua-cau-ca-bubbles', 'vua-cau-ca-gold-sparks',
       'vua-cau-ca-fish-bodies', 'vua-cau-ca-fins', 'vua-cau-ca-carp-trail', 'vua-cau-ca-carp-water', 'vua-cau-ca-splash',
       'vua-cau-ca-splash-ripples', 'vua-cau-ca-rod-body', 'vua-cau-ca-rod-glow', 'vua-cau-ca-reel', 'vua-cau-ca-line', 'vua-cau-ca-drips',
-      'vua-cau-ca-water-jets', 'vua-cau-ca-jet-spray', 'vua-cau-ca-shockwave'] },
+      'vua-cau-ca-water-jets', 'vua-cau-ca-jet-spray', 'vua-cau-ca-shockwave', 'vua-cau-ca-dragon-horns', 'vua-cau-ca-dragon-glory',
+      'vua-cau-ca-dragon-motes', 'vua-cau-ca-rainbow', 'vua-cau-ca-footprint-ripples', 'vua-cau-ca-footprint-splash'] },
 ];
 const one = (aura, name) => { let hit = null; aura.points.traverse(o => { if (o.name === name) hit = o; }); return hit; };
 const draws = a => { let n = 0; a.points.traverse(o => { if (o.isMesh || o.isPoints || o.isSprite) n++; }); return n; };
@@ -49,7 +53,7 @@ for (const { effect, make, name, layers, lowSkip } of AURAS) {
         });
       }
       for (const layer of layers) if (!low || !(lowSkip ?? /glow/).test(layer)) assert.ok(one(aura, layer), layer);
-      assert.ok(draws(aura) <= (low ? 22 : 26), `số lần vẽ ${draws(aura)}`);
+      assert.ok(draws(aura) <= (low ? 30 : 34), `số lần vẽ ${draws(aura)}`); // Kim Long cho tới 40
       aura.dispose();
     }
   });
@@ -67,9 +71,10 @@ for (const { effect, make, name, layers, lowSkip } of AURAS) {
     aura.dispose();
   });
 
-  test(`${EFFECT_NAMES[effect]}: đúng bảng phân vai — không rồng, mây, trăng, kiếm, sen, cánh, xoáy hay cổng`, () => {
+  test(`${EFFECT_NAMES[effect]}: đúng bảng phân vai — không thân rồng, mây, trăng, kiếm, sen, cánh, xoáy hay cổng`, () => {
+    // Sừng "hoá rồng" của cá chép (Vua câu cá) là phần riêng; thân rồng là của Kim Long và Long Quyền.
     const aura = make(false);
-    aura.points.traverse(o => assert.ok(!/dragon|cloud|moon|sword|blade|lotus|petal|wing|vortex|spiral|helix|gate|mandala|trigram|koi/.test(o.name), o.name));
+    aura.points.traverse(o => assert.ok(!/dragon-body|dragon-head|cloud|moon|sword|blade|lotus|petal|wing|vortex|spiral|helix|gate|mandala|trigram|koi/.test(o.name), o.name));
     aura.dispose();
   });
 
@@ -203,6 +208,62 @@ test('Vua Câu Cá: thuỷ trụ chỉ phun quanh đỉnh nhịp 12 giây', () =
   assert.ok(tall > 1.2, 'cột nước vọt cao ' + tall);
   aura.dispose();
 });
+
+test('Thần Bài: Vạn Bài Quy Tông — lúc tất tay lốc bài xếp thành vòng trận bài quanh người, sét chỉ giật lúc đó', () => {
+  const aura = createThanBaiAura(false, { matches: false });
+  const storm = one(aura, 'than-bai-card-storm'), bolts = one(aura, 'than-bai-lightning');
+  aura.update(THAN_BAI_CYCLE * 0.47);
+  for (let i = 0; i < storm.count; i++) {
+    const p = instancePos(storm, i), r = Math.hypot(p.x, p.z);
+    assert.ok(r > FORMATION.radius - 0.15 && r < FORMATION.radius + 0.8, 'lá về vòng trận ' + r);
+    assert.ok(Math.abs(p.y - FORMATION.y) < 0.5, 'vòng trận ngang ngực');
+  }
+  assert.ok(thunder(thanBaiRhythm(THAN_BAI_CYCLE * 0.5)) > 0.9 && thunder(thanBaiRhythm(THAN_BAI_CYCLE * 0.2)) === 0);
+  const span = () => { const a = bolts.geometry.attributes.position.array; let lo = Infinity, hi = -Infinity; for (let i = 1; i < a.length; i += 3) { lo = Math.min(lo, a[i]); hi = Math.max(hi, a[i]); } return hi - lo; };
+  aura.update(THAN_BAI_CYCLE * 0.5);
+  assert.ok(span() > 0.6, 'sét giật từ ấn xuống trận');
+  aura.update(THAN_BAI_CYCLE * 0.2);
+  assert.ok(span() < 1e-6, 'ngoài cao trào không có sét');
+  aura.dispose();
+});
+
+test('Vua Câu Cá: Lý Ngư Hoá Long — đúng đỉnh nhịp cá chép vắt trên đầu và mọc sừng; cầu vồng hiện sau cột nước', () => {
+  const aura = createVuaCauCaAura(false, { matches: false });
+  const horns = one(aura, 'vua-cau-ca-dragon-horns'), rainbow = one(aura, 'vua-cau-ca-rainbow');
+  const hornScale = () => new Vector3().setFromMatrixScale(new Matrix4().fromArray(horns.instanceMatrix.array, 0)).y;
+  aura.update(CLIMAX_TIME);
+  assert.ok(fishCentroid(aura, 0).y > 1.2, 'cá vắt ngang trên đầu lúc cao trào');
+  assert.ok(Math.abs(fishCentroid(aura, 0).x) < 0.35, 'giữa thân cá ở ngay trên đầu');
+  assert.ok(hornScale() > 0.8, 'mọc sừng rồng');
+  assert.ok(dragonize(vuaCauCaRhythm(CLIMAX_TIME + VUA_CAU_CA_CYCLE)) > 0.99, 'nhịp sau vẫn khớp');
+  aura.update(1);
+  assert.ok(hornScale() < 0.01, 'ngoài cao trào là cá chép thường');
+  assert.equal(rainbow.visible, false);
+  aura.update(VUA_CAU_CA_CYCLE * 0.72);
+  assert.ok(rainbow.visible && rainbowShow(vuaCauCaRhythm(VUA_CAU_CA_CYCLE * 0.72)) > 0.9, 'cầu vồng sau khi nước hạ');
+  aura.dispose();
+});
+
+for (const { effect, make, layer } of [
+  { effect: 13, make: () => createThanBaiAura(false, { matches: false }), layer: 'than-bai-footprint-cards' },
+  { effect: 14, make: () => createVuaCauCaAura(false, { matches: false }), layer: 'vua-cau-ca-footprint-ripples' },
+]) {
+  test(`${EFFECT_NAMES[effect]}: bước đi để lại dấu nằm yên trên đất, đứng yên không sinh dấu`, () => {
+    const aura = make(), prints = one(aura, layer);
+    const shown = () => { const out = []; for (let i = 0; i < prints.count; i++) if (prints.instanceColor.array[i * 3] > 0.01) out.push(i); return out; };
+    for (let t = 0; t < 2; t += 0.05) aura.update(t, 0);
+    assert.equal(shown().length, 0, 'đứng yên không có dấu');
+    // Đi thẳng theo trục z 1 m/giây.
+    for (let t = 2; t < 3.2; t += 0.05) { aura.points.position.z = t - 2; aura.update(t, 1); }
+    const live = shown();
+    assert.ok(live.length >= 3, 'có dấu chân ' + live.length);
+    const first = live.map(i => instancePos(prints, i).z + aura.points.position.z);
+    aura.points.position.z += 0.5; aura.update(3.25, 0);
+    const later = live.map(i => instancePos(prints, i).z + aura.points.position.z);
+    first.forEach((z, k) => assert.ok(Math.abs(z - later[k]) < 0.02, 'dấu nằm yên trong thế giới'));
+    aura.dispose();
+  });
+}
 
 test('hào quang chí tôn là hai món cuối, có tên và danh hiệu', () => {
   assert.equal(AVATAR.effects, 15);
