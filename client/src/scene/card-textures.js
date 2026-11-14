@@ -9,6 +9,7 @@ import { drawSuit } from './card-suit-paths.js';
 
 const W = 200;
 const H = 280;
+export const CARD_SIZE = { w: W, h: H };
 const R = 16; // Bo góc.
 const SERIF = '"Palatino Linotype", "Book Antiqua", Georgia, serif';
 const RED = '#c0392b';
@@ -62,7 +63,8 @@ function corners(g, rank, suit, color) {
   }
 }
 
-function paintFace(g, card) {
+/** Vẽ mặt ngửa lá card (0..51) lên context g trong khung CARD_SIZE (200×280); dùng chung cho bàn và hào quang Thần bài. */
+export function paintFace(g, card) {
   const rank = rankOf(card);
   const suit = suitOf(card);
   const red = RED_SUITS.has(suit);

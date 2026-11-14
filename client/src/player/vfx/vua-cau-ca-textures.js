@@ -4,51 +4,6 @@ import { canvasTexture } from './aura-canvas-kit.js';
 // Hệ toạ độ canvasTexture: tâm (0,0), khung ±512.
 const GOLD = '#f2b632', GOLD_HI = '#ffe39a', AQUA = '#5fe3f0', FOAM = '#e9fdff';
 
-// Atlas cá: 1 cột × 2 hàng (ô 1024×512, tỉ lệ 2:1), đầu cá quay về +x (bên phải ô).
-export const FISH_ATLAS = { cols: 1, rows: 2 };
-export const FISH_CELLS = { goldCarp: 0, silver: 1 };
-
-function fish(c, body, belly, fin, scale) {
-  // Đuôi chẻ đôi.
-  c.beginPath(); c.moveTo(-250, 0);
-  c.quadraticCurveTo(-330, -40, -430, -150); c.quadraticCurveTo(-380, -20, -400, 0);
-  c.quadraticCurveTo(-380, 20, -430, 150); c.quadraticCurveTo(-330, 40, -250, 0);
-  c.fillStyle = fin; c.fill();
-  // Vây lưng và vây bụng.
-  c.beginPath(); c.moveTo(-120, -120); c.quadraticCurveTo(0, -230, 120, -128); c.closePath(); c.fill();
-  c.beginPath(); c.moveTo(-40, 110); c.quadraticCurveTo(10, 190, 70, 112); c.closePath(); c.fill();
-  // Thân thoi: lưng đậm, bụng sáng.
-  c.beginPath(); c.moveTo(330, 0);
-  c.bezierCurveTo(260, -150, -80, -170, -260, -20); c.lineTo(-260, 20);
-  c.bezierCurveTo(-80, 170, 260, 150, 330, 0); c.closePath();
-  const g = c.createLinearGradient(0, -150, 0, 150);
-  g.addColorStop(0, body); g.addColorStop(0.55, belly); g.addColorStop(1, '#fffdf4');
-  c.fillStyle = g; c.fill();
-  c.lineWidth = 8; c.strokeStyle = scale; c.stroke();
-  // Vảy hình vòng cung.
-  c.save(); c.clip(); c.lineWidth = 4; c.strokeStyle = scale; c.globalAlpha = 0.45;
-  for (let x = -220; x < 240; x += 52) for (let y = -130; y < 140; y += 52) {
-    c.beginPath(); c.arc(x + (Math.round(y / 52) % 2) * 26, y, 30, -Math.PI / 2, Math.PI / 2); c.stroke();
-  }
-  c.restore();
-  // Mang, mắt, râu.
-  c.beginPath(); c.arc(190, 0, 90, -0.9, 0.9); c.lineWidth = 6; c.strokeStyle = scale; c.stroke();
-  c.beginPath(); c.arc(250, -40, 22, 0, Math.PI * 2); c.fillStyle = '#14100c'; c.fill();
-  c.beginPath(); c.arc(256, -46, 7, 0, Math.PI * 2); c.fillStyle = '#fff'; c.fill();
-}
-
-/** Atlas hai loài: cá chép vàng (ô 0) và cá bạc ánh lam (ô 1). */
-export function fishAtlas() {
-  return canvasTexture('vua-cau-ca-fish', 1024, ({ c }) => {
-    c.save(); c.translate(0, -256); c.scale(0.95, 0.95);
-    fish(c, '#e07a10', GOLD, '#ffb43a', '#8a3d05');
-    c.restore();
-    c.save(); c.translate(0, 256); c.scale(0.95, 0.95);
-    fish(c, '#2c6f9a', '#9fd8ef', '#7fc6e6', '#123f5c');
-    c.restore();
-  });
-}
-
 /** Trận biển dưới chân: vành sóng vảy (seigaiha), tám lưỡi câu vàng, chữ 漁王, la bàn tám hướng. */
 export function seaSealTexture() {
   return canvasTexture('vua-cau-ca-sea-seal', 1024, ({ c, around, ring, star, glyph }) => {

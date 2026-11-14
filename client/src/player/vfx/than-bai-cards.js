@@ -1,58 +1,80 @@
 import * as THREE from 'three';
-import { atlasPlaneLayer } from './vip-atlas-plane-layer.js';
 import { billboardLayer } from './aura-billboard-layer.js';
-import { CARD_ATLAS, CARD_CELLS, cardAtlas, sunburstTexture } from './than-bai-textures.js';
-import { sstep } from './aura-rhythm.js';
+import { bell, sstep } from './aura-rhythm.js';
+import { cardFragment, instancedLayer, litMaterial } from './vip-aura-shaders.js';
+import { CARD_ATLAS, CARD_CELLS, cardAtlas, sealStampTexture, sunburstTexture } from './than-bai-textures.js';
 
-// Bài của Thần bài, hai lớp atlas (mỗi lớp một lần vẽ) và một hào quang tia:
-//  Quạt Tứ Át — bóng dáng riêng: bốn lá Át (♠♥♦♣) xoè quạt sau đầu như vương miện, hai mặt đều
-//    là mặt bài; nhịp thở xoè rộng thêm rồi khép lại. Phía sau là hào quang tia vàng xoay rất chậm.
-//  Vòng bài bay — các lá bài bay vòng ngang ngực, mặt hướng ra ngoài, lần lượt lật để lộ lưng đỏ
-//    chỉ vàng rồi lật lại; vòng hơi nghiêng như đang được tung tráo trên không.
-// Không có: rồng, mây, trăng, kiếm, sen, cánh — những thứ của các hào quang khác.
-export const FAN = { x: 0, y: 1.32, z: -0.5, radius: 0.42, spread: 0.4 };
-export const RING = { radius: 0.9, y: 0.78, tilt: 0.12, speed: 0.32 };
-const FAN_CELLS = [CARD_CELLS.aceSpade, CARD_CELLS.aceHeart, CARD_CELLS.aceDiamond, CARD_CELLS.aceClub];
-const RING_CELLS = [CARD_CELLS.kingHeart, CARD_CELLS.aceSpade, CARD_CELLS.queenSpade, CARD_CELLS.aceHeart,
-  CARD_CELLS.jackDiamond, CARD_CELLS.aceDiamond, CARD_CELLS.kingHeart, CARD_CELLS.aceClub];
-// Kích thước tấm theo ô atlas 1:2 (lá bài chiếm phần giữa ô).
-const RING_SIZE = new THREE.Vector3(0.24, 0.48, 1), FAN_SIZE = new THREE.Vector3(0.42, 0.84, 1);
+// Bài của Thần bài — lá bài là hộp 3D mỏng (mặt trước, mặt lưng, cạnh viền vàng), phủ ánh kim tuyến:
+//  Quạt Thùng Phá Sảnh — bóng dáng riêng: năm lá 10 J Q K A bích xoè quạt lớn sau đầu như đuôi công,
+//    hai mặt đều là mặt bài; nhịp thở xoè rộng thêm. Lúc "tất tay" (cao trào của nhịp) cả quạt lật sóng
+//    từng lá một vòng, lóe sáng, ấn triện 賭神 đóng xuống trên đỉnh quạt rồi tan.
+//  Hào quang tia vàng xoay chậm sau quạt.
+//  Lốc bài — hai dải bài xoắn ốc ngược pha cuộn từ chân lên quá đầu, lá lộn nhào để lộ lưng sơn mài.
+// Không có: rồng, mây, trăng, kiếm, sen, cánh.
+export const FAN = { x: 0, y: 0.98, z: -0.58, radius: 0.62, spread: 0.42 };
+export const STORM = { life: 5.5, height: 2.1, turns: 1.25 };
+const FAN_CELLS = [CARD_CELLS.tenSpade, CARD_CELLS.jackSpade, CARD_CELLS.queenSpade, CARD_CELLS.kingSpade, CARD_CELLS.aceSpade];
+const FAN_SIZE = new THREE.Vector3(0.46, 0.644, 0.012), STORM_SIZE = new THREE.Vector3(0.2, 0.28, 0.006);
+const box = new THREE.BoxGeometry(1, 1, 1); // dùng chung, không dispose
+
+/** Độ "tất tay" của nhịp: 0 ngoài cao trào, lên 1 quanh đỉnh nhịp (phase ≈ 0.45). */
+export const allIn = rhythm => sstep(0.36, 0.44, rhythm.phase) * (1 - sstep(0.56, 0.7, rhythm.phase));
 
 export function createThanBaiCards(parent, colors, lowQuality) {
-  const atlas = cardAtlas(), ringCount = lowQuality ? 5 : 8;
+  const atlas = cardAtlas(), stormCount = lowQuality ? 14 : 30;
+  const cardMat = () => litMaterial(cardFragment, {
+    map: { value: atlas }, grid: { value: new THREE.Vector2(CARD_ATLAS.cols, CARD_ATLAS.rows) },
+    gold: { value: colors.gold }, light: { value: colors.light }, flash: { value: 0 },
+  }, { side: THREE.FrontSide });
   const burst = billboardLayer(parent, 'than-bai-sunburst', sunburstTexture(), 1, colors.gold.clone(), THREE.AdditiveBlending);
   burst.mesh.renderOrder = 3;
-  const fan = atlasPlaneLayer(parent, 'than-bai-ace-fan', atlas, FAN_CELLS.length, { ...CARD_ATLAS, renderOrder: 6 });
-  const ring = atlasPlaneLayer(parent, 'than-bai-card-ring', atlas, ringCount, { ...CARD_ATLAS, renderOrder: 7 });
+  const stamp = billboardLayer(parent, 'than-bai-seal-stamp', sealStampTexture(), 1, new THREE.Color(1, 1, 1), THREE.NormalBlending);
+  stamp.mesh.renderOrder = 9;
+  const fan = instancedLayer(parent, 'than-bai-royal-fan', box, cardMat(), FAN_CELLS.length, 6);
+  const storm = instancedLayer(parent, 'than-bai-card-storm', box, cardMat(), stormCount, 7);
+  const seeds = Array.from({ length: stormCount }, (_, i) => ({
+    off: i / stormCount, strand: i % 2, cell: i % 11, tumble: 1.2 + (i * 37 % 10) / 10 * 1.6, tilt: ((i * 53) % 10) / 10 - 0.5,
+  }));
   const m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), p = new THREE.Vector3();
 
   return {
     update(time, rhythm, f) {
-      // Hào quang tia: một tấm lớn quay chậm sau quạt, sáng theo nhịp.
-      burst.set(0, FAN.x, FAN.y + 0.2, FAN.z - 0.06, 2.1, 2.1, (0.38 + 0.4 * rhythm.pulse) * f, (time * 0.015) % 1);
+      const hit = allIn(rhythm), flash = bell(0.45, 0.035, rhythm.phase);
+      burst.set(0, FAN.x, FAN.y + 0.5, FAN.z - 0.08, 2.6 + 0.5 * hit, 2.6 + 0.5 * hit, (0.26 + 0.24 * rhythm.pulse + 0.4 * flash) * f, (time * 0.012) % 1);
       burst.commit();
 
-      // Quạt Tứ Át: xoè theo nhịp thở, mép quạt rung nhẹ.
-      const spread = FAN.spread * (1 + 0.22 * rhythm.release - 0.08 * rhythm.gather);
+      // Ấn triện: rơi từ to xuống đúng cỡ (đóng dấu) ngay đỉnh nhịp, giữ một lúc rồi tan.
+      const stampIn = sstep(0.43, 0.47, rhythm.phase), stampOut = 1 - sstep(0.6, 0.72, rhythm.phase);
+      const stampScale = 0.5 * (1 + 1.4 * (1 - stampIn));
+      stamp.set(0, 0, FAN.y + FAN.radius + 0.62, FAN.z + 0.05, stampScale, stampScale, stampIn * stampOut * f, 0.985);
+      stamp.commit();
+
+      // Quạt Thùng Phá Sảnh: xoè theo nhịp, lật sóng một vòng lúc tất tay.
+      const spread = FAN.spread * (1 + 0.18 * rhythm.release + 0.12 * hit);
       FAN_CELLS.forEach((cell, i) => {
-        const k = i - (FAN_CELLS.length - 1) / 2, a = k * spread + 0.02 * Math.sin(time * 1.3 + i);
-        p.set(FAN.x + Math.sin(a) * FAN.radius, FAN.y + Math.cos(a) * FAN.radius + 0.02 * Math.sin(time * 0.8), FAN.z - Math.abs(k) * 0.012);
-        q.setFromEuler(e.set(0, 0, -a));
+        const k = i - (FAN_CELLS.length - 1) / 2, a = k * spread + 0.015 * Math.sin(time * 1.3 + i);
+        const flip = Math.PI * 2 * sstep(0.4 + i * 0.025, 0.5 + i * 0.025, rhythm.phase);
+        p.set(FAN.x + Math.sin(a) * FAN.radius, FAN.y + Math.cos(a) * FAN.radius + 0.025 * Math.sin(time * 0.8 + i * 0.6), FAN.z - Math.abs(k) * 0.025);
+        q.setFromEuler(e.set(-0.08, flip, -a, 'ZYX'));
         fan.set(i, m.compose(p, q, FAN_SIZE), f, cell, cell);
       });
       fan.commit();
+      fan.material.uniforms.flash.value = 0.55 * flash + 0.12 * hit;
 
-      // Vòng bài bay: mặt hướng ra ngoài; mỗi 7 giây một lá lật lộ lưng chừng 1.7 giây rồi lật lại.
-      for (let i = 0; i < ringCount; i++) {
-        const a = i / ringCount * Math.PI * 2 + time * RING.speed;
-        const phase = ((time / 7 + i / ringCount) % 1 + 1) % 1;
-        const flip = -Math.PI * (sstep(0, 0.08, phase) - sstep(0.25, 0.33, phase));
-        p.set(Math.sin(a) * RING.radius, RING.y + RING.tilt * Math.cos(a + 0.6) + 0.04 * Math.sin(time * 1.1 + i * 1.7), Math.cos(a) * RING.radius);
-        q.setFromEuler(e.set(0.18 * Math.sin(time * 0.7 + i), a + flip, 0.12 * Math.sin(a * 2 + time * 0.5), 'YXZ'));
-        ring.set(i, m.compose(p, q, RING_SIZE), f * (0.85 + 0.15 * rhythm.pulse), RING_CELLS[i % RING_CELLS.length], CARD_CELLS.back);
-      }
-      ring.commit();
+      // Lốc bài: hai dải xoắn ốc ngược pha, lá lộn nhào quanh trục tiếp tuyến.
+      seeds.forEach(({ off, strand, cell, tumble, tilt }, i) => {
+        const u = ((time / STORM.life + off) % 1 + 1) % 1;
+        const th = strand * Math.PI + u * Math.PI * 2 * STORM.turns + off * 9;
+        const r = 0.55 + 0.42 * Math.pow(Math.sin(Math.PI * u), 0.7) + 0.08 * hit;
+        p.set(Math.sin(th) * r, 0.08 + STORM.height * u, Math.cos(th) * r);
+        q.setFromEuler(e.set(u * Math.PI * 2 * tumble + tilt, th + Math.PI / 2, 0.5 * tilt + 0.3 * Math.sin(time + i), 'YXZ'));
+        const alpha = Math.min(1, u * 10) * Math.min(1, (1 - u) * 6);
+        storm.set(i, m.compose(p, q, STORM_SIZE), alpha * f, cell, CARD_CELLS.back);
+      });
+      storm.commit();
+      for (const layer of [fan, storm]) layer.material.uniforms.time.value = time;
+      storm.material.uniforms.flash.value = 0.3 * flash;
     },
-    dispose() { burst.dispose(); fan.dispose(); ring.dispose(); },
+    dispose() { burst.dispose(); stamp.dispose(); fan.dispose(); storm.dispose(); },
   };
 }

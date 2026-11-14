@@ -11,8 +11,9 @@
 // 8 Hắc ám — hắc viêm lửa đen lõi tím vờn quanh người, vũng âm khí nuốt sáng, trận lục lăng, quỷ hỏa, chân ngôn 魔;
 // 9 Long Quyền — module riêng vfx/long-quyen-aura.js (hỏa long xoắn ốc vươn quyền, ấn quyền 拳, vết nứt chấn địa).
 // 13 Thần Bài, 14 Vua Câu Cá — hào quang chí tôn (cần thành tích mới mua): vfx/than-bai-aura.js
-// (quạt Tứ Át, vòng bài bay, phỉnh 財, trận bàn sòng) và vfx/vua-cau-ca-aura.js (cần câu vàng treo
-// cá chép, đàn cá vọt toé nước, trận biển 漁王).
+// (quạt Thùng Phá Sảnh 3D, lốc bài, xúc xắc vàng, phỉnh 3D, bàn cò quay, cao trào "tất tay" ấn 賭神) và
+// vfx/vua-cau-ca-aura.js (cá chép vàng 3D khổng lồ vượt sóng, cần câu Ngư Vương, đàn cá vọt, mặt biển,
+// cao trào thuỷ trụ).
 import * as THREE from 'three';
 import { createKiemVuAura } from './vfx/kiem-vu-aura.js';
 import { createTinhHaAura } from './vfx/tinh-ha-aura.js';
