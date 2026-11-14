@@ -1,87 +1,88 @@
-/* Thanh menu góc phải theo kiểu game thùng đồ (cùng tông với túi đồ): khay gỗ nâu viền cam, mỗi nút là ô vuông
-   bo tròn nền kem cam nổi khối có gờ tối phía dưới, icon màu viền đậm (game-menu-icons.js), nhãn chữ trắng viền nâu.
-   Di chuột thì ô nổi lên, bấm thì lún xuống; "Chơi gì?" là ô tròn vàng toả sáng. Ghi đè lớp "Mực tàu" trong style.css. */
+/* Thanh menu góc phải theo kiểu game thùng đồ: dải tối mờ viền chỉ vàng, icon minh hoạ nổi khối đứng tự do
+   (game-menu-icons.js), nhô lên khỏi mép trên của dải, đổ bóng xuống dải; nhãn chữ trắng viền đen dưới icon.
+   Di chuột thì icon phóng to, sáng lên, toả quầng vàng; bấm thì nhún xuống. "Chơi gì?" to hơn và luôn toả sáng.
+   Ghi đè lớp "Mực tàu" trong style.css nên mọi selector bắt đầu bằng #hud #menu cho chắc thắng. */
 #hud #menu {
-  --outline: 1px 1px 0 #4a1e04, -1px -1px 0 #4a1e04, 1px -1px 0 #4a1e04, -1px 1px 0 #4a1e04, 0 2px 2px rgba(0, 0, 0, .45);
-  gap: 3px; padding: 5px 7px 4px; border: 2px solid #3e1804; border-radius: 16px;
-  background: linear-gradient(180deg, #96501c 0%, #6e3412 45%, #4a1e08 100%);
-  box-shadow: inset 0 2px 0 rgba(255, 196, 110, .5), inset 0 0 0 2px rgba(255, 160, 60, .22), 0 6px 18px rgba(0, 0, 0, .45);
+  --outline: 1px 1px 0 #1a0c03, -1px -1px 0 #1a0c03, 1px -1px 0 #1a0c03, -1px 1px 0 #1a0c03, 0 2px 3px rgba(0, 0, 0, .7);
+  align-items: flex-end; gap: 2px; margin-top: 10px; padding: 0 8px 3px; border: 0; border-radius: 14px 14px 12px 12px;
+  background: linear-gradient(180deg, rgba(58, 34, 16, .55) 0%, rgba(26, 15, 7, .84) 45%, rgba(14, 8, 3, .92) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 214, 140, .35), inset 0 -2px 0 rgba(0, 0, 0, .5), 0 6px 16px rgba(0, 0, 0, .45);
 }
 #hud #menu::before { display: none; }
-#hud #menu::after { left: 16px; right: 16px; bottom: auto; top: -2px; height: 2px; background: linear-gradient(90deg, transparent, #ffd27a 20%, #fff0c0 50%, #ffd27a 80%, transparent); opacity: .8; }
+#hud #menu::after {
+  left: 10px; right: 10px; top: 0; bottom: auto; height: 2px;
+  background: linear-gradient(90deg, transparent, #c98a2c 12%, #ffe9a8 50%, #c98a2c 88%, transparent); opacity: .9;
+}
 
 #hud #menu .icon-btn {
-  flex-direction: column; justify-content: flex-start; gap: 2px; width: 54px; min-width: 0; height: auto; padding: 0;
-  border: 0; border-radius: 12px; background: none; color: #fff; filter: none;
+  flex-direction: column; justify-content: flex-start; gap: 0; width: 54px; min-width: 0; height: auto; padding: 0;
+  border: 0; border-radius: 10px; background: none; color: #fff; filter: none;
 }
 #hud #menu .icon-btn:hover, #hud #menu .icon-btn[aria-expanded="true"] { background: none; color: #fff; }
+/* Icon nhô lên khỏi mép trên của dải. */
 #hud #menu .game-icon {
-  display: grid; place-items: center; width: 42px; height: 42px; border: 2px solid #5e2606; border-radius: 12px;
-  background: radial-gradient(120% 95% at 50% 15%, #fffaf0 0%, #ffe1a0 34%, #f6aa48 70%, #d0701e 100%);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, .8), inset 0 -3px 0 rgba(140, 56, 0, .35), 0 3px 0 #3a1404, 0 5px 6px rgba(0, 0, 0, .35);
-  transition: transform .1s, filter .15s, box-shadow .15s;
+  display: block; width: 46px; height: 46px; margin-top: -14px;
+  filter: drop-shadow(0 3px 1.5px rgba(0, 0, 0, .65)) drop-shadow(0 0 1px rgba(0, 0, 0, .8));
+  transform-origin: 50% 85%; transition: transform .12s ease-out, filter .15s;
 }
-#hud #menu .game-icon svg { width: 30px; height: 30px; overflow: visible; }
-#hud #menu .icon-btn:hover .game-icon { transform: translateY(-2px); filter: brightness(1.08) saturate(1.12); }
-#hud #menu .icon-btn:active .game-icon {
-  transform: translateY(2px);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, .6), inset 0 -2px 0 rgba(140, 56, 0, .35), 0 1px 0 #3a1404;
+#hud #menu .game-icon svg { display: block; width: 100%; height: 100%; overflow: visible; }
+#hud #menu .icon-btn:hover .game-icon, #hud #menu .icon-btn:focus-visible .game-icon {
+  transform: translateY(-3px) scale(1.14);
+  filter: brightness(1.12) drop-shadow(0 4px 2px rgba(0, 0, 0, .6)) drop-shadow(0 0 7px rgba(255, 214, 90, .9));
 }
-/* Bảng đang mở (nhạc): ô sáng viền vàng như đang được chọn. */
+#hud #menu .icon-btn:active .game-icon { transform: translateY(1px) scale(.94); transition-duration: .05s; }
 #hud #menu .icon-btn[aria-expanded="true"] .game-icon {
-  background: radial-gradient(120% 95% at 50% 15%, #ffffff 0%, #fff1b8 40%, #ffc64a 78%, #e08a12 100%);
-  box-shadow: inset 0 2px 0 #fff, 0 0 0 2px #ffe27a, 0 0 12px rgba(255, 200, 60, .85), 0 3px 0 #3a1404;
+  filter: brightness(1.1) drop-shadow(0 3px 1.5px rgba(0, 0, 0, .6)) drop-shadow(0 0 8px rgba(255, 214, 90, 1));
 }
 #hud #menu .icon-btn em {
-  position: static; transform: none; z-index: auto; padding: 0; border: 0; background: none; opacity: 1;
-  color: #fff; font: 800 10.5px/1.15 var(--sans); letter-spacing: .01em; text-shadow: var(--outline); pointer-events: none;
+  position: static; transform: none; z-index: auto; margin-top: -1px; padding: 0; border: 0; background: none; opacity: 1;
+  color: #fff; font: 800 11px/1.15 var(--sans); letter-spacing: .01em; text-shadow: var(--outline); pointer-events: none;
 }
-#hud #menu .icon-btn:hover em { color: #ffe9a8; }
+#hud #menu .icon-btn:hover em, #hud #menu .icon-btn[aria-expanded="true"] em { color: #ffe27a; }
 
-/* "Chơi gì?": ô tròn vàng to hơn, quầng sáng thở nhẹ để người mới thấy ngay. */
-#hud #menu #playBtn { color: #fff; background: none; box-shadow: none; border-radius: 12px; }
-#hud #menu #playBtn .game-icon {
-  border-radius: 50%; border-color: #6a3a02;
-  background: radial-gradient(110% 95% at 45% 18%, #fffbe6 0%, #ffe680 32%, #ffbf2e 66%, #d98a08 100%);
-  animation: menuPlayGlow 2.6s ease-in-out infinite;
-}
+/* "Chơi gì?": la bàn to hơn, quầng vàng thở nhẹ để người mới thấy ngay. */
+#hud #menu #playBtn { width: 58px; color: #fff; background: none; box-shadow: none; border-radius: 10px; }
+#hud #menu #playBtn .game-icon { width: 52px; height: 52px; margin-top: -18px; animation: menuPlayGlow 2.6s ease-in-out infinite; }
+#hud #menu #playBtn:hover .game-icon { animation: none; }
 @keyframes menuPlayGlow {
-  0%, 100% { box-shadow: inset 0 2px 0 rgba(255, 255, 255, .85), inset 0 -3px 0 rgba(140, 70, 0, .35), 0 3px 0 #3a1404, 0 0 6px rgba(255, 210, 80, .4); }
-  50% { box-shadow: inset 0 2px 0 rgba(255, 255, 255, .85), inset 0 -3px 0 rgba(140, 70, 0, .35), 0 3px 0 #3a1404, 0 0 16px rgba(255, 210, 80, .95); }
+  0%, 100% { filter: drop-shadow(0 3px 1.5px rgba(0, 0, 0, .65)) drop-shadow(0 0 3px rgba(255, 210, 80, .45)); }
+  50% { filter: drop-shadow(0 3px 1.5px rgba(0, 0, 0, .65)) drop-shadow(0 0 10px rgba(255, 210, 80, 1)); }
 }
 
-/* Số món trong túi: viên đỏ viền trắng ở góc ô. */
+/* Số món trong túi: viên xanh (đầy thì đỏ) viền trắng ở góc icon. */
 #hud #menu .bag-badge {
-  top: -5px; right: -1px; z-index: 1; min-width: 19px; padding: 0 5px; border: 2px solid #fff; border-radius: 10px;
-  background: linear-gradient(180deg, #55c47e, #2f8a52); font: 900 10.5px/15px var(--sans); box-shadow: 0 2px 0 rgba(0, 0, 0, .35);
+  top: -14px; right: 3px; z-index: 1; min-width: 19px; padding: 0 5px; border: 2px solid #fff; border-radius: 10px;
+  background: linear-gradient(180deg, #55c47e, #2f8a52); font: 900 10.5px/15px var(--sans); box-shadow: 0 2px 0 rgba(0, 0, 0, .4);
 }
 #hud #menu .bag-badge.full { background: linear-gradient(180deg, #ff6a4a, #c42a17); }
 
-/* Khay cao hơn thanh cũ: đẩy bảng nhạc và banner xuống dưới khay. */
-body #musicPanel, body #banner { top: calc(92px + var(--safe-t)); }
+/* Bảng nhạc và banner nằm dưới dải menu. */
+body #musicPanel, body #banner { top: calc(80px + var(--safe-t)); }
 
 @media (prefers-reduced-motion: reduce) {
   #hud #menu #playBtn .game-icon { animation: none; }
+  #hud #menu .game-icon { transition: none; }
 }
 
-/* Màn hẹp: bỏ nhãn, ô nhỏ lại; khay vẫn giữ. */
+/* Màn hẹp: bỏ nhãn, icon nhỏ lại, vẫn nhô khỏi dải. */
 @media (max-width: 760px), (max-height: 500px) {
-  #hud #menu { gap: 3px; padding: 4px 5px; border-radius: 13px; }
-  #hud #menu .icon-btn { width: 36px; min-width: 36px; }
-  #hud #menu .game-icon { width: 34px; height: 34px; border-radius: 10px; }
-  #hud #menu .game-icon svg { width: 24px; height: 24px; }
+  #hud #menu { margin-top: 8px; padding: 0 5px 3px; border-radius: 12px; }
+  #hud #menu .icon-btn, #hud #menu #playBtn { width: 37px; min-width: 37px; }
+  #hud #menu .game-icon { width: 36px; height: 36px; margin-top: -8px; }
+  #hud #menu #playBtn .game-icon { width: 38px; height: 38px; margin-top: -9px; }
   #hud #menu .icon-btn em { display: none; }
+  #hud #menu .bag-badge { top: -9px; right: -2px; }
   body #musicPanel, body #banner { top: calc(104px + var(--safe-t)); }
 }
-/* Điện thoại: một hàng 10 nút sẽ đè lên số người online và ví TEU ở góc trái, nên xếp khay thành 2 hàng × 5 nút
-   ở góc phải (đáy khay vẫn cao hơn thông báo và bảng nhạc ở 104px). */
+/* Điện thoại: một hàng 10 nút sẽ đè lên số người online và ví TEU ở góc trái, nên xếp dải thành 2 hàng × 5 nút
+   ở góc phải; nút mic, bảng nhạc, banner, hướng dẫn dời xuống dưới. */
 @media (max-width: 580px) {
-  #hud #menu { display: grid; grid-template-columns: repeat(5, auto); gap: 3px 4px; }
+  #hud #menu { display: grid; grid-template-columns: repeat(5, auto); gap: 9px 2px; padding-top: 0; }
   body #voicePanel { top: calc(96px + var(--safe-t)); }
   body #musicPanel, body #banner, body.touch .tutorial { top: calc(146px + var(--safe-t)); }
 }
-/* Máy chạm màn rộng (tablet): nút mic của voice.css nằm góc phải ngay dưới thanh menu, nên dời theo khay cao hơn. */
+/* Máy chạm màn rộng (tablet): nút mic của voice.css nằm góc phải ngay dưới thanh menu, nên dời theo dải mới. */
 @media (pointer: coarse) and (min-width: 761px) and (min-height: 501px) {
-  body #voicePanel { top: calc(88px + var(--safe-t)); }
-  body #musicPanel, body #banner { top: calc(138px + var(--safe-t)); }
+  body #voicePanel { top: calc(82px + var(--safe-t)); }
+  body #musicPanel, body #banner { top: calc(132px + var(--safe-t)); }
 }
