@@ -10,6 +10,7 @@ import { buildHuyenDaThrone } from './vfx/huyen-da-meditation-throne.js';
 import { buildLongQuyenThrone } from './vfx/long-quyen-meditation-throne.js';
 import { buildXichDiemThrone } from './vfx/xich-diem-meditation-throne.js';
 import { buildKimLongThrone } from './vfx/kim-long-meditation-throne.js';
+import { buildSenKimThrone } from './vfx/sen-kim-meditation-throne.js';
 import { buildThanBaiThrone } from './vfx/than-bai-meditation-throne.js';
 import { buildVuaCauCaThrone } from './vfx/vua-cau-ca-meditation-throne.js';
 
@@ -132,8 +133,11 @@ function build(effect, stage) {
   } else if (effect === 11) {
     // Kim Long: vòm rồng vàng thu nhỏ qua đầu, long châu, cung bán nguyệt, đài mây.
     buildKimLongThrone(stage, add);
+  } else if (effect === 1) {
+    // Sen kim: tòa đài sen vàng riêng hai tầng cánh cuốn quanh hông, không mượn đoá sen chung.
+    buildSenKimThrone(stage, add);
   } else if (effect === 13) {
-    // Thần Bài: lá Át xoè trước gối → vòng bài dựng quanh tòa → quạt Tứ Át sau đầu, vành phỉnh.
+    // Thần Bài: lá Át xoè trước gối → vòng bài dựng quanh tòa → quạt bài lớn sau đầu, vành phỉnh.
     buildThanBaiThrone(stage, add);
   } else if (effect === 14) {
     // Vua Câu Cá: cá vọt trước gối → đàn cá vọt quanh tòa → cần câu vồng qua đầu treo cá chép.

@@ -28,6 +28,8 @@ export const groundFragment = `
     if (theme == 3.0) shape = 0.36 + 0.2 * pow(abs(cos(turn * 3.5)), 7.0);
     // Hồng Liên: mười sáu cánh sen nhọn như ngọn lửa lụa.
     if (theme == 4.0) shape = 0.37 + 0.18 * pow(1.0 - abs(sin(turn * 8.0)), 2.2);
+    // Sen kim (Cửu Phẩm Kim Liên): mười hai cánh sen dẫn lên nhụy, mép mềm hơn cánh lửa Hồng Liên.
+    if (theme == 1.0) shape = 0.36 + 0.17 * pow(abs(sin(turn * 6.0)), 0.42);
     if (theme == 7.0) shape = 0.43 + 0.13 * cos(turn);
     if (theme == 8.0) shape = 0.41 + 0.12 * sin(turn * 3.0 + r * 7.0);
     // Long Quyền: viền gãy khúc như mép hố chấn địa.
