@@ -58,7 +58,10 @@ test('danh hiệu kiểu Võ Lâm Chi Mộng: cánh + chữ hai lớp + sao, r�
 
 test('trang trí hai bên đúng chủ đề: Thần bài có lá bài + phỉnh, Vua câu cá có cá chép + sóng', () => {
   const bai = sideOrnamentSvg('than-bai', false);
-  assert.equal((bai.match(/<rect x="-7.5"/g) ?? []).length, 3, 'ba lá bài xoè');
+  assert.equal((bai.match(/<rect x="-8"/g) ?? []).length, 3, 'ba lá bài xoè');
+  assert.deepEqual([...bai.matchAll(/>([AKQ])<\/text>/g)].map(m => m[1]), ['A', 'K', 'Q'], 'chỉ số góc A K Q');
+  // Bên phải lật gương cả nhóm nhưng chữ trên lá bài được lật lại để không bị ngược.
+  assert.equal((sideOrnamentSvg('than-bai', true).match(/scale\(-1 1\)/g) ?? []).length, 4);
   assert.match(bai, /stroke-dasharray/, 'phỉnh có vành đứt khúc');
   const ca = sideOrnamentSvg('vua-cau-ca', false);
   assert.match(ca, /url\(#vtto-carp\)/);

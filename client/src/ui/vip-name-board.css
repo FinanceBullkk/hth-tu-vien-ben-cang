@@ -4,18 +4,18 @@
    Cấu trúc ở client/src/player/vip-title-badge.js. */
 
 .tag[data-board="than-bai"] {
-  --vt-fill: linear-gradient(180deg, #fffef0 6%, #ffe466 30%, #ffb21e 55%, #ff6a18 78%, #e2281a 96%);
-  --vt-edge: #420600; --vt-glow: rgba(255, 70, 70, .85);
+  --vt-fill: linear-gradient(180deg, #ffffff 0%, #fff3a6 22%, #ffd23a 44%, #ff9a10 50%, #ff7412 72%, #d01e0e 100%);
+  --vt-edge: #420600;
 }
 .tag[data-board="vua-cau-ca"] {
-  --vt-fill: linear-gradient(180deg, #ffffff 6%, #e2fbff 30%, #7fdcff 55%, #3a9cf0 78%, #1a5fd0 96%);
-  --vt-edge: #021e40; --vt-glow: rgba(60, 190, 255, .85);
+  --vt-fill: linear-gradient(180deg, #ffffff 0%, #eafcff 22%, #a4e8ff 44%, #3ea4f2 50%, #2a84e4 72%, #0e48bc 100%);
+  --vt-edge: #021e40;
 }
-/* Chữ nhỏ kiểu MMO 2D: font chân phương, viền đen 1px tám phía + bóng tối mềm để nổi trên nền hào quang rực. */
+/* Chữ nhỏ kiểu MMO 2D: font chân phương, viền đen 1px tám phía, nét cứng không nhoè (sắc trên mọi nền). */
 .tag[data-board] {
   gap: 1px;
   --vt-ink: 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000, 1px 1px 0 #000, -1px 1px 0 #000,
-    1px -1px 0 #000, -1px -1px 0 #000, 0 0 6px rgba(0, 0, 0, .85);
+    1px -1px 0 #000, -1px -1px 0 #000, 0 2px 0 rgba(0, 0, 0, .55);
 }
 
 /* ----- Danh hiệu ----- */
@@ -33,10 +33,10 @@
   display: block; padding: 1px 8px 3px 5px; white-space: nowrap; /* phải rộng hơn vì nét nghiêng vươn ra */
   font: 700 22px/1.25 "Segoe Script", "Brush Script MT", var(--serif);
 }
-/* Viền tối dày dưới chữ màu (chữ HTML không có paint-order nên tách lớp). */
+/* Viền tối dày dưới chữ màu (chữ HTML không có paint-order nên tách lớp); bóng đổ nét cứng, không nhoè. */
 .vtt-outline {
   position: absolute; inset: 0; color: var(--vt-edge); -webkit-text-stroke: 5px var(--vt-edge);
-  filter: drop-shadow(0 0 3px var(--vt-glow)) drop-shadow(0 1px 2px rgba(0, 0, 0, .8));
+  filter: drop-shadow(0 1.5px 0 rgba(0, 0, 0, .85));
 }
 .vtt-text {
   position: relative; color: transparent; -webkit-text-fill-color: transparent;
@@ -47,11 +47,10 @@
   animation: vttSweep 3.6s ease-in-out infinite;
 }
 
-/* Đồ trang trí hai bên (xấp bài + phỉnh / cá chép nhảy sóng; SVG đã lật sẵn cho bên phải), khẽ lắc quanh gốc sát chữ. */
-.vtt-side { display: block; width: 52px; height: 31px; line-height: 0; }
-.vtt-wing { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 2.5px var(--vt-glow)) drop-shadow(0 1px 1px rgba(0, 0, 0, .6)); }
-.vtt-side.l { transform-origin: 90% 90%; animation: vttFlapL 2.6s ease-in-out infinite; }
-.vtt-side.r { transform-origin: 10% 90%; animation: vttFlapR 2.6s ease-in-out infinite; }
+/* Đồ trang trí hai bên (xấp bài + phỉnh / cá chép nhảy sóng; SVG đã lật sẵn cho bên phải). Đứng yên để vector vẽ
+   nét sắc (xoay cả khối thì trình duyệt vẽ lại thành ảnh nên nhoè); chỉ các chi tiết bên trong SVG chuyển động. */
+.vtt-side { display: block; width: 60px; height: 36px; line-height: 0; }
+.vtt-wing { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 1px 0 rgba(0, 0, 0, .75)); }
 
 /* Sao lấp lánh bốn cánh (sao vàng như sprite danh hiệu). */
 .vtt-star {
@@ -75,14 +74,54 @@
   position: absolute; right: 100%; top: 1px; margin-right: 8px; min-width: 25px; height: 25px; padding: 0 2px; box-sizing: border-box;
   display: grid; place-items: center; border: 2px solid #2a1000; border-radius: 3px;
   background: radial-gradient(circle at 35% 30%, #fffbd8, transparent 55%), linear-gradient(180deg, #fff3a0, #ffcf2a 45%, #e08a08);
-  box-shadow: inset 0 0 0 1px #fff6c0, inset 0 0 0 2.5px #b86a00, 0 0 5px var(--vt-glow), 0 1px 3px rgba(0, 0, 0, .8);
+  box-shadow: inset 0 0 0 1px #fff6c0, inset 0 0 0 2.5px #b86a00, 0 1.5px 0 rgba(0, 0, 0, .8);
   font: 700 10.5px/1 "Segoe Script", "Brush Script MT", var(--serif); letter-spacing: -.03em; color: #c40818;
-  text-shadow: 0 0 1px #fff6c0;
+  text-shadow: none; /* không kế thừa viền đen của dòng hiệu phụ */
+}
+
+/* Chuyển động bên trong đồ trang trí: phỉnh lật, nguyên bảo loé, cá nhấp nhô, giọt nước lấp lánh. */
+.vtto-flip, .vtto-bob { transform-box: fill-box; transform-origin: center; }
+.vtto-flip { animation: vttoFlip 2.4s ease-in-out infinite; }
+.vtto-bob { animation: vttoBob 2.2s ease-in-out infinite alternate; }
+.vtto-glint { animation: vttoGlint 2.6s ease-in-out infinite; }
+.vtto-drop { animation: vttoGlint 1.8s ease-in-out infinite; }
+.vtto-drop:nth-of-type(2) { animation-delay: .6s; }
+.vtto-drop:nth-of-type(3) { animation-delay: 1.2s; }
+
+/* Sao theo chủ đề: Thần bài là chất bài vàng ♠ ♥ ♦ bật lên; Vua câu cá là bọt nước nổi. */
+.tag[data-board="than-bai"] .vtt-star {
+  width: 12px; height: 12px; margin: -6px 0 0 -6px; background: none; text-align: center;
+  font: 700 11px/12px var(--serif); color: #ffd84a;
+  text-shadow: 1px 0 0 #4a1a00, -1px 0 0 #4a1a00, 0 1px 0 #4a1a00, 0 -1px 0 #4a1a00;
+  animation-name: vttSuit;
+}
+.tag[data-board="than-bai"] .vtt-star.s1::before { content: '\2660\FE0E'; }
+.tag[data-board="than-bai"] .vtt-star.s2::before { content: '\2665\FE0E'; }
+.tag[data-board="than-bai"] .vtt-star.s3::before { content: '\2666\FE0E'; }
+.tag[data-board="vua-cau-ca"] .vtt-star {
+  width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px;
+  background:
+    radial-gradient(circle at 34% 32%, #fff 0 16%, transparent 28%),
+    radial-gradient(circle, transparent 52%, rgba(220, 250, 255, .95) 60%, rgba(120, 220, 255, .5) 68%, transparent 74%);
+  animation-name: vttBubble;
+}
+
+@keyframes vttoFlip { 0%, 40%, 100% { transform: scaleX(1); } 55% { transform: scaleX(.12); } 70% { transform: scaleX(-1); } 85% { transform: scaleX(.12); } }
+@keyframes vttoBob { from { transform: translateY(1px) rotate(2deg); } to { transform: translateY(-1.8px) rotate(-3deg); } }
+@keyframes vttoGlint { 0%, 100% { opacity: .1; } 40% { opacity: 1; } }
+@keyframes vttSuit {
+  0%, 100% { opacity: 0; transform: translateY(3px) scale(.4); }
+  18% { opacity: 1; transform: translateY(0) scale(1.15); }
+  40% { opacity: 0; transform: translateY(-5px) scale(.8); }
+}
+@keyframes vttBubble {
+  0% { opacity: 0; transform: translateY(6px) scale(.5); }
+  25% { opacity: 1; }
+  70% { opacity: .9; transform: translate(2px, -6px) scale(1); }
+  100% { opacity: 0; transform: translate(-1px, -12px) scale(1.1); }
 }
 
 @keyframes vttSweep { 0% { background-position: 150% 0, 0 0; } 55%, 100% { background-position: -50% 0, 0 0; } }
-@keyframes vttFlapL { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(5deg); } }
-@keyframes vttFlapR { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-5deg); } }
 @keyframes vttStar {
   0%, 100% { opacity: 0; transform: scale(.3) rotate(0); }
   14% { opacity: 1; transform: scale(1) rotate(45deg); }
@@ -97,5 +136,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vtt-text, .vtt-side, .vtt-star { animation: none; }
+  .vtt-text, .vtt-star, .vtto-flip, .vtto-bob, .vtto-glint, .vtto-drop { animation: none; }
 }
