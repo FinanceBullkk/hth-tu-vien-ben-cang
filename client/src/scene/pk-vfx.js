@@ -703,6 +703,439 @@ function createDamageTexture(text, color = '#ff5500', isSpecial = false) {
   return tex;
 }
 
+// ===== Theme PK theo aura (EFFECT_NAMES 1–12) =====
+// Mỗi aura một tông: pháp trận, bảng màu và "linh vật" bay theo chiêu. effect 0 hoặc
+// id lạ → null, builder dùng đúng dáng Bát Quái hiện có. Mesh theme sinh lúc ra chiêu
+// và gắn vào group chiêu nên dispose theo đúng pattern traverse sẵn có của update();
+// các loop không cần biết theme vì chỉ đụng position/rotation/opacity.
+
+// Hoạ tiết vẽ quanh vành pháp trận, vẽ tại gốc toạ độ sau translate/rotate.
+const SIGIL_MOTIFS = {
+  // Cánh sen / cánh đào — giọt cong nhọn hai đầu.
+  petal: (ctx, color) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, 26);
+    ctx.bezierCurveTo(-16, 6, -14, -18, 0, -30);
+    ctx.bezierCurveTo(14, -18, 16, 6, 0, 26);
+    ctx.fill();
+  },
+  // Sóng nước — ba vòng cung chồng nhau.
+  wave: (ctx, color) => {
+    ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.lineCap = 'round';
+    for (let k = 0; k < 3; k++) {
+      ctx.beginPath();
+      ctx.arc(0, 14 - k * 12, 16 - k * 3, Math.PI * 1.15, Math.PI * 1.85);
+      ctx.stroke();
+    }
+  },
+  // Sao băng — thoi sáng 4 cánh.
+  star: (ctx, color) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, -26); ctx.lineTo(6, -6); ctx.lineTo(24, 0); ctx.lineTo(6, 6);
+    ctx.lineTo(0, 26); ctx.lineTo(-6, 6); ctx.lineTo(-24, 0); ctx.lineTo(-6, -6);
+    ctx.closePath(); ctx.fill();
+  },
+  // Lá trúc — lá nhọn có gân giữa.
+  leaf: (ctx, color) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, 28);
+    ctx.quadraticCurveTo(-12, 0, 0, -28);
+    ctx.quadraticCurveTo(12, 0, 0, 28);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, 22); ctx.lineTo(0, -22); ctx.stroke();
+  },
+  // Lưỡi liềm trăng.
+  crescent: (ctx, color) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(0, 0, 24, Math.PI * .3, Math.PI * 1.7);
+    ctx.arc(7, 0, 18, Math.PI * 1.6, Math.PI * .4, true);
+    ctx.closePath(); ctx.fill();
+  },
+  // Lục lăng rune tối.
+  hex: (ctx, color) => {
+    ctx.strokeStyle = color; ctx.lineWidth = 4;
+    ctx.beginPath();
+    for (let k = 0; k <= 6; k++) {
+      const a = k * Math.PI / 3;
+      const x = Math.cos(a) * 22, y = Math.sin(a) * 22;
+      k ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    }
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill();
+  },
+  // Ngọn lửa / long viêm.
+  ember: (ctx, color) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, -28);
+    ctx.quadraticCurveTo(16, -4, 8, 12);
+    ctx.quadraticCurveTo(4, 24, 0, 28);
+    ctx.quadraticCurveTo(-4, 24, -8, 12);
+    ctx.quadraticCurveTo(-16, -4, 0, -28);
+    ctx.fill();
+  },
+  // Thanh kiếm cách điệu.
+  sword: (ctx, color) => {
+    ctx.strokeStyle = color; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(0, -26); ctx.lineTo(0, 14); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-10, 14); ctx.lineTo(10, 14); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, 14); ctx.lineTo(0, 28); ctx.stroke();
+  },
+};
+
+// Hoạ sĩ pháp trận tham số hoá dùng chung cho các aura mới: quầng nền, hai vành ngoài,
+// vành khía, 8 hoạ tiết lặp quanh tâm và một chữ triện sáng giữa trận.
+function createSigilTexture({ bg, rim, rim2, tick, glyph, glyphColor, motif, motifColor }) {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  const cx = 256, cy = 256;
+  const grad = ctx.createRadialGradient(cx, cy, 20, cx, cy, 246);
+  grad.addColorStop(0, bg[0]); grad.addColorStop(1, bg[1]);
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.arc(cx, cy, 246, 0, Math.PI * 2); ctx.fill();
+
+  const ring = (r, w, color) => {
+    ctx.strokeStyle = color; ctx.lineWidth = w;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+  };
+  ring(240, 5, rim); ring(232, 2, rim2); ring(140, 3, rim);
+  ctx.strokeStyle = tick; ctx.lineWidth = 2;
+  for (let i = 0; i < 24; i++) {
+    const a = i * Math.PI / 12;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(a) * 200, cy + Math.sin(a) * 200);
+    ctx.lineTo(cx + Math.cos(a) * 212, cy + Math.sin(a) * 212);
+    ctx.stroke();
+  }
+  for (let i = 0; i < 8; i++) {
+    const a = i * Math.PI / 4 - Math.PI / 2;
+    ctx.save();
+    ctx.translate(cx + Math.cos(a) * 178, cy + Math.sin(a) * 178);
+    ctx.rotate(a + Math.PI / 2);
+    SIGIL_MOTIFS[motif](ctx, motifColor);
+    ctx.restore();
+  }
+  ctx.font = '110px "Microsoft YaHei", "SimSun", serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.shadowColor = glyphColor; ctx.shadowBlur = 18;
+  ctx.fillStyle = glyphColor;
+  ctx.fillText(glyph, cx, cy + 6);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  return tex;
+}
+
+const SIGIL_SPECS = {
+  water: { bg: ['rgba(126,232,224,.25)', 'rgba(16,74,70,.06)'], rim: '#bff5ef', rim2: '#3aa8a0',
+    tick: '#7ee8e0', glyph: '水', glyphColor: '#d8fff3', motif: 'wave', motifColor: '#8fe8de' },
+  star: { bg: ['rgba(205,216,255,.25)', 'rgba(30,40,96,.08)'], rim: '#e6ecff', rim2: '#8fa0e8',
+    tick: '#cdd8ff', glyph: '星', glyphColor: '#ffe9b0', motif: 'star', motifColor: '#dbe4ff' },
+  peach: { bg: ['rgba(255,168,204,.26)', 'rgba(112,38,68,.08)'], rim: '#ffdfef', rim2: '#e06a9d',
+    tick: '#ffa8cc', glyph: '桃', glyphColor: '#ffe3f0', motif: 'petal', motifColor: '#ffb7d4' },
+  jade: { bg: ['rgba(126,232,160,.25)', 'rgba(18,74,42,.08)'], rim: '#d0ffd8', rim2: '#3f9c66',
+    tick: '#7ee8a0', glyph: '竹', glyphColor: '#e2ffe8', motif: 'leaf', motifColor: '#8fe8ab' },
+  moon: { bg: ['rgba(246,247,255,.28)', 'rgba(52,60,102,.08)'], rim: '#ffffff', rim2: '#aab4dd',
+    tick: '#e6eaff', glyph: '月', glyphColor: '#ffffff', motif: 'crescent', motifColor: '#dfe6ff' },
+  dark: { bg: ['rgba(122,46,204,.30)', 'rgba(28,8,52,.10)'], rim: '#d2afff', rim2: '#5c2a92',
+    tick: '#a86bdd', glyph: '魔', glyphColor: '#e3c8ff', motif: 'hex', motifColor: '#b98ae8' },
+  dragonRed: { bg: ['rgba(255,90,40,.28)', 'rgba(96,20,4,.10)'], rim: '#ffc46b', rim2: '#c2410c',
+    tick: '#ff8a50', glyph: '龍', glyphColor: '#ffd9a0', motif: 'ember', motifColor: '#ff9a5c' },
+  dragonGold: { bg: ['rgba(255,222,140,.28)', 'rgba(90,64,12,.10)'], rim: '#ffedac', rim2: '#c29238',
+    tick: '#ffe4a0', glyph: '龍', glyphColor: '#fff6d8', motif: 'ember', motifColor: '#f0c46b' },
+  sword: { bg: ['rgba(123,224,207,.25)', 'rgba(12,58,52,.08)'], rim: '#d9fff2', rim2: '#2c8c7e',
+    tick: '#7be0cf', glyph: '劍', glyphColor: '#e8fff8', motif: 'sword', motifColor: '#9be8da' },
+};
+
+// Mesh nhỏ theo motif: mỗi lần gọi tạo geometry/material mới (gắn vào group chiêu nên
+// dispose theo traverse); 'sword' trả Group phi kiếm như bản gốc.
+function motifMesh(kind, t, i = 0) {
+  const mat = (color) => new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .9,
+    depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending });
+  switch (kind) {
+    case 'petal': return new THREE.Mesh(new THREE.PlaneGeometry(.1, .22), mat(i % 2 ? t.core : t.main));
+    case 'leaf': return new THREE.Mesh(new THREE.PlaneGeometry(.09, .26), mat(i % 2 ? t.core : t.main));
+    case 'star': {
+      const m = new THREE.Mesh(new THREE.OctahedronGeometry(.09), mat(t.core));
+      m.scale.y = 1.6;
+      return m;
+    }
+    case 'moon': return new THREE.Mesh(new THREE.RingGeometry(.15, .23, 20, 1, 0, Math.PI * .85), mat(t.main));
+    case 'ember': return new THREE.Mesh(new THREE.ConeGeometry(.07, .28, 6), mat(i % 2 ? t.accent : t.main));
+    case 'orb': return new THREE.Mesh(new THREE.SphereGeometry(.11, 10, 8), mat(t.core));
+    case 'shard': return new THREE.Mesh(new THREE.TetrahedronGeometry(.1), mat(i % 2 ? t.core : t.accent));
+    case 'claw': {
+      const g = new THREE.Group();
+      for (let k = -1; k <= 1; k++) {
+        const c = new THREE.Mesh(new THREE.BoxGeometry(.05, .04, .34), mat(t.main));
+        c.rotation.y = k * .38;
+        g.add(c);
+      }
+      return g;
+    }
+    default: return createSwordMesh(i % 2 ? t.accent : t.main, t.core);
+  }
+}
+
+// Kích thước cân lại so với phi kiếm (~1.15 đơn vị) — motif nhỏ cần phóng to để đọc được.
+const MOTIF_SCALE = { petal: 2.6, leaf: 2.4, star: 2.6, moon: 2.4, ember: 2.2, orb: 2.2, shard: 2.4, claw: 2.4, sword: 1 };
+
+// Bảng tông màu theo effect id; các builder đọc `pkTheme(effect)?.x ?? <mặc định cũ>`.
+// Ngoài màu, mỗi tông còn có DÁNG CHIÊU RIÊNG:
+//   slashStyle — hình đòn chính (crescent vòm chém, petalBurst nở cánh, waves sóng nước,
+//     starBurst sao băng, emberFan quạt lửa, spike trúc tiễn, moonArc liềm trăng đứng,
+//     voidWave vòng tối nở, claw long trảo, fanSwords xòe kiếm);
+//   rain + rainMode — vật rơi ở vùng nổ AOE (blade mưa kiếm, petal cánh hoa, star sao,
+//     spike cột mọc từ đất, shard mảnh, moon liềm, ember tàn lửa) và rơi xuống / bùng lên;
+//   pillar — cột năng lượng dâng ở đích; orbitR/orbitW/wobble — nhịp bay đạn;
+//   guards + dome — số linh vật hộ thể và kiểu vòm (sphere/hex lục lăng/halo nguyệt/rings gợn sóng);
+//   dashWake — vệt lướt thêm (sparks bụi, petals cánh hoa, ripples gợn sóng).
+const PK_THEMES = {
+  1: { // Sen kim — đòn nở cánh sen, mưa cánh vàng
+    sigil: 'lotus', main: 0xffd98a, accent: 0xffc247, core: 0xfff0bf, edge: 0x5c4718,
+    fan: 'petal', coreMesh: 'orb', satellite: 'petal', guardian: 'petal', ghost: 'petal', blade: 'petal',
+    burstGeo: 'petal', burst: [0xffd98a, 0xffc247, 0xfff0bf], trail: [0xffe7a3, 0xffd98a, 0xfff6d8],
+    groundDark: 0x2e2410,
+    slashStyle: 'petalBurst', rain: 'petal', rainMode: 'fall', pillar: false,
+    orbitR: .5, orbitW: 16, wobble: .2, guards: 8, dome: 'sphere', dashWake: 'petals',
+  },
+  2: { // Lưu ly — sóng nước dâng, mưa tinh thể, vòm gợn sóng
+    sigil: 'water', main: 0x7ee8e0, accent: 0x48d8cc, core: 0xd8fff3, edge: 0x14514c,
+    fan: 'shard', coreMesh: 'orb', satellite: 'orb', guardian: 'orb', ghost: 'shard', blade: 'shard',
+    burstGeo: 'shard', burst: [0x7ee8e0, 0x48d8cc, 0xd8fff3], trail: [0x9ff2ea, 0x7ee8e0, 0xd8fff3],
+    groundDark: 0x0e3a36,
+    slashStyle: 'waves', rain: 'shard', rainMode: 'fall', pillar: true,
+    orbitR: .34, orbitW: 22, wobble: .3, guards: 6, dome: 'rings', dashWake: 'ripples',
+  },
+  3: { // Tinh hà — sao băng tỏa, mưa sao, đạn lượn zigzag
+    sigil: 'star', main: 0xcdd8ff, accent: 0x9fb2ff, core: 0xffe9b0, edge: 0x2c3670,
+    fan: 'star', coreMesh: 'star', satellite: 'star', guardian: 'star', ghost: 'star', blade: 'star',
+    burstGeo: 'spark', burst: [0xcdd8ff, 0x9fb2ff, 0xffe9b0], trail: [0xdbe4ff, 0xcdd8ff, 0xffe9b0],
+    groundDark: 0x1a2246,
+    slashStyle: 'starBurst', rain: 'star', rainMode: 'fall', pillar: false,
+    orbitR: .5, orbitW: 26, wobble: .38, guards: 6, dome: 'sphere', dashWake: 'sparks',
+  },
+  4: { // Hỏa diễm — quạt lửa, tàn lửa bùng lên, cột hỏa ở đích
+    sigil: 'flame', main: 0xff9a5c, accent: 0xff6b3d, core: 0xffd268, edge: 0x701f0e,
+    fan: 'ember', coreMesh: 'orb', satellite: 'ember', guardian: 'ember', ghost: 'ember', blade: 'ember',
+    burstGeo: 'spark', burst: [0xff9a5c, 0xff6b3d, 0xffd268], trail: [0xffb87e, 0xff9a5c, 0xffd268],
+    groundDark: 0x4a1608,
+    slashStyle: 'emberFan', rain: 'ember', rainMode: 'rise', pillar: true,
+    orbitR: .42, orbitW: 24, wobble: .12, guards: 6, dome: 'sphere', dashWake: 'sparks',
+  },
+  5: { // Đào hoa — nở cánh đào, mưa cánh hồng
+    sigil: 'peach', main: 0xffa8cc, accent: 0xff7fae, core: 0xffdfef, edge: 0x7a3355,
+    fan: 'petal', coreMesh: 'orb', satellite: 'petal', guardian: 'petal', ghost: 'petal', blade: 'petal',
+    burstGeo: 'petal', burst: [0xffa8cc, 0xff7fae, 0xffdfef], trail: [0xffc2dd, 0xffa8cc, 0xffdfef],
+    groundDark: 0x4a1c30,
+    slashStyle: 'petalBurst', rain: 'petal', rainMode: 'fall', pillar: false,
+    orbitR: .5, orbitW: 18, wobble: .22, guards: 8, dome: 'sphere', dashWake: 'petals',
+  },
+  6: { // Bích ngọc — trúc tiễn phóng, cột trúc mọc từ đất
+    sigil: 'jade', main: 0x7ee8a0, accent: 0x48c47a, core: 0xd0ffd8, edge: 0x1c5c34,
+    fan: 'leaf', coreMesh: 'leaf', satellite: 'leaf', guardian: 'leaf', ghost: 'leaf', blade: 'leaf',
+    burstGeo: 'petal', burst: [0x7ee8a0, 0x48c47a, 0xd0ffd8], trail: [0x9af0b4, 0x7ee8a0, 0xd0ffd8],
+    groundDark: 0x124420,
+    slashStyle: 'spike', rain: 'spike', rainMode: 'rise', pillar: false,
+    orbitR: .38, orbitW: 22, wobble: .18, guards: 8, dome: 'sphere', dashWake: 'sparks',
+  },
+  7: { // Nguyệt bạch — liềm trăng đứng quét, mưa liềm bạc, vòm halo nguyệt
+    sigil: 'moon', main: 0xf6f7ff, accent: 0xcdd9ff, core: 0xffffff, edge: 0x5b648f,
+    fan: 'moon', coreMesh: 'orb', satellite: 'star', guardian: 'moon', ghost: 'moon', blade: 'moon',
+    burstGeo: 'spark', burst: [0xf6f7ff, 0xcdd9ff, 0xffffff], trail: [0xeef1ff, 0xf6f7ff, 0xcdd9ff],
+    groundDark: 0x2c3252,
+    slashStyle: 'moonArc', rain: 'moon', rainMode: 'fall', pillar: true,
+    orbitR: .44, orbitW: 20, wobble: .28, guards: 4, dome: 'halo', dashWake: 'sparks',
+  },
+  8: { // Hắc ám — vòng tối nở, quỷ hỏa bùng, vòm lục lăng
+    sigil: 'dark', main: 0xa86bdd, accent: 0x7a2ecc, core: 0xe3c8ff, edge: 0x2a0d4a,
+    fan: 'ember', coreMesh: 'orb', satellite: 'ember', guardian: 'orb', ghost: 'ember', blade: 'ember',
+    burstGeo: 'spark', burst: [0xa86bdd, 0x7a2ecc, 0xe3c8ff], trail: [0xbc8ce8, 0xa86bdd, 0xe3c8ff],
+    groundDark: 0x1c0a33,
+    slashStyle: 'voidWave', rain: 'ember', rainMode: 'rise', pillar: true,
+    orbitR: .5, orbitW: 14, wobble: .16, guards: 6, dome: 'hex', dashWake: 'sparks',
+  },
+  9: { // Long quyền — long trảo vồ, cột hỏa dội, đạn bay thẳng nhanh
+    sigil: 'dragonRed', main: 0xff7a30, accent: 0xff3d00, core: 0xffc46b, edge: 0x6e1c00,
+    fan: 'claw', coreMesh: 'ember', satellite: 'ember', guardian: 'ember', ghost: 'claw', blade: 'claw',
+    burstGeo: 'spark', burst: [0xff7a30, 0xff3d00, 0xffc46b], trail: [0xff9550, 0xff7a30, 0xffc46b],
+    groundDark: 0x4a1400,
+    slashStyle: 'claw', rain: 'ember', rainMode: 'rise', pillar: true,
+    orbitR: .3, orbitW: 30, wobble: .1, guards: 4, dome: 'sphere', dashWake: 'sparks',
+  },
+  10: { // Xích diễm — quạt đao xích, tàn hồng bùng
+    sigil: 'flame', main: 0xff5b3a, accent: 0xd94b2b, core: 0xffb440, edge: 0x4a0f08,
+    fan: 'ember', coreMesh: 'ember', satellite: 'ember', guardian: 'ember', ghost: 'ember', blade: 'ember',
+    burstGeo: 'spark', burst: [0xff5b3a, 0xd94b2b, 0xffb440], trail: [0xff7e5e, 0xff5b3a, 0xffb440],
+    groundDark: 0x40100a,
+    slashStyle: 'emberFan', rain: 'ember', rainMode: 'rise', pillar: true,
+    orbitR: .38, orbitW: 26, wobble: .12, guards: 6, dome: 'sphere', dashWake: 'sparks',
+  },
+  11: { // Kim long — vòm chém vàng, mưa phi kiếm vàng, đạn lượn như rồng
+    sigil: 'dragonGold', main: 0xffedac, accent: 0xe0a83c, core: 0xfff6d8, edge: 0x5c420e,
+    fan: 'sword', coreMesh: 'sword', satellite: 'sword', guardian: 'sword', ghost: 'sword', blade: 'sword',
+    burstGeo: 'spark', burst: [0xffedac, 0xe0a83c, 0xfff6d8], trail: [0xfff2c2, 0xffedac, 0xe0a83c],
+    groundDark: 0x3a2c0e,
+    slashStyle: 'crescent', rain: 'blade', rainMode: 'fall', pillar: false,
+    orbitR: .42, orbitW: 22, wobble: .3, guards: 4, dome: 'sphere', dashWake: 'sparks',
+  },
+  12: { // Kiếm vũ — xòe kiếm xanh, mưa kiếm teal
+    sigil: 'sword', main: 0x7be0cf, accent: 0x3ec2ae, core: 0xd9fff2, edge: 0x123c36,
+    fan: 'sword', coreMesh: 'sword', satellite: 'sword', guardian: 'sword', ghost: 'sword', blade: 'sword',
+    burstGeo: 'shard', burst: [0x7be0cf, 0x3ec2ae, 0xd9fff2], trail: [0x9be8da, 0x7be0cf, 0xd9fff2],
+    groundDark: 0x0c3830,
+    slashStyle: 'fanSwords', rain: 'blade', rainMode: 'fall', pillar: false,
+    orbitR: .46, orbitW: 24, wobble: .2, guards: 6, dome: 'sphere', dashWake: 'sparks',
+  },
+};
+const pkTheme = (effect) => PK_THEMES[effect] ?? null;
+
+// Dáng đòn đánh thường theo tông: trả { wave, waveEdge?, cross1?, cross2?, extras }.
+// wave là mảnh chính được update() làm mờ dần; extras là các mảnh phụ với userData
+// {spin, grow, vx, vy, vz} — update() cộng dần mỗi khung nên tua lại vẫn đúng khung.
+function buildSlashStrike(t) {
+  const style = t?.slashStyle ?? 'crescent';
+  const mat = (color, opacity = .95) => new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide,
+    transparent: true, opacity, depthWrite: false, blending: THREE.NormalBlending });
+  const arc = (r0, r1, span = Math.PI * .9) =>
+    new THREE.Mesh(new THREE.RingGeometry(r0, r1, 48, 1, -span / 2, span), mat(t?.main ?? 0xffdf91));
+  const extras = [];
+  const push = (m, x, y, z, u) => {
+    m.position.set(x, y, z);
+    Object.assign(m.userData, u);
+    extras.push(m);
+    return m;
+  };
+  const radial = (n, meshFn, r, speed, spin) => {
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      push(meshFn(i), Math.cos(a) * r, Math.sin(a) * r * .72 + .1, .8,
+        { vx: Math.cos(a) * speed, vy: Math.sin(a) * speed * .8, spin: (i % 2 ? 1 : -1) * spin });
+    }
+  };
+
+  if (style === 'petalBurst') { // Sen kim / Đào hoa — vòng cung + cánh nở toả
+    const wave = arc(1.14, 1.3);
+    wave.position.z = .45;
+    radial(10, (i) => motifMesh(t.fan, t, i), 1.05, 1.7, 2.5);
+    return { wave, extras };
+  }
+  if (style === 'waves') { // Lưu ly — ba lớp sóng nước dâng
+    const wave = arc(1.12, 1.34, Math.PI * 1.2);
+    wave.rotation.x = -.55;
+    wave.position.z = .45;
+    for (let k = 1; k <= 2; k++) {
+      const layer = arc(1.0 - k * .16, 1.14 - k * .16, Math.PI * 1.2);
+      layer.rotation.x = -.55;
+      layer.position.set(0, -.28 * k, .45 + k * .18);
+      push(layer, layer.position.x, layer.position.y, layer.position.z, { vy: 1.5 + k * .5, spin: .6 * (k % 2 ? 1 : -1) });
+    }
+    for (let i = 0; i < 4; i++) push(motifMesh(t.fan, t, i), (i - 1.5) * .5, -.2 + (i % 2) * .3, .9,
+      { vx: (i - 1.5) * 1.1, vy: .9, spin: 2.4 });
+    return { wave, extras };
+  }
+  if (style === 'starBurst') { // Tinh hà — sao băng toả 12 hướng
+    const wave = arc(1.2, 1.36);
+    wave.position.z = .45;
+    radial(12, (i) => motifMesh(t.fan, t, i), .95, 2.4, 6);
+    return { wave, extras };
+  }
+  if (style === 'emberFan') { // Hỏa diễm / Xích diễm — quạt lửa xòe trước
+    const wave = arc(1.22, 1.4);
+    wave.position.z = .45;
+    for (let k = 0; k < 5; k++) {
+      const m = motifMesh('ember', t, k);
+      m.rotation.x = -Math.PI / 2;
+      m.scale.multiplyScalar(1.5);
+      push(m, (k - 2) * .46, -.05 + Math.abs(k - 2) * -.08, .75, { vx: (k - 2) * 1.2, vy: .6, grow: 1.4 });
+    }
+    return { wave, extras };
+  }
+  if (style === 'spike') { // Bích ngọc — trúc tiễn phóng thẳng
+    const wave = arc(1.18, 1.34);
+    wave.position.z = .45;
+    for (let i = 0; i < 6; i++) {
+      const m = motifMesh(t.fan, t, i);
+      m.rotation.x = Math.PI / 2;
+      m.scale.multiplyScalar(1.4);
+      push(m, (i % 3 - 1) * .46, -.25 + Math.floor(i / 3) * .5, .6 + i * .16, { vz: 3.6, spin: 0 });
+    }
+    return { wave, extras };
+  }
+  if (style === 'moonArc') { // Nguyệt bạch — liềm trăng lớn quét ngang
+    const wave = arc(1.3, 1.58, Math.PI * 1.0);
+    wave.rotation.x = -.18;
+    wave.position.z = .45;
+    const edge = new THREE.Mesh(new THREE.RingGeometry(1.58, 1.66, 48, 1, -Math.PI * .5, Math.PI),
+      mat(t?.edge ?? 0x5b648f, .9));
+    edge.rotation.x = -.18;
+    edge.position.z = .44;
+    for (let k = 0; k < 3; k++) {
+      const m = motifMesh('moon', t, k);
+      push(m, (k - 1) * .8, .15 - k * .22, .95 + k * .3, { vx: (k - 1) * 1.3, vy: .5, spin: (k - 1) * 2.2, grow: .5 });
+    }
+    return { wave, waveEdge: edge, extras };
+  }
+  if (style === 'voidWave') { // Hắc ám — vòng tối nở + quỷ hỏa trôi
+    const wave = new THREE.Mesh(new THREE.TorusGeometry(1.05, .1, 8, 40), mat(t?.main ?? 0xa86bdd, .9));
+    wave.position.z = .5;
+    for (let i = 0; i < 4; i++) {
+      const a = i * Math.PI / 2 + .4;
+      push(motifMesh('orb', t, i), Math.cos(a) * .7, Math.sin(a) * .6, .55,
+        { vx: Math.cos(a) * 1.6, vy: Math.sin(a) * 1.3, grow: .8 });
+    }
+    return { wave, extras };
+  }
+  if (style === 'claw') { // Long quyền — ba vệt long trảo vồ
+    const wave = arc(1.26, 1.44);
+    wave.position.z = .45;
+    for (let k = 0; k < 3; k++) {
+      const mark = new THREE.Mesh(new THREE.BoxGeometry(.07, 1.05, .07),
+        new THREE.MeshBasicMaterial({ color: k % 2 ? t.accent : t.main, transparent: true, opacity: .92,
+          depthWrite: false, blending: THREE.AdditiveBlending }));
+      mark.rotation.z = (k - 1) * .3;
+      push(mark, (k - 1) * .52, 0, .8, { grow: 1.5, vy: .4 });
+    }
+    for (let k = 0; k < 2; k++) {
+      const m = motifMesh('claw', t, k);
+      m.rotation.x = Math.PI / 2;
+      push(m, (k ? .4 : -.4), -.15, 1.05, { vz: 2.8 });
+    }
+    return { wave, extras };
+  }
+  if (style === 'fanSwords') { // Kiếm vũ — xòe kiếm xanh phóng tới
+    const wave = arc(1.22, 1.38);
+    wave.position.z = .45;
+    for (let i = 0; i < 5; i++) {
+      const m = createSwordMesh(i % 2 ? t.accent : t.main, t.core);
+      m.rotation.x = Math.PI / 2;
+      m.scale.setScalar(1.1);
+      push(m, (i % 3 - 1) * .44, -.3 + Math.floor(i / 3) * .55, .55 + i * .18, { vz: 4.2 - i * .3, spin: 0 });
+    }
+    return { wave, extras };
+  }
+  // 'crescent' — Vô Môn / Kim Long: vòm chém bắt chéo như bản gốc.
+  const wave = arc(1.3, 1.48);
+  wave.position.z = .45;
+  const waveEdge = new THREE.Mesh(new THREE.RingGeometry(1.48, 1.56, 48, 1, -Math.PI * .45, Math.PI * .9),
+    mat(t?.edge ?? 0x284c40, .9));
+  waveEdge.position.z = .44;
+  const cross1 = new THREE.Mesh(new THREE.RingGeometry(.94, 1.04, 36, 1, -Math.PI * .38, Math.PI * .76),
+    mat(t?.accent ?? 0x86c9ae, .85));
+  cross1.rotation.z = Math.PI / 4;
+  cross1.position.z = .35;
+  const cross2 = new THREE.Mesh(cross1.geometry, cross1.material);
+  cross2.rotation.z = -Math.PI / 4;
+  cross2.position.z = .35;
+  return { wave, waveEdge, cross1, cross2, extras };
+}
+
 // Vẽ canvas một lần cho mọi PkVfx (kể cả bản làm nóng shader); không bao giờ dispose.
 let sharedTextures = null;
 function pkTextures() {
@@ -711,6 +1144,7 @@ function pkTextures() {
     lotus: createLotusMandalaTexture(),
     flame: createFlameArrayTexture(),
     poisonPalm: createPoisonPalmTexture(),
+    ...Object.fromEntries(Object.entries(SIGIL_SPECS).map(([key, spec]) => [key, createSigilTexture(spec)])),
   };
   return sharedTextures;
 }
@@ -730,6 +1164,7 @@ export class PkVfx {
     this.shields = [];
     this.shockwaves = [];
     this.aoeFields = [];
+    this.pillars = [];
     this.aoeDummy = new THREE.Object3D();
 
     // Bộ texture và geometry dùng chung
@@ -738,6 +1173,9 @@ export class PkVfx {
     this.lotusTex = textures.lotus;
     this.flameTex = textures.flame;
     this.poisonPalmTex = textures.poisonPalm;
+    // Bảng pháp trận theo key theme (SIGIL_SPECS + 3 trận có sẵn).
+    this.sigilTex = { bagua: textures.bagua, lotus: textures.lotus, flame: textures.flame,
+      ...Object.fromEntries(Object.keys(SIGIL_SPECS).map((key) => [key, textures[key]])) };
     this.sparkGeo = new THREE.BoxGeometry(0.045, 0.045, 0.045);
     this.petalGeo = new THREE.PlaneGeometry(0.07, 0.12);
     this.sparkMat = new THREE.MeshBasicMaterial({ color: 0xb8e8cd, blending: THREE.AdditiveBlending });
@@ -751,13 +1189,14 @@ export class PkVfx {
    * Cửu Thiên Lôi Kiếm (Judgement Crescent Slash - M1):
    * Đao quang kiếm khí đan chéo hình cánh én anime, pháp trận chân lôi và tia sét ziczac.
    */
-  slash({ x, y = 0, z, rot = 0, color = 0x00f0ff }) {
+  slash({ x, y = 0, z, rot = 0, color = 0x00f0ff, effect = 0 }) {
+    const t = pkTheme(effect);
     const group = new THREE.Group();
 
-    // 1. Pháp trận kiếm khí chân đế (Daoist Ground Sigil)
+    // 1. Pháp trận kiếm khí chân đế (Daoist Ground Sigil) — đổi theo aura
     const sigilGeo = new THREE.PlaneGeometry(1.6, 1.6);
     const sigilMat = new THREE.MeshBasicMaterial({
-      map: this.baguaTex,
+      map: t ? this.sigilTex[t.sigil] : this.baguaTex,
       transparent: true,
       opacity: 0.9,
       depthWrite: false,
@@ -767,20 +1206,20 @@ export class PkVfx {
     sigil.rotation.x = -Math.PI / 2;
     sigil.position.y = -0.78;
 
-    // 2. Lõi năng lượng lôi kiếm trung tâm (nhỏ gọn sắc nét, không bị chói lóa)
+    // 2. Lõi năng lượng trung tâm (nhỏ gọn sắc nét, không bị chói lóa)
     const orbGeo = new THREE.OctahedronGeometry(0.12, 1);
     const orbMat = new THREE.MeshBasicMaterial({
-      color: 0xf3dfad,
+      color: t?.core ?? 0xf3dfad,
       transparent: true,
       opacity: 0.85,
       blending: THREE.AdditiveBlending,
     });
     const orb = new THREE.Mesh(orbGeo, orbMat);
 
-    // 3. Vòng hồ quang lôi hỏa xoay tít
+    // 3. Vòng hồ quang xoay tít
     const ringGeo = new THREE.TorusGeometry(0.55, 0.035, 8, 28);
     const ringMat = new THREE.MeshBasicMaterial({
-      color: 0x9bd7b9,
+      color: t?.accent ?? 0x9bd7b9,
       transparent: true,
       opacity: 0.75,
       blending: THREE.AdditiveBlending,
@@ -793,60 +1232,26 @@ export class PkVfx {
 
     const swordFan = [];
     for (let k = -1; k <= 1; k++) {
-      const sword = createSwordMesh(k === 0 ? 0xe9dfbb : 0x8fc9a9, 0xd8b46d);
-      sword.scale.setScalar(k === 0 ? 1.2 : .9);
+      const sword = t ? motifMesh(t.fan, t, k + 1) : createSwordMesh(k === 0 ? 0xe9dfbb : 0x8fc9a9, 0xd8b46d);
+      sword.scale.setScalar((k === 0 ? 1.2 : .9) * (!t ? 1 : MOTIF_SCALE[t.fan]));
       sword.rotation.set(Math.PI / 2, 0, k * .3);
       sword.position.set(k * .34, k === 0 ? .1 : -.1, .7 + Math.abs(k) * .1);
       group.add(sword);
       swordFan.push(sword);
     }
 
-    // 4. Đao quang kiếm khí chính (Primary Crescent Anime Arc)
-    const waveGeo = new THREE.RingGeometry(1.3, 1.48, 48, 1, -Math.PI * 0.45, Math.PI * 0.9);
-    const waveMat = new THREE.MeshBasicMaterial({
-      color: 0xffdf91,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.98,
-      depthWrite: false,
-      blending: THREE.NormalBlending,
-    });
-    const wave = new THREE.Mesh(waveGeo, waveMat);
-    wave.rotation.x = 0;
-    wave.position.z = 0.45;
-    const waveEdge = new THREE.Mesh(
-      new THREE.RingGeometry(1.48, 1.56, 48, 1, -Math.PI * 0.45, Math.PI * 0.9),
-      new THREE.MeshBasicMaterial({ color: 0x284c40, side: THREE.DoubleSide, transparent: true,
-        opacity: 0.9, depthWrite: false }),
-    );
-    waveEdge.position.z = 0.44;
+    // 4+5. Đòn chính theo tông aura (buildSlashStrike) — wave làm mờ dần, extras tự chuyển động.
+    const strike = buildSlashStrike(t);
+    const { wave, waveEdge, cross1, cross2 } = strike;
+    const extras = strike.extras;
+    for (const m of extras) group.add(m);
 
-    // 5. Hai vết chém không gian bắt chéo (Cross Dimensional Slices)
-    const crossWaveGeo = new THREE.RingGeometry(.94, 1.04, 36, 1, -Math.PI * 0.38, Math.PI * 0.76);
-    const crossWaveMat = new THREE.MeshBasicMaterial({
-      color: 0x86c9ae,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.85,
-      depthWrite: false,
-      blending: THREE.NormalBlending,
-    });
-    const cross1 = new THREE.Mesh(crossWaveGeo, crossWaveMat);
-    cross1.rotation.x = 0;
-    cross1.rotation.z = Math.PI / 4;
-    cross1.position.z = 0.35;
-
-    const cross2 = new THREE.Mesh(crossWaveGeo, crossWaveMat);
-    cross2.rotation.x = 0;
-    cross2.rotation.z = -Math.PI / 4;
-    cross2.position.z = 0.35;
-
-    // 6. Nhánh tia sét lôi điện anime ziczac
+    // 6. Tia năng lượng anime ziczac
     const bolts = [];
     for (let k = 0; k < 4; k++) {
       const boltGeo = new THREE.CylinderGeometry(0.015, 0.02, 0.9, 4);
       const boltMat = new THREE.MeshBasicMaterial({
-        color: 0xe9d6a0,
+        color: t?.core ?? 0xe9d6a0,
         transparent: true,
         opacity: 0.9,
         blending: THREE.AdditiveBlending,
@@ -859,7 +1264,10 @@ export class PkVfx {
       bolts.push(bolt);
     }
 
-    group.add(sigil, orb, ring1, ring2, waveEdge, wave, cross1, cross2);
+    group.add(sigil, orb, ring1, ring2, wave);
+    if (waveEdge) group.add(waveEdge);
+    if (cross1) group.add(cross1);
+    if (cross2) group.add(cross2);
     group.rotation.y = rot;
     group.position.set(x + Math.sin(rot) * 1.1, y + 1.25, z + Math.cos(rot) * 1.1);
 
@@ -876,6 +1284,7 @@ export class PkVfx {
       sigil,
       bolts,
       swordFan,
+      extras,
       rot,
       age: 0,
       life: 0.42,
@@ -887,14 +1296,15 @@ export class PkVfx {
    * Khởi phát Thái Cực Bát Quái Trận, triệu hồi 6 Phi Kiếm Tiên Hiệp xoáy trôn ốc
    * dẫn đầu bởi Thần Long Hoàng Kim, chạm đích nổ Kiếm Trận Cực Hạn.
    */
-  projectile({ fromX, fromY = 0, fromZ, toX, toY = 0, toZ, rot = 0, radius = 4, isHit = false }) {
+  projectile({ fromX, fromY = 0, fromZ, toX, toY = 0, toZ, rot = 0, radius = 4, isHit = false, effect = 0 }) {
+    const t = pkTheme(effect);
     const group = new THREE.Group();
-    this.areaBurst({ x: toX, y: toY, z: toZ, radius });
+    this.areaBurst({ x: toX, y: toY, z: toZ, radius, effect });
 
-    // 1. Trận đồ Bát Quái bốc lên từ mặt đất dưới chân người thi triển (rõ nét chuẩn anime)
+    // 1. Trận đồ bốc lên từ mặt đất dưới chân người thi triển (đổi theo aura)
     const startSigilGeo = new THREE.PlaneGeometry(3.2, 3.2);
     const startSigilMat = new THREE.MeshBasicMaterial({
-      map: this.baguaTex,
+      map: t ? this.sigilTex[t.sigil] : this.baguaTex,
       transparent: true,
       opacity: 0.95,
       depthWrite: false,
@@ -905,16 +1315,16 @@ export class PkVfx {
     startSigil.position.set(fromX, fromY + 0.09, fromZ);
     this.scene.add(startSigil);
 
-    // Lõi kiếm chính thay hình đầu rồng thô; sáu phi kiếm tụ quanh trục.
-    const dragon = createSwordMesh(0xf2e6bd, 0xd8b46d);
-    dragon.rotation.x = Math.PI / 2;
-    dragon.scale.setScalar(1.65);
+    // Lõi chính: phi kiếm (mặc định) hoặc linh vật theo aura.
+    const dragon = t ? motifMesh(t.coreMesh, t) : createSwordMesh(0xf2e6bd, 0xd8b46d);
+    if (!t || t.coreMesh === 'sword') dragon.rotation.x = Math.PI / 2;
+    dragon.scale.multiplyScalar(1.65 * (!t || t.coreMesh === 'sword' ? 1 : MOTIF_SCALE[t.coreMesh]));
     group.add(dragon);
 
-    // 3. Lõi năng lượng thiên kiếp trung tâm (nhỏ gọn tinh tế)
+    // 3. Lõi năng lượng trung tâm (nhỏ gọn tinh tế)
     const coreGeo = new THREE.SphereGeometry(0.1, 8, 8);
     const coreMat = new THREE.MeshBasicMaterial({
-      color: 0xe6c680,
+      color: t?.core ?? 0xe6c680,
       transparent: true,
       opacity: 0.65,
       blending: THREE.AdditiveBlending,
@@ -922,13 +1332,13 @@ export class PkVfx {
     const core = new THREE.Mesh(coreGeo, coreMat);
     group.add(core);
 
-    // 4. Bầy 6 Phi Kiếm Tiên Hiệp (Flying Swords) xoay vần vũ (lớn hơn, rõ từng lưỡi kiếm)
+    // 4. Bầy 6 vệ tinh xoay vần vũ quanh tâm
     const swords = [];
     const swordColors = [0x9bd7b9, 0xd8b46d, 0xb8e8cd, 0x83bca1, 0xe6d399, 0xa5d6bd];
     for (let k = 0; k < 6; k++) {
-      const sw = createSwordMesh(swordColors[k], 0xd8b46d);
-      sw.scale.set(1.2, 1.2, 1.2);
-      sw.rotation.x = Math.PI / 2; // Hướng mũi kiếm về phía trước
+      const sw = t ? motifMesh(t.satellite, t, k) : createSwordMesh(swordColors[k], 0xd8b46d);
+      sw.scale.multiplyScalar(t && t.satellite !== 'sword' ? .9 * MOTIF_SCALE[t.satellite] : 1.2);
+      if (!t || t.satellite === 'sword') sw.rotation.x = Math.PI / 2; // Hướng mũi kiếm về phía trước
       group.add(sw);
       swords.push(sw);
     }
@@ -957,6 +1367,11 @@ export class PkVfx {
       isHit,
       radius,
       rot,
+      effect,
+      orbitR: t?.orbitR ?? .42,
+      orbitW: t?.orbitW ?? 18,
+      wobble: t?.wobble ?? .14,
+      trailColors: t?.trail,
       trailTimer: 0,
     });
   }
@@ -965,11 +1380,12 @@ export class PkVfx {
    * Ngự Kiếm Phi Thần / Hư Không Đạp Bộ (Anime Flash Step / Space):
    * Tốc biến lướt kiếm không gian, để lại tàn ảnh kiếm khách và vết chém hư không.
    */
-  dash({ fromX, fromY = 0, fromZ, toX, toY = 0, toZ, rot = 0 }) {
-    // 1. Trận đồ Thái Cực Bát Quái bừng sáng tại điểm xuất phát (rõ nét chuẩn anime)
+  dash({ fromX, fromY = 0, fromZ, toX, toY = 0, toZ, rot = 0, effect = 0 }) {
+    const t = pkTheme(effect);
+    // 1. Trận đồ bừng sáng tại điểm xuất phát (đổi theo aura)
     const sigilGeo = new THREE.PlaneGeometry(2.4, 2.4);
     const sigilMat1 = new THREE.MeshBasicMaterial({
-      map: this.baguaTex,
+      map: t ? this.sigilTex[t.sigil] : this.baguaTex,
       transparent: true,
       opacity: 0.92,
       depthWrite: false,
@@ -980,10 +1396,10 @@ export class PkVfx {
     originSigil.position.set(fromX, fromY + 0.06, fromZ);
     this.scene.add(originSigil);
 
-    // Cột kiếm khí thăng thiên tại điểm đi (dịu nhẹ thanh thoát)
+    // Cột khí thăng thiên tại điểm đi (dịu nhẹ thanh thoát)
     const beamGeo = new THREE.CylinderGeometry(0.25, 0.45, 2.2, 16, 1, true);
     const beamMat = new THREE.MeshBasicMaterial({
-      color: 0x8fc9a9,
+      color: t?.accent ?? 0x8fc9a9,
       side: THREE.DoubleSide,
       transparent: true,
       opacity: 0.32,
@@ -996,18 +1412,20 @@ export class PkVfx {
 
     const blades = [];
     for (let i = 0; i < 5; i++) {
-      const sword = createSwordMesh(i % 2 ? 0xd8b46d : 0x9bd7b9, 0xe9dfbb);
+      const sword = t ? motifMesh(t.blade, t, i) : createSwordMesh(i % 2 ? 0xd8b46d : 0x9bd7b9, 0xe9dfbb);
       sword.rotation.set(Math.PI / 2, rot, 0);
-      sword.scale.setScalar(.65 + i * .06);
-      const t = (i + .5) / 5;
-      sword.position.set(fromX + (toX - fromX) * t, fromY + .65 + Math.sin(i * 2) * .12, fromZ + (toZ - fromZ) * t);
+      const bladeScale = (.65 + i * .06) * (!t ? 1 : MOTIF_SCALE[t.blade]);
+      sword.scale.setScalar(bladeScale);
+      sword.userData.s0 = bladeScale; // update() co dần theo tỉ lệ này, không ghi đè cứng.
+      const t2 = (i + .5) / 5;
+      sword.position.set(fromX + (toX - fromX) * t2, fromY + .65 + Math.sin(i * 2) * .12, fromZ + (toZ - fromZ) * t2);
       this.scene.add(sword);
       blades.push(sword);
     }
 
-    // 2. Trận đồ Bát Quái tiếp ứng tại điểm đến
+    // 2. Trận đồ tiếp ứng tại điểm đến
     const sigilMat2 = new THREE.MeshBasicMaterial({
-      map: this.baguaTex,
+      map: t ? this.sigilTex[t.sigil] : this.baguaTex,
       transparent: true,
       opacity: 0.92,
       depthWrite: false,
@@ -1018,10 +1436,10 @@ export class PkVfx {
     destSigil.position.set(toX, toY + 0.06, toZ);
     this.scene.add(destSigil);
 
-    // 3. Dải lụa kiếm quang không gian nối liền (Spatial Blade Streamer)
+    // 3. Dải khí quang không gian nối liền (Spatial Streamer)
     const lineGeo = new THREE.CylinderGeometry(0.19, 0.19, Math.hypot(toX - fromX, toZ - fromZ), 8);
     const lineMat = new THREE.MeshBasicMaterial({
-      color: 0xfff1bb,
+      color: t?.core ?? 0xfff1bb,
       transparent: true,
       opacity: 0.95,
       blending: THREE.AdditiveBlending,
@@ -1033,7 +1451,7 @@ export class PkVfx {
     this.scene.add(streak);
     const wake = new THREE.Mesh(
       new THREE.CylinderGeometry(0.52, 0.52, Math.hypot(toX - fromX, toZ - fromZ), 8, 1, true),
-      new THREE.MeshBasicMaterial({ color: 0x72b89a, side: THREE.DoubleSide, transparent: true,
+      new THREE.MeshBasicMaterial({ color: t?.accent ?? 0x72b89a, side: THREE.DoubleSide, transparent: true,
         opacity: 0.38, depthWrite: false, blending: THREE.AdditiveBlending }),
     );
     wake.position.copy(streak.position);
@@ -1051,24 +1469,37 @@ export class PkVfx {
       toX + widthX * 0.75, toY + 0.28, toZ + widthZ * 0.75,
     ], 3));
     const trail = new THREE.Mesh(trailGeo, new THREE.MeshBasicMaterial({
-      color: 0xf8d482, side: THREE.DoubleSide, transparent: true, opacity: 0.8,
+      color: t?.main ?? 0xf8d482, side: THREE.DoubleSide, transparent: true, opacity: 0.8,
       depthWrite: false, blending: THREE.NormalBlending,
     }));
     this.scene.add(trail);
-    this.shockwave({ x: toX, y: toY + 0.06, z: toZ, color: 0xffdf91,
+    this.shockwave({ x: toX, y: toY + 0.06, z: toZ, color: t?.core ?? 0xffdf91,
       maxRadius: 1.5, duration: 0.32 });
+    // Vệt lướt thêm theo tông: gợn sóng dọc đường (Lưu ly) hoặc bụi/cánh hoa tông màu.
+    if (t?.dashWake === 'ripples') {
+      for (const q of [.35, .7]) {
+        this.shockwave({ x: fromX + (toX - fromX) * q, y: fromY + 0.06, z: fromZ + (toZ - fromZ) * q,
+          color: t.accent, maxRadius: 1.1, duration: 0.3 });
+      }
+    } else if (t) {
+      for (let i = 0; i < 8; i++) {
+        const q = (i + .5) / 8;
+        this.addTrailSpark(fromX + (toX - fromX) * q, fromY + .5 + Math.sin(i * 1.7) * .2,
+          fromZ + (toZ - fromZ) * q, t.trail[i % t.trail.length]);
+      }
+    }
 
-    // 4. Bốn tàn ảnh phân thân kiếm khách dọc đường lướt (Ghost Echos with Swords)
+    // 4. Ba tàn ảnh phân thân dọc đường lướt (Ghost Echos)
     const ghosts = [];
     for (let k = 1; k <= 3; k++) {
-      const t = k / 4;
-      const gx = fromX + (toX - fromX) * t;
-      const gz = fromZ + (toZ - fromZ) * t;
+      const t2 = k / 4;
+      const gx = fromX + (toX - fromX) * t2;
+      const gz = fromZ + (toZ - fromZ) * t2;
 
       const echoGroup = new THREE.Group();
-      const sword = createSwordMesh(0x9bd7b9, 0xd8b46d);
-      sword.scale.setScalar(0.8);
-      sword.rotation.x = Math.PI / 2;
+      const sword = t ? motifMesh(t.ghost, t, k) : createSwordMesh(0x9bd7b9, 0xd8b46d);
+      sword.scale.setScalar(.8 * (!t || t.ghost === 'sword' ? 1 : MOTIF_SCALE[t.ghost]));
+      if (!t || t.ghost === 'sword') sword.rotation.x = Math.PI / 2;
       echoGroup.add(sword);
       echoGroup.position.set(gx, fromY + 0.75, gz);
       echoGroup.rotation.y = rot;
@@ -1098,13 +1529,14 @@ export class PkVfx {
    * Trận đồ Thái Cực Bát Quái dưới chân xoay liên tục, 4 thanh Trấn Sơn Kiếm
    * bay lơ lửng 4 phương hộ thể, quả cầu tinh thể kim cương và 3 vành đai phù chú.
    */
-  shield({ x, y = 0, z, duration = 1600, targetFn = null }) {
+  shield({ x, y = 0, z, duration = 1600, targetFn = null, effect = 0 }) {
+    const t = pkTheme(effect);
     const group = new THREE.Group();
 
-    // 1. Trận đồ Thái Cực Bát Quái xoay tròn dưới chân (nằm nổi trên mặt đất, rõ nét chuẩn anime)
+    // 1. Trận đồ xoay tròn dưới chân (đổi theo aura)
     const groundSigilGeo = new THREE.PlaneGeometry(3.0, 3.0);
     const groundSigilMat = new THREE.MeshBasicMaterial({
-      map: this.baguaTex,
+      map: t ? this.sigilTex[t.sigil] : this.baguaTex,
       transparent: true,
       opacity: 0.95,
       depthWrite: false,
@@ -1114,34 +1546,61 @@ export class PkVfx {
     groundSigil.rotation.x = -Math.PI / 2;
     groundSigil.position.y = -0.76;
 
-    // Màng chắn trong suốt, giữ nhân vật còn nhìn thấy qua lớp bảo hộ.
-    const shieldGlowGeo = new THREE.SphereGeometry(1.18, 24, 18);
-    const shieldGlowMat = new THREE.MeshBasicMaterial({
-      color: 0x8fc9a9,
-      transparent: true,
-      opacity: 0.16,
-      depthWrite: false,
-      blending: THREE.NormalBlending,
-    });
-    const shieldGlow = new THREE.Mesh(shieldGlowGeo, shieldGlowMat);
+    // Màng chắn theo tông: cầu (mặc định), lục lăng (Hắc ám), halo nguyệt (Nguyệt bạch),
+    // thêm gợn sóng lan (Lưu ly).
+    const dome = t?.dome ?? 'sphere';
+    const shieldGlow = new THREE.Mesh(
+      dome === 'hex' ? new THREE.CylinderGeometry(1.22, 1.34, 1.7, 6, 1, true)
+        : new THREE.SphereGeometry(dome === 'halo' ? 1.4 : 1.18, 24, 18),
+      new THREE.MeshBasicMaterial({
+        color: t?.accent ?? 0x8fc9a9,
+        transparent: true,
+        opacity: dome === 'halo' ? .1 : .16,
+        depthWrite: false,
+        blending: THREE.NormalBlending,
+        side: dome === 'hex' ? THREE.DoubleSide : THREE.FrontSide,
+      }),
+    );
+    const ripples = [];
+    if (dome === 'rings') {
+      for (let k = 0; k < 2; k++) {
+        const r = new THREE.Mesh(new THREE.TorusGeometry(1.2, .035, 6, 40),
+          new THREE.MeshBasicMaterial({ color: t?.main ?? 0x7ee8e0, transparent: true, opacity: .5,
+            depthWrite: false, blending: THREE.AdditiveBlending }));
+        r.rotation.x = Math.PI / 2;
+        r.position.y = -.35;
+        group.add(r);
+        ripples.push(r);
+      }
+    }
+    let haloRing = null;
+    if (dome === 'halo') {
+      haloRing = new THREE.Mesh(new THREE.TorusGeometry(1.55, .05, 8, 48),
+        new THREE.MeshBasicMaterial({ color: t?.core ?? 0xffffff, transparent: true, opacity: .75,
+          depthWrite: false, blending: THREE.AdditiveBlending }));
+      haloRing.rotation.x = Math.PI / 2;
+      haloRing.position.y = .4;
+      group.add(haloRing);
+    }
 
-    // 3. Hai vành đai phù chú cổ ngữ xoay quanh (Golden & Cyan orbital rings - thanh thoát)
+    // 3. Hai vành đai phù chú cổ ngữ xoay quanh (orbital rings - thanh thoát)
     const ringGeo = new THREE.TorusGeometry(1.28, 0.055, 8, 36);
-    const ringMat1 = new THREE.MeshBasicMaterial({ color: 0xd8b46d, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending });
+    const ringMat1 = new THREE.MeshBasicMaterial({ color: t?.main ?? 0xd8b46d, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending });
     const ring1 = new THREE.Mesh(ringGeo, ringMat1);
     ring1.rotation.x = Math.PI / 2;
 
-    const ringMat2 = new THREE.MeshBasicMaterial({ color: 0x8fc9a9, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending });
+    const ringMat2 = new THREE.MeshBasicMaterial({ color: t?.accent ?? 0x8fc9a9, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending });
     const ring2 = new THREE.Mesh(ringGeo, ringMat2);
     ring2.rotation.x = Math.PI / 3;
     ring2.rotation.y = Math.PI / 4;
 
-    // 4. Bốn thanh Trấn Sơn Kiếm bay lơ lửng 4 phương hộ thể (Four Guardian Swords)
+    // 4. Linh vật hộ thể bay lơ lửng quanh thân — số lượng theo tông
     const guardianSwords = [];
     const guardColors = [0xd8b46d, 0x8fc9a9, 0xe9dfbb, 0x79baa4];
-    for (let i = 0; i < 4; i++) {
-      const sw = createSwordMesh(guardColors[i], 0xd8b46d);
-      sw.scale.set(0.85, 0.85, 0.85);
+    const guardCount = t?.guards ?? 4;
+    for (let i = 0; i < guardCount; i++) {
+      const sw = t ? motifMesh(t.guardian, t, i) : createSwordMesh(guardColors[i % guardColors.length], 0xd8b46d);
+      sw.scale.setScalar(.85 * (!t || t.guardian === 'sword' ? 1 : MOTIF_SCALE[t.guardian]));
       group.add(sw);
       guardianSwords.push(sw);
     }
@@ -1171,6 +1630,8 @@ export class PkVfx {
       ring2,
       guardianSwords,
       lotus,
+      ripples,
+      haloRing,
       targetFn,
       age: 0,
       life: duration / 1000,
@@ -1613,10 +2074,11 @@ export class PkVfx {
     });
   }
 
-  areaBurst({ x, y = 0, z, radius = 4 }) {
+  areaBurst({ x, y = 0, z, radius = 4, effect = 0 }) {
+    const t = pkTheme(effect);
     const ground = new THREE.Mesh(
       new THREE.CircleGeometry(radius, 48),
-      new THREE.MeshBasicMaterial({ color: 0x173629, transparent: true, opacity: 0.52,
+      new THREE.MeshBasicMaterial({ color: t?.groundDark ?? 0x173629, transparent: true, opacity: 0.52,
         side: THREE.DoubleSide, depthWrite: false }),
     );
     ground.rotation.x = -Math.PI / 2;
@@ -1624,7 +2086,7 @@ export class PkVfx {
     this.scene.add(ground);
     const mesh = new THREE.Mesh(
       new THREE.PlaneGeometry(radius * 2, radius * 2),
-      new THREE.MeshBasicMaterial({ map: this.baguaTex, transparent: true, opacity: 0.94,
+      new THREE.MeshBasicMaterial({ map: t ? this.sigilTex[t.sigil] : this.baguaTex, transparent: true, opacity: 0.94,
         side: THREE.DoubleSide, depthWrite: false, blending: THREE.NormalBlending }),
     );
     mesh.rotation.x = -Math.PI / 2;
@@ -1633,7 +2095,7 @@ export class PkVfx {
     this.scene.add(mesh);
     const rim = new THREE.Mesh(
       new THREE.RingGeometry(radius * 0.94, radius, 64),
-      new THREE.MeshBasicMaterial({ color: 0xf8de94, transparent: true, opacity: 0.85,
+      new THREE.MeshBasicMaterial({ color: t?.core ?? 0xf8de94, transparent: true, opacity: 0.85,
         side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending }),
     );
     rim.rotation.x = -Math.PI / 2;
@@ -1656,15 +2118,25 @@ export class PkVfx {
     blade.lineTo(-0.11, -0.22);
     blade.lineTo(-0.18, 0.1);
     blade.closePath();
+    // Vật rơi/bùng ở vùng nổ theo tông: kiếm (mặc định), cánh hoa, sao, cột mọc, mảnh, liềm trăng, tàn lửa.
+    const rainKind = t?.rain ?? 'blade';
+    const rainGeo = rainKind === 'blade' ? new THREE.ShapeGeometry(blade)
+      : rainKind === 'petal' ? new THREE.PlaneGeometry(.5, .9)
+      : rainKind === 'star' ? new THREE.OctahedronGeometry(.28)
+      : rainKind === 'spike' ? new THREE.ConeGeometry(.16, 1.5, 6)
+      : rainKind === 'shard' ? new THREE.TetrahedronGeometry(.34)
+      : rainKind === 'moon' ? new THREE.RingGeometry(.3, .46, 20, 1, 0, Math.PI * .85)
+      : new THREE.ConeGeometry(.2, .8, 6); // ember
+    const rise = t?.rainMode === 'rise';
     const swords = new THREE.InstancedMesh(
-      new THREE.ShapeGeometry(blade),
+      rainGeo,
       new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true,
         opacity: 0.82, depthWrite: false, blending: THREE.AdditiveBlending }), 24,
     );
     swords.position.set(x, y, z);
-    for (let i = 0; i < 24; i++) swords.setColorAt(i, new THREE.Color(i % 3 ? 0xffdc7b : 0xb8fff0));
+    for (let i = 0; i < 24; i++) swords.setColorAt(i, new THREE.Color(i % 3 ? (t?.main ?? 0xffdc7b) : (t?.core ?? 0xb8fff0)));
     this.scene.add(swords);
-    this.aoeFields.push({ ground, mesh, rim, swords, radius, age: 0, life: 0.9 });
+    this.aoeFields.push({ ground, mesh, rim, swords, radius, age: 0, life: 0.9, rise });
   }
 
   /** Bụi kiếm linh / hoa đào kiếm khí tiên hiệp bay theo chiêu */
@@ -1921,7 +2393,7 @@ export class PkVfx {
       }
     }
 
-    // 1. Cập nhật Cửu Thiên Lôi Kiếm (M1)
+    // 1. Cập nhật đòn đánh thường (M1) — dáng chính theo tông, extras chuyển động riêng.
     for (let i = this.slashes.length - 1; i >= 0; i--) {
       const s = this.slashes[i];
       s.age += dt;
@@ -1939,11 +2411,19 @@ export class PkVfx {
         s.sigil.rotation.z += dt * 2;
         s.sigil.material.opacity = 0.7 * (1 - p);
         s.wave.material.opacity = 0.9 * (1 - p);
-        s.waveEdge.material.opacity = 0.85 * (1 - p);
-        s.cross1.material.opacity = 0.7 * (1 - p);
+        if (s.waveEdge) s.waveEdge.material.opacity = 0.85 * (1 - p);
+        if (s.cross1) s.cross1.material.opacity = 0.7 * (1 - p);
         for (let k = 0; k < s.swordFan.length; k++) {
           s.swordFan[k].position.z = .7 + p * (1.2 + .25 * k);
           s.swordFan[k].rotation.z += dt * (k - 1) * 2;
+        }
+        for (const m of s.extras ?? []) {
+          const u = m.userData;
+          if (u.spin) m.rotation.z += dt * u.spin;
+          if (u.grow) m.scale.multiplyScalar(1 + u.grow * dt);
+          if (u.vx) m.position.x += u.vx * dt;
+          if (u.vy) m.position.y += u.vy * dt;
+          if (u.vz) m.position.z += u.vz * dt;
         }
         s.group.position.x += Math.sin(s.rot) * dt * 7;
         s.group.position.z += Math.cos(s.rot) * dt * 7;
@@ -1969,28 +2449,28 @@ export class PkVfx {
         pr.startSigil.material.opacity = Math.max(0, 0.95 * (1 - p));
       }
 
-      // Thần Long uốn lượn nhấp nhô
+      // Thần Long uốn lượn nhấp nhô — biên độ/tần số theo tông
       if (pr.dragon) {
-        pr.dragon.position.y = Math.sin(pr.age * 16) * 0.15;
-        pr.dragon.rotation.z = Math.sin(pr.age * 14) * 0.25;
+        pr.dragon.position.y = Math.sin(pr.age * 16) * (pr.wobble ?? .15) * .9;
+        pr.dragon.rotation.z = Math.sin(pr.age * 14) * .25;
       }
 
-      // 6 Phi Kiếm Tiên Hiệp xoắn ốc vần vũ quanh tâm
+      // 6 vệ tinh xoắn ốc quanh tâm — bán kính/tốc độ theo tông
       for (let k = 0; k < pr.swords.length; k++) {
         const sw = pr.swords[k];
-        const angle = pr.age * 18 + (k * Math.PI) / 3;
-        const radius = 0.42 + Math.sin(pr.age * 14 + k) * 0.14;
+        const angle = pr.age * (pr.orbitW ?? 18) + (k * Math.PI) / 3;
+        const radius = (pr.orbitR ?? .42) + Math.sin(pr.age * 14 + k) * (pr.wobble ?? .14) * .9;
         sw.position.x = Math.cos(angle) * radius;
         sw.position.y = Math.sin(angle) * radius;
         sw.position.z = Math.sin(pr.age * 12 + k) * 0.18;
         sw.rotation.z = angle + Math.PI / 2;
       }
 
-      // Nhả bụi kiếm linh & cánh sen kiếm khí rực rỡ
+      // Nhả bụi linh khí & cánh hoa theo tông aura
       pr.trailTimer += dt;
         if (pr.trailTimer >= 0.05) {
         pr.trailTimer = 0;
-        const trailColor = kColors[Math.floor(Math.random() * kColors.length)];
+        const trailColor = (pr.trailColors ?? kColors)[Math.floor(Math.random() * (pr.trailColors ?? kColors).length)];
         this.addTrailSpark(hx, hy, hz, trailColor);
       }
 
@@ -2003,19 +2483,38 @@ export class PkVfx {
           pr.startSigil.material.dispose();
         }
 
-        // Sóng xung kích Bát Quái
+        // Sóng xung kích cuối đường (màu theo tông aura)
+        const burstTheme = pkTheme(pr.effect);
         this.shockwave({
           x: pr.toX,
           y: pr.toY - 0.7,
           z: pr.toZ,
-          color: 0xd8b46d,
+          color: burstTheme?.accent ?? 0xd8b46d,
           maxRadius: pr.radius,
           duration: 0.38,
         });
 
-        // 24 Mảnh vụn kiếm linh bùng tỏa 360 độ
+        // Cột năng lượng dâng ở đích cho tông có pillar (lửa / nước / trăng / tối)
+        if (burstTheme?.pillar) {
+          const beam = new THREE.Mesh(
+            new THREE.CylinderGeometry(.5, .85, 3.8, 18, 1, true),
+            new THREE.MeshBasicMaterial({ color: burstTheme.core, side: THREE.DoubleSide,
+              transparent: true, opacity: .5, depthWrite: false, blending: THREE.AdditiveBlending }),
+          );
+          beam.position.set(pr.toX, pr.toY + 1.5, pr.toZ);
+          this.scene.add(beam);
+          this.pillars.push({ mesh: beam, age: 0, life: .55 });
+        }
+
+        // 24 mảnh vụn linh khí bùng tỏa 360 độ — hạt và màu theo tông aura
+        const burstGeo = burstTheme?.burstGeo === 'petal' ? this.petalGeo
+          : burstTheme?.burstGeo === 'shard' ? this.iceShardGeo : this.sparkGeo;
         for (let j = 0; j < 24; j++) {
-          const sparkMesh = new THREE.Mesh(this.sparkGeo, this.goldMat.clone());
+          const sparkMat = new THREE.MeshBasicMaterial({
+            color: burstTheme ? burstTheme.burst[j % burstTheme.burst.length] : 0xd8b46d,
+            blending: THREE.AdditiveBlending,
+          });
+          const sparkMesh = new THREE.Mesh(burstGeo, sparkMat);
           sparkMesh.position.set(pr.toX, pr.toY, pr.toZ);
           const angle = (j / 24) * Math.PI * 2;
           const speed = 2.4 + Math.random() * 2.4;
@@ -2025,7 +2524,7 @@ export class PkVfx {
             vx: Math.cos(angle) * speed,
             vy: 1.0 + Math.random() * 2.2,
             vz: Math.sin(angle) * speed,
-            rotSpeed: 0,
+            rotSpeed: burstTheme?.burstGeo === 'petal' ? (Math.random() - .5) * 8 : 0,
             age: 0,
             life: 0.4,
           });
@@ -2080,7 +2579,7 @@ export class PkVfx {
         ds.streak.material.opacity = Math.max(0, 0.9 * (1 - p));
         ds.wake.material.opacity = Math.max(0, 0.38 * (1 - p));
         ds.trail.material.opacity = Math.max(0, 0.8 * (1 - p));
-        for (const blade of ds.blades) blade.scale.setScalar(.8 * (1 - p));
+        for (const blade of ds.blades) blade.scale.setScalar((blade.userData.s0 ?? .7) * .8 * (1 - p));
         for (const g of ds.ghosts) {
           g.traverse((o) => {
             if (o.material) o.material.opacity = Math.max(0, 0.65 * (1 - p));
@@ -2112,13 +2611,13 @@ export class PkVfx {
         sh.ring1.rotation.z += dt * 1.6;
         sh.ring2.rotation.y += dt * 1.2;
 
-      // Xoay 4 thanh Trấn Sơn Kiếm hộ thể 4 phương
+      // Xoay linh vật hộ thể quanh thân — bước góc theo số lượng thực tế
       for (let k = 0; k < sh.guardianSwords.length; k++) {
         const sw = sh.guardianSwords[k];
-        const angle = sh.age * 1.8 + (k * Math.PI) / 2;
+        const angle = sh.age * 1.8 + (k * Math.PI * 2) / sh.guardianSwords.length;
         const radius = 1.35;
         sw.position.set(Math.cos(angle) * radius, Math.sin(sh.age * 6 + k) * 0.12, Math.sin(angle) * radius);
-        sw.rotation.y = -angle; // Mũi kiếm chĩa ra ngoài
+        sw.rotation.y = -angle; // Mũi chĩa ra ngoài
         sw.rotation.z = Math.sin(sh.age * 8 + k) * 0.15;
       }
 
@@ -2126,6 +2625,17 @@ export class PkVfx {
       sh.shieldGlow.scale.set(pulse, pulse, pulse);
       sh.lotus.rotation.y += dt * .8;
       sh.lotus.scale.setScalar(.92 + .08 * Math.sin(sh.age * 6));
+      // Gợn sóng lan (Lưu ly) và vành nguyệt thở (Nguyệt bạch)
+      for (const r of sh.ripples ?? []) {
+        const q = (sh.age % 1.1) / 1.1;
+        r.scale.setScalar(.35 + q * 1.05);
+        r.material.opacity = .55 * (1 - q);
+      }
+      if (sh.haloRing) {
+        const hp = 1 + Math.sin(sh.age * 4) * .05;
+        sh.haloRing.scale.set(hp, hp, 1);
+        sh.haloRing.rotation.z += dt * .6;
+      }
 
       if (p >= 1) {
         this.shatterIce(sh.x, sh.y, sh.z);
@@ -2167,16 +2677,38 @@ export class PkVfx {
         for (let j = 0; j < 24; j++) {
           const angle = j * Math.PI / 12 + (j % 2) * 0.12;
           const spread = field.radius * (j % 3 === 0 ? 0.42 : j % 3 === 1 ? 0.7 : 0.88);
-          const fall = Math.min(1, Math.max(0, p * 2.4 - (j % 4) * 0.1));
-          sword.position.set(Math.cos(angle) * spread, 4.5 - fall * 4.5,
-            Math.sin(angle) * spread);
-          sword.rotation.set(Math.PI, angle + Math.PI / 2, 0);
+          const prog = Math.min(1, Math.max(0, p * 2.4 - (j % 4) * 0.1));
+          if (field.rise) {
+            // Bùng từ mặt đất (tàn lửa / trúc tiễn / quỷ hỏa) — mũi chỉa lên trời.
+            sword.position.set(Math.cos(angle) * spread, -0.45 + prog * 3.4, Math.sin(angle) * spread);
+            sword.rotation.set(0, angle + Math.PI / 2, 0);
+          } else {
+            // Rơi từ trời (mưa kiếm / cánh hoa / sao / liềm trăng).
+            sword.position.set(Math.cos(angle) * spread, 4.5 - prog * 4.5, Math.sin(angle) * spread);
+            sword.rotation.set(Math.PI, angle + Math.PI / 2, 0);
+          }
           sword.scale.setScalar(Math.min(1, (1 - p) * 5));
           sword.updateMatrix();
           field.swords.setMatrixAt(j, sword.matrix);
         }
         field.swords.instanceMatrix.needsUpdate = true;
         field.swords.material.opacity = 0.96 * Math.min(1, (1 - p) * 3);
+      }
+    }
+
+    // 4b. Cột năng lượng ở đích (Pillar) — nở nhẹ rồi tắt
+    for (let i = this.pillars.length - 1; i >= 0; i--) {
+      const pl = this.pillars[i];
+      pl.age += dt;
+      const p = pl.age / pl.life;
+      if (p >= 1) {
+        this.scene.remove(pl.mesh);
+        pl.mesh.geometry.dispose();
+        pl.mesh.material.dispose();
+        this.pillars.splice(i, 1);
+      } else {
+        pl.mesh.scale.set(1 + p * .7, 1 + p * .35, 1 + p * .7);
+        pl.mesh.material.opacity = .5 * (1 - p);
       }
     }
 
@@ -2360,6 +2892,13 @@ export class PkVfx {
       sw.mesh.material.dispose();
     }
     this.shockwaves.length = 0;
+
+    for (const pl of this.pillars) {
+      this.scene.remove(pl.mesh);
+      pl.mesh.geometry.dispose();
+      pl.mesh.material.dispose();
+    }
+    this.pillars.length = 0;
 
     for (const d of this.damagePopups) {
       this.scene.remove(d.sprite);
