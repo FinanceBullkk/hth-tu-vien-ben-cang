@@ -147,6 +147,8 @@ export class PkActivity {
     } else if (event.type === 'dash' && r) {
       r.x = event.toX; r.z = event.toZ;
       this.app.world.pkVfx.dash({ ...event, effect });
+      // Kit xung kích chém trên đường lướt — server trả hits, render popup sát thương.
+      if (event.hits?.length) this.hit(event);
     } else if (event.type === 'shield' && r) {
       this.app.world.pkVfx.shield({ x: r.x, y: r.y, z: r.z, duration: event.duration, effect,
         targetFn: () => ({ x: r.x, y: r.y, z: r.z }) });
@@ -161,8 +163,9 @@ export class PkActivity {
       if (!target) continue;
       if (impact.targetHp !== 0) target.avatar.flinch();
       const x = impact.x ?? target.x, z = impact.z ?? target.z;
+      // Server báo cờ khiên; bản cũ không có cờ thì đoán theo mốc sát thương cũ.
       this.app.world.pkVfx.hit({ x, y: floorHeight(x, z), z, damage: impact.damage,
-        isShielded: impact.damage < (event.type === 'slashQ' ? 16 : 20) });
+        isShielded: impact.shielded ?? impact.damage < (event.type === 'slashQ' ? 16 : 20) });
       if (local) this.app.follow?.shake?.(0.16);
     }
   }
