@@ -8,6 +8,7 @@ import { FISH_RODS, rodOf } from '../../../shared/fish-gear.js';
 import { rarityColor, rarityName, rodGlyphSvg, thinhGlyphSvg } from './bag-tooltip.js';
 import { h } from './dom.js';
 import { fishPortraitSvg } from './fish-portrait.js';
+import { inkIcon } from './ink-icons.js';
 
 const svgBox = (cls, svg) => {
   const el = h('span', { class: cls });
@@ -36,21 +37,26 @@ function sideSlot(entries, entry, art, { onPick, label = '', aria = '' }) {
   return slot;
 }
 
-const box = (label, value) => h('div', { class: 'bagx-stat' }, h('span', {}, label), h('b', {}, value));
+/** Ô chỉ số: icon tròn màu tone, nhãn nhỏ, số to. warn tô đỏ số (ví dụ túi sắp đầy). */
+const tile = (icon, tone, label, value, warn = false) => h('div', { class: `bagx-stat${warn ? ' warn' : ''}`, style: `--tone:${tone}` },
+  h('span', { class: 'bagx-stat-ico' }, inkIcon(icon)),
+  h('span', { class: 'bagx-stat-txt' }, h('small', {}, label), h('b', {}, value)));
 
-/** Thanh màu: ratio 0..1, text là con số hiển thị. */
+/** Một hàng chỉ số cần: nhãn | thanh chia vạch | số. ratio 0..1. */
 const bar = (label, ratio, text, color) => h('div', { class: 'bagx-bar', style: `--bar:${color}` },
   h('span', {}, label),
-  h('i', {}, h('u', { style: `width:${Math.round(Math.min(1, Math.max(0, ratio)) * 100)}%` }), h('b', {}, text)));
+  h('i', {}, h('u', { style: `width:${Math.round(Math.min(1, Math.max(0, ratio)) * 100)}%` })),
+  h('b', {}, text));
 
+/** Ngư hạng hiện tại, giá trị túi, và thanh tiến tới ngư hạng kế tiếp (đủ rộng để chữ không bị cắt). */
 function levelRow(bag) {
   const next = nextAnglerTitle(bag.species);
   const ratio = next ? (bag.species - next.from) / (next.species - next.from) : 1;
   const text = next ? `${bag.species}/${next.species} loài → ${next.title}` : `Đủ ${bag.species} loài · bậc cao nhất`;
   return h('div', { class: 'bagx-level' },
     h('span', { class: 'bagx-lv' }, anglerTitle(bag.species)),
-    h('i', { class: 'bagx-exp' }, h('u', { style: `width:${Math.round(ratio * 100)}%` }), h('b', {}, text)),
-    h('span', { class: 'bagx-power' }, 'Giá trị túi', h('b', {}, String(bagValue(bag.items)))));
+    h('span', { class: 'bagx-power' }, inkIcon('coin'), 'Giá trị túi', h('b', {}, String(bagValue(bag.items)))),
+    h('i', { class: 'bagx-exp' }, h('u', { style: `width:${Math.round(ratio * 100)}%` }), h('b', {}, text)));
 }
 
 /** Vẽ cột Thông tin; trả về các ô vừa vẽ (có key) để bảng chi tiết tra cứu. */
@@ -88,10 +94,13 @@ export function renderInfoPanel(root, { name, bag, bait, onPick }) {
     levelRow(bag),
     h('div', { class: 'bagx-statbox' },
       h('div', { class: 'bagx-stats' },
-        box('Sổ cá', `${bag.species}/${FISH.length}`),
-        box('Đã câu', String(bag.caught)),
-        box('Cá hiếm+', String(rare)),
-        box('Ô túi', `${bag.items.length}/${bag.capacity}`)),
+        tile('book', '#21a38f', 'Sổ cá', `${bag.species}/${FISH.length}`),
+        tile('fish', '#2f84d8', 'Đã câu', String(bag.caught)),
+        tile('gem', '#9b52e0', 'Cá hiếm+', String(rare)),
+        tile('bag', '#e9781a', 'Ô túi', `${bag.items.length}/${bag.capacity}`, bag.items.length >= bag.capacity * 0.9)),
+      h('div', { class: 'bagx-rod-head' },
+        h('span', {}, 'Cần đang dùng'),
+        h('b', { style: `--rc:${rarityColor(rod.rarity)}` }, rod.name)),
       h('div', { class: 'bagx-bars' },
         bar('Giữ cá', (rod.half - 1) / TOP.half, rod.half > 1 ? `+${Math.round((rod.half - 1) * 100)}%` : 'Gốc', '#ff8a2a'),
         bar('Tụt chậm', (1 - rod.drain) / TOP.drain, rod.drain < 1 ? `${Math.round((1 - rod.drain) * 100)}%` : 'Gốc', '#f5c531'),
