@@ -48,6 +48,13 @@ const bar = (label, ratio, text, color) => h('div', { class: 'bagx-bar', style: 
   h('i', {}, h('u', { style: `width:${Math.round(Math.min(1, Math.max(0, ratio)) * 100)}%` })),
   h('b', {}, text));
 
+/** Bốn thanh chỉ số của một cây cần, đo tương đối với cần xịn nhất. Dùng ở túi đồ và quầy Bena. */
+export const rodStatBars = (rod) => h('div', { class: 'bagx-bars' },
+  bar('Giữ cá', (rod.half - 1) / TOP.half, rod.half > 1 ? `+${Math.round((rod.half - 1) * 100)}%` : 'Gốc', '#ff8a2a'),
+  bar('Tụt chậm', (1 - rod.drain) / TOP.drain, rod.drain < 1 ? `${Math.round((1 - rod.drain) * 100)}%` : 'Gốc', '#f5c531'),
+  bar('Sử thi', (rod.luck?.[4] ?? 1) / TOP.epic, `×${rod.luck?.[4] ?? 1}`, '#b46cf0'),
+  bar('Huyền thoại', (rod.luck?.[5] ?? 1) / TOP.legend, (rod.luck?.[5] ?? 1) === 0 ? 'Không' : `×${rod.luck?.[5] ?? 1}`, '#e8452c'));
+
 /** Ngư hạng hiện tại, giá trị túi, và thanh tiến tới ngư hạng kế tiếp (đủ rộng để chữ không bị cắt). */
 function levelRow(bag) {
   const next = nextAnglerTitle(bag.species);
@@ -101,11 +108,7 @@ export function renderInfoPanel(root, { name, bag, bait, onPick }) {
       h('div', { class: 'bagx-rod-head' },
         h('span', {}, 'Cần đang dùng'),
         h('b', { style: `--rc:${rarityColor(rod.rarity)}` }, rod.name)),
-      h('div', { class: 'bagx-bars' },
-        bar('Giữ cá', (rod.half - 1) / TOP.half, rod.half > 1 ? `+${Math.round((rod.half - 1) * 100)}%` : 'Gốc', '#ff8a2a'),
-        bar('Tụt chậm', (1 - rod.drain) / TOP.drain, rod.drain < 1 ? `${Math.round((1 - rod.drain) * 100)}%` : 'Gốc', '#f5c531'),
-        bar('Sử thi', (rod.luck?.[4] ?? 1) / TOP.epic, `×${rod.luck?.[4] ?? 1}`, '#b46cf0'),
-        bar('Huyền thoại', (rod.luck?.[5] ?? 1) / TOP.legend, (rod.luck?.[5] ?? 1) === 0 ? 'Không' : `×${rod.luck?.[5] ?? 1}`, '#e8452c'))),
+      rodStatBars(rod)),
   );
   return entries;
 }
