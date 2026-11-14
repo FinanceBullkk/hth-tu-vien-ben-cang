@@ -1,38 +1,39 @@
-/* DANH HIỆU CHÍ TÔN KIỂU MMO 2D — chỉ người đeo hào quang chí tôn (avatar-title.js đặt .tag[data-board]).
-   Danh hiệu: chữ viết tay nghiêng tô chuyển màu, viền tối dày, quầng mỏng; hai cánh vuốt hai bên; sao lấp lánh;
-   vệt sáng chạy qua chữ. Tên: chữ vàng viền đen, không đóng hộp, ô huy hiệu vàng nhỏ phía trước.
+/* DANH HIỆU CHÍ TÔN KIỂU VÕ LÂM CHI MỘNG — chỉ người đeo hào quang chí tôn (avatar-title.js đặt .tag[data-board]).
+   Từ trên xuống: danh hiệu chữ viết tay tô màu viền tối kẹp giữa hai cánh lông vũ ngang đầu cuộn xoáy;
+   dòng hiệu phụ chữ xanh ngọc viền đen với ô ấn vàng chữ đỏ treo bên trái; tên chữ trắng viền đen, không khung.
    Cấu trúc ở client/src/player/vip-title-badge.js. */
 
 .tag[data-board="than-bai"] {
-  --vt-fill: linear-gradient(180deg, #fffbd0 8%, #ffe04a 34%, #ff9a12 60%, #e5330c 92%);
-  --vt-edge: #3a0800; --vt-glow: rgba(255, 110, 20, .75); --vt-badge: 'Bài';
+  --vt-fill: linear-gradient(180deg, #fffbc8 10%, #ffd84a 38%, #ff9a1c 64%, #e8501a 92%);
+  --vt-edge: #4a0a00; --vt-glow: rgba(255, 90, 60, .6);
 }
 .tag[data-board="vua-cau-ca"] {
-  --vt-fill: linear-gradient(180deg, #ffffff 8%, #c8f6ff 34%, #4cc8f2 60%, #1767c8 92%);
-  --vt-edge: #031c36; --vt-glow: rgba(40, 190, 255, .75); --vt-badge: 'Ngư';
+  --vt-fill: linear-gradient(180deg, #ffffff 10%, #d8f9ff 38%, #6fd6ff 64%, #2a8ee0 92%);
+  --vt-edge: #03264a; --vt-glow: rgba(60, 180, 255, .6);
 }
-.tag[data-board] { gap: 0; }
+/* Chữ nhỏ kiểu MMO 2D: font chân phương, viền đen 1px bốn phía. */
+.tag[data-board] { gap: 1px; --vt-ink: 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000, 0 0 2px #000; }
 
 /* ----- Danh hiệu ----- */
 .tag[data-board] .tag-title {
-  z-index: 1; padding: 0; margin: 0 0 -2px; line-height: 1; background: none; text-shadow: none; animation: none;
+  z-index: 1; padding: 0; margin: 0; line-height: 1; background: none; text-shadow: none; animation: none;
   filter: none; -webkit-text-fill-color: initial; letter-spacing: 0;
 }
 .tag[data-board] .tag-title::before,
 .tag[data-board] .tag-title::after { content: none; }
 
-.vtt { position: relative; display: flex; align-items: center; padding: 2px 4px; }
-.vtt-word { position: relative; display: block; margin: 0 -3px; }
+.vtt { display: flex; flex-direction: column; align-items: center; }
+.vtt-art { position: relative; display: flex; align-items: center; }
+.vtt-word { position: relative; display: block; margin: 0 -4px; }
 .vtt-outline, .vtt-text {
-  display: block; padding: 2px 9px 4px 6px; white-space: nowrap; /* phải rộng hơn vì nét nghiêng vươn ra */
-  font: 700 22px/1.25 "Segoe Script", "Brush Script MT", var(--serif); letter-spacing: .01em;
+  display: block; padding: 1px 8px 3px 5px; white-space: nowrap; /* phải rộng hơn vì nét nghiêng vươn ra */
+  font: 700 19px/1.25 "Segoe Script", "Brush Script MT", var(--serif);
 }
-/* Viền tối dày + quầng màu chủ đề, nằm dưới chữ màu (chữ HTML không có paint-order nên tách lớp). */
+/* Viền tối dày dưới chữ màu (chữ HTML không có paint-order nên tách lớp). */
 .vtt-outline {
-  position: absolute; inset: 0; color: var(--vt-edge); -webkit-text-stroke: 4.5px var(--vt-edge);
-  filter: drop-shadow(0 0 3px var(--vt-glow)) drop-shadow(0 1px 1px #000);
+  position: absolute; inset: 0; color: var(--vt-edge); -webkit-text-stroke: 4px var(--vt-edge);
+  filter: drop-shadow(0 0 2px var(--vt-glow));
 }
-/* Chữ màu: dải chuyển sắc theo chủ đề + vệt sáng trắng chạy ngang. */
 .vtt-text {
   position: relative; color: transparent; -webkit-text-fill-color: transparent;
   background:
@@ -42,45 +43,52 @@
   animation: vttSweep 3.6s ease-in-out infinite;
 }
 
-/* Cánh vuốt hai bên (SVG đã lật sẵn cho bên phải); đập nhẹ quanh gốc sát chữ. */
-.vtt-side { display: block; width: 34px; height: 23px; line-height: 0; }
-.vtt-wing { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 2px var(--vt-glow)); }
-.vtt-side.l { transform-origin: 100% 60%; animation: vttFlapL 2.4s ease-in-out infinite; }
-.vtt-side.r { transform-origin: 0 60%; animation: vttFlapR 2.4s ease-in-out infinite; }
+/* Cánh lông vũ ngang (SVG đã lật sẵn cho bên phải), khẽ phập phồng quanh gốc sát chữ. */
+.vtt-side { display: block; width: 44px; height: 19px; line-height: 0; }
+.vtt-wing { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 1.5px var(--vt-glow)); }
+.vtt-side.l { transform-origin: 100% 55%; animation: vttFlapL 2.6s ease-in-out infinite; }
+.vtt-side.r { transform-origin: 0 55%; animation: vttFlapR 2.6s ease-in-out infinite; }
 
-/* Sao lấp lánh bốn cánh. */
+/* Sao lấp lánh bốn cánh (sao vàng như sprite danh hiệu). */
 .vtt-star {
-  position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; opacity: 0; pointer-events: none;
+  position: absolute; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; opacity: 0; pointer-events: none;
   background:
-    radial-gradient(circle, #fff 0 1.3px, rgba(255, 255, 255, .5) 2.2px, transparent 3.6px),
-    linear-gradient(transparent 46%, rgba(255, 255, 255, .95) 50%, transparent 54%),
-    linear-gradient(90deg, transparent 46%, rgba(255, 255, 255, .95) 50%, transparent 54%);
+    radial-gradient(circle, #fff 0 1.2px, rgba(255, 240, 150, .6) 2px, transparent 3.4px),
+    linear-gradient(transparent 46%, rgba(255, 246, 190, .95) 50%, transparent 54%),
+    linear-gradient(90deg, transparent 46%, rgba(255, 246, 190, .95) 50%, transparent 54%);
   animation: vttStar 2.8s ease-in-out infinite;
 }
-.vtt-star.s1 { left: 6%; top: 18%; }
-.vtt-star.s2 { left: 58%; top: 10%; animation-delay: .95s; }
-.vtt-star.s3 { left: 93%; top: 78%; animation-delay: 1.9s; }
+.vtt-star.s1 { left: 9%; top: 22%; }
+.vtt-star.s2 { left: 55%; top: 6%; animation-delay: .95s; }
+.vtt-star.s3 { left: 91%; top: 72%; animation-delay: 1.9s; }
+
+/* ----- Hiệu phụ xanh ngọc + ô ấn vàng treo trái ----- */
+.vtt-epithet {
+  position: relative; display: block; margin-top: 1px; white-space: nowrap;
+  font: 700 13px/1.25 "Times New Roman", var(--serif); color: #74f2e2; text-shadow: var(--vt-ink);
+}
+.vtt-seal {
+  position: absolute; right: 100%; top: 1px; margin-right: 7px; min-width: 21px; height: 21px; padding: 0 2px; box-sizing: border-box;
+  display: grid; place-items: center; border: 1.5px solid #2a1200; border-radius: 2px;
+  background: linear-gradient(180deg, #fff6a8, #ffd22e 48%, #e39a0c);
+  box-shadow: inset 0 0 0 1px #fff7c4, 0 1px 2px rgba(0, 0, 0, .6);
+  font: 700 9px/1 "Segoe Script", "Brush Script MT", var(--serif); letter-spacing: -.03em; color: #c80f1e; text-shadow: none;
+}
 
 @keyframes vttSweep { 0% { background-position: 150% 0, 0 0; } 55%, 100% { background-position: -50% 0, 0 0; } }
-@keyframes vttFlapL { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(9deg); } }
-@keyframes vttFlapR { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-9deg); } }
+@keyframes vttFlapL { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(5deg); } }
+@keyframes vttFlapR { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-5deg); } }
 @keyframes vttStar {
   0%, 100% { opacity: 0; transform: scale(.3) rotate(0); }
   14% { opacity: 1; transform: scale(1) rotate(45deg); }
   30% { opacity: 0; transform: scale(.4) rotate(90deg); }
 }
 
-/* ----- Tên người chơi: chữ vàng viền đen, ô huy hiệu vàng nhỏ phía trước ----- */
+/* ----- Tên người chơi: chữ trắng viền đen, không khung ----- */
 .tag[data-board] .tag-name {
-  display: flex; align-items: center; gap: 4px; padding: 0 2px; border: 0; border-radius: 0; background: none;
-  font: 700 14px/1.2 var(--serif); letter-spacing: .02em; color: #ffe35c;
-  text-shadow: 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000, 0 0 3px #000;
-}
-.tag[data-board] .tag-name::before {
-  content: var(--vt-badge); flex: none; padding: 1px 3px; border: 1px solid #5a2600; border-radius: 3px;
-  font: 700 10px/1.1 var(--serif); color: #6a1500; text-shadow: none;
-  background: linear-gradient(180deg, #fff7c2, #ffd23f 45%, #d98a12);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .55), 0 0 4px var(--vt-glow);
+  padding: 0 2px; border: 0; border-radius: 0; background: none;
+  font: 700 13.5px/1.25 "Times New Roman", var(--serif); letter-spacing: .01em; color: #fffbec;
+  text-shadow: var(--vt-ink);
 }
 
 @media (prefers-reduced-motion: reduce) {

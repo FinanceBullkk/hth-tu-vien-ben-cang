@@ -1,7 +1,7 @@
 // Danh hiệu đi cùng aura. Phần lớn chỉ để trang trí; riêng hào quang chí tôn (vip) phải đạt thành tích
 // mới mua được (SHOP_REQUIREMENTS) nên danh hiệu của chúng chạy ánh kim để người khác nhận ra, và cả nhãn
-// tên đổi kiểu riêng theo chủ đề kiểu MMO 2D: danh hiệu là chữ viết tay tô màu viền tối có cánh hai bên
-// (vip-title-badge.js), tên là chữ vàng viền đen có ô huy hiệu, không đóng hộp (client/src/ui/vip-name-board.css).
+// tên đổi kiểu Võ Lâm Chi Mộng: danh hiệu chữ viết tay có cánh, hiệu phụ xanh ngọc với ô ấn vàng
+// (vip-title-badge.js), tên chữ trắng viền đen không khung (client/src/ui/vip-name-board.css).
 import { createTitleBadge } from './vip-title-badge.js';
 
 export const AURA_TITLES = [

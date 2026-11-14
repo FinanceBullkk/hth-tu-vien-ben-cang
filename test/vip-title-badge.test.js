@@ -1,5 +1,5 @@
-// Danh hiệu chí tôn kiểu MMO 2D: chỉ hai danh hiệu chí tôn có kiểu riêng; cấu trúc cánh, chữ hai lớp, sao;
-// chữ lấy đúng danh hiệu qua textContent; cánh là SVG hằng số an toàn.
+// Danh hiệu chí tôn kiểu Võ Lâm Chi Mộng: chỉ hai danh hiệu chí tôn có kiểu riêng; cấu trúc cánh, chữ hai lớp,
+// sao, hiệu phụ có ô ấn; chữ lấy qua textContent; cánh là SVG hằng số an toàn.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createTitleBadge, TITLE_BOARDS } from '../client/src/player/vip-title-badge.js';
@@ -21,14 +21,15 @@ test('chỉ hai danh hiệu chí tôn có kiểu riêng', () => {
   assert.ok(AURA_TITLES.filter(t => t.board).every(t => t.vip));
 });
 
-test('danh hiệu: cánh trái + chữ (viền dưới, chữ màu trên) + cánh phải + sao; board lạ không dựng gì', () => {
+test('danh hiệu kiểu Võ Lâm Chi Mộng: cánh + chữ hai lớp + sao, rồi hiệu phụ có ô ấn; board lạ không dựng gì', () => {
   globalThis.document = fakeDocument();
   try {
     assert.equal(createTitleBadge('khong-co', 'X'), null);
     for (const board of TITLE_BOARDS) {
       const root = createTitleBadge(board, 'Thần Bài');
       assert.equal(root.className, 'vtt');
-      const [left, word, right, ...stars] = root.children;
+      const [art, epithet] = root.children;
+      const [left, word, right, ...stars] = art.children;
       assert.equal(left.className, 'vtt-side l');
       assert.equal(right.className, 'vtt-side r');
       assert.equal(stars.length, 3);
@@ -36,6 +37,11 @@ test('danh hiệu: cánh trái + chữ (viền dưới, chữ màu trên) + cán
       assert.equal(outline.attrs['aria-hidden'], 'true');
       assert.equal(text.className, 'vtt-text');
       assert.equal(text.textContent, 'Thần Bài');
+      // Hiệu phụ: ô ấn chữ ngắn treo trái + dòng chữ.
+      const [seal, line] = epithet.children;
+      assert.equal(seal.className, 'vtt-seal');
+      assert.ok(seal.textContent.length > 0 && seal.textContent.length <= 3);
+      assert.ok(line.textContent.length > 0);
       // Cánh là SVG hằng số: không script, không tải ngoài; bên phải lật gương.
       for (const side of [left, right]) {
         assert.match(side.innerHTML, /^<svg class="vtt-wing"/);
