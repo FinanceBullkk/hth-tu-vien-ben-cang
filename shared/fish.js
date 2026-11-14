@@ -1,5 +1,6 @@
 // Câu cá ở hồ trong sân, dùng chung client + server: danh mục cá, mồi, roll loài và mô phỏng pha giằng co.
 // Cùng một hàm mô phỏng: client vẽ cho mượt, server tính thật và quyết định đầy hay tuột.
+import { BAITS, DEFAULT_BAIT, FISH } from './fish-catalog.js';
 import { THINH, rodOf } from './fish-gear.js';
 import { LAKE, lakeDistance } from './layout.js';
 
@@ -23,45 +24,23 @@ export const FISH_FIGHT = {
     1: { half: 0.2, speed: 0.7, gain: 0.15, drain: 0.06 },
     2: { half: 0.14, speed: 0.95, gain: 0.115, drain: 0.08 },
     3: { half: 0.095, speed: 1.25, gain: 0.085, drain: 0.1 },
+    4: { half: 0.08, speed: 1.4, gain: 0.075, drain: 0.11 },
+    5: { half: 0.068, speed: 1.55, gain: 0.068, drain: 0.12 },
   },
 };
 
-export const BAITS = [
-  { id: 'bot', name: 'Mồi bột', seal: '粉' },
-  { id: 'giun', name: 'Mồi giun', seal: '蚓' },
-  { id: 'rau', name: 'Mồi rau', seal: '草' },
-];
-export const DEFAULT_BAIT = 'giun';
+export { BAITS, DEFAULT_BAIT, FISH, FISH_RARITY, MAX_RARITY } from './fish-catalog.js';
 
-// rarity 1 thường, 2 quý, 3 hiếm. bait: loài này mê mồi nào; null là đồ thất lạc, mồi nào cũng vướng.
-// time: chỉ cắn lúc hoàng hôn ('dusk') hoặc đêm ('night'); bỏ trống là lúc nào cũng có.
-export const FISH = [
-  { id: 'com', name: 'Cá cơm', rarity: 1, minW: 0.05, maxW: 0.2, bait: 'bot' },
-  { id: 'doi', name: 'Cá đối', rarity: 1, minW: 0.4, maxW: 1.2, bait: 'rau' },
-  { id: 'thu', name: 'Cá thu', rarity: 1, minW: 0.8, maxW: 2.4, bait: 'giun' },
-  { id: 'dep', name: 'Dép tổ ong của sếp', rarity: 1, minW: 0.3, maxW: 0.45, bait: null },
-  { id: 'hong', name: 'Cá hồng', rarity: 2, minW: 1.2, maxW: 3.5, bait: 'rau' },
-  { id: 'mu', name: 'Cá mú', rarity: 2, minW: 1.5, maxW: 4.2, bait: 'giun' },
-  { id: 'voa', name: 'Cá vòa', rarity: 2, minW: 0.6, maxW: 1.8, bait: 'rau' },
-  { id: 'giay', name: 'Giày da CEO', rarity: 2, minW: 0.7, maxW: 0.9, bait: null },
-  { id: 'ngu_van', name: 'Cá ngừ vằn', rarity: 2, minW: 3, maxW: 8, bait: 'bot' },
-  { id: 'nham', name: 'Cá nhám mập', rarity: 3, minW: 8, maxW: 24, bait: 'giun' },
-  { id: 'ngu_duong', name: 'Cá ngừ đại dương', rarity: 3, minW: 20, maxW: 60, bait: 'bot' },
-  { id: 'container', name: 'Container thất lạc (mô hình)', rarity: 3, minW: 2.4, maxW: 2.4, bait: null },
-  { id: 'long_den', name: 'Cá lồng đèn', rarity: 2, minW: 0.5, maxW: 1.6, bait: 'bot', time: 'night' },
-  { id: 'trang', name: 'Cá mặt trăng', rarity: 3, minW: 6, maxW: 18, bait: 'rau', time: 'night' },
-  { id: 'chep_vang', name: 'Cá chép vàng', rarity: 3, minW: 2, maxW: 7, bait: 'rau', time: 'dusk' },
-];
-
-const RARITY_WEIGHT = { 1: 58, 2: 32, 3: 10 };
+const RARITY_WEIGHT = { 1: 58, 2: 32, 3: 10, 4: 3, 5: 1.2 };
 const WRONG_BAIT_FACTOR = 0.12;
 const JUNK_FACTOR = 0.25; // đồ thất lạc mồi nào cũng vướng nên phải hiếm hơn cá, kẻo người mới toàn kéo lên dép
 // Quăng trúng bóng nào thì loài cắn nghiêng theo cỡ bóng đó; thả vào chỗ trống vẫn có cá, nhưng hiếm khi quý.
+// Cá sử thi, huyền thoại gần như chỉ rình bóng lớn.
 const SHADOW_BIAS = {
-  none: { 1: 1.3, 2: 0.6, 3: 0.2 },
-  s: { 1: 1.3, 2: 0.8, 3: 0.3 },
-  m: { 1: 0.7, 2: 1.8, 3: 1 },
-  l: { 1: 0.2, 2: 1.2, 3: 5 },
+  none: { 1: 1.3, 2: 0.6, 3: 0.2, 4: 0.08, 5: 0.03 },
+  s: { 1: 1.3, 2: 0.8, 3: 0.3, 4: 0.12, 5: 0.04 },
+  m: { 1: 0.7, 2: 1.8, 3: 1, 4: 0.6, 5: 0.25 },
+  l: { 1: 0.2, 2: 1.2, 3: 5, 4: 3, 5: 2.5 },
 };
 export const SHADOW_WAIT = { none: 1, s: 0.75, m: 0.7, l: 0.6 }; // có bóng thì cá cắn sớm hơn
 export const CAST_MAX_REACH = 12; // quăng xa nhất từ chỗ đứng, đủ tới phần lớn mặt hồ
@@ -88,7 +67,8 @@ export function fishHint(fish) {
   const parts = [bait ? bait.name : 'Mồi nào cũng vướng'];
   if (fish.time === 'night') parts.push('chỉ cắn ban đêm');
   if (fish.time === 'dusk') parts.push('chỉ cắn lúc hoàng hôn');
-  if (fish.rarity === 3) parts.push('rình bóng lớn');
+  if (fish.rarity === 5) parts.push('rình bóng lớn, cần trúc đen trở lên');
+  else if (fish.rarity >= 3) parts.push('rình bóng lớn');
   else if (fish.rarity === 2) parts.push('rình bóng vừa');
   return parts.join(' · ');
 }
@@ -123,15 +103,19 @@ export function castSpot(x, z, tx, tz) {
   return spotAt(ux, uz, Math.min(toLake, 5.5));
 }
 
-/** Roll loài + cân nặng deterministic. Mồi đúng, bóng to, đúng giờ và có rắc thính làm tăng tỉ lệ. */
-export function fishRoll(castAt, salt = 0, { bait = DEFAULT_BAIT, shadow = null, night = false, thinh = false } = {}) {
+/**
+ * Roll loài + cân nặng deterministic. Mồi đúng, bóng to, đúng giờ, có rắc thính và cần xịn làm tăng tỉ lệ cá quý.
+ * rod: bậc cần câu; luck của cần nhân thêm vào từng phẩm chất, luck 0 là cần đó không kéo nổi loài ấy.
+ */
+export function fishRoll(castAt, salt = 0, { bait = DEFAULT_BAIT, shadow = null, night = false, thinh = false, rod = 0 } = {}) {
   const shadowBias = SHADOW_BIAS[shadow ?? 'none'];
-  const bias = thinh ? Object.fromEntries(Object.entries(shadowBias).map(([r, v]) => [r, v * THINH.rareBias[r]])) : shadowBias;
+  const luck = rodOf(rod).luck ?? {};
+  const bias = (r) => shadowBias[r] * (thinh ? THINH.rareBias[r] : 1) * (luck[r] ?? 1);
   const period = night ? 'night' : 'dusk';
   const rand = lcg((Math.imul(castAt, 2246822519) ^ Math.imul(salt + 1, 3266489917)) >>> 0);
   const weightOf = (f) => (f.time && f.time !== period ? 0 : RARITY_WEIGHT[f.rarity])
     * (f.bait === null ? JUNK_FACTOR : f.bait !== bait ? WRONG_BAIT_FACTOR : 1)
-    * bias[f.rarity];
+    * bias(f.rarity);
   const total = FISH.reduce((sum, f) => sum + weightOf(f), 0);
   let pick = rand() * total;
   let fish = FISH[0];

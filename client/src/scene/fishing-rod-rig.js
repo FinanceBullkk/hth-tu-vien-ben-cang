@@ -14,7 +14,8 @@ const NIBBLE_GAP_S = [1.4, 4.2]; // lúc chờ, phao thỉnh thoảng nhấp nh�
 
 // Hình và vật liệu dùng chung; riêng dây mỗi người một geometry vì toạ độ khác nhau.
 const rodGeo = new THREE.CylinderGeometry(0.012, 0.03, ROD_LEN, 5);
-const rodMats = FISH_RODS.map((r) => new THREE.MeshLambertMaterial({ color: r.color, flatShading: true, emissive: r.tier === 2 ? 0x3a2600 : 0 }));
+const ROD_GLOW = { 2: 0x3a2600, 3: 0x4a1206 }; // cần quý ánh lên chút sắc riêng
+const rodMats = FISH_RODS.map((r) => new THREE.MeshLambertMaterial({ color: r.color, flatShading: true, emissive: ROD_GLOW[r.tier] ?? 0 }));
 const lineMat = new THREE.LineBasicMaterial({ color: 0xf5eeda, transparent: true, opacity: 0.55 });
 const bobberGeo = new THREE.SphereGeometry(0.09, 8, 6);
 const bobberMat = new THREE.MeshLambertMaterial({ color: 0xd94f35, emissive: 0x7a1f10, flatShading: true });
@@ -131,7 +132,7 @@ export function updateRodRig(rig, dt, now, effects) {
     fightFish.visible = true;
     fightFish.position.set(px + data.dirX * 0.15, LAKE.y - RIG_Y + 0.012, pz + data.dirZ * 0.15);
     fightFish.rotation.y = Math.atan2(-data.dirZ * sideways, data.dirX * sideways) + Math.sin(now * 0.025) * 0.35;
-    fightFish.scale.setScalar(0.75 + data.rarity * 0.4);
+    fightFish.scale.setScalar(0.75 + Math.min(data.rarity, 4) * 0.4); // huyền thoại cũng chỉ to cỡ sử thi, kẻo bóng tràn ra ngoài hồ
   }
   const pos = line.geometry.attributes.position;
   pos.setXYZ(0, tipX, tipY, tipZ);

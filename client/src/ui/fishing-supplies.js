@@ -56,7 +56,7 @@ export class FishingSuppliesView {
       h('p', { class: 'fish-shop-teu' }, `Đang có ${teu} TEU`),
       ...FISH_RODS.filter((r) => r.tier > 0).map((r) => row(
         r.name,
-        `Vùng xanh rộng thêm ${Math.round((r.half - 1) * 100)}%, cá tụt chậm hơn ${Math.round((1 - r.drain) * 100)}%`,
+        `Vùng xanh +${Math.round((r.half - 1) * 100)}%, cá tụt chậm ${Math.round((1 - r.drain) * 100)}%, cá sử thi ×${r.luck?.[4] ?? 1}, huyền thoại ×${r.luck?.[5] ?? 1}`,
         r.tier <= rod ? h('span', { class: 'fish-shop-owned' }, r.tier === rod ? 'Đang dùng' : 'Đã có') : buyBtn(r.item, r.price),
       )),
       row(`${THINH.name} ×${THINH.pack}`, `Cá cắn nhanh, dễ ra cá quý và hiếm. Còn ${thinh} nắm`, buyBtn(THINH.item, THINH.price)),

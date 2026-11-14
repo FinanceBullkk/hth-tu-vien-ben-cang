@@ -93,7 +93,6 @@ export const RIDDLE = {
 
 // TEU — điểm chung của tu viện: làm gì cũng tích, cuối tuần lên bảng.
 export const TEU = {
-  fishByRarity: { 1: 1, 2: 2, 3: 4 },
   fishPerfectBonus: 1,
   pitchRank: { S: 8, A: 5, B: 3, C: 1 },
   rhythmPer25: 1, // floor(score / 25)

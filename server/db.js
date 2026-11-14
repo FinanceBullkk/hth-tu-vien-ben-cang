@@ -6,6 +6,7 @@ import { pkTitleMask } from '../shared/pk.js';
 import { cultivationProgress, QI_INTERVAL_MS } from '../shared/cultivation.js';
 import { TABLE_GAMES, TableStakeStore } from './table-stake-store.js';
 import { FishingStore } from './fishing-store.js';
+import { BagStore } from './bag-store.js';
 import { ShopStore } from './shop-store.js';
 import { TradeStore } from './trade-store.js';
 
@@ -152,6 +153,7 @@ export class Db {
     this.shop = new ShopStore(this.db);
     this.trade = new TradeStore(this.db);
     this.fishing = new FishingStore(this.db);
+    this.bag = new BagStore(this.db);
     this.baucua = new TableStakeStore(this.db, 'baucua');
     this.xidach = new TableStakeStore(this.db, 'xidach');
     this.taixiu = new TableStakeStore(this.db, 'taixiu');

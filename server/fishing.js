@@ -6,6 +6,8 @@ import { BAITS, DEFAULT_BAIT, FISH_BITE, FISH_BOOK_MILESTONES, FISH_FIGHT, SHADO
 import { GOLDEN_HOUR, catchTeu, isGoldenHour, isTrophy } from '../shared/fish-bonus.js';
 import { THINH } from '../shared/fish-gear.js';
 import { LAKE_SHADOW, shadowNear } from '../shared/fish-lake-shadows.js';
+import { BAG, catchTags } from '../shared/fish-bag.js';
+import { Bag } from './bag.js';
 import { FishingSupplies } from './fishing-supplies.js';
 import { localDate } from './time.js';
 
@@ -14,6 +16,7 @@ export class Fishing {
     Object.assign(this, { db, io, config });
     this.takenShadows = new Map(); // id bóng -> giờ hết hạn: bóng đã có người quăng trúng
     this.supplies = new FishingSupplies({ db, config });
+    this.bag = new Bag({ db, config });
   }
 
   nearSpot(player) {
@@ -87,7 +90,7 @@ export class Fishing {
     if (rod.state !== 'waiting') return;
     const now = Date.now();
     const night = isLakeNight(now, (this.config.dayCycleMinutes || 20) * 60_000);
-    rod.catch = fishRoll(rod.castAt, player.sid, { bait: rod.bait, shadow: rod.shadow, night, thinh: rod.thinh });
+    rod.catch = fishRoll(rod.castAt, player.sid, { bait: rod.bait, shadow: rod.shadow, night, thinh: rod.thinh, rod: rod.tier });
     const seed = fightSeed(rod.castAt, player.sid);
     const { rarity } = rod.catch.fish;
     const startAt = now + FISH_FIGHT.graceMs;
@@ -158,13 +161,22 @@ export class Fishing {
     player.fishStreak = perfect ? (player.fishStreak ?? 0) + 1 : 0;
     // Giờ cá vàng tính theo lúc quăng: đã thả kịp trong giờ thì con cá đó vẫn được gấp đôi.
     const bonus = { trophy: isTrophy(fish, weight), golden: isGoldenHour(rod.castAt), streak: player.fishStreak };
-    const teu = catchTeu({ rarity: fish.rarity, perfect, ...bonus }) + (milestone?.teu ?? 0);
-    this.db.addTeu(player.pid, teu, 'fish', date);
+    // Con cá vào túi với giá bán chốt ngay bây giờ; túi đầy thì thương lái bên hồ mua luôn, không mất cá.
+    const value = catchTeu({ fish, weight, perfect, ...bonus });
+    const item = this.db.bag.count(player.pid) < BAG.capacity
+      ? this.db.bag.add(player.pid, { ref: fish.id, weight, price: value, tags: catchTags({ ...bonus, perfect }) })
+      : null;
+    const teu = (item ? 0 : value) + (milestone?.teu ?? 0);
+    if (teu > 0) this.db.addTeu(player.pid, teu, 'fish', date);
     if (orderDone) this.db.addTeu(player.pid, orderDone.teu, 'fish-order', date);
     // Báo trước khi dọn để mọi máy còn thấy nước văng đúng chỗ phao.
     this.io.emit('fish:caught', { sid: player.sid, id: fish.id, name: fish.name, rarity: fish.rarity, weight, trophy: bonus.trophy });
     this.clear(player, true);
-    return { ok: true, grade, fish: { id: fish.id, name: fish.name, rarity: fish.rarity, weight }, teu: teu + (orderDone?.teu ?? 0), isNew, record, species, milestone, orderDone, orders, bonus };
+    // teu: số TEU vừa vào ví (mốc, đơn, hoặc bán ngay khi túi đầy); value: giá bán của con cá.
+    return {
+      ok: true, grade, fish: { id: fish.id, name: fish.name, rarity: fish.rarity, weight },
+      value, item, soldNow: !item, teu: teu + (orderDone?.teu ?? 0), isNew, record, species, milestone, orderDone, orders, bonus,
+    };
   }
 
   /** Về bờ hẳn. Người đang cầm cần chờ quăng tiếp không có rod nên phải xét cả tư thế. */

@@ -481,10 +481,10 @@ body:has(#onlineList:not([hidden])) #voicePanel { visibility: hidden; }
   #banner { top: calc(104px + var(--safe-t)); padding: 7px 12px; font-size: 13.5px; }
   #banner.big #bannerText { font-size: 18px; }
 }
-/* Điện thoại hẹp (360-420px): 9 nút menu thu lại để không tràn khỏi mép trái. */
+/* Điện thoại hẹp (360-420px): 10 nút menu thu lại để không tràn khỏi mép trái. */
 @media (max-width: 420px) {
   #menu { gap: 2px; }
-  #menu .icon-btn { width: 34px; min-width: 34px; }
+  #menu .icon-btn { width: 32px; min-width: 32px; }
 }
 
 /* Điện thoại dọc: thẻ chào nằm dưới, nhân vật ở trên. */

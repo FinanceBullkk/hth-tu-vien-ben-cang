@@ -1,6 +1,6 @@
 // HUD câu cá tối giản: mặt nước là chính, màn hình chỉ có một dòng lời dẫn theo từng pha.
 // Không có nút hành động: chạm ở đâu trên màn hình cũng được, kể cả trên điện thoại.
-import { BAITS, FISH, fishForBait } from '../../../shared/fish.js';
+import { BAITS, FISH, FISH_RARITY, fishForBait } from '../../../shared/fish.js';
 import { GOLDEN_HOUR, TROPHY, streakBonus } from '../../../shared/fish-bonus.js';
 import { $, h } from './dom.js';
 import { fishPortraitSvg } from './fish-portrait.js';
@@ -19,7 +19,7 @@ const mmss = (ms) => {
 const pointerOf = (e) => ({ x: e.clientX, y: e.clientY, clientX: e.clientX, touch: e.pointerType === 'touch' });
 
 export class FishingPanel {
-  constructor({ onPress, onMove, onRelease, onBait, onExit, onBuy, onThinh }) {
+  constructor({ onPress, onMove, onRelease, onBait, onExit, onBuy, onThinh, onBag }) {
     this.gauge = new FishingArcGauge();
     this.supplies = new FishingSuppliesView({ onBuy, onThinh });
     this.tally = h('p', { class: 'fish-tally' });
@@ -28,6 +28,7 @@ export class FishingPanel {
     this.hint = h('p', { class: 'fish-hint', role: 'status' });
     this.baitNote = h('p', { class: 'fish-bait-note' });
     this.catchEl = h('div', { class: 'fish-catch', hidden: true });
+    this.bagBtn = h('button', { type: 'button', class: 'fish-bag-open', onClick: onBag }, 'Túi');
     this.baitButtons = new Map(BAITS.map((bait) => [bait.id, h('button', {
       type: 'button',
       onClick: () => { onBait(bait.id); this.root.focus({ preventScroll: true }); },
@@ -37,7 +38,7 @@ export class FishingPanel {
 
     this.root = h('section', { class: 'fish-hud', hidden: true, tabIndex: -1, 'aria-label': 'Câu cá ở hồ' },
       h('div', { class: 'fish-corner' }, this.tally, this.golden, this.company, this.supplies.orders),
-      h('div', { class: 'fish-top-right' }, this.supplies.shopBtn, h('button', { type: 'button', class: 'fish-exit', onClick: onExit }, 'Về bờ')),
+      h('div', { class: 'fish-top-right' }, this.bagBtn, this.supplies.shopBtn, h('button', { type: 'button', class: 'fish-exit', onClick: onExit }, 'Về bờ')),
       this.supplies.shop,
       this.gauge.root,
       this.catchEl,
@@ -118,8 +119,16 @@ export class FishingPanel {
     this.noteTimer = setTimeout(() => this.baitNote.classList.remove('on'), BAIT_NOTE_MS);
   }
 
-  setTally(count, teu) {
-    this.tally.textContent = count ? `${count} con · +${teu} TEU` : '';
+  /** count con đã câu trong chuyến này, worth: tổng giá bán của chúng. */
+  setTally(count, worth) {
+    this.tally.textContent = count ? `${count} con · trị giá ${worth} TEU` : '';
+  }
+
+  /** Nút Túi góc phải: số món đang có, đỏ lên khi đầy (cá mới sẽ bán ngay tại hồ). */
+  setBag(count, capacity) {
+    this.bagBtn.textContent = `Túi ${count}/${capacity}`;
+    this.bagBtn.classList.toggle('full', count >= capacity);
+    this.bagBtn.title = count >= capacity ? 'Túi đầy: cá mới sẽ được bán ngay. Mở túi bán bớt (phím B).' : 'Mở túi đồ (phím B)';
   }
 
   /** Banner Giờ cá vàng: đang mở thì đếm ngược tới lúc đóng, sắp mở (dưới 10 phút) thì báo trước. */
@@ -143,7 +152,7 @@ export class FishingPanel {
     this.catchEl.hidden = true;
   }
 
-  showCatch({ fish, teu, isNew, record, species, milestone, grade, orderDone, bonus }) {
+  showCatch({ fish, value, soldNow, isNew, record, species, milestone, grade, orderDone, bonus }) {
     const streak = bonus?.streak ?? 0;
     const notes = [
       bonus?.trophy ? `Cá khủng ×${TROPHY.teuFactor}` : '',
@@ -157,15 +166,16 @@ export class FishingPanel {
     ].filter(Boolean);
     this.catchEl.hidden = false;
     this.catchEl.dataset.rarity = String(fish.rarity);
+    this.catchEl.style.setProperty('--rc', FISH_RARITY[fish.rarity]?.color ?? '');
     const art = h('span', { class: 'fish-catch-art' });
     art.innerHTML = fishPortraitSvg(fish.id);
     this.catchEl.replaceChildren(
       isNew ? h('span', { class: 'fish-catch-new' }, 'Loài mới') : '',
       !isNew && bonus?.trophy ? h('span', { class: 'fish-catch-new trophy' }, 'Cá khủng') : '',
       art,
-      h('span', { class: 'fish-catch-stars' }, '★'.repeat(fish.rarity)),
+      h('span', { class: 'fish-catch-stars' }, `${'★'.repeat(fish.rarity)} ${FISH_RARITY[fish.rarity]?.name ?? ''}`),
       h('b', {}, fish.name),
-      h('span', {}, `${fish.weight.toLocaleString('vi-VN')} kg · +${teu} TEU`),
+      h('span', {}, `${fish.weight.toLocaleString('vi-VN')} kg · ${soldNow ? `túi đầy, bán ngay +${value} TEU` : `giá ${value} TEU · vào túi`}`),
       notes.length ? h('small', {}, notes.join(' · ')) : '',
     );
     clearTimeout(this.catchTimer);

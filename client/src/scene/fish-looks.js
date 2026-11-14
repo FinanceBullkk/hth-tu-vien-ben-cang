@@ -19,6 +19,16 @@ export const FISH_LOOKS = {
   long_den: { kind: 'fish', size: 0.32, h: 0.28, w: 0.15, back: '#1f2033', side: '#3a3c5a', belly: '#6d6f8e', fin: '#2c2e48', tail: 'fork', dorsal: 0.14, pattern: 'dots', mark: '#9ff2ff', glow: '#5fd8ff' },
   trang: { kind: 'fish', size: 0.95, h: 1.0, w: 0.16, back: '#8a929b', side: '#c3cad0', belly: '#eef0f2', fin: '#9aa3ab', tail: 'clavus', dorsal: 0.55 },
   chep_vang: { kind: 'fish', size: 0.52, h: 0.32, w: 0.2, back: '#c47a12', side: '#f2b630', belly: '#fde7a4', fin: '#f08a1c', tail: 'round', dorsal: 0.18, glow: '#ffcf5a' },
+  // Sử thi
+  rong_huyet: { kind: 'fish', size: 0.9, h: 0.24, w: 0.12, back: '#6e1010', side: '#d4313a', belly: '#f6b08a', fin: '#a81c26', tail: 'round', dorsal: 0.1, pattern: 'spots', mark: '#ff8a6a', glow: '#ff4a3a' },
+  tam_hoang: { kind: 'fish', size: 1.6, h: 0.16, w: 0.16, back: '#36434b', side: '#7d8a90', belly: '#e2e5df', fin: '#46535a', tail: 'shark', dorsal: 0.12, snout: 0.8, pattern: 'lines', mark: '#c9cfc9' },
+  koi_bach: { kind: 'fish', size: 0.55, h: 0.3, w: 0.2, back: '#f1ede4', side: '#ffffff', belly: '#fff7e6', fin: '#e8e2d4', tail: 'round', dorsal: 0.16, pattern: 'spots', mark: '#d9a23a', glow: '#fff3c0' },
+  kiem: { kind: 'fish', size: 1.8, h: 0.22, w: 0.16, back: '#1a2a48', side: '#6f86a8', belly: '#e8edf2', fin: '#22345a', tail: 'fork', dorsal: 0.34, snout: 1 },
+  ket_sat: { kind: 'box', size: 0.5, color: '#5d6670', rib: '#3c444c' },
+  // Huyền thoại
+  ly_ngu: { kind: 'fish', size: 1.1, h: 0.3, w: 0.2, back: '#b01c10', side: '#f0a326', belly: '#ffe7a8', fin: '#e2471c', tail: 'round', dorsal: 0.2, pattern: 'lines', mark: '#ffe08a', glow: '#ffb83a' },
+  nguyet_ngu: { kind: 'fish', size: 0.7, h: 0.34, w: 0.14, back: '#3f55a0', side: '#b9c8f2', belly: '#f2f5ff', fin: '#8fa6e8', tail: 'fork', dorsal: 0.22, pattern: 'dots', mark: '#eaf6ff', glow: '#bcd8ff' },
+  ruong_vang: { kind: 'box', size: 0.55, color: '#c8901e', rib: '#7a4f12' },
 };
 
 const FALLBACK = FISH_LOOKS.doi;

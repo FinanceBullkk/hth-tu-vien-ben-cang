@@ -80,14 +80,15 @@
 /* Thành quả: hình con cá, tên lớn, không khung. Hiện sau một nhịp để mắt kịp theo con cá vọt khỏi nước. */
 .fish-catch { position: absolute; left: 50%; bottom: calc(118px + var(--safe-b, 0px)); width: min(460px, 92vw); padding: 22px 20px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; pointer-events: none; background: radial-gradient(closest-side, rgba(10, 8, 6, .6), transparent); animation: fishRise .4s .55s ease-out both; }
 .fish-catch-art svg { display: block; width: 132px; height: auto; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, .55)); animation: fishFlop .9s .55s ease-out both; }
-.fish-catch[data-rarity="3"] .fish-catch-art svg { filter: drop-shadow(0 0 10px rgba(255, 210, 110, .75)) drop-shadow(0 3px 6px rgba(0, 0, 0, .5)); }
+.fish-catch:is([data-rarity="3"], [data-rarity="4"], [data-rarity="5"]) .fish-catch-art svg { filter: drop-shadow(0 0 10px var(--rc, rgba(255, 210, 110, .75))) drop-shadow(0 3px 6px rgba(0, 0, 0, .5)); }
+.fish-catch[data-rarity="5"] .fish-catch-art svg { width: 168px; filter: drop-shadow(0 0 18px var(--rc)) drop-shadow(0 0 6px #fff3c0); }
 .fish-catch-new { padding: 2px 10px; border: 1px solid #f0cd78; border-radius: 3px; color: #ffe2a0; font-size: 12.5px; letter-spacing: .14em; text-transform: uppercase; animation: fishStamp .45s .75s ease-out both; }
 .fish-catch-new.trophy { border-color: #ff9a52; color: #ffc08a; }
 .fish-catch b { font-size: 30px; font-weight: 500; letter-spacing: .02em; color: #fff4dc; overflow-wrap: anywhere; }
 .fish-catch span { font-size: 15.5px; font-variant-numeric: tabular-nums; }
 .fish-catch small { margin-top: 2px; font-size: 13px; color: #bff0d6; }
 .fish-catch .fish-catch-stars { color: #f0cd78; letter-spacing: 4px; font-size: 13px; }
-.fish-catch[data-rarity="3"] b { color: #ffd98c; }
+.fish-catch:is([data-rarity="2"], [data-rarity="3"], [data-rarity="4"], [data-rarity="5"]) b, .fish-catch:is([data-rarity="2"], [data-rarity="3"], [data-rarity="4"], [data-rarity="5"]) .fish-catch-stars { color: var(--rc); }
 
 @keyframes fishFade { from { opacity: 0; } }
 @keyframes fishRise { from { opacity: 0; transform: translate(-50%, 10px); } }
