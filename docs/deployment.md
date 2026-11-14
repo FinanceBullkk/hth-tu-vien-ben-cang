@@ -1,6 +1,31 @@
 # Deployment
 
-## Current release: 2026-11-14 Bena Banca fish merchant by the lake, 22:06 UTC+7
+## Current release: 2026-11-15 Visual Bena Banca stall, 00:23 UTC+7
+
+Deploy run [43620774020](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43620774020)
+released main `31152f4` as `hth:261115-0023-31152f4`, replacing
+`hth:261114-2206-0276c0e`. Includes PR #109 (Bena's stall redesigned as cards: SVG
+portrait of Bena with a speech bubble, coin wallet that counts up on sale, sell tab with
+total payout, bag capacity meter, value-by-rarity strip and one card per rarity showing
+up to three fish portraits, big "sell all" button; gear tab with one card per rod showing
+its glyph and the shared rod stat bars, and a bait card with a stock meter). Client only,
+server unchanged. Public bundle `index-BHTswTo_.js` served at
+`https://game.hthlogistics.top/`.
+
+Docker tests 446/446. Candidate passed with DB `quick_check` ok (57 players,
+24 wishes, 115 fish).
+
+The first attempt, run [43617786950](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43617786950)
+started at 23:50 UTC+7, was cancelled after 30 minutes in the Docker test stage before
+cutover, so production was not touched. `test/meditation.test.js` "không vượt trần mỗi ngày"
+failed because it uses the real clock and its simulated 18-minute sit crossed midnight in
+UTC+7; the test run then hung without finishing. The retry at 00:23 passed.
+
+Rollback container `hth-rollback-261115-0023-31152f4` preserves
+`hth:261114-2206-0276c0e`. Private backup is in the data volume at
+`backups/cutover-261115-0023-31152f4/`.
+
+## Previous release: 2026-11-14 Bena Banca fish merchant by the lake, 22:06 UTC+7
 
 Deploy run [43608324002](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43608324002)
 released main `0276c0e` as `hth:261114-2206-0276c0e`, replacing
