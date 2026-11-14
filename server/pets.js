@@ -47,6 +47,8 @@ export class Pets {
     const res = this.db.pets.hatch(p.pid, PET.eggPrice, date, pick, now);
     const teu = this.db.shop.teu(p.pid);
     if (!res.ok) return { ok: false, error: `Còn thiếu ${PET.eggPrice - teu} TEU để mua trứng.`, teu };
+    // Nở Linh thú trở lên lần đầu thì cả tu viện cùng biết.
+    if (!res.dup && PETS[res.kind].rarity >= PET.pityRarity) this.io.emit('pet:hatched', { sid: p.sid, kind: res.kind });
     // Đang dắt đúng bé vừa nở trùng: thân thiết tăng có thể lên bậc, cả phòng thấy hiệu ứng mới.
     if (res.kind === p.pet && bondTier(res.bond) !== p.petTier) {
       p.petTier = bondTier(res.bond);

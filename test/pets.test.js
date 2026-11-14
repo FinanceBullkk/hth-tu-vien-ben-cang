@@ -114,6 +114,7 @@ test('ấp trứng: trừ đúng giá, ghi sổ TEU, thú vào chuồng với th
   assert.deepEqual(res.list, [{ kind: 0, bond: 0, hatched: 1 }]);
   assert.equal(res.pity, 1, 'thú thường làm tăng bộ đếm bảo hiểm');
   assert.equal(f.db.shop.teu(a.pid), 100 - PET.eggPrice);
+  assert.equal(f.emits.length, 0, 'thú thường không báo cả phòng');
 });
 
 test('ấp trứng: thiếu TEU thì không trừ, không có thú, bộ đếm bảo hiểm giữ nguyên', () => {
@@ -143,6 +144,8 @@ test('ấp trứng: nở trùng thì cộng thân thiết theo bậc, không vư
   f.hatch(a, dragon);
   const dup = f.hatch(a, dragon);
   assert.equal(dup.dup, true);
+  assert.equal(f.emits.filter(([e]) => e === 'pet:hatched').length, 1, 'chỉ báo cả phòng lần nở đầu');
+  assert.deepEqual(f.emits.find(([e]) => e === 'pet:hatched'), ['pet:hatched', { sid: 1, kind: dragon }]);
   assert.equal(dup.gained, PET_RARITY[4].dup);
   assert.equal(dup.bond, PET_RARITY[4].dup);
   for (let i = 0; i < 5; i++) f.hatch(a, dragon);

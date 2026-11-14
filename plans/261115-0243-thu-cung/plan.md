@@ -26,7 +26,7 @@ Chủ dự án chốt (15/11/2026): đi theo + cho ăn cá tăng thân thiết; 
 - `test/pets.test.js`: bốc thú, bảo hiểm, trừ TEU, thiếu TEU, trùng thú, cho ăn (cá khoá, cá người khác, chưa dắt thú), dắt thú chưa có, dữ liệu giả, broadcast.
 
 ## Trạng thái
-- [ ] shared + server + test
-- [ ] client model + follower + panel
-- [ ] npm test, build, xem trong trình duyệt
+- [x] shared + server + test
+- [x] client model + follower + panel
+- [x] npm test, build, xem trong trình duyệt
 - [ ] README, PR, merge
