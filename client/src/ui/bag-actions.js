@@ -2,9 +2,13 @@
 // báo một dòng cho người chơi. Tách khỏi bag-panel.js để bảng chỉ lo vẽ; cũng dùng được từ chỗ khác.
 import { THINH } from '../../../shared/fish-gear.js';
 
-/** Bán các món theo id; trả kết quả server (hoặc null khi mất mạng). */
-export async function sellItems(app, ids) {
+/**
+ * Bán các món theo id; trả kết quả server (hoặc null khi mất mạng).
+ * beforeRemove(res): chạy hiệu ứng trên các ô vừa bán trước khi chúng biến khỏi túi.
+ */
+export async function sellItems(app, ids, { beforeRemove } = {}) {
   const res = await app.net.call('bag:sell', { ids }).catch(() => null);
+  if (res?.ok) await beforeRemove?.(res);
   if (Number.isFinite(res?.teu)) app.wallet.apply({ teu: res.teu });
   if (res?.ok) {
     app.bag.remove(res.sold);

@@ -24,16 +24,15 @@ const TOP = {
 };
 
 /**
- * Một ô cạnh vòng giữa. Rê chuột: bảng chi tiết; bấm: onPick (cá) hoặc ghim bảng chi tiết (đồ câu).
- * art: chuỗi SVG hoặc phần tử; label: chữ nhỏ góc dưới.
+ * Một ô cạnh vòng giữa. Bảng chi tiết khi rê chuột do bag-panel.js lo theo data-key;
+ * bấm thì onPick(entry) để chọn đúng món đó trong lưới. Ô được ghi vào entries để bảng chi tiết tra theo key.
  */
-function sideSlot(entry, art, { onHover, onPick, label = '', aria = '' }) {
+function sideSlot(entries, entry, art, { onPick, label = '', aria = '' }) {
   if (!entry) return h('span', { class: 'bagx-gear empty', 'aria-hidden': 'true' });
+  entries.push(entry);
   const slot = h('button', { type: 'button', class: 'bagx-gear', 'data-key': entry.key, 'data-rarity': String(entry.rarity ?? 1), style: `--rc:${rarityColor(entry.rarity ?? 1)}`, 'aria-label': aria },
     typeof art === 'string' ? svgBox(`bagx-gear-art${entry.kind === 'fish' ? ' tilt' : ''}`, art) : art, label ? h('em', {}, label) : '');
-  slot.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') onHover(entry); });
-  slot.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') onHover(null); });
-  slot.addEventListener('click', () => (entry.kind === 'fish' ? onPick(entry.item.id) : onHover(entry, true)));
+  slot.addEventListener('click', () => onPick(entry));
   return slot;
 }
 
@@ -54,14 +53,16 @@ function levelRow(bag) {
     h('span', { class: 'bagx-power' }, 'Giá trị túi', h('b', {}, String(bagValue(bag.items)))));
 }
 
-export function renderInfoPanel(root, { name, bag, bait, onHover, onPick }) {
+/** Vẽ cột Thông tin; trả về các ô vừa vẽ (có key) để bảng chi tiết tra cứu. */
+export function renderInfoPanel(root, { name, bag, bait, onPick }) {
   const rod = rodOf(bag.rod);
   const top = [...bag.items].sort((a, b) => b.price - a.price || b.id - a.id).slice(0, 3);
   const best = top[0] ?? null;
   const bestRarity = best ? itemRarity(best) : 1;
   const rare = bag.items.filter((it) => itemRarity(it) >= 3).length;
   const baitInfo = BAITS.find((b) => b.id === bait) ?? BAITS[0];
-  const ctx = { onHover, onPick };
+  const ctx = { onPick };
+  const entries = [];
 
   const showcase = h('div', { class: `bagx-showcase${best ? '' : ' empty'}`, style: `--rc:${rarityColor(bestRarity)}` },
     best ? svgBox('bagx-showcase-art', fishPortraitSvg(best.ref)) : h('p', {}, 'Túi trống.', h('br'), 'Ra hồ câu cá nhé!'),
@@ -75,14 +76,14 @@ export function renderInfoPanel(root, { name, bag, bait, onHover, onPick }) {
       h('span', { class: 'bagx-rank' }, 'Ngư hạng ', h('i', {}, anglerTitle(bag.species)))),
     h('div', { class: 'bagx-stage' },
       h('div', { class: 'bagx-gear-col' },
-        sideSlot({ key: 'info-rod', kind: 'rod', tier: bag.rod, owned: true, inUse: true, rarity: rod.rarity }, rodGlyphSvg(bag.rod), { ...ctx, aria: rod.name }),
-        sideSlot({ key: 'info-thinh', kind: 'thinh', count: bag.thinh, rarity: 2 }, thinhGlyphSvg(), { ...ctx, label: `×${bag.thinh}`, aria: `Thính, còn ${bag.thinh} nắm` }),
-        sideSlot({ key: 'info-bait', kind: 'bait', bait: baitInfo.id, rarity: 1 }, h('span', { class: 'bagx-seal' }, baitInfo.seal), { ...ctx, aria: baitInfo.name })),
+        sideSlot(entries, { key: 'info-rod', kind: 'rod', tier: bag.rod, owned: true, inUse: true, rarity: rod.rarity }, rodGlyphSvg(bag.rod), { ...ctx, aria: rod.name }),
+        sideSlot(entries, { key: 'info-thinh', kind: 'thinh', count: bag.thinh, rarity: 2 }, thinhGlyphSvg(), { ...ctx, label: `×${bag.thinh}`, aria: `Thính, còn ${bag.thinh} nắm` }),
+        sideSlot(entries, { key: 'info-bait', kind: 'bait', bait: baitInfo.id, rarity: 1 }, h('span', { class: 'bagx-seal' }, baitInfo.seal), { ...ctx, aria: baitInfo.name })),
       showcase,
       h('div', { class: 'bagx-gear-col' },
         ...[0, 1, 2].map((i) => {
           const item = top[i];
-          return sideSlot(item && { key: `info-f${item.id}`, kind: 'fish', item, rarity: itemRarity(item) }, item ? fishPortraitSvg(item.ref) : '', { ...ctx, label: item ? `${item.price}` : '', aria: item ? fishById(item.ref)?.name : '' });
+          return sideSlot(entries, item && { key: `info-f${item.id}`, kind: 'fish', item, rarity: itemRarity(item) }, item ? fishPortraitSvg(item.ref) : '', { ...ctx, label: item ? `${item.price}` : '', aria: item ? fishById(item.ref)?.name : '' });
         }))),
     levelRow(bag),
     h('div', { class: 'bagx-statbox' },
@@ -97,4 +98,5 @@ export function renderInfoPanel(root, { name, bag, bait, onHover, onPick }) {
         bar('Sử thi', (rod.luck?.[4] ?? 1) / TOP.epic, `×${rod.luck?.[4] ?? 1}`, '#b46cf0'),
         bar('Huyền thoại', (rod.luck?.[5] ?? 1) / TOP.legend, (rod.luck?.[5] ?? 1) === 0 ? 'Không' : `×${rod.luck?.[5] ?? 1}`, '#e8452c'))),
   );
+  return entries;
 }

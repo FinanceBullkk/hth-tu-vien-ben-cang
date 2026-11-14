@@ -103,16 +103,22 @@ export function tipContent(entry) {
   return fishTip(entry.item);
 }
 
-/** Đặt bảng chi tiết cạnh ô neo (toạ độ trong khung host); hết chỗ bên phải thì lật sang trái. */
+/**
+ * Đặt bảng chi tiết cạnh ô neo, toạ độ tính trong host (khung cuộn có position: relative):
+ * ưu tiên bên phải ô, hết chỗ thì lật sang trái; luôn nằm trong phần host đang nhìn thấy kể cả khi đã cuộn.
+ */
 export function placeTooltip(tip, host, anchor) {
   const a = anchor.getBoundingClientRect();
   const b = host.getBoundingClientRect();
   const w = tip.offsetWidth;
   const hgt = tip.offsetHeight;
-  let left = a.right - b.left + 8;
-  if (left + w > b.width - 6) left = a.left - b.left - w - 8;
-  left = Math.max(6, Math.min(left, b.width - w - 6));
-  const top = Math.max(6, Math.min(a.top - b.top, b.height - hgt - 6));
+  const gap = 10;
+  let left = a.right - b.left + gap;
+  if (left + w > host.clientWidth - 6) left = a.left - b.left - w - gap;
+  left = Math.max(6, Math.min(left, host.clientWidth - w - 6)) + host.scrollLeft;
+  const visibleTop = host.scrollTop + 6;
+  const visibleBottom = host.scrollTop + host.clientHeight - hgt - 6;
+  const top = Math.max(visibleTop, Math.min(a.top - b.top + host.scrollTop, visibleBottom));
   tip.style.left = `${left}px`;
   tip.style.top = `${top}px`;
 }
