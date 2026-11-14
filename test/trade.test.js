@@ -117,6 +117,10 @@ test('dữ liệu giả mạo: món không có, món bên kia đã có, TEU khô
   open(f);
 
   assert.match(f.offer(a, { items: ['effect:11'] }).error, /không có/);
+  // Hào quang chí tôn gắn với thành tích: có trong tủ cũng không đưa lên trạm được.
+  db.addTeu(a.pid, 888, 'fish', DATE);
+  db.shop.buy(a.pid, 'effect:13', 888, DATE);
+  assert.match(f.offer(a, { items: ['effect:13'] }).error, /không trao đổi được/);
   assert.match(f.offer(a, { teu: 1 }).error, /Không đủ TEU/);
   assert.match(f.offer(b, { teu: 26 }).error, /Không đủ TEU/);
   assert.equal(trade.ready(a, { rev: a.trade.rev }).ok, false, 'chưa ai đặt gì');

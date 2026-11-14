@@ -11,6 +11,8 @@ import { buildLongQuyenThrone } from './vfx/long-quyen-meditation-throne.js';
 import { buildXichDiemThrone } from './vfx/xich-diem-meditation-throne.js';
 import { buildKimLongThrone } from './vfx/kim-long-meditation-throne.js';
 import { buildSenKimThrone } from './vfx/sen-kim-meditation-throne.js';
+import { buildThanBaiThrone } from './vfx/than-bai-meditation-throne.js';
+import { buildVuaCauCaThrone } from './vfx/vua-cau-ca-meditation-throne.js';
 
 const cache = new Map();
 const petal = new THREE.PlaneGeometry(1, 1, 8, 12);
@@ -134,6 +136,12 @@ function build(effect, stage) {
   } else if (effect === 1) {
     // Sen kim: tòa sen vàng riêng — vòm hai tầng so le, vòng cánh ôm hông, chén đài, túi nhụy.
     buildSenKimThrone(stage, add, petal);
+  } else if (effect === 13) {
+    // Thần Bài: lá Át xoè trước gối → vòng bài dựng quanh tòa → quạt bài lớn sau đầu, vành phỉnh.
+    buildThanBaiThrone(stage, add);
+  } else if (effect === 14) {
+    // Vua Câu Cá: cá vọt trước gối → đàn cá vọt quanh tòa → cần câu vồng qua đầu treo cá chép.
+    buildVuaCauCaThrone(stage, add);
   } else if (stage === 0) {
   // Tier three is a small spirit seed; later tiers introduce a new silhouette.
     if (effect === 1 || effect === 0) bloom(0, 0.18, -0.42, 0.42, 8);
@@ -172,7 +180,7 @@ function build(effect, stage) {
 }
 
 export function createManifestation(effect, tint, accent, lowQuality = false) {
-  const theme = Number.isInteger(effect) && effect >= 0 && effect <= 12 ? effect : 0;
+  const theme = Number.isInteger(effect) && effect >= 0 && effect <= 14 ? effect : 0;
   if (!cache.has(theme)) cache.set(theme, [0, 1, 2].map(stage => {
     const geometry = build(theme, stage);
     geometry.userData.outline = new THREE.EdgesGeometry(geometry, 35);
@@ -206,7 +214,7 @@ export function createManifestation(effect, tint, accent, lowQuality = false) {
       group.visible = level >= 3 && sit > 0.1 && fading > 0;
       layers.forEach((mesh, i) => {
         // Tinh Hà giữ Bắc Đẩu ở tầng 5 (hồn thiên nghi ôm lấy chòm sao).
-        const replacesCrown = [0, 1, 4, 8, 9, 10, 11].includes(theme);
+        const replacesCrown = [0, 1, 4, 8, 9, 10, 11, 13, 14].includes(theme);
         mesh.visible = level >= i + 3 && !(i === 1 && level >= 5 && replacesCrown);
         mesh.position.y = i ? Math.sin(time * 0.7 + i) * 0.035 : Math.sin(time) * 0.06;
         mesh.rotation.y = Math.sin(time * 0.35 + i) * (i ? 0.08 : 0.15);

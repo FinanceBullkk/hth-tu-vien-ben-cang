@@ -4,6 +4,7 @@ import { SHADOW_SIZES } from '../../../shared/fish-lake-shadows.js';
 import { goldenHour } from '../../../shared/fish-bonus.js';
 import { BAITS, DEFAULT_BAIT } from '../../../shared/fish.js';
 import { LAKE } from '../../../shared/layout.js';
+import { openBag } from '../ui/bag-panel.js';
 import { FishingPanel } from '../ui/fishing-panel.js';
 import { FishingAimPhase, SHADOW_TALK_FROM } from './fishing-aim-phase.js';
 import { lakeShot } from './fishing-camera-shot.js';
@@ -38,6 +39,7 @@ export class FishingActivity {
       onExit: () => app.activities.exit(),
       onBuy: (item) => this.supplies.buy(item),
       onThinh: () => this.supplies.toggle(),
+      onBag: () => openBag(app),
     });
     this.supplies = new FishingSuppliesControl({ app, panel: this.panel });
     const phase = { app, panel: this.panel, lines: this.lines };
@@ -58,6 +60,10 @@ export class FishingActivity {
     this.panel.show();
     this.panel.setBait(this.bait);
     this.panel.setTally(0, 0);
+    const showBag = (bag) => this.panel.setBag(bag.items.length, bag.capacity);
+    this.offBag?.();
+    this.offBag = app.bag.onChange(showBag);
+    showBag(app.bag);
     this.aiming.reset();
     this.aim();
     const generation = this.generation;
@@ -169,7 +175,8 @@ export class FishingActivity {
       return;
     }
     this.caught += 1;
-    this.earned += res.teu;
+    this.earned += res.value ?? 0;
+    app.bag.addCatch(res.item, res.species);
     this.streak = res.bonus?.streak ?? 0;
     this.total = noteCatch();
     this.panel.setTally(this.caught, this.earned);
@@ -255,7 +262,9 @@ export class FishingActivity {
     app.follow.shot = null;
     app.world.fishing.setAim(null);
     app.net.call('fish:cancel').catch(() => {});
+    this.offBag?.();
+    this.offBag = null;
     app.world.fishing.setRod(app.sid, { on: false });
-    if (this.caught > 0) app.hud.toast(`Chuyến câu: ${this.caught} con, +${this.earned} TEU`);
+    if (this.caught > 0) app.hud.toast(`Chuyến câu: ${this.caught} con, trị giá ${this.earned} TEU. Mở túi (B) để bán.`);
   }
 }

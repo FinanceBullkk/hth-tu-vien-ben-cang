@@ -1,4 +1,9 @@
-// Danh hiệu trang trí đi cùng aura, không biểu thị cấp bậc hay thành tích.
+// Danh hiệu đi cùng aura. Phần lớn chỉ để trang trí; riêng hào quang chí tôn (vip) phải đạt thành tích
+// mới mua được (SHOP_REQUIREMENTS) nên danh hiệu của chúng chạy ánh kim để người khác nhận ra, và cả nhãn
+// tên đổi kiểu Võ Lâm Chi Mộng: danh hiệu chữ viết tay có cánh, hiệu phụ xanh ngọc với ô ấn vàng
+// (vip-title-badge.js), tên chữ trắng viền đen không khung (client/src/ui/vip-name-board.css).
+import { createTitleBadge } from './vip-title-badge.js';
+
 export const AURA_TITLES = [
   { title: '', color: '#e9d6ab' },
   { title: 'Kim Liên Tĩnh Tâm', color: '#ffd98a' },
@@ -13,11 +18,24 @@ export const AURA_TITLES = [
   { title: 'Xích Diễm Lưu Vân', color: '#ffad60' },
   { title: 'Kim Long Nguyệt Ảnh', color: '#ffe4a0' },
   { title: 'Thanh Phong Kiếm Vũ', color: '#a9f0e9' },
+  { title: 'Thần Bài', color: '#ffcf3f', vip: true, board: 'than-bai' },
+  { title: 'Vua Câu Cá', color: '#5fe3f0', vip: true, board: 'vua-cau-ca' },
 ];
 
 export function applyAvatarTitle(tag, title, effect) {
   const theme = AURA_TITLES[effect] ?? AURA_TITLES[0];
   tag.style.setProperty('--tag-accent', theme.color);
-  title.textContent = theme.title;
+  if (theme.board) {
+    // Danh hiệu chí tôn: dựng từ hằng số của game (không chứa dữ liệu người chơi).
+    title.replaceChildren(createTitleBadge(theme.board, theme.title));
+    title.setAttribute('aria-label', theme.title);
+  } else {
+    title.textContent = theme.title;
+    title.removeAttribute('aria-label');
+  }
   title.hidden = !theme.title;
+  title.classList.toggle('vip', Boolean(theme.vip));
+  // Kiểu chí tôn cho cả nhãn (màu quầng, tên sáng) theo chủ đề.
+  if (theme.board) tag.dataset.board = theme.board;
+  else delete tag.dataset.board;
 }

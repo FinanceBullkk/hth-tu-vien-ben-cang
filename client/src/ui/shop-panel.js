@@ -2,10 +2,11 @@
 // Bấm món là mặc thử ngay (chỉ máy mình thấy); "Mua" trừ TEU trên server; "Mặc bộ này" lưu và cả phòng cùng thấy.
 // Đóng bảng khi chưa lưu thì nhân vật về lại bộ đang mặc.
 import { AVATAR, SHIRT_COLORS } from '../../../shared/protocol.js';
-import { HAT_SHOP_START, LOOK_SLOTS, SHOP_SECTIONS, canWear, itemId, itemName, paidItems, priceOf } from '../../../shared/shop.js';
+import { HAT_SHOP_START, LOOK_SLOTS, SHOP_SECTIONS, canWear, itemId, itemName, meetsRequirement, paidItems, priceOf, requirementOf } from '../../../shared/shop.js';
 import { trimShadowCasters } from '../player/avatar-lod.js';
 import { h, store } from './dom.js';
 import { openModal } from './modal.js';
+import { requirementStatus, vipCard } from './shop-vip-card.js';
 
 const SLOT_COUNT = { color: AVATAR.colors, hair: AVATAR.hairs, hat: AVATAR.hats, attire: AVATAR.attires, weapon: AVATAR.weapons, effect: AVATAR.effects };
 const SLOT_START = { hat: HAT_SHOP_START };
@@ -29,7 +30,7 @@ export function rememberLook(app, look) {
 }
 
 // Màu chủ đạo của từng hào quang trả phí, để ô trong sạp không giống hệt nhau.
-const EFFECT_TINT = { 3: '#5b6fd6', 4: '#e2672a', 7: '#c9d6e8', 8: '#4b2f63', 9: '#d4a017', 10: '#c0392b', 11: '#e8c34a', 12: '#5fb7d9' };
+const EFFECT_TINT = { 3: '#5b6fd6', 4: '#e2672a', 7: '#c9d6e8', 8: '#4b2f63', 9: '#d4a017', 10: '#c0392b', 11: '#e8c34a', 12: '#5fb7d9', 13: '#d4a52a', 14: '#2aa7c4' };
 
 /** Ô vẽ món: màu áo là ô màu, hào quang nhuộm theo màu riêng, món khác là triện chữ Hán theo loại. */
 export function itemSwatch(slot, index, owned) {
@@ -48,6 +49,11 @@ export function openShop(app, tab = 'shop') {
   let draft = { ...current };
   let selected = null; // id món đang xem ở thẻ Cửa hàng
   let busy = false;
+  let progress = null; // Tiến độ thành tích cho hào quang chí tôn, server đếm.
+  app.net.call('shop:progress').then((res) => {
+    if (res?.ok && res.progress) progress = res.progress;
+    if (active === api) render();
+  });
 
   const preview = () => applyLook(me.avatar, draft);
   // Quay mặt nhân vật về phía camera để nhìn rõ bộ đồ đang thử.
@@ -71,8 +77,12 @@ export function openShop(app, tab = 'shop') {
 
   const shopList = () => SHOP_SECTIONS.map(({ slot, label, hanzi }) => h('section', {},
     h('h3', { 'data-hanzi': hanzi }, label),
-    h('div', { class: 'shopx-grid' }, paidItems(slot).map((it) => {
+    // Món chí tôn lên đầu, chiếm cả hàng; còn lại xếp theo giá như cũ.
+    h('div', { class: 'shopx-grid' }, [...paidItems(slot).filter((it) => requirementOf(it.id)), ...paidItems(slot).filter((it) => !requirementOf(it.id))].map((it) => {
       const owned = wallet.has(it.id);
+      if (requirementOf(it.id)) {
+        return vipCard(it, { owned, on: draft[slot] === it.index, poor: wallet.teu < it.price, progress, onPick: () => pick(slot, it.index) });
+      }
       const card = h('button', {
         class: `shopx-card${owned ? ' owned' : ''}${draft[slot] === it.index ? ' on' : ''}${!owned && wallet.teu < it.price ? ' poor' : ''}`,
         type: 'button', 'aria-pressed': draft[slot] === it.index ? 'true' : 'false',
@@ -116,9 +126,10 @@ export function openShop(app, tab = 'shop') {
     if (buying) {
       const price = priceOf(selected);
       const [slot, index] = selected.split(':');
-      status.textContent = `Đang thử ${itemName(slot, Number(index))}.`;
-      primary.textContent = wallet.teu < price ? `Thiếu ${price - wallet.teu} TEU` : `Mua · ${price} TEU`;
-      primary.disabled = busy || wallet.teu < price;
+      const locked = !meetsRequirement(selected, progress);
+      status.textContent = locked ? requirementStatus(selected, progress) : `Đang thử ${itemName(slot, Number(index))}.`;
+      primary.textContent = locked ? 'Chưa đủ điều kiện' : wallet.teu < price ? `Thiếu ${price - wallet.teu} TEU` : `Mua · ${price} TEU`;
+      primary.disabled = busy || locked || wallet.teu < price;
       primary.dataset.mode = 'buy';
     } else if (dirty) {
       const locked = LOOK_SLOTS.find((slot) => !canWear(wallet.owned, slot, draft[slot]));
@@ -141,6 +152,7 @@ export function openShop(app, tab = 'shop') {
     const res = await app.net.call('shop:buy', { item });
     busy = false;
     if (Number.isFinite(res?.teu)) wallet.apply({ teu: res.teu });
+    if (res?.progress) progress = res.progress;
     if (res?.ok) {
       wallet.grant(item);
       app.audio.pop?.();

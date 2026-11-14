@@ -81,13 +81,14 @@ TEU là điểm chung của tu viện: câu cá, giải đố của sư chú M�
 - **Thử đồ miễn phí:** bấm một món là nhân vật mặc thử ngay (chỉ máy mình thấy). Đủ TEU thì bấm **Mua**, rồi **Mặc bộ này** để cả tu viện cùng thấy. Đóng bảng khi chưa lưu thì nhân vật về lại bộ đang mặc.
 - **Tủ đồ:** nút tủ đồ trên menu (hoặc thẻ **Tủ đồ** trong sạp) để thay đồ ngay khi đang chơi, không cần ra màn vào game. Tủ chỉ hiện đồ miễn phí và đồ đã mua.
 - **Hàng bán:** hào quang Tinh hà, Nguyệt bạch (30), Hỏa diễm, Hắc ám (40), Xích diễm (50), Long quyền, Kiếm vũ (60), Kim long (80); trang phục 25–35; Phất trần 20, Băng quyền 30; mũ và kiểu tóc 15–35; sáu màu áo quý 25–40 TEU. Giá nằm trong `shared/shop.js`.
+- **Hào quang chí tôn (888 TEU):** hai món hiếm đứng đầu thẻ Hào quang, phải đạt thành tích mới được mua. **Thần bài** (Vận Mệnh Luân — bánh xe vận mệnh vàng khổng lồ có đèn sòng bài chạy đuổi sau lưng, quạt Thùng Phá Sảnh 3D phủ kim tuyến, ba xúc xắc vàng, bàn cò quay có bi chạy; mỗi 10 giây "tất tay": bánh xe quay vòng may mắn, ấn 賭神 đóng xuống, mười hai lá bài hiện thành vòng trận bài quanh người, sét vàng; đi tới đâu rải bài tới đó): thắng 100 ván ở bàn bầu cua, xì dách, tài xỉu hoặc cò quay; máy gạt cần không tính. **Vua câu cá** (cá chép vàng 3D khổng lồ vượt sóng sau lưng, cần câu Ngư Vương treo cá quẫy, đàn cá 3D vọt toé nước, mặt biển sóng cuộn, mỗi 12 giây cá chép vắt qua đầu hoá rồng mọc sừng, sáu cột nước phun rồi cầu vồng hiện; mỗi bước để lại vũng gợn nước): câu đủ mọi loài trong Sổ cá. Thẻ trong sạp hiện tiến độ, danh hiệu trên đầu chạy ánh kim. Hai món này không đưa lên trạm giao thương được. Điều kiện nằm trong `SHOP_REQUIREMENTS` của `shared/shop.js`.
 - **Đồ cũ được giữ:** ai đang mặc một món nay phải mua thì được giữ món đó miễn phí; màu áo quý đã mở trước đây vẫn còn. Các món khác vẫn miễn phí như cũ.
 
 Sổ an giờ chia bốn thẻ: **Tổng quan** (số liệu, túi tiền, lối tắt sang sạp), **Tu luyện**, **Sổ cá**, **Kỷ niệm** (lời ước và quẻ đã rút).
 
 ## Trạm giao thương
 
-Bảng gỗ mái ngói bên lối đi từ trục chính sang Sạp Kim Bảo. Hai người cùng đứng ở trạm thì trao đổi đồ ngoại hình đã mua và TEU với nhau, miễn phí. Bấm **Chơi gì?** rồi chọn **Giao thương**, hoặc tới gần bấm **E** hay bấm vào bảng.
+Bảng gỗ mái ngói bên lối đi từ trục chính sang Sạp Kim Bảo. Hai người cùng đứng ở trạm thì trao đổi đồ ngoại hình đã mua (trừ hào quang chí tôn) và TEU với nhau, miễn phí. Bấm **Chơi gì?** rồi chọn **Giao thương**, hoặc tới gần bấm **E** hay bấm vào bảng.
 
 - **Mời:** bảng liệt kê người đang đứng ở trạm, bấm **Mời giao dịch**. Người được mời thấy lời mời (hết hạn sau 30 giây), bấm **Nhận** hoặc **Từ chối**.
 - **Đặt đề nghị:** mỗi bên chọn tối đa 6 món trả phí và 0–999 TEU muốn đưa; bên kia thấy ngay. Không đặt được món mà người kia đã có, hay nhiều TEU hơn mình đang có.
@@ -166,10 +167,11 @@ Bấm nút **Chơi gì?** ở góc trên rồi chọn **Câu cá**, hoặc tự 
 - **Người mới:** chưa bắt đủ 3 loài thì vùng xanh rộng và tụt rất chậm. Lần đầu chỉ cần làm theo chữ trên màn hình; mồi, bóng cá, lắc cần được giới thiệu dần sau mỗi con.
 - **Mồi:** bột, giun hoặc rau (bấm chữ dưới màn hình hoặc phím **Q**). Mỗi mồi có nhóm cá riêng.
 - **Bóng cá:** bóng đen bơi dưới mặt hồ, mọi máy thấy giống nhau. Bóng càng to càng dễ ra cá hiếm, ai thả trúng trước được. Chỗ nước gợn mạnh thường có bóng lớn.
-- **Thưởng:** thường, quý, hiếm được 1, 2, 4 TEU; ở trong vùng xanh từ 80% thời gian được thêm 1 TEU.
-- **Sạp đồ câu** (góc phải khi đang câu): Cần trúc đen 60 TEU, Cần kim long 160 TEU, mua một lần dùng mãi; cần tốt thì vùng xanh rộng hơn, cá tụt chậm hơn, và cả hồ thấy màu cần. Thính thơm 8 TEU một gói 5 nắm: bật **Thính** cạnh chọn mồi thì mỗi lần quăng rắc một nắm, cá cắn nhanh hơn và dễ ra cá quý, cá hiếm.
+- **Phẩm chất:** Thường, Quý, Hiếm, Sử thi, Huyền thoại (chữ trắng, xanh lá, xanh lam, tím, cam). Cá sử thi, huyền thoại gần như chỉ rình bóng lớn; ai câu được thì cả tu viện thấy thông báo.
+- **Túi đồ (phím B, nút Túi đồ trên HUD hoặc nút Túi khi đang câu):** cá kéo lên vào túi 49 ô với giá bán chốt ngay lúc câu: theo loài, con càng nặng càng đắt (80-120% giá loài), cá khủng và Giờ cá vàng nhân đôi, câu đẹp và chuỗi cộng thêm. Rê chuột vào ô để xem chi tiết; chọn ô rồi **Bán** hoặc **Khoá** (món khoá không bị bán nhanh). **Bán nhanh** bán hết cá chưa khoá tới phẩm chất đã chọn. Cá huyền thoại, sử thi phải bấm bán hai lần. Túi đầy thì con cá mới được bán ngay tại hồ, không mất cá. Thẻ **Đạo cụ** trong túi xem và mua cần, thính.
+- **Sạp đồ câu** (góc phải khi đang câu, hoặc thẻ Đạo cụ trong túi): Cần trúc đen 60 TEU, Cần kim long 160 TEU, Cần phượng hoàng 400 TEU, mua một lần dùng mãi; cần tốt thì vùng xanh rộng hơn, cá tụt chậm hơn, hay dính cá hiếm, sử thi, huyền thoại hơn, và cả hồ thấy màu cần. Cần tre không kéo nổi cá huyền thoại; ở bóng lớn, cần phượng hoàng ra cá huyền thoại khoảng 5 con mỗi trăm lần. Thính thơm 8 TEU một gói 5 nắm: bật **Thính** cạnh chọn mồi thì mỗi lần quăng rắc một nắm, cá cắn nhanh hơn và dễ ra cá quý, cá hiếm.
 - **Đơn bếp chùa:** mỗi ngày ba đơn chung cho cả tu viện, hiện ở góc trái: 3 con cá thường (+4 TEU), 1 con cá quý (+6 TEU), 1 con nặng ký (+8 TEU). Bắt đủ là tự cộng, mỗi đơn một lần một ngày.
-- **Sổ cá:** trong Sổ an có đủ 15 loài, mỗi loài một hình minh hoạ. Loài chưa bắt chỉ hiện bóng đen và gợi ý mồi, giờ và cỡ bóng. Đủ 5, 10 và 15 loài được thưởng 5, 10 và 25 TEU.
+- **Sổ cá:** trong Sổ an có đủ 23 loài, mỗi loài một hình minh hoạ. Loài chưa bắt chỉ hiện bóng đen và gợi ý mồi, giờ và cỡ bóng. Đủ 5, 10 và 23 loài được thưởng 5, 10 và 25 TEU (vào ví ngay). Danh hiệu ngư phủ trong túi đồ lên theo số loài.
 
 ## Trò chuyện bằng mic
 
@@ -278,6 +280,7 @@ server/
   wishes.js      Lời ước và quẻ vận đơn
   bell.js        Chuông cá nhân, lịch và sự kiện chuông
   fishing.js     Câu cá: định giờ cắn, roll loài, tự mô phỏng pha giằng co
+  bag.js         Túi đồ: bán cá lấy TEU, khoá món (bag-store.js: bảng bag_items)
   meditation.js  Giữ chỗ chiếu, nhịp thở chung
   rhythm.js      Minigame Audition chuông
   riddle.js      Đố thuật ngữ với Mặc Vũ

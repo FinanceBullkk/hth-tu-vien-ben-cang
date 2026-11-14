@@ -22,7 +22,9 @@ function compileLike(renderer, group, camera, scene, target) {
   return ready;
 }
 
-/** Mỗi chiêu PK một lần, ở nhóm tạm không gắn vào cảnh. */
+/** Mỗi chiêu PK một lần, ở nhóm tạm không gắn vào cảnh; thêm ba tông aura đại diện
+ * (Sen kim — hạt plane, Hắc ám — hạt mesh không map, Thần bài — lá bài/xúc xắc/mưa bài có map
+ * atlas) để ra chiêu theo aura lần đầu không phải biên dịch thêm tổ hợp vật liệu nào. */
 async function pkSamples(group, compile) {
   const vfx = new PkVfx(group);
   const at = { x: 0, y: 0, z: 0, rot: 0 };
@@ -41,6 +43,12 @@ async function pkSamples(group, compile) {
   vfx.shatterIce(0, 0, 0);
   vfx.hit({ x: 0, z: 0, damage: 20 });
   vfx.hit({ x: 0, z: 0, damage: 20, isShielded: true });
+  for (const effect of [1, 8, 13]) {
+    vfx.slash({ ...at, effect });
+    vfx.projectile({ fromX: 0, fromZ: 0, toX: 3, toZ: 3, effect });
+    vfx.dash({ fromX: 0, fromZ: 0, toX: 2, toZ: 0, effect });
+    vfx.shield({ x: 0, z: 0, effect });
+  }
   vfx.update(0.05); // Vài mảnh chỉ sinh ra trong khung đầu.
   await compile();
   vfx.clear();

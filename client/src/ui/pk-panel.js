@@ -2,6 +2,15 @@ import { h } from './dom.js';
 
 const pct = (n, max) => `${Math.max(0, Math.min(100, max ? (n / max) * 100 : 0))}%`;
 
+// Dòng số liệu trong tooltip dựng thẳng từ số liệu kit — không viết tay để khỏi lệch shared/pk.js.
+function statsLine(type, s) {
+  const cd = `${(s.cooldown / 1000).toFixed(1)}s`;
+  if (type === 'slashQ') return `AOE: nổ tại điểm ngắm ≤${s.range}m, bán kính ${s.burstRadius}m · ${s.damage} sát thương/mục tiêu · Hồi ${cd}`;
+  if (type === 'shield') return `Giảm ${Math.round(s.reduction * 100)}% sát thương trong ${(s.duration / 1000).toFixed(1)}s · Hồi chiêu: ${cd}`;
+  if (type === 'dash') return `Lướt ${s.distance}m · Né đòn trong ${(s.iframe / 1000).toFixed(2)}s · Hồi chiêu: ${cd}`;
+  return `Sát thương: ${s.damage} · Phạm vi: ${s.range}m · Hồi chiêu: ${cd}`;
+}
+
 export class PkPanel {
   constructor(app, activity) {
     this.app = app;
@@ -92,7 +101,7 @@ export class PkPanel {
         sr
       );
 
-      return { btn, cdCurtain, cdTimer: cdCurtain.firstChild, iconImg, flash };
+      return { btn, cdCurtain, cdTimer: cdCurtain.firstChild, iconImg, flash, label, tipData };
     };
 
     // Slot 1 (X=136): Chiêu 1 - Cửu Thiên Lôi Kiếm / Đánh thường (Phím 1 / Chuột Trái)
@@ -169,6 +178,30 @@ export class PkPanel {
     });
     this.dashBtn = this.dashSlot.btn;
 
+    // Bảng slot cho applyKit: mỗi slot giữ dữ liệu gốc của kit Vô Môn để trả lại khi aura 0.
+    this.kitSlots = [
+      { type: 'strike', slot: this.strikeSlot, hotkey: 'Phím 1 / Chuột Trái (M1)', label: 'Đánh thường',
+        title: 'Cửu Thiên Lôi Kiếm (Đánh thường · Phím 1 / Chuột Trái)',
+        tip: { name: 'Cửu Thiên Lôi Kiếm', type: 'Kiếm Pháp · Công Kích Chính',
+          stats: statsLine('strike', { damage: 20, range: 2.2, cooldown: 500 }),
+          desc: 'Dẫn Cửu Thiên Lôi Điện vào kiếm phong, xuất chiêu như sấm sét chớp nhoáng trảm phá hư không.' } },
+      { type: 'slashQ', slot: this.slashQSlot, hotkey: 'Phím 2', label: 'Kiếm khí',
+        title: 'Vạn Kiếm Quy Tông (Kim Long Xuất Hải · Phím 2)',
+        tip: { name: 'Vạn Kiếm Quy Tông', type: 'Tuyệt Kỹ Trấn Phái · Kiếm Tông',
+          stats: statsLine('slashQ', { damage: 16, range: 8.5, burstRadius: 4, cooldown: 500 }),
+          desc: 'Triệu hoán ngàn vạn phi kiếm hộ thân hợp nhất cùng Hoàng Kim Cự Long càn quét đại địa.' } },
+      { type: 'shield', slot: this.shieldSlot, hotkey: 'Phím 3', label: 'Hộ thể',
+        title: 'Bát Quái Hộ Thể (Trận Đồ Hộ Thân · Phím 3)',
+        tip: { name: 'Bát Quái Hộ Thể', type: 'Pháp Trận · Phòng Ngự',
+          stats: statsLine('shield', { reduction: 0.6, duration: 1600, cooldown: 500 }),
+          desc: 'Hiển hóa Thái Cực Bát Quái trận đồ với tứ đại phi kiếm hộ thân xoay quanh ngăn chặn ám chiêu.' } },
+      { type: 'dash', slot: this.dashSlot, hotkey: 'Phím 4', label: 'Lướt né',
+        title: 'Ngự Kiếm Phi Thần (Lướt kiếm thần tốc · Phím 4)',
+        tip: { name: 'Ngự Kiếm Phi Thần', type: 'Thân Pháp · Thuấn Di',
+          stats: statsLine('dash', { distance: 3.5, iframe: 250, cooldown: 500 }),
+          desc: 'Chân đạp kiếm quang lướt gió xé toạc cự ly trong chớp mắt, thoát khỏi vòng vây hiểm trở.' } },
+    ];
+
     // =========================================================================
     // 6. CÁC NÚT PHỤ TRỢ ĐẤU TRƯỜNG & KHUNG CHÍNH (DESIGNED WUXIA HUD)
     // =========================================================================
@@ -225,6 +258,23 @@ export class PkPanel {
 
     // Khởi tạo trạng thái tự do dùng kỹ năng
     this.updateFreeRoam();
+  }
+
+  // HUD đổi theo kit aura: nhãn chip, tiêu đề, tooltip và màu tông viền --kit-color.
+  // sr-text slot 1 giữ chuỗi "Đánh thường" nguyên vẹn (bộ kiểm thử tự động phụ thuộc nó).
+  applyKit(kit) {
+    for (const def of this.kitSlots) {
+      const s = kit.id !== 'none' ? kit.skills?.[def.type] : null;
+      const tip = def.slot.tipData;
+      const name = s?.name ?? def.tip.name;
+      tip.name = name;
+      tip.type = s?.type ?? def.tip.type;
+      tip.stats = s ? statsLine(def.type, s) : def.tip.stats;
+      tip.desc = s?.desc ?? def.tip.desc;
+      def.slot.label.textContent = s?.shortLabel ?? def.label;
+      def.slot.btn.title = s ? `${name} (${s.type} · ${def.hotkey})` : def.title;
+      def.slot.btn.style.setProperty('--kit-color', kit.color ?? '#e9d6ab');
+    }
   }
 
   showBanner(text, duration = 2000) {

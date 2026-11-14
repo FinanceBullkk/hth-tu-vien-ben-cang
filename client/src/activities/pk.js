@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { PkPanel } from '../ui/pk-panel.js';
 import { floorHeight } from '../../../shared/layout.js';
-import { PK_ATTACK, PK_SKILLS } from '../../../shared/pk.js';
+import { PK_SKILLS, pkKitForEffect } from '../../../shared/pk.js';
 
 export class PkActivity {
   constructor(app) {
@@ -12,7 +12,10 @@ export class PkActivity {
     this.aimNdc = new THREE.Vector2();
     this.aimGround = new THREE.Plane(new THREE.Vector3(0, 1, 0));
     this.aimPoint = new THREE.Vector3();
+    this.kit = pkKitForEffect(app.me?.avatar?.effectIndex ?? 0);
+    this.kitEffect = this.kit.effect;
     this.panel = new PkPanel(app, this);
+    this.panel.applyKit(this.kit);
   }
 
   bind() {
@@ -51,12 +54,22 @@ export class PkActivity {
 
   setSnapshot(me, others) {
     this.status = me.combat ?? this.status;
+    this.syncKit();
     this.panel.updateFreeRoam(this.cooldowns);
     this.app.me.avatar.setCombatStatus(this.status.protectedUntil ? 'Bảo hộ' : this.status.satKhiUntil ? 'Sát khí' : '');
     for (const p of others) {
       const r = this.app.remotes.map.get(p.sid);
       if (r) r.avatar.setCombatStatus(p.combat?.protectedUntil ? 'Bảo hộ' : p.combat?.satKhiUntil ? 'Sát khí' : '');
     }
+  }
+
+  // Kit theo aura của mình — chỉ áp lại khi effect đổi (setSnapshot chạy mỗi nhịp mạng).
+  syncKit() {
+    const effect = this.app.me?.avatar?.effectIndex ?? 0;
+    if (this.kitEffect === effect) return;
+    this.kitEffect = effect;
+    this.kit = pkKitForEffect(effect);
+    this.panel.applyKit(this.kit);
   }
 
   aimRotation(point) {
@@ -77,21 +90,22 @@ export class PkActivity {
     if (this.app.modalBusy() || this.app.activities.current) return;
     const now = this.app.net.now();
     if (this.cooldowns[type] > now) return;
-    const duration = type === 'strike' ? PK_ATTACK.cooldown : PK_SKILLS[type]?.cooldown;
+    const duration = this.kit.skills[type]?.cooldown;
     if (!duration) return;
     this.cooldowns[type] = now + duration;
     const me = this.app.me;
+    const effect = me.avatar.effectIndex;
     if (type !== 'shield') me.placeAt(me.x, me.z, this.aimRotation(point));
     const aimDistance = type === 'slashQ'
-      ? Math.max(1.5, Math.min(PK_SKILLS.slashQ.range, this.aimDistance)) : undefined;
+      ? Math.max(1.5, Math.min(this.kit.skills.slashQ.range, this.aimDistance)) : undefined;
     if (type === 'strike') {
       me.avatar.slash();
-      this.app.world.pkVfx.slash({ x: me.x, y: me.y, z: me.z, rot: me.rot });
+      this.app.world.pkVfx.slash({ x: me.x, y: me.y, z: me.z, rot: me.rot, effect });
     } else if (type === 'slashQ') {
       me.avatar.slash();
       this.app.world.pkVfx.projectile({ fromX: me.x, fromZ: me.z,
         toX: me.x + Math.sin(me.rot) * aimDistance, toZ: me.z + Math.cos(me.rot) * aimDistance,
-        rot: me.rot, radius: PK_SKILLS.slashQ.burstRadius });
+        rot: me.rot, radius: this.kit.skills.slashQ.burstRadius, effect });
     }
     const fromX = me.x, fromZ = me.z;
     const result = await this.app.net.call('pk:attack', { type, rot: type === 'shield' ? undefined : me.rot,
@@ -101,9 +115,9 @@ export class PkActivity {
       if (result?.error) this.app.hud.toast(result.error);
     } else if (type === 'dash') {
       me.placeAt(result.x, result.z, me.rot);
-      this.app.world.pkVfx.dash({ fromX, fromZ, toX: result.x, toZ: result.z, rot: me.rot });
+      this.app.world.pkVfx.dash({ fromX, fromZ, toX: result.x, toZ: result.z, rot: me.rot, effect });
     } else if (type === 'shield') {
-      this.app.world.pkVfx.shield({ x: me.x, y: me.y, z: me.z, duration: 1600,
+      this.app.world.pkVfx.shield({ x: me.x, y: me.y, z: me.z, duration: 1600, effect,
         targetFn: () => ({ x: me.x, y: me.y, z: me.z }) });
     }
   }
@@ -113,7 +127,8 @@ export class PkActivity {
       const r = this.app.remotes.map.get(event.attackerSid);
       if (r) {
         r.avatar.slash();
-        this.app.world.pkVfx.slash({ x: r.x, y: r.y, z: r.z, rot: event.rot });
+        this.app.world.pkVfx.slash({ x: r.x, y: r.y, z: r.z, rot: event.rot,
+          effect: event.effect ?? r.avatar.effectIndex });
       }
     }
     this.hit(event);
@@ -121,18 +136,21 @@ export class PkActivity {
 
   onSkill(event) {
     const r = this.app.remotes.map.get(event.attackerSid);
+    const effect = event.effect ?? r?.avatar.effectIndex;
     if (event.type === 'slashQ') {
       if (r) {
         r.avatar.slash();
         this.app.world.pkVfx.projectile({ fromX: event.fromX, fromZ: event.fromZ,
-          toX: event.toX, toZ: event.toZ, rot: event.rot, radius: event.radius, isHit: event.isHit });
+          toX: event.toX, toZ: event.toZ, rot: event.rot, radius: event.radius, isHit: event.isHit, effect });
       }
       this.hit(event);
     } else if (event.type === 'dash' && r) {
       r.x = event.toX; r.z = event.toZ;
-      this.app.world.pkVfx.dash(event);
+      this.app.world.pkVfx.dash({ ...event, effect });
+      // Kit xung kích chém trên đường lướt — server trả hits, render popup sát thương.
+      if (event.hits?.length) this.hit(event);
     } else if (event.type === 'shield' && r) {
-      this.app.world.pkVfx.shield({ x: r.x, y: r.y, z: r.z, duration: event.duration,
+      this.app.world.pkVfx.shield({ x: r.x, y: r.y, z: r.z, duration: event.duration, effect,
         targetFn: () => ({ x: r.x, y: r.y, z: r.z }) });
     }
   }
@@ -145,8 +163,9 @@ export class PkActivity {
       if (!target) continue;
       if (impact.targetHp !== 0) target.avatar.flinch();
       const x = impact.x ?? target.x, z = impact.z ?? target.z;
+      // Server báo cờ khiên; bản cũ không có cờ thì đoán theo mốc sát thương cũ.
       this.app.world.pkVfx.hit({ x, y: floorHeight(x, z), z, damage: impact.damage,
-        isShielded: impact.damage < (event.type === 'slashQ' ? 16 : 20) });
+        isShielded: impact.shielded ?? impact.damage < (event.type === 'slashQ' ? 16 : 20) });
       if (local) this.app.follow?.shake?.(0.16);
     }
   }
