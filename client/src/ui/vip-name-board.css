@@ -1,15 +1,15 @@
-/* DANH HIỆU CHÍ TÔN KIỂU VÕ LÂM CHI MỘNG — chỉ người đeo hào quang chí tôn (avatar-title.js đặt .tag[data-board]).
-   Từ trên xuống: danh hiệu chữ viết tay tô màu viền tối, hai bên đồ trang trí kiếm hiệp Hồng Kông đúng chủ đề;
-   dòng hiệu phụ chữ xanh ngọc viền đen với con dấu son chữ Hán treo bên trái; tên chữ trắng viền đen, không khung.
-   Cấu trúc ở client/src/player/vip-title-badge.js. */
+/* DANH HIỆU CHÍ TÔN KIỂU KIẾM HIỆP — chỉ người đeo hào quang chí tôn (avatar-title.js đặt .tag[data-board]).
+   Từ trên xuống: danh hiệu chữ viết tay tô màu kim loại, hai bên đồ trang trí kiểu "khí" phát sáng (nét mảnh,
+   thân trong mờ, không viền đen dày để khỏi giống đồ chơi); dòng hiệu phụ chữ xanh ngọc với con dấu son chữ Hán
+   treo bên trái; tên chữ trắng viền đen, không khung. Cấu trúc ở client/src/player/vip-title-badge.js. */
 
 .tag[data-board="than-bai"] {
   --vt-fill: linear-gradient(180deg, #ffffff 0%, #fff3a6 22%, #ffd23a 44%, #ff9a10 50%, #ff7412 72%, #d01e0e 100%);
-  --vt-edge: #420600;
+  --vt-edge: #420600; --vt-glow: rgba(255, 170, 40, .95); --vt-haze: rgba(255, 110, 20, .55);
 }
 .tag[data-board="vua-cau-ca"] {
   --vt-fill: linear-gradient(180deg, #ffffff 0%, #eafcff 22%, #a4e8ff 44%, #3ea4f2 50%, #2a84e4 72%, #0e48bc 100%);
-  --vt-edge: #021e40;
+  --vt-edge: #021e40; --vt-glow: rgba(110, 220, 255, .95); --vt-haze: rgba(30, 140, 255, .55);
 }
 /* Chữ nhỏ kiểu MMO 2D: font chân phương, viền đen 1px tám phía, nét cứng không nhoè (sắc trên mọi nền). */
 .tag[data-board] {
@@ -28,15 +28,15 @@
 
 .vtt { display: flex; flex-direction: column; align-items: center; }
 .vtt-art { position: relative; display: flex; align-items: center; }
-.vtt-word { position: relative; display: block; margin: 0 -4px; }
+.vtt-word { position: relative; display: block; margin: 0 -6px; }
 .vtt-outline, .vtt-text {
   display: block; padding: 1px 8px 3px 5px; white-space: nowrap; /* phải rộng hơn vì nét nghiêng vươn ra */
   font: 700 22px/1.25 "Segoe Script", "Brush Script MT", var(--serif);
 }
-/* Viền tối dày dưới chữ màu (chữ HTML không có paint-order nên tách lớp); bóng đổ nét cứng, không nhoè. */
+/* Viền tối vừa phải dưới chữ màu (chữ HTML không có paint-order nên tách lớp): lõi sắc, quầng sáng mảnh bên ngoài. */
 .vtt-outline {
-  position: absolute; inset: 0; color: var(--vt-edge); -webkit-text-stroke: 5px var(--vt-edge);
-  filter: drop-shadow(0 1.5px 0 rgba(0, 0, 0, .85));
+  position: absolute; inset: 0; color: var(--vt-edge); -webkit-text-stroke: 3.4px var(--vt-edge);
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, .8)) drop-shadow(0 0 4px var(--vt-haze));
 }
 .vtt-text {
   position: relative; color: transparent; -webkit-text-fill-color: transparent;
@@ -47,12 +47,15 @@
   animation: vttSweep 3.6s ease-in-out infinite;
 }
 
-/* Đồ trang trí hai bên (mây vàng, xúc xắc, nguyên bảo / sóng, cần trúc, cá chép; SVG lật sẵn bên phải). Đứng yên để vector vẽ
-   nét sắc (xoay cả khối thì trình duyệt vẽ lại thành ảnh nên nhoè); chỉ các chi tiết bên trong SVG chuyển động. */
+/* Đồ trang trí hai bên (dải khí vàng + lá bài nét vàng / dải nước + linh ngư; SVG lật sẵn bên phải). Lõi nét sáng
+   giữ sắc, quầng sáng hai lớp mỏng; khối đứng yên (xoay cả khối thì bị vẽ lại thành ảnh nên nhoè). */
 .vtt-side { display: block; width: 60px; height: 36px; line-height: 0; }
-.vtt-wing { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 1px 0 rgba(0, 0, 0, .75)); }
+.vtt-wing {
+  display: block; width: 100%; height: 100%; overflow: visible;
+  filter: drop-shadow(0 0 1.2px var(--vt-glow)) drop-shadow(0 0 5px var(--vt-haze));
+}
 
-/* Sao lấp lánh bốn cánh (sao vàng như sprite danh hiệu). */
+/* Sao lấp lánh bốn cánh. */
 .vtt-star {
   position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; opacity: 0; pointer-events: none;
   background:
@@ -64,8 +67,16 @@
 .vtt-star.s1 { left: 7%; top: 14%; }
 .vtt-star.s2 { left: 56%; top: 4%; animation-delay: .95s; }
 .vtt-star.s3 { left: 94%; top: 80%; animation-delay: 1.9s; }
+/* Vua câu cá: sao đổi thành bọt nước nổi. */
+.tag[data-board="vua-cau-ca"] .vtt-star {
+  width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px;
+  background:
+    radial-gradient(circle at 34% 32%, #fff 0 16%, transparent 28%),
+    radial-gradient(circle, transparent 52%, rgba(220, 250, 255, .95) 60%, rgba(120, 220, 255, .5) 68%, transparent 74%);
+  animation-name: vttBubble;
+}
 
-/* ----- Hiệu phụ xanh ngọc + ô ấn vàng treo trái ----- */
+/* ----- Hiệu phụ xanh ngọc + con dấu son treo trái ----- */
 .vtt-epithet {
   position: relative; display: block; margin-top: 1px; white-space: nowrap;
   font: 700 14.5px/1.25 "Times New Roman", var(--serif); color: #7cfbe6; text-shadow: var(--vt-ink);
@@ -80,46 +91,20 @@
   text-shadow: none; /* không kế thừa viền đen của dòng hiệu phụ */
 }
 
-/* Chuyển động bên trong đồ trang trí: tiền xu đung đưa, nguyên bảo loé, cá nhấp nhô, giọt nước lấp lánh. */
-.vtto-bob { transform-box: fill-box; transform-origin: center; }
-.vtto-swing { transform-box: fill-box; transform-origin: 50% 0; animation: vttoSwing 2.4s ease-in-out infinite alternate; }
-.vtto-bob { animation: vttoBob 2.2s ease-in-out infinite alternate; }
+/* Chuyển động bên trong đồ trang trí: linh ngư nhấp nhô, sao và giọt sáng loé. */
+.vtto-bob { transform-box: fill-box; transform-origin: center; animation: vttoBob 2.2s ease-in-out infinite alternate; }
 .vtto-glint { animation: vttoGlint 2.6s ease-in-out infinite; }
 .vtto-drop { animation: vttoGlint 1.8s ease-in-out infinite; }
-.vtto-drop:nth-of-type(2) { animation-delay: .6s; }
-.vtto-drop:nth-of-type(3) { animation-delay: 1.2s; }
+.vtto-drop + .vtto-drop { animation-delay: .7s; }
 
-/* Sao theo chủ đề: Thần bài là đồng xu vàng lỗ vuông bật lên; Vua câu cá là bọt nước nổi. */
-.tag[data-board="than-bai"] .vtt-star {
-  width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
-  background:
-    linear-gradient(#4a2000, #4a2000) center / 3px 3px no-repeat,
-    radial-gradient(circle at 38% 32%, #fffbe0 0 18%, #ffcc2a 45%, #b06a00 70%, #3a1600 74%, transparent 78%);
-  animation-name: vttSuit;
-}
-.tag[data-board="vua-cau-ca"] .vtt-star {
-  width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px;
-  background:
-    radial-gradient(circle at 34% 32%, #fff 0 16%, transparent 28%),
-    radial-gradient(circle, transparent 52%, rgba(220, 250, 255, .95) 60%, rgba(120, 220, 255, .5) 68%, transparent 74%);
-  animation-name: vttBubble;
-}
-
-@keyframes vttoSwing { from { transform: rotate(-9deg); } to { transform: rotate(9deg); } }
 @keyframes vttoBob { from { transform: translateY(1px) rotate(2deg); } to { transform: translateY(-1.8px) rotate(-3deg); } }
-@keyframes vttoGlint { 0%, 100% { opacity: .1; } 40% { opacity: 1; } }
-@keyframes vttSuit {
-  0%, 100% { opacity: 0; transform: translateY(3px) scale(.4); }
-  18% { opacity: 1; transform: translateY(0) scale(1.15); }
-  40% { opacity: 0; transform: translateY(-5px) scale(.8); }
-}
+@keyframes vttoGlint { 0%, 100% { opacity: .15; } 40% { opacity: 1; } }
 @keyframes vttBubble {
   0% { opacity: 0; transform: translateY(6px) scale(.5); }
   25% { opacity: 1; }
   70% { opacity: .9; transform: translate(2px, -6px) scale(1); }
   100% { opacity: 0; transform: translate(-1px, -12px) scale(1.1); }
 }
-
 @keyframes vttSweep { 0% { background-position: 150% 0, 0 0; } 55%, 100% { background-position: -50% 0, 0 0; } }
 @keyframes vttStar {
   0%, 100% { opacity: 0; transform: scale(.3) rotate(0); }
@@ -135,5 +120,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vtt-text, .vtt-star, .vtto-swing, .vtto-bob, .vtto-glint, .vtto-drop { animation: none; }
+  .vtt-text, .vtt-star, .vtto-bob, .vtto-glint, .vtto-drop { animation: none; }
 }

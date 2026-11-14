@@ -56,14 +56,13 @@ test('danh hiệu kiểu Võ Lâm Chi Mộng: cánh + chữ hai lớp + sao, r�
   }
 });
 
-test('trang trí hai bên kiếm hiệp Hồng Kông đúng chủ đề', () => {
+test('trang trí hai bên kiểu khí kiếm hiệp đúng chủ đề, không viền đen dày kiểu đồ chơi', () => {
   const bai = sideOrnamentSvg('than-bai', false);
-  assert.match(bai, /url\(#vtto-goldline\)/, 'mây tường vân vàng');
-  assert.equal((bai.match(/<g fill="#d0102a">/g) ?? []).length, 1, 'xúc xắc kiểu Tàu: mặt bốn chấm đỏ');
-  assert.match(bai, /<rect x="14.5" y="30.5" width="2.2" height="2.2"/, 'tiền xu lỗ vuông');
+  assert.match(bai, /url\(#vtto-qi\)/, 'dải khí vàng');
+  assert.equal((bai.match(/fill="url\(#vtto-cardglass\)"/g) ?? []).length, 3, 'ba lá bài nét vàng');
   const ca = sideOrnamentSvg('vua-cau-ca', false);
-  assert.match(ca, /url\(#vtto-bamboo\)/, 'cần câu trúc');
-  assert.match(ca, /url\(#vtto-carp\)/);
-  assert.match(ca, /url\(#vtto-sea\)/);
+  assert.match(ca, /url\(#vtto-water\)/, 'dải nước');
+  assert.match(ca, /class="vtto-bob"/, 'linh ngư nhấp nhô');
+  for (const svg of [bai, ca]) assert.ok(!/stroke-width="[3-9]/.test(svg), 'không có viền dày');
   assert.equal(sideOrnamentSvg('khong-co', false), '');
 });
