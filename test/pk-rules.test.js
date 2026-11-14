@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Db } from '../server/db.js';
-import { PK, PK_ATTACK, PK_SKILLS, PK_KIT_BY_EFFECT, pkDamage, pkKitForEffect, pkMaxHp, pkTitleMask } from '../shared/pk.js';
+import { PK, PK_ATTACK, PK_KITS, PK_SKILLS, PK_KIT_BY_EFFECT, pkDamage, pkKitForEffect, pkMaxHp, pkTitleMask } from '../shared/pk.js';
+import { EFFECT_NAMES } from '../shared/protocol.js';
 
 test('pk stats are flat and server authoritative for P0 slice', () => {
   assert.equal(pkMaxHp(), 100);
@@ -25,7 +26,8 @@ test('pk kits expose clean single melee kit', () => {
 });
 
 test('mỗi aura một kit riêng nhưng số liệu trùng baseline', () => {
-  for (let effect = 1; effect <= 12; effect++) {
+  assert.equal(PK_KIT_BY_EFFECT.length, EFFECT_NAMES.length, 'aura nào trong EFFECT_NAMES cũng phải có kit');
+  for (let effect = 1; effect < EFFECT_NAMES.length; effect++) {
     const kit = pkKitForEffect(effect);
     assert.equal(kit.effect, effect);
     assert.ok(kit.name);
@@ -45,11 +47,36 @@ test('mỗi aura một kit riêng nhưng số liệu trùng baseline', () => {
     }
   }
   const names = new Set(PK_KIT_BY_EFFECT.slice(1).map((kit) => kit.name));
-  assert.equal(names.size, 12);
+  assert.equal(names.size, EFFECT_NAMES.length - 1);
+  const skillNames = new Set(PK_KIT_BY_EFFECT.slice(1).flatMap((kit) =>
+    ['strike', 'slashQ', 'shield', 'dash'].map((type) => kit.skills[type].name)));
+  assert.equal(skillNames.size, (EFFECT_NAMES.length - 1) * 4, 'tên chiêu không được trùng giữa các kit');
+});
+
+test('hai hào quang chí tôn có kit riêng, không rơi về Vô Môn', () => {
+  const thanBai = pkKitForEffect(13);
+  const vuaCauCa = pkKitForEffect(14);
+  assert.equal(EFFECT_NAMES[13], 'Thần bài');
+  assert.equal(EFFECT_NAMES[14], 'Vua câu cá');
+  assert.deepEqual([thanBai.id, thanBai.effect, thanBai.color], ['than-bai', 13, '#ffcf3f']);
+  assert.deepEqual([vuaCauCa.id, vuaCauCa.effect, vuaCauCa.color], ['vua-cau-ca', 14, '#5fe3f0']);
+  for (const kit of [thanBai, vuaCauCa]) {
+    assert.notEqual(kit, PK_KITS.none);
+    assert.notEqual(kit.skills.strike.name, PK_SKILLS.strike.name);
+    assert.ok(Object.isFrozen(kit) && Object.isFrozen(kit.skills.slashQ));
+    // Mua aura 888 TEU không mua được lợi thế PvP: số liệu trùng kit Vô Môn từng chiêu.
+    for (const type of ['strike', 'slashQ', 'shield', 'dash']) {
+      const { name, shortLabel, type: kind, desc, ...stats } = kit.skills[type];
+      const { name: _n, ...base } = PK_KITS.none.skills[type];
+      assert.deepEqual(stats, base, `${kit.id}.${type} lệch số liệu baseline`);
+    }
+  }
+  assert.match(thanBai.skills.slashQ.name, /Tất Tay/);
+  assert.match(vuaCauCa.skills.slashQ.name, /Ngư|Vũ Môn/);
 });
 
 test('aura ngoài bảng thì rơi về kit Vô Môn', () => {
-  for (const effect of [undefined, 0, 99, -1, 1.5, '3']) {
+  for (const effect of [undefined, 0, 15, 99, -1, 1.5, '3', '13']) {
     assert.equal(pkKitForEffect(effect).id, 'none');
   }
 });

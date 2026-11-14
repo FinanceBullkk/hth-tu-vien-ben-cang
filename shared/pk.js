@@ -63,7 +63,7 @@ export const pkDamage = (base = PK_ATTACK.damage) => Number(base) || PK_ATTACK.d
 export const pkShieldReduction = () => 0;
 
 // ===== Kit kỹ năng theo aura =====
-// Mỗi aura (EFFECT_NAMES, id 1–12) một kit: tên chiêu, phân loại và mô tả riêng theo
+// Mỗi aura (EFFECT_NAMES, id 1–14) một kit: tên chiêu, phân loại và mô tả riêng theo
 // tông phái; số liệu TRÙNG baseline PK_SKILLS để PvP công bằng — khác biệt nằm ở tên,
 // mô tả và hiệu ứng (client/src/scene/pk-vfx.js render theo effect id). Server vẫn
 // resolve từ kit (`pkKitForEffect(player.effect)`) nên sau này muốn biến thể số liệu
@@ -242,6 +242,32 @@ export const PK_KITS = Object.freeze({
     dash: { name: 'Ngự Kiếm Thuấn Ảnh', shortLabel: 'Ngự Kiếm', type: 'Thân Pháp · Tung Thân',
       desc: 'Đạp lên kiếm quang lướt gió, thân ảnh tan vào làn gió xanh.' },
   }),
+  // ----- Hào quang chí tôn (888 TEU, cần thành tích): vẫn đúng số liệu baseline như mọi kit,
+  // chỉ khác tên, mô tả và hiệu ứng — mua aura không mua được lợi thế PvP.
+  // 13 Thần bài — bài, xúc xắc, tất tay
+  'than-bai': makeKit({
+    id: 'than-bai', name: 'Thần Bài', effect: 13, color: '#ffcf3f',
+    attack: { name: 'Thần Bài Phi Diệp', shortLabel: 'Phi Bài', type: 'Bài Thuật · Công Kích Chính',
+      desc: 'Xòe Thùng Phá Sảnh bích trong tay rồi phóng cả năm lá như phi đao, vệt chém mạ vàng.' },
+    slashQ: { name: 'Tất Tay Định Càn Khôn', shortLabel: 'Tất Tay', type: 'Tuyệt Kỹ Chí Tôn · Đổ Thần',
+      desc: 'Tất tay một ván: xúc xắc vàng ném tới điểm ngắm, sét vàng giáng xuống, bài đổ ập như mưa.' },
+    shield: { name: 'Thùng Phá Sảnh Hộ Thể', shortLabel: 'Phá Sảnh', type: 'Bài Trận · Phòng Ngự',
+      desc: 'Năm lá 10 J Q K Át bích đứng vòng hộ thân, đèn sòng bạc chạy quanh chặn mọi sát chiêu.' },
+    dash: { name: 'Lục Lục Đại Thuận', shortLabel: 'Lục Lục', type: 'Thân Pháp · Tung Thân',
+      desc: 'Gieo xúc xắc ra sáu sáu, thân theo vận đỏ lướt đi, để lại vệt phỉnh vàng lăn tròn.' },
+  }),
+  // 14 Vua câu cá — cần câu, cá chép, sóng nước
+  'vua-cau-ca': makeKit({
+    id: 'vua-cau-ca', name: 'Ngư Vương', effect: 14, color: '#5fe3f0',
+    attack: { name: 'Thần Câu Quất Thủy', shortLabel: 'Quất Câu', type: 'Cần Pháp · Công Kích Chính',
+      desc: 'Vung cần câu vàng quất thành vòm, dây câu xé nước, cá chép vọt lên theo lưỡi câu.' },
+    slashQ: { name: 'Lý Ngư Vượt Vũ Môn', shortLabel: 'Vũ Môn', type: 'Tuyệt Kỹ Chí Tôn · Ngư Vương',
+      desc: 'Cá chép vàng vượt vũ môn lao tới điểm ngắm, cột nước phun trời, cả đàn cá vọt khỏi mặt sóng.' },
+    shield: { name: 'Hải Triều Hộ Thể', shortLabel: 'Hải Triều', type: 'Thủy Trận · Phòng Ngự',
+      desc: 'Đàn cá chép vàng bơi vòng quanh thân trong màn sóng gợn, sóng loang hóa giải sát khí.' },
+    dash: { name: 'Phi Ngư Lướt Sóng', shortLabel: 'Phi Ngư', type: 'Thân Pháp · Tung Thân',
+      desc: 'Như cá chuồn vọt khỏi mặt nước, thân lướt trên sóng để lại vệt bọt bạc.' },
+  }),
 });
 
 // Index theo effect id cho tra nhanh; aura 0 hoặc id lạ → kit Vô Môn.
@@ -250,6 +276,7 @@ export const PK_KIT_BY_EFFECT = Object.freeze([
   PK_KITS['kim-lien'], PK_KITS['luu-ly'], PK_KITS['tinh-ha'], PK_KITS['hong-lien'],
   PK_KITS['dao-hoa'], PK_KITS['bich-ngoc'], PK_KITS['nguyet-bach'], PK_KITS['hac-am'],
   PK_KITS['long-quyen'], PK_KITS['xich-diem'], PK_KITS['kim-long'], PK_KITS['kiem-vu'],
+  PK_KITS['than-bai'], PK_KITS['vua-cau-ca'], // 13–14 — hào quang chí tôn
 ]);
 
 export function pkKitForEffect(effect) {

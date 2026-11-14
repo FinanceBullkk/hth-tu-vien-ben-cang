@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { PkGame } from '../server/pk.js';
-import { PK, PK_ATTACK } from '../shared/pk.js';
+import { PK, PK_ATTACK, PK_KITS, pkKitForEffect } from '../shared/pk.js';
 import { SPAWN } from '../shared/layout.js';
 import { ACTIVITY } from '../shared/protocol.js';
 
@@ -78,6 +78,44 @@ test('chiêu thức mang effect của kẻ ra chiêu, số liệu vẫn trùng b
   const slash = events.filter(([name]) => name === 'pk:skill').at(-1)[1];
   assert.equal(slash.effect, 4);
   assert.equal(slash.type, 'slashQ');
+});
+
+test('hào quang chí tôn 13, 14 dùng kit riêng trên server, không rơi về Vô Môn', () => {
+  for (const effect of [13, 14]) {
+    const { pk, a, b, events } = fixture();
+    a.effect = effect;
+    const kit = pkKitForEffect(effect);
+    assert.notEqual(kit.id, PK_KITS.none.id);
+    assert.equal(kit.effect, effect);
+    // Đòn thường: số liệu baseline, sự kiện mang đúng effect để client vẽ chiêu chí tôn.
+    assert.equal(pk.attack(a, { type: 'strike', damage: 999 }).isHit, true);
+    const strike = events.find(([name]) => name === 'pk:strike')[1];
+    assert.equal(strike.effect, effect);
+    assert.equal(strike.hits[0].damage, kit.skills.strike.damage);
+    assert.equal(pk.state(b).hp, PK.baseHp - PK_ATTACK.damage);
+    // Cooldown lấy từ kit chí tôn, client không tự rút ngắn được.
+    assert.equal(pk.attack(a, { type: 'strike' }).ok, false);
+    assert.equal(a.combat.cooldowns.strike - Date.now() <= kit.skills.strike.cooldown, true);
+    // Tuyệt kỹ AOE: tầm và bán kính nổ theo kit, sát thương baseline.
+    a.combat.cooldowns.slashQ = 0;
+    const q = pk.attack(a, { type: 'slashQ', rot: 0, aimDistance: 1.5, damage: 999 });
+    assert.equal(q.ok, true);
+    assert.equal(q.hits.find((hit) => hit.sid === b.sid).damage, kit.skills.slashQ.damage);
+    const skill = events.filter(([name]) => name === 'pk:skill').at(-1)[1];
+    assert.deepEqual([skill.type, skill.effect, skill.radius], ['slashQ', effect, kit.skills.slashQ.burstRadius]);
+    // Hộ thể và lướt né cũng mang effect chí tôn.
+    a.combat.cooldowns.shield = 0;
+    pk.attack(a, { type: 'shield' });
+    const shield = events.filter(([name]) => name === 'pk:skill').at(-1)[1];
+    assert.deepEqual([shield.type, shield.effect, shield.duration], ['shield', effect, kit.skills.shield.duration]);
+    a.combat.cooldowns.dash = 0;
+    a.x = 0; a.z = 0;
+    pk.attack(a, { type: 'dash', rot: 0 });
+    const dash = events.filter(([name]) => name === 'pk:skill').at(-1)[1];
+    assert.deepEqual([dash.type, dash.effect], ['dash', effect]);
+    assert.ok(Math.abs(dash.toZ - dash.fromZ - kit.skills.dash.distance) < 0.01);
+    assert.equal(JSON.stringify(events).includes('secret-'), false);
+  }
 });
 
 test('hộ thể giảm sát thương, lướt né tránh đòn và không phá bảo hộ', () => {
