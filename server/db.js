@@ -9,6 +9,7 @@ import { FishingStore } from './fishing-store.js';
 import { BagStore } from './bag-store.js';
 import { ShopStore } from './shop-store.js';
 import { TradeStore } from './trade-store.js';
+import { StoneStockStore } from './stone-stock-store.js';
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS players (
@@ -159,6 +160,9 @@ export class Db {
     this.taixiu = new TableStakeStore(this.db, 'taixiu');
     this.coquay = new TableStakeStore(this.db, 'coquay');
     this.slot = new TableStakeStore(this.db, 'slot');
+    // Bãi đá: đá quý mua bằng TEU giữ tiền như máy gạt cần; đá thường lấy từ kho tích theo giờ.
+    this.stone = new TableStakeStore(this.db, 'stone');
+    this.stoneStock = new StoneStockStore(this.db);
     /** Gán từ Room: báo số dư TEU mới để đẩy ví cho người chơi. */
     this.onTeu = null;
   }

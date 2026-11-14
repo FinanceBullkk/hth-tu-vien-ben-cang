@@ -1,5 +1,5 @@
 // Điều phối hoạt động: phát hiện điểm gần người chơi, bật/tắt hoạt động, khoá di chuyển.
-import { ABBOT, BAUCUA_ZONE, BENA_BANCA, BELL, COQUAY_ZONE, LAKE, PITCH_ZONE, POND, SHOP, TAIXIU_ZONE, TEA, TREE, XIDACH_ZONE, ZOEYY, dist2d, isInsideHall, lakeDistance, slotMachineAt } from '../../../shared/layout.js';
+import { ABBOT, BAUCUA_ZONE, BENA_BANCA, BELL, COQUAY_ZONE, LAKE, PITCH_ZONE, POND, SHOP, TAIXIU_ZONE, TEA, TREE, XIDACH_ZONE, ZOEYY, dist2d, isInsideHall, lakeDistance, slotMachineAt, stoneSpotAt } from '../../../shared/layout.js';
 import { openShop } from '../ui/shop-panel.js';
 import { visitBenaBanca } from '../ui/bena-banca-dialog.js';
 import { BauCuaActivity } from './baucua.js';
@@ -7,6 +7,7 @@ import { XiDachActivity } from './xidach.js';
 import { createTaiXiuActivity } from './taixiu.js';
 import { createCoQuayActivity } from './coquay.js';
 import { SlotActivity } from './slot.js';
+import { StoneActivity } from './stone.js';
 import { BellEvent } from './bell-event.js';
 import { FishingActivity } from './fishing.js';
 import { FortuneActivity } from './fortune.js';
@@ -19,7 +20,7 @@ import { MelodyActivity } from './melody.js';
 import { PkActivity } from './pk.js';
 import { TradeController } from './trade.js';
 
-const KIND_CODE = { bell: 2, write: 3, shake: 4, fish: 5, pitch: 6, baucua: 9, xidach: 10, taixiu: 11, coquay: 12, slot: 13 };
+const KIND_CODE = { bell: 2, write: 3, shake: 4, fish: 5, pitch: 6, baucua: 9, xidach: 10, taixiu: 11, coquay: 12, slot: 13, stone: 14 };
 
 // Lớp CSS báo đang trong một hoạt động: khung chiến đấu (thanh máu, thanh chiêu) tự cất đi để không che bảng hoạt động.
 const markInActivity = (on) => document.body.classList.toggle('in-activity', on);
@@ -40,6 +41,7 @@ export class Activities {
     this.taixiu = createTaiXiuActivity(app);
     this.coquay = createCoQuayActivity(app);
     this.slot = new SlotActivity(app);
+    this.stone = new StoneActivity(app);
     this.melody = new MelodyActivity(app);
     this.pk = new PkActivity(app);
     this.pk.bind();
@@ -138,6 +140,9 @@ export class Activities {
     if (lakeDistance(x, z) < LAKE.shoreWidth) {
       return { key: 'fish', label: 'Câu cá', run: () => this.fishing.start() };
     }
+    // Bãi đá cạnh bãi container: đứng trước đe nào thì đập ở đe đó.
+    const stoneSpot = stoneSpotAt(x, z);
+    if (stoneSpot >= 0) return { key: `stone${stoneSpot}`, label: 'Đập đá tìm ngọc', run: () => this.stone.start(stoneSpot) };
     if (dist2d(x, z, PITCH_ZONE.x, PITCH_ZONE.z) < PITCH_ZONE.radius) {
       return { key: 'pitch', label: 'Chơi đầu hồ', run: () => this.pitch.start() };
     }

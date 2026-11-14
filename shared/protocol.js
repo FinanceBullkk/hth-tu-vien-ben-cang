@@ -65,8 +65,8 @@ export const PLACE_LABELS = {
 
 // Mã trạng thái chuyển động và hoạt động (gửi dạng số cho gọn).
 export const ANIM = { idle: 0, walk: 1 };
-export const ACTIVITY = { none: 0, meditate: 1, bell: 2, write: 3, shake: 4, fish: 5, pitch: 6, melody: 7, pk: 8, baucua: 9, xidach: 10, taixiu: 11, coquay: 12, slot: 13 };
-export const ACTIVITY_BY_NAME = { meditate: 1, bell: 2, write: 3, shake: 4, fish: 5, pitch: 6, baucua: 9, xidach: 10, taixiu: 11, coquay: 12, slot: 13 };
+export const ACTIVITY = { none: 0, meditate: 1, bell: 2, write: 3, shake: 4, fish: 5, pitch: 6, melody: 7, pk: 8, baucua: 9, xidach: 10, taixiu: 11, coquay: 12, slot: 13, stone: 14 };
+export const ACTIVITY_BY_NAME = { meditate: 1, bell: 2, write: 3, shake: 4, fish: 5, pitch: 6, baucua: 9, xidach: 10, taixiu: 11, coquay: 12, slot: 13, stone: 14 };
 export const ACTIVITY_LABEL = {
   7: 'đang tấu nhạc',
   1: 'đang ngồi thiền',
@@ -81,6 +81,7 @@ export const ACTIVITY_LABEL = {
   11: 'đang chơi tài xỉu',
   12: 'đang chơi cò quay',
   13: 'đang gạt cần',
+  14: 'đang đập đá',
 };
 
 // Đố thuật ngữ: nhà sư ở cổng đưa câu đố, trả lời đúng nhận TEU theo bậc.

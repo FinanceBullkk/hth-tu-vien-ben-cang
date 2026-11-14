@@ -54,7 +54,7 @@ import './ui/table-hud.css';
 import './ui/baucua.css';
 import './ui/casino-round-hud.css';
 import './ui/slot.css';
-import './ui/slot.css';
+import './ui/stone.css';
 import './ui/xidach.css';
 import './ui/trade.css';
 
@@ -227,6 +227,8 @@ function main() {
     app.activities.xidach.setSnapshot(snap.xidach);
     app.activities.taixiu.setSnapshot(snap.taixiu);
     app.activities.coquay.setSnapshot(snap.coquay);
+    app.activities.stone.setStock(snap.stoneStock);
+    world.stoneYard.applySnapshot(snap.stones);
     // Server gỡ món chưa sở hữu (mua ở máy khác, hết hạn giữ đồ cũ...): mặc đúng bộ server chốt.
     const look = lookOf(snap.me);
     if (Object.entries(look).some(([slot, v]) => profile[slot] !== v)) {
@@ -392,8 +394,11 @@ function main() {
   // ---------- Máy gạt cần ----------
   net.on('slot:spin', (spin) => app.activities.slot.onRemoteSpin(spin));
 
-  // ---------- Máy gạt cần ----------
-  net.on('slot:spin', (spin) => app.activities.slot.onRemoteSpin(spin));
+  // ---------- Bãi đá ----------
+  net.on('stone:place', (d) => app.activities.stone.onRemotePlace(d));
+  net.on('stone:hit', (d) => app.activities.stone.onRemoteHit(d));
+  net.on('stone:break', (d) => app.activities.stone.onRemoteBreak(d));
+  net.on('stone:auto', (res) => app.activities.stone.onAuto(res));
 
   // ---------- Xì dách ----------
   net.on('xidach:state', (state) => app.activities.xidach.applyState(state));
@@ -646,6 +651,7 @@ function main() {
     world.taixiuTable.update(dt, camera, nowMs);
     world.coquayTable.update(dt, camera, nowMs);
     world.slotMachines.update(dt, camera);
+    world.stoneYard.update(dt, camera);
     world.pitchCourt.update(dt, camera);
     app.follow.update(dt, me.x, me.y, me.z, look);
     world.sky.follow(camera);

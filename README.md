@@ -75,7 +75,7 @@ Màn vào game có nút **Mặc bộ Lee Sin · Long quyền** để chọn cùn
 
 ## TEU và Sạp Kim Bảo
 
-TEU là điểm chung của tu viện: câu cá, giải đố của sư chú Mặc Vũ, đầu hồ, Audition chuông, tấu nhạc và ngồi thiền đều được TEU. Số TEU đang có hiện ngay dưới số người online ở góc trái; được cộng thì số nảy lên kèm `+N`. Bảng tuần chỉ tính TEU kiếm được, tiêu bao nhiêu cũng không bị trừ hạng.
+TEU là điểm chung của tu viện: câu cá, đập đá, giải đố của sư chú Mặc Vũ, đầu hồ, Audition chuông, tấu nhạc và ngồi thiền đều được TEU. Số TEU đang có hiện ngay dưới số người online ở góc trái; được cộng thì số nảy lên kèm `+N`. Bảng tuần chỉ tính TEU kiếm được, tiêu bao nhiêu cũng không bị trừ hạng.
 
 - **Sạp Kim Bảo:** quầy mái đỏ của bà chủ Kim Bảo cạnh lối đi tới quán trà. Tới gần bấm **E**, bấm vào bà chủ, hoặc bấm nút cửa hàng trên menu, bấm vào số TEU cũng được.
 - **Thử đồ miễn phí:** bấm một món là nhân vật mặc thử ngay (chỉ máy mình thấy). Đủ TEU thì bấm **Mua**, rồi **Mặc bộ này** để cả tu viện cùng thấy. Đóng bảng khi chưa lưu thì nhân vật về lại bộ đang mặc.
@@ -156,6 +156,27 @@ Dãy ba máy gạt cần trong hành lang có mái phía tây, quay mặt ra sâ
 
 - Khoảng 35% lượt có ăn; máy hoàn vốn kỳ vọng khoảng 95,6% nên chơi lâu TEU vẫn hao. Bảng tuần tính lãi/lỗ ròng như bầu cua. Trúng từ ×40 trở lên thì cả sân được báo tên.
 - Người khác gạt thì máy của họ cũng quay trên màn hình mình. Chi tiết và giao thức xem `docs/slot.md`.
+
+## Đập đá
+
+Bãi đá cạnh bãi container, giữa lối ra sân đầu hồ và lối ven hồ câu: bốn đe đá, mỗi người một đe. Bấm **Chơi gì?** rồi chọn **Đập đá**, hoặc đứng trước đe nào bấm **E** để đập ở đe đó. Đập vỡ tảng đá là ra một viên ngọc, giá ngọc cộng thẳng vào TEU.
+
+- **Lấy đá:** chọn loại đá (phím **1–3**) rồi bấm **Lấy đá**. **Đá thường** miễn phí: mỗi người có một kho tích 1 tảng mỗi 3 phút, tối đa 12 tảng. **Đá ngọc** (10 TEU) và **Linh thạch thô** (30 TEU) mua bằng TEU, ra ngọc to hơn nhưng có thể chỉ toàn đá vụn.
+- **Đập:** kim thanh lực chạy qua lại; bấm **Đập** hoặc **Space** khi kim vào vùng vàng. Chuẩn trừ 3 độ cứng, Khá 2, Yếu 1. Đá thường cứng 8, đá ngọc 10, linh thạch 12; đá đắt thanh lực chạy nhanh hơn. Đập đá thường mà mọi nhát đều Chuẩn được thêm 1 TEU khéo tay.
+- **Ngọc:**
+
+  | Ngọc | TEU | Đá thường | Đá ngọc | Linh thạch thô |
+  | --- | --- | --- | --- | --- |
+  | Linh thạch cực phẩm | 200 | – | 0,8% | 7% |
+  | Hồng ngọc | 50 | 0,1% | 5,2% | 16% |
+  | Lam ngọc | 20 | 0,9% | 13% | 25% |
+  | Bích ngọc | 8 | 7% | 23% | 22% |
+  | Mã não | 3 | 22% | 30% | – |
+  | Thạch anh | 1 | 70% | – | – |
+  | Đá vụn | 0 | – | 28% | 30% |
+
+- Đá thường trung bình khoảng 2 TEU một tảng, không bao giờ lỗ. Đá mua bằng TEU hoàn vốn trung bình khoảng 95%, nên đập nhiều TEU vẫn hao; bảng tuần tính lãi/lỗ ròng của bãi đá như bầu cua. Ra Hồng ngọc trở lên thì cả sân được báo tên.
+- Rời bãi hay mất mạng khi đá chưa vỡ thì server đập nốt và trả ngọc vào ví, không mất tảng đã lấy. Chi tiết và giao thức xem `docs/dap-da.md`.
 
 ## Câu cá
 
