@@ -1,6 +1,27 @@
 # Deployment
 
-## Current release: 2026-11-14 Thần bài and Vua câu cá supreme auras, PK kits per aura, 20:27 UTC+7
+## Current release: 2026-11-14 Fishing bag and fish market, PK techniques per aura, 21:32 UTC+7
+
+Deploy run [43605333229](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43605333229)
+released main `78ca844` as `hth:261114-2132-78ca844`, replacing
+`hth:261114-2027-3f32ead`. Includes PR #95 (Gunny-style bag: caught fish go into a
+49-slot bag priced at catch time and sell for TEU, lock and quick-sell; 23 species
+with new epic and legendary fish; better rods raise rare-fish odds, the base rod
+cannot hook legendary fish; new 400 TEU Cần phượng hoàng), PR #101 and PR #103 (PK
+techniques per aura rebuilt), PR #104 (PK kits for the Thần bài and Vua câu cá
+supreme auras) and PR #105 (meditation throne with solid gradient body, two-tier
+lotus for Sen kim). The Vua câu cá requirement now counts all 23 species. Public
+bundle `index-D09i7gny.js`, confirmed served at `https://game.hthlogistics.top/`
+with `/api/health` 200.
+
+Docker tests 445/445. Candidate passed with DB `quick_check` ok (57 players,
+24 wishes, 105 fish).
+
+Rollback container `hth-rollback-261114-2132-78ca844` preserves
+`hth:261114-2027-3f32ead`. Private backup is in the data volume at
+`backups/cutover-261114-2132-78ca844/`.
+
+## Previous release: 2026-11-14 Thần bài and Vua câu cá supreme auras, PK kits per aura, 20:27 UTC+7
 
 Deploy run [43599793921](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43599793921)
 released main `3f32ead` as `hth:261114-2027-3f32ead`, replacing
