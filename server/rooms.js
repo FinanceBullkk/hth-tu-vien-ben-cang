@@ -27,7 +27,7 @@ const SIT_INTERVAL_MS = 1000; // Ngồi xuống phát tin cho cả phòng nên p
 const round2 = (n) => Math.round(n * 100) / 100;
 
 export class Room {
-  constructor({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch, melody, pk, shop, baucua, xidach, taixiu, coquay, slot, trade }) {
+  constructor({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch, melody, pk, shop, baucua, xidach, taixiu, coquay, slot, stone, trade }) {
     this.io = io;
     this.broadcast = io.to(PLAYERS_ROOM);
     this.db = db;
@@ -46,6 +46,7 @@ export class Room {
     this.baucua = baucua;
     this.xidach = xidach;
     this.slot = slot; // Máy gạt cần: mỗi lần gạt chấm ngay, không có ván chung nên không cần sweep hay snapshot.
+    this.stone = stone; // Bãi đá: mỗi người một tảng trên đe mình đứng; sweep đập nốt cho người đi khỏi bãi.
     // Tài xỉu, cò quay: cùng lõi CasinoRoundTable, sự kiện <trò>:bet|clear|throw.
     this.casinoTables = [taixiu, coquay].filter(Boolean);
     // Kết quả các bàn đỏ đen gửi riêng cho từng người cược (theo pid); người đã rời thì bỏ qua, tiền vẫn vào ví.
@@ -150,6 +151,7 @@ export class Room {
       this.pk?.sweep();
       this.baucua?.sweep();
       this.xidach?.sweep();
+      this.stone?.sweep(this.players);
       for (const table of this.casinoTables) table.sweep();
       this.trade?.sweep();
     }
@@ -203,7 +205,7 @@ export class Room {
             ack?.({ ok: false, error: 'Chưa vào phòng.' });
             return;
           }
-          if (player?.melody && /^(action:start|rhythm:|fish:|pitch:|riddle:|baucua:|xidach:|taixiu:|coquay:|slot:)/.test(event)) {
+          if (player?.melody && /^(action:start|rhythm:|fish:|pitch:|riddle:|baucua:|xidach:|taixiu:|coquay:|slot:|stone:)/.test(event)) {
             ack?.({ ok: false, error: 'Rời sân đàn trước nhé.' });
             return;
           }
@@ -267,6 +269,8 @@ export class Room {
       on(`${name}:throw`, (p, data) => table.throw(p, data));
     }
     on('slot:spin', (p, data) => this.slot.spin(p, data));
+    on('stone:start', (p, data) => this.stone.start(p, data));
+    on('stone:hit', (p, data) => this.stone.hit(p, data));
     on('shop:buy', (p, data) => this.onBuy(p, data));
     on('shop:progress', (p) => this.shop.status(p));
     on('look:set', (p, data) => this.onLook(p, data));
@@ -424,6 +428,8 @@ export class Room {
         welcomeGift: isNewcomer ? TEU.welcomeGift : 0,
         baucua: this.baucua.snapshot(pid),
         xidach: this.xidach.snapshot(pid),
+        stones: this.stone?.snapshot(this.players) ?? [],
+        stoneStock: this.stone?.stock(pid, now) ?? null,
         ...Object.fromEntries(this.casinoTables.map((t) => [t.rules.name, t.snapshot(pid)])),
         dayCycleMs: (this.config.dayCycleMinutes || 20) * 60_000,
         radio: { durationSec: 1758, startedAt: this.config.radioStartedAt },
@@ -535,6 +541,7 @@ export class Room {
     this.riddle.leave(p);
     this.pitch.leave(p);
     this.melody?.leave(p);
+    this.stone?.leave(p);
     if (p.activity !== ACTIVITY.none) {
       p.activity = ACTIVITY.none;
       p.dirty = true;
@@ -594,6 +601,7 @@ export class Room {
     this.riddle.leave(p);
     this.pitch.leave(p);
     this.melody?.leave(p);
+    this.stone?.leave(p);
     this.removePlayer(p);
     return true;
   }

@@ -16,7 +16,8 @@ phía đông là tường chắn dốc xuống cảng nên giữ nguyên. Kế h
   dây đèn lồng đỏ trên bốn cột cờ (`CASINO_POLES`), nguyên bảo vàng bay vòng trên Tụ Bảo Bồn.
   Lối giữa bắc–nam có Tụ Bảo Bồn; cột tây bầu cua và tài xỉu, cột đông xì dách và cò quay; khách luôn đứng
   phía lối giữa, nhà cái mép ngoài. Hành lang máy gạt cần sát tường tây.
-- Phía đông giữ nguyên: hồ câu, tấu nhạc, đầu hồ, bảng ước, sư chú giữ cổng.
+- Phía đông giữ nguyên: hồ câu, tấu nhạc, đầu hồ, bảng ước, sư chú giữ cổng. Bãi đá (`STONE_YARD`) nằm giữa lối ra sân
+  đầu hồ và lối ven hồ câu, cạnh bãi container: dãy bốn đe, đống đá thô ở đầu đông, khe giữa các vật cản rộng hơn thân người.
 
 ## Cảnh xa tiên hiệp
 
