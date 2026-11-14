@@ -50,7 +50,7 @@ export const goldFragment = `
     vec3 col = mix(deep, gold, 0.3 + 0.7 * ndl);
     col = mix(col, light, pow(0.5 + 0.5 * r.y, 4.0) * 0.55);
     col += light * pow(max(dot(reflect(-L, n), v), 0.0), 30.0) * 1.1;
-    float sweep = pow(0.5 + 0.5 * sin(dot(vV, vec3(2.3, 3.1, 0.0)) * 0.9 - time * 2.2 + vSeed * 6.3), 18.0);
+    float sweep = pow(0.5 + 0.5 * sin(dot(vV, vec3(2.3, 3.1, 0.0)) * 0.9 - time * 0.9 + vSeed * 6.3), 18.0);
     col += light * (sweep * 0.55 + pulse * 0.45);
     col = mix(col, ink, smoothstep(0.62, 0.97, fres) * 0.5);
     float a = opacity * vAlpha;
@@ -74,7 +74,7 @@ export const cardFragment = `
     vec3 n = normalize(vN), v = normalize(vV);
     float fres = pow(1.0 - abs(dot(n, v)), 2.0);
     float ndl = 0.62 + 0.38 * abs(dot(n, ${LIGHT}));
-    float band = pow(max(0.0, sin((vUv.x * 0.8 + vUv.y) * 5.0 - time * 1.8 + vSeed * 6.2831)), 22.0);
+    float band = pow(max(0.0, sin((vUv.x * 0.8 + vUv.y) * 5.0 - time * 0.8 + vSeed * 6.2831)), 22.0);
     vec3 col; float a = 1.0;
     if (abs(vObjN.z) > 0.5) {
       float cell = floor((vObjN.z > 0.0 ? vCells.x : vCells.y) + 0.5);

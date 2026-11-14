@@ -4,27 +4,39 @@ import { bell, sstep } from './aura-rhythm.js';
 import { cardFragment, instancedLayer, litMaterial } from './vip-aura-shaders.js';
 import { CARD_ATLAS, CARD_CELLS, cardAtlas, sealStampTexture, sunburstTexture } from './than-bai-textures.js';
 
-// Bài của Thần bài — lá bài là hộp 3D mỏng (mặt trước, mặt lưng, cạnh viền vàng), phủ ánh kim tuyến:
+// Bài của Thần bài — lá bài là hộp 3D mỏng (mặt trước, mặt lưng, cạnh viền vàng), phủ ánh kim tuyến.
+// Nguyên tắc chuyển động: ÍT, TO, CHẬM — như thần bài ung dung, không có gì bay vèo hay lộn nhào loạn.
 //  Quạt Thùng Phá Sảnh — bóng dáng riêng: năm lá 10 J Q K A bích xoè quạt lớn sau đầu như đuôi công,
-//    hai mặt đều là mặt bài; nhịp thở xoè rộng thêm. Lúc "tất tay" (cao trào của nhịp) cả quạt lật sóng
-//    từng lá một vòng, lóe sáng, ấn triện 賭神 đóng xuống trên đỉnh quạt rồi tan.
-//  Hào quang tia vàng xoay chậm sau quạt.
-//  Lốc bài — hai dải bài xoắn ốc ngược pha cuộn từ chân lên quá đầu, lá lộn nhào để lộ lưng sơn mài.
-//    "VẠN BÀI QUY TÔNG" lúc tất tay: mọi lá trong lốc bay về xếp thành một vòng trận bài đứng quanh người
-//    (mặt bài hướng ra, mép trên nhấp nhô như vương miện), xoay vòng, xoè bung rộng ra rồi tung trở lại lốc.
+//    hai mặt đều là mặt bài; nhịp thở xoè rộng thêm. Lúc "tất tay" quạt lật sóng chậm từng lá một vòng,
+//    lóe sáng, ấn triện 賭神 đóng xuống trên đỉnh quạt rồi tan.
+//  Hào quang tia vàng xoay rất chậm sau quạt.
+//  THIÊN BÀI HOÀN — mười hai lá bài lớn trôi thành một vành nghiêng quanh ngực, mặt bài hướng ra, 24 giây
+//    mới quay hết một vòng; từng lá lần lượt lật chậm một vòng (lộ lưng sơn mài rồi về mặt bài) như gợn sóng.
+//    Lúc tất tay vành bài nâng lên thành VƯƠNG MIỆN quanh đầu (phẳng lại, lá ngả ra như cánh hoa), mặt bài
+//    lóe sáng, rồi hạ xuống êm.
 // Không có: rồng, mây, trăng, kiếm, sen, cánh.
 export const FAN = { x: 0, y: 0.98, z: -0.58, radius: 0.62, spread: 0.42 };
-export const STORM = { life: 5.5, height: 2.1, turns: 1.25 };
-export const FORMATION = { radius: 1.02, y: 0.95, spin: 0.9 };
+export const ORBIT = { radius: 0.98, y: 0.82, tilt: 0.22, period: 24, flipEvery: 2.2, flipTime: 1.6 };
+export const CROWN = { radius: 1.2, y: 1.55 };
+export const ORBIT_SPEED = Math.PI * 2 / ORBIT.period;
 const FAN_CELLS = [CARD_CELLS.tenSpade, CARD_CELLS.jackSpade, CARD_CELLS.queenSpade, CARD_CELLS.kingSpade, CARD_CELLS.aceSpade];
-const FAN_SIZE = new THREE.Vector3(0.46, 0.644, 0.012), STORM_SIZE = new THREE.Vector3(0.2, 0.28, 0.006);
+const FAN_SIZE = new THREE.Vector3(0.46, 0.644, 0.012), HALO_SIZE = new THREE.Vector3(0.22, 0.308, 0.008);
+const HALO_CELLS = [CARD_CELLS.aceSpade, CARD_CELLS.kingHeart, CARD_CELLS.aceDiamond, CARD_CELLS.queenDiamond, CARD_CELLS.aceClub, CARD_CELLS.jackClub,
+  CARD_CELLS.aceHeart, CARD_CELLS.kingSpade, CARD_CELLS.queenSpade, CARD_CELLS.jackSpade, CARD_CELLS.tenSpade, CARD_CELLS.aceSpade];
 const box = new THREE.BoxGeometry(1, 1, 1); // dùng chung, không dispose
+const smoother = x => x * x * x * (x * (x * 6 - 15) + 10);
 
-/** Độ "tất tay" của nhịp: 0 ngoài cao trào, lên 1 quanh đỉnh nhịp (phase ≈ 0.45). */
-export const allIn = rhythm => sstep(0.36, 0.44, rhythm.phase) * (1 - sstep(0.56, 0.7, rhythm.phase));
+/** Độ "tất tay" của nhịp: 0 ngoài cao trào, lên 1 quanh đỉnh nhịp (phase ≈ 0.45), giữ một lúc rồi hạ êm. */
+export const allIn = rhythm => sstep(0.34, 0.46, rhythm.phase) * (1 - sstep(0.64, 0.8, rhythm.phase));
+
+/** Góc lật của lá thứ i trong vành (0 = mặt bài hướng ra; lật đủ một vòng trong ORBIT.flipTime giây). */
+export function haloFlip(i, count, time) {
+  const cycle = count * ORBIT.flipEvery, t = ((time - i * ORBIT.flipEvery) % cycle + cycle) % cycle;
+  return t < ORBIT.flipTime ? Math.PI * 2 * smoother(t / ORBIT.flipTime) : 0;
+}
 
 export function createThanBaiCards(parent, colors, lowQuality) {
-  const atlas = cardAtlas(), stormCount = lowQuality ? 14 : 30;
+  const atlas = cardAtlas(), haloCount = lowQuality ? 8 : 12;
   const cardMat = () => litMaterial(cardFragment, {
     map: { value: atlas }, grid: { value: new THREE.Vector2(CARD_ATLAS.cols, CARD_ATLAS.rows) },
     gold: { value: colors.gold }, light: { value: colors.light }, flash: { value: 0 },
@@ -34,61 +46,47 @@ export function createThanBaiCards(parent, colors, lowQuality) {
   const stamp = billboardLayer(parent, 'than-bai-seal-stamp', sealStampTexture(), 1, new THREE.Color(1, 1, 1), THREE.NormalBlending);
   stamp.mesh.renderOrder = 9;
   const fan = instancedLayer(parent, 'than-bai-royal-fan', box, cardMat(), FAN_CELLS.length, 6);
-  const storm = instancedLayer(parent, 'than-bai-card-storm', box, cardMat(), stormCount, 7);
-  const seeds = Array.from({ length: stormCount }, (_, i) => ({
-    off: i / stormCount, strand: i % 2, cell: i % 11, tumble: 1.2 + (i * 37 % 10) / 10 * 1.6, tilt: ((i * 53) % 10) / 10 - 0.5,
-  }));
+  const halo = instancedLayer(parent, 'than-bai-card-halo', box, cardMat(), haloCount, 7);
   const m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), p = new THREE.Vector3();
-  const q2 = new THREE.Quaternion(), p2 = new THREE.Vector3();
 
   return {
     update(time, rhythm, f) {
-      const hit = allIn(rhythm), flash = bell(0.45, 0.035, rhythm.phase);
-      burst.set(0, FAN.x, FAN.y + 0.5, FAN.z - 0.08, 2.6 + 0.5 * hit, 2.6 + 0.5 * hit, (0.26 + 0.24 * rhythm.pulse + 0.4 * flash) * f, (time * 0.012) % 1);
+      const hit = allIn(rhythm), k = smoother(hit), flash = bell(0.46, 0.045, rhythm.phase);
+      burst.set(0, FAN.x, FAN.y + 0.5, FAN.z - 0.08, 2.6 + 0.4 * k, 2.6 + 0.4 * k, (0.26 + 0.22 * rhythm.pulse + 0.35 * flash) * f, (time * 0.008) % 1);
       burst.commit();
 
       // Ấn triện: rơi từ to xuống đúng cỡ (đóng dấu) ngay đỉnh nhịp, giữ một lúc rồi tan.
-      const stampIn = sstep(0.43, 0.47, rhythm.phase), stampOut = 1 - sstep(0.6, 0.72, rhythm.phase);
-      const stampScale = 0.5 * (1 + 1.4 * (1 - stampIn));
+      const stampIn = sstep(0.43, 0.48, rhythm.phase), stampOut = 1 - sstep(0.64, 0.78, rhythm.phase);
+      const stampScale = 0.5 * (1 + 1.2 * (1 - smoother(stampIn)));
       stamp.set(0, 0, FAN.y + FAN.radius + 0.62, FAN.z + 0.05, stampScale, stampScale, stampIn * stampOut * f, 0.985);
       stamp.commit();
 
-      // Quạt Thùng Phá Sảnh: xoè theo nhịp, lật sóng một vòng lúc tất tay.
-      const spread = FAN.spread * (1 + 0.18 * rhythm.release + 0.12 * hit);
+      // Quạt Thùng Phá Sảnh: xoè theo nhịp, lật sóng chậm một vòng lúc tất tay.
+      const spread = FAN.spread * (1 + 0.15 * rhythm.release + 0.1 * k);
       FAN_CELLS.forEach((cell, i) => {
-        const k = i - (FAN_CELLS.length - 1) / 2, a = k * spread + 0.015 * Math.sin(time * 1.3 + i);
-        const flip = Math.PI * 2 * sstep(0.4 + i * 0.025, 0.5 + i * 0.025, rhythm.phase);
-        p.set(FAN.x + Math.sin(a) * FAN.radius, FAN.y + Math.cos(a) * FAN.radius + 0.025 * Math.sin(time * 0.8 + i * 0.6), FAN.z - Math.abs(k) * 0.025);
+        const j = i - (FAN_CELLS.length - 1) / 2, a = j * spread + 0.01 * Math.sin(time * 0.6 + i);
+        const flip = Math.PI * 2 * smoother(sstep(0.4 + i * 0.04, 0.54 + i * 0.04, rhythm.phase));
+        p.set(FAN.x + Math.sin(a) * FAN.radius, FAN.y + Math.cos(a) * FAN.radius + 0.02 * Math.sin(time * 0.5 + i * 0.6), FAN.z - Math.abs(j) * 0.025);
         q.setFromEuler(e.set(-0.08, flip, -a, 'ZYX'));
         fan.set(i, m.compose(p, q, FAN_SIZE), f, cell, cell);
       });
       fan.commit();
-      fan.material.uniforms.flash.value = 0.55 * flash + 0.12 * hit;
+      fan.material.uniforms.flash.value = 0.5 * flash + 0.1 * k;
 
-      // Lốc bài: hai dải xoắn ốc ngược pha, lá lộn nhào quanh trục tiếp tuyến. Lúc tất tay (hit) mỗi lá
-      // trượt về chỗ của mình trong vòng trận bài; nửa sau cao trào vòng xoè rộng (spread) rồi trả lá về lốc.
-      const ringOpen = sstep(0.5, 0.62, rhythm.phase);
-      seeds.forEach(({ off, strand, cell, tumble, tilt }, i) => {
-        const u = ((time / STORM.life + off) % 1 + 1) % 1;
-        const th = strand * Math.PI + u * Math.PI * 2 * STORM.turns + off * 9;
-        const r = 0.55 + 0.42 * Math.pow(Math.sin(Math.PI * u), 0.7) + 0.08 * hit;
-        p.set(Math.sin(th) * r, 0.08 + STORM.height * u, Math.cos(th) * r);
-        q.setFromEuler(e.set(u * Math.PI * 2 * tumble + tilt, th + Math.PI / 2, 0.5 * tilt + 0.3 * Math.sin(time + i), 'YXZ'));
-        let alpha = Math.min(1, u * 10) * Math.min(1, (1 - u) * 6);
-        if (hit > 0.001) {
-          const phi = i / stormCount * Math.PI * 2 + time * FORMATION.spin, rf = FORMATION.radius + 0.7 * ringOpen;
-          p2.set(Math.sin(phi) * rf, FORMATION.y + 0.1 * Math.sin(phi * 3 + time * 2) + 0.25 * ringOpen, Math.cos(phi) * rf);
-          q2.setFromEuler(e.set(-0.18 - 0.3 * ringOpen, phi, 0, 'YXZ'));
-          const k = hit * hit * (3 - 2 * hit);
-          p.lerp(p2, k); q.slerp(q2, k);
-          alpha += (1 - alpha) * k;
-        }
-        storm.set(i, m.compose(p, q, STORM_SIZE), alpha * f, cell, CARD_CELLS.back);
-      });
-      storm.commit();
-      for (const layer of [fan, storm]) layer.material.uniforms.time.value = time;
-      storm.material.uniforms.flash.value = 0.3 * flash;
+      // Thiên Bài Hoàn: vành nghiêng trôi chậm; tất tay thì nâng thành vương miện quanh đầu.
+      const R = ORBIT.radius + (CROWN.radius - ORBIT.radius) * k, Y = ORBIT.y + (CROWN.y - ORBIT.y) * k;
+      const tilt = ORBIT.tilt * (1 - k), lean = 0.12 - 0.55 * k;
+      for (let i = 0; i < haloCount; i++) {
+        const phi = i / haloCount * Math.PI * 2 + time * ORBIT_SPEED;
+        const x = Math.sin(phi) * R, z = Math.cos(phi) * R;
+        p.set(x, Y + z * Math.sin(tilt) + 0.035 * Math.sin(time * 0.7 + i * 0.9), z * Math.cos(tilt));
+        q.setFromEuler(e.set(lean, phi + haloFlip(i, haloCount, time) * (1 - k), 0, 'YXZ'));
+        halo.set(i, m.compose(p, q, HALO_SIZE), f, HALO_CELLS[i % HALO_CELLS.length], CARD_CELLS.back);
+      }
+      halo.commit();
+      for (const layer of [fan, halo]) layer.material.uniforms.time.value = time;
+      halo.material.uniforms.flash.value = 0.35 * flash + 0.15 * k;
     },
-    dispose() { burst.dispose(); stamp.dispose(); fan.dispose(); storm.dispose(); },
+    dispose() { burst.dispose(); stamp.dispose(); fan.dispose(); halo.dispose(); },
   };
 }

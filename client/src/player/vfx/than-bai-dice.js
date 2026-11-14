@@ -3,8 +3,8 @@ import { bell } from './aura-rhythm.js';
 import { diceFragment, instancedLayer, litMaterial } from './vip-aura-shaders.js';
 import { DICE_ATLAS, diceAtlas } from './than-bai-textures.js';
 
-// Ba xúc xắc vàng ròng của Thần bài: khối bo góc, chấm hồng ngọc; bay vòng ngang hông, lộn nhào chậm,
-// lúc "tất tay" cùng nảy vọt lên và chấm đỏ rực sáng. Mặt đối nhau cộng bằng 7 như xúc xắc thật.
+// Ba xúc xắc vàng ròng của Thần bài: khối bo góc, chấm hồng ngọc; trôi vòng ngang hông rất chậm, xoay lững lờ,
+// lúc "tất tay" cùng nâng lên êm và chấm đỏ rực sáng. Mặt đối nhau cộng bằng 7 như xúc xắc thật.
 export const DICE = { radius: 1.0, y: 0.6, size: 0.17 };
 // Thứ tự nhóm mặt của BoxGeometry: +x, -x, +y, -y, +z, -z → số chấm.
 const FACE_VALUES = [3, 4, 1, 6, 2, 5];
@@ -42,11 +42,11 @@ export function createThanBaiDice(parent, colors, lowQuality) {
 
   return {
     update(time, rhythm, f) {
-      const jump = bell(0.47, 0.06, rhythm.phase);
+      const jump = bell(0.48, 0.1, rhythm.phase);
       for (let i = 0; i < 3; i++) {
-        const a = i / 3 * Math.PI * 2 - time * 0.4;
-        p.set(Math.sin(a) * DICE.radius, DICE.y + 0.08 * Math.sin(time * 1.4 + i * 2) + 0.7 * jump, Math.cos(a) * DICE.radius);
-        q.setFromEuler(e.set(time * (0.7 + i * 0.2) + i, time * 0.5 + i * 2, time * (0.4 + i * 0.15) + jump * Math.PI * 2));
+        const a = i / 3 * Math.PI * 2 - time * 0.16;
+        p.set(Math.sin(a) * DICE.radius, DICE.y + 0.05 * Math.sin(time * 0.6 + i * 2) + 0.5 * jump, Math.cos(a) * DICE.radius);
+        q.setFromEuler(e.set(time * (0.22 + i * 0.05) + i, time * 0.18 + i * 2, time * (0.14 + i * 0.04) + jump * Math.PI));
         dice.set(i, m.compose(p, q, s), f);
       }
       dice.commit();

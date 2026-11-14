@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { Color, Matrix4, Vector3 } from 'three';
 import { createThanBaiAura, thanBaiRhythm, THAN_BAI_CYCLE } from '../client/src/player/vfx/than-bai-aura.js';
-import { FAN, FORMATION, STORM, allIn } from '../client/src/player/vfx/than-bai-cards.js';
+import { CROWN, FAN, ORBIT, ORBIT_SPEED, allIn, haloFlip } from '../client/src/player/vfx/than-bai-cards.js';
 import { thunder } from '../client/src/player/vfx/than-bai-lightning.js';
 import { createVuaCauCaAura } from '../client/src/player/vfx/vua-cau-ca-aura.js';
 import { LEAP, leapPoint } from '../client/src/player/vfx/vua-cau-ca-leaping-fish.js';
@@ -23,7 +23,7 @@ const AURAS = [
   { effect: 13, make: low => createThanBaiAura(low, { matches: false }), name: 'than-bai-aura',
     layers: ['than-bai-roulette', 'than-bai-roulette-rims', 'than-bai-roulette-frets', 'than-bai-roulette-ball', 'than-bai-ball-trail',
       'than-bai-gold-suit-0', 'than-bai-gold-suit-3', 'than-bai-gold-pillars', 'than-bai-shockwave', 'than-bai-sunburst', 'than-bai-seal-stamp',
-      'than-bai-royal-fan', 'than-bai-card-storm', 'than-bai-dice', 'than-bai-chips', 'than-bai-gold-sparks', 'than-bai-light-arcs',
+      'than-bai-royal-fan', 'than-bai-card-halo', 'than-bai-dice', 'than-bai-chips', 'than-bai-gold-sparks', 'than-bai-light-arcs',
       'than-bai-lightning', 'than-bai-footprint-cards'],
     lowSkip: /pillars/ },
   { effect: 14, make: low => createVuaCauCaAura(low, { matches: false }), name: 'vua-cau-ca-aura',
@@ -98,7 +98,7 @@ for (const { effect, make, name, layers, lowSkip } of AURAS) {
   });
 }
 
-test('Thần Bài: quạt Thùng Phá Sảnh 3D sau đầu cao hơn đầu; lốc bài xoắn quanh thân từ chân lên quá đầu', () => {
+test('Thần Bài: quạt Thùng Phá Sảnh 3D sau đầu cao hơn đầu; Thiên Bài Hoàn là vành lá bài lớn quanh ngực', () => {
   const aura = createThanBaiAura(false, { matches: false });
   aura.update(2);
   const fan = one(aura, 'than-bai-royal-fan');
@@ -109,27 +109,38 @@ test('Thần Bài: quạt Thùng Phá Sảnh 3D sau đầu cao hơn đầu; lố
     assert.ok(p.z < -0.5, 'quạt nằm sau lưng');
     assert.ok(p.y > 1.3, 'quạt cao hơn đầu');
   }
-  const storm = one(aura, 'than-bai-card-storm');
-  let low = 0, high = 0;
-  for (const t of [0, 1.1, 2.3, 3.7]) {
-    aura.update(t);
-    for (let i = 0; i < storm.count; i++) {
-      const p = instancePos(storm, i);
-      assert.ok(Math.hypot(p.x, p.z) > 0.5, 'lá bài không xuyên người');
-      if (p.y < 0.6) low++;
-      if (p.y > 1.5) high++;
-    }
+  const halo = one(aura, 'than-bai-card-halo');
+  assert.ok(halo.count <= 12, 'ít lá mà to');
+  for (let i = 0; i < halo.count; i++) {
+    const p = instancePos(halo, i);
+    assert.ok(Math.abs(Math.hypot(p.x, p.z / Math.cos(ORBIT.tilt)) - ORBIT.radius) < 1e-6, 'nằm trên vành');
+    assert.ok(p.y > 0.5 && p.y < 1.15, 'ngang ngực');
   }
-  assert.ok(low > 0 && high > 0, 'lốc bài trải từ chân lên quá đầu');
-  assert.ok(STORM.height > 1.8);
+  aura.dispose();
+});
+
+test('Thần Bài: chuyển động chậm và trang nghiêm — vành bài 24 giây một vòng, mỗi lúc chỉ một lá lật chậm', () => {
+  assert.ok(ORBIT_SPEED < 0.3, 'vành quay chậm');
+  assert.ok(ORBIT.flipTime >= 1.5, 'lật chậm');
+  for (let t = 0; t < 60; t += 0.37) {
+    const flipping = Array.from({ length: 12 }, (_, i) => haloFlip(i, 12, t)).filter(a => a > 0).length;
+    assert.ok(flipping <= 1, 'không quá một lá lật cùng lúc');
+  }
+  // Ngoài cao trào: không lá nào dịch quá 0.12 m trong 0.25 giây (không bay vèo).
+  const aura = createThanBaiAura(false, { matches: false }), halo = one(aura, 'than-bai-card-halo');
+  for (const t of [0.5, 1.7, 2.6]) {
+    aura.update(t); const a = Array.from({ length: halo.count }, (_, i) => instancePos(halo, i));
+    aura.update(t + 0.25); const b = Array.from({ length: halo.count }, (_, i) => instancePos(halo, i));
+    a.forEach((p, i) => assert.ok(p.distanceTo(b[i]) < 0.12, 'lá trôi chậm ' + p.distanceTo(b[i])));
+  }
   aura.dispose();
 });
 
 test('Thần Bài: cao trào "tất tay" chỉ quanh đỉnh nhịp — quạt lật một vòng rồi về đúng chỗ, ấn triện hiện rồi tan', () => {
-  assert.equal(THAN_BAI_CYCLE, 9);
+  assert.equal(THAN_BAI_CYCLE, 12);
   assert.equal(allIn(thanBaiRhythm(0)), 0);
   assert.ok(allIn(thanBaiRhythm(THAN_BAI_CYCLE * 0.5)) > 0.9);
-  assert.equal(thanBaiRhythm(1).phase.toFixed(6), thanBaiRhythm(10).phase.toFixed(6));
+  assert.equal(thanBaiRhythm(1).phase.toFixed(6), thanBaiRhythm(1 + THAN_BAI_CYCLE).phase.toFixed(6));
   const aura = createThanBaiAura(false, { matches: false });
   const fan = one(aura, 'than-bai-royal-fan'), stamp = one(aura, 'than-bai-seal-stamp');
   const rot = (t) => { aura.update(t); return [...fan.instanceMatrix.array.slice(0, 12)].map(v => v.toFixed(3)).join(); };
@@ -209,19 +220,19 @@ test('Vua Câu Cá: thuỷ trụ chỉ phun quanh đỉnh nhịp 12 giây', () =
   aura.dispose();
 });
 
-test('Thần Bài: Vạn Bài Quy Tông — lúc tất tay lốc bài xếp thành vòng trận bài quanh người, sét chỉ giật lúc đó', () => {
+test('Thần Bài: tất tay — vành bài nâng thành vương miện quanh đầu, sét chỉ giật lúc đó', () => {
   const aura = createThanBaiAura(false, { matches: false });
-  const storm = one(aura, 'than-bai-card-storm'), bolts = one(aura, 'than-bai-lightning');
-  aura.update(THAN_BAI_CYCLE * 0.47);
-  for (let i = 0; i < storm.count; i++) {
-    const p = instancePos(storm, i), r = Math.hypot(p.x, p.z);
-    assert.ok(r > FORMATION.radius - 0.15 && r < FORMATION.radius + 0.8, 'lá về vòng trận ' + r);
-    assert.ok(Math.abs(p.y - FORMATION.y) < 0.5, 'vòng trận ngang ngực');
+  const halo = one(aura, 'than-bai-card-halo'), bolts = one(aura, 'than-bai-lightning');
+  aura.update(THAN_BAI_CYCLE * 0.55);
+  for (let i = 0; i < halo.count; i++) {
+    const p = instancePos(halo, i), r = Math.hypot(p.x, p.z);
+    assert.ok(Math.abs(r - CROWN.radius) < 0.05, 'vành nở thành vương miện ' + r);
+    assert.ok(Math.abs(p.y - CROWN.y) < 0.1, 'vương miện quanh đầu');
   }
-  assert.ok(thunder(thanBaiRhythm(THAN_BAI_CYCLE * 0.5)) > 0.9 && thunder(thanBaiRhythm(THAN_BAI_CYCLE * 0.2)) === 0);
+  assert.ok(thunder(thanBaiRhythm(THAN_BAI_CYCLE * 0.52)) > 0.9 && thunder(thanBaiRhythm(THAN_BAI_CYCLE * 0.2)) === 0);
   const span = () => { const a = bolts.geometry.attributes.position.array; let lo = Infinity, hi = -Infinity; for (let i = 1; i < a.length; i += 3) { lo = Math.min(lo, a[i]); hi = Math.max(hi, a[i]); } return hi - lo; };
-  aura.update(THAN_BAI_CYCLE * 0.5);
-  assert.ok(span() > 0.6, 'sét giật từ ấn xuống trận');
+  aura.update(THAN_BAI_CYCLE * 0.52);
+  assert.ok(span() > 0.3, 'sét giật từ ấn xuống vương miện');
   aura.update(THAN_BAI_CYCLE * 0.2);
   assert.ok(span() < 1e-6, 'ngoài cao trào không có sét');
   aura.dispose();

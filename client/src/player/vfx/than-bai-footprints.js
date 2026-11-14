@@ -22,10 +22,10 @@ export function createThanBaiFootprints(parent, colors) {
     update(time, rhythm, f, walk = 0) {
       trail.update(time, walk, (i, local, age, seed) => {
         if (!local) { cards.set(i, m.makeScale(0, 0, 0), 0); return; }
-        const land = Math.min(1, age / 0.1), drop = 1 - land;
-        p.copy(local); p.y += 0.4 * drop * drop;
+        const land = Math.min(1, age / 0.18), drop = 1 - land;
+        p.copy(local); p.y += 0.35 * drop * drop;
         // Rơi xoay rồi nằm ngửa (mặt trước hướng lên trời), góc nằm ngẫu nhiên theo seed.
-        q.setFromEuler(e.set(-Math.PI / 2 + drop * 2.5, hash(seed) * 6.28 + drop * 4, 0, 'YXZ'));
+        q.setFromEuler(e.set(-Math.PI / 2 + drop * 1.2, hash(seed) * 6.28 + drop * 1.5, 0, 'YXZ'));
         const alpha = Math.min(1, (1 - age) / 0.4);
         cards.set(i, m.compose(p, q, SIZE), alpha * f, Math.floor(hash(seed + 7) * 11), CARD_CELLS.back);
       });

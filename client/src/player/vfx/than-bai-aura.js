@@ -11,17 +11,18 @@ import { breathRhythm } from './aura-rhythm.js';
 // Thần Bài (effect 13) — hào quang chí tôn, chỉ mua được khi đã thắng đủ ván ở sòng (shared/shop.js).
 //  Bóng dáng: QUẠT THÙNG PHÁ SẢNH — năm lá 10 J Q K A bích 3D phủ kim tuyến xoè sau đầu như đuôi công,
 //    hào quang tia vàng xoay chậm phía sau.
-//  Quanh thân: lốc bài xoắn kép cuộn từ chân lên quá đầu; ba xúc xắc vàng chấm hồng ngọc bay vòng ngang hông;
-//    mạch phỉnh 3D tung lên; dải kim quang đỏ vàng uốn lượn; kim quang li ti.
+//  Quanh thân: Thiên Bài Hoàn — vành mười hai lá bài lớn trôi nghiêng quanh ngực, lần lượt lật chậm; ba xúc xắc
+//    vàng chấm hồng ngọc trôi vòng ngang hông; ba chồng phỉnh 3D lơ lửng; dải kim quang đỏ vàng lượn chậm.
+//  Nguyên tắc: ít, to, chậm — không có gì bay vèo hay lộn nhào loạn; nhịp chủ yếu đổi độ sáng.
 //  Nền đất: bàn cò quay pháp trận — vành ô đỏ đen quay, phím ngăn vàng, bi ngà chạy rãnh, bốn chất bài
 //    đúc vàng bay vòng ngoài, cột kim quang quanh vành.
-//  Cao trào "TẤT TAY" mỗi nhịp 9 giây: quạt lật sóng từng lá và lóe sáng, ấn triện 賭神 đóng xuống trên đỉnh
-//    quạt, lốc bài tụ thành vòng trận bài ("Vạn Bài Quy Tông") rồi xoè bung, sét vàng giật từ ấn xuống trận,
-//    xúc xắc nảy vọt, phỉnh nổ hũ toả bốn phía, mưa tiền vàng trút xuống, sóng chấn vàng loang khỏi bàn.
+//  Cao trào "TẤT TAY" mỗi nhịp 12 giây: vành bài nâng thành vương miện quanh đầu, quạt lật sóng chậm từng lá,
+//    ấn triện 賭神 đóng xuống trên đỉnh quạt, vài tia sét vàng giật xuống vương miện, xúc xắc và chồng phỉnh
+//    nâng lên, phỉnh nổ hũ bay cao, tiền vàng rơi chậm như lá, sóng chấn vàng loang khỏi bàn — rồi hạ êm.
 //  Bước đi: mỗi bước một lá bài xoay tròn rơi xuống nằm ngửa trên đất rồi mờ dần.
 //  Bảng màu: vàng kim + đỏ son + mực đen, khác Kim Long (vàng mây) ở chỗ có đỏ đen của sòng bài.
 const BASE_OPACITY = 0.9;
-export const THAN_BAI_CYCLE = 9;
+export const THAN_BAI_CYCLE = 12;
 export const thanBaiRhythm = time => breathRhythm(time, THAN_BAI_CYCLE);
 export const THAN_BAI_COLORS = {
   deep: new THREE.Color('#7a4106'), gold: new THREE.Color('#f2b632'), light: new THREE.Color('#fff1c2'),
@@ -30,9 +31,9 @@ export const THAN_BAI_COLORS = {
   edge: new THREE.Color('#ffc845'), core: new THREE.Color('#fff7dc'), arcTail: new THREE.Color('#ff3b2f'),
 };
 const ARCS = [
-  { r: 1.05, y: 1.1, tilt: 1.0, yaw: 0.4, speed: 0.42, len: 3.6, w: 0.11 },
-  { r: 1.25, y: 0.7, tilt: -0.75, yaw: 2.3, speed: -0.34, len: 3.0, w: 0.09 },
-  { r: 0.95, y: 1.55, tilt: 0.5, yaw: 4.2, speed: 0.5, len: 2.6, w: 0.07 },
+  { r: 1.05, y: 1.1, tilt: 1.0, yaw: 0.4, speed: 0.16, len: 3.6, w: 0.11 },
+  { r: 1.25, y: 0.7, tilt: -0.75, yaw: 2.3, speed: -0.12, len: 3.0, w: 0.09 },
+  { r: 0.95, y: 1.55, tilt: 0.5, yaw: 4.2, speed: 0.2, len: 2.6, w: 0.07 },
 ];
 
 /** reducedMotion: đối tượng `{ matches }`; giảm chuyển động = chậm ba lần, không tắt hình. */

@@ -3,18 +3,18 @@ import { createRibbonStrips } from './aura-ribbon-strips.js';
 import { ribbonVertex, arcFragment } from './aura-flow-shaders.js';
 import { hash } from './aura-billboard-layer.js';
 import { sstep } from './aura-rhythm.js';
-import { FAN, FORMATION } from './than-bai-cards.js';
+import { CROWN, FAN, ORBIT_SPEED } from './than-bai-cards.js';
 
-// Kim lôi của Thần bài: lúc "tất tay" sét vàng giật từ ấn triện 賭神 trên đỉnh quạt xuống vòng trận bài.
-// Mỗi tia là đường gấp khúc ngẫu nhiên đổi hình 15 lần mỗi giây (tất định theo thời gian, không cần trạng thái),
+// Kim lôi của Thần bài: lúc "tất tay" vài tia sét vàng giật từ ấn triện 賭神 trên đỉnh quạt xuống vương miện bài.
+// Mỗi tia là đường gấp khúc ngẫu nhiên đổi hình 8 lần mỗi giây (tất định theo thời gian, không cần trạng thái),
 // dựng bằng hai dải bắt chéo để nhìn từ góc nào cũng thấy; lõi trắng, viền vàng, đuôi ngả đỏ son.
-const BOLT_SEG = 12, FLICKER_HZ = 15;
+const BOLT_SEG = 12, FLICKER_HZ = 8;
 
 /** Độ mạnh của sét theo nhịp: chỉ trong khoảng ấn triện vừa đóng xuống tới khi trận bài xoè bung. */
-export const thunder = rhythm => sstep(0.44, 0.47, rhythm.phase) * (1 - sstep(0.58, 0.64, rhythm.phase));
+export const thunder = rhythm => sstep(0.45, 0.48, rhythm.phase) * (1 - sstep(0.6, 0.68, rhythm.phase));
 
 export function createThanBaiLightning(parent, colors, lowQuality) {
-  const bolts = lowQuality ? 3 : 6;
+  const bolts = lowQuality ? 2 : 4;
   const strips = createRibbonStrips(bolts * 2, BOLT_SEG);
   const material = new THREE.ShaderMaterial({
     uniforms: { edge: { value: colors.edge }, core: { value: colors.core }, gold: { value: colors.arcTail }, time: { value: 0 }, opacity: { value: 1 } },
@@ -38,8 +38,8 @@ export function createThanBaiLightning(parent, colors, lowQuality) {
       from.set(0, FAN.y + FAN.radius + 0.62, FAN.z + 0.05);
       for (let b = 0; b < bolts; b++) {
         const seed = tick * 7.13 + b * 31.7;
-        const phi = (b + hash(seed)) / bolts * Math.PI * 2 + time * FORMATION.spin;
-        to.set(Math.sin(phi) * FORMATION.radius, FORMATION.y + 0.15, Math.cos(phi) * FORMATION.radius);
+        const phi = (b + hash(seed)) / bolts * Math.PI * 2 + time * ORBIT_SPEED;
+        to.set(Math.sin(phi) * CROWN.radius, CROWN.y, Math.cos(phi) * CROWN.radius);
         dir.subVectors(to, from).normalize();
         sideA.crossVectors(dir, X).normalize(); sideB.crossVectors(dir, Z).normalize();
         const live = hash(seed + 3) > 0.25 ? 1 : 0; // vài tia tắt ngẫu nhiên cho ra nhịp giật

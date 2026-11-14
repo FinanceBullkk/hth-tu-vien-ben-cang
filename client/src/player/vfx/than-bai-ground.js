@@ -15,7 +15,7 @@ import { createSuitGeometries } from './than-bai-suit-geometry.js';
 //  - Bốn chất bài đúc vàng 3D bay vòng ngoài, tự xoay.
 //  - Cột kim quang dựng quanh vành, vân sáng chạy lên.
 //  - Lúc "tất tay": sóng chấn vàng loang ra từ tâm.
-const R = 1.5, POCKETS = 37, WHEEL_SPEED = 0.45, HUB_SPEED = -0.12, BALL_SPEED = -1.6, TRAIL = 10;
+const R = 1.5, POCKETS = 37, WHEEL_SPEED = 0.18, HUB_SPEED = -0.05, BALL_SPEED = -0.7, TRAIL = 10;
 
 const diskFragment = `
   uniform sampler2D map;
@@ -31,7 +31,7 @@ const diskFragment = `
     vec4 tex = texture2D(map, rot(p, -ang) * 0.5 + 0.5);
     float goldMask = smoothstep(0.1, 0.3, tex.r - tex.b) * step(0.42, tex.g);
     float th = atan(p.y, p.x);
-    float beam = pow(max(0.0, cos(th - time * 1.1)), 28.0) * smoothstep(0.15, 0.9, r);
+    float beam = pow(max(0.0, cos(th - time * 0.45)), 28.0) * smoothstep(0.15, 0.9, r);
     // Nỉ nhung đỏ thẫm có vân trám chìm, sẫm dần ra mép.
     vec2 hp = rot(p, -hub) * 18.0;
     float lattice = smoothstep(0.88, 1.0, max(abs(sin(hp.x + hp.y)), abs(sin(hp.x - hp.y))));
@@ -52,7 +52,7 @@ const pillarFragment = `
   varying vec2 vUv;
   void main() {
     float streak = pow(0.5 + 0.5 * sin(vUv.x * 6.2831853 * 26.0 + sin(vUv.x * 41.0) * 2.0), 6.0);
-    float rise = 0.5 + 0.5 * sin(vUv.y * 11.0 - time * 2.6 + vUv.x * 31.0);
+    float rise = 0.5 + 0.5 * sin(vUv.y * 11.0 - time * 1.1 + vUv.x * 31.0);
     float fade = pow(1.0 - vUv.y, 1.7) * smoothstep(0.0, 0.06, vUv.y);
     vec3 col = mix(gold, light, rise * 0.55);
     float a = fade * (0.1 + 0.4 * streak * rise) * (0.55 + 0.9 * pulse);
@@ -120,21 +120,21 @@ export function createThanBaiGround(parent, colors, lowQuality) {
 
   return {
     update(time, rhythm, f) {
-      const flash = bell(0.45, 0.035, rhythm.phase), shock = Math.max(0, Math.min(1, (rhythm.phase - 0.44) / 0.22));
+      const flash = bell(0.46, 0.045, rhythm.phase), shock = Math.max(0, Math.min(1, (rhythm.phase - 0.46) / 0.3));
       diskMat.uniforms.time.value = time; diskMat.uniforms.wheel.value = time * WHEEL_SPEED; diskMat.uniforms.hub.value = time * HUB_SPEED;
       diskMat.uniforms.pulse.value = rhythm.pulse; diskMat.uniforms.flash.value = flash; diskMat.uniforms.opacity.value = 0.88 * f;
       fretMesh.rotation.y = time * WHEEL_SPEED;
       const ba = time * BALL_SPEED, br = R * 0.745;
-      ball.position.set(Math.sin(ba) * br, 0.05 + 0.02 * Math.abs(Math.sin(time * 9)), Math.cos(ba) * br);
+      ball.position.set(Math.sin(ba) * br, 0.05, Math.cos(ba) * br);
       for (let i = 0; i < TRAIL; i++) {
-        const a = ba - i * 0.06 * Math.sign(BALL_SPEED), s = 0.09 * (1 - i / TRAIL);
+        const a = ba - i * 0.035 * Math.sign(BALL_SPEED), s = 0.08 * (1 - i / TRAIL);
         trail.set(i, Math.sin(a) * br, 0.05, Math.cos(a) * br, s, s, (1 - i / TRAIL) * 0.8 * f);
       }
       trail.commit();
       suits.forEach((mesh, i) => {
-        const a = i / suits.length * Math.PI * 2 + time * 0.25;
-        mesh.position.set(Math.sin(a) * R * 1.12, 0.3 + 0.06 * Math.sin(time * 1.2 + i * 1.6) + 0.35 * flash, Math.cos(a) * R * 1.12);
-        mesh.rotation.set(0, time * 0.9 + i, 0);
+        const a = i / suits.length * Math.PI * 2 + time * 0.1;
+        mesh.position.set(Math.sin(a) * R * 1.12, 0.3 + 0.05 * Math.sin(time * 0.5 + i * 1.6) + 0.25 * flash, Math.cos(a) * R * 1.12);
+        mesh.rotation.set(0, time * 0.3 + i, 0);
       });
       for (const m of mats) {
         if (!m.uniforms) continue;
