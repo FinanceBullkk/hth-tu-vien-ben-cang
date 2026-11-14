@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { spawnQTechnique, spawnDomain } from './pk-techniques.js';
 
 // Cánh sen có độ cong và chuyển sắc; dùng chung cho các pháp trận PK ngắn hạn.
 function createPkPetal() {
@@ -1165,6 +1166,7 @@ export class PkVfx {
     this.shockwaves = [];
     this.aoeFields = [];
     this.pillars = [];
+    this.techniques = [];
     this.aoeDummy = new THREE.Object3D();
 
     // Bộ texture và geometry dùng chung
@@ -1298,8 +1300,13 @@ export class PkVfx {
    */
   projectile({ fromX, fromY = 0, fromZ, toX, toY = 0, toZ, rot = 0, radius = 4, isHit = false, effect = 0 }) {
     const t = pkTheme(effect);
-    const group = new THREE.Group();
     this.areaBurst({ x: toX, y: toY, z: toZ, radius, effect });
+
+    // Aura có tuyệt kỹ riêng (pk-techniques.js): tuyệt kỹ đảm nhiệm toàn bộ hành trình
+    // và đòn nổ, PkVfx chỉ giữ trận đồ đích ở trên làm mốc vùng sát thương.
+    if (effect && spawnQTechnique(this, { effect, t, fromX, fromY, fromZ, toX, toY, toZ, rot, radius, isHit })) return;
+
+    const group = new THREE.Group();
 
     // 1. Trận đồ bốc lên từ mặt đất dưới chân người thi triển (đổi theo aura)
     const startSigilGeo = new THREE.PlaneGeometry(3.2, 3.2);
@@ -1632,6 +1639,7 @@ export class PkVfx {
       lotus,
       ripples,
       haloRing,
+      tech: spawnDomain(group, effect, t),
       targetFn,
       age: 0,
       life: duration / 1000,
@@ -2636,6 +2644,8 @@ export class PkVfx {
         sh.haloRing.scale.set(hp, hp, 1);
         sh.haloRing.rotation.z += dt * .6;
       }
+      // Lãnh vực thu nhỏ riêng từng tông (pk-techniques.js)
+      sh.tech?.tick?.(dt, sh.age / sh.life, sh);
 
       if (p >= 1) {
         this.shatterIce(sh.x, sh.y, sh.z);
@@ -2709,6 +2719,23 @@ export class PkVfx {
       } else {
         pl.mesh.scale.set(1 + p * .7, 1 + p * .35, 1 + p * .7);
         pl.mesh.material.opacity = .5 * (1 - p);
+      }
+    }
+
+    // 4c. Tuyệt kỹ riêng theo aura (pk-techniques.js) — tick tự lo chuyển động từng phần.
+    for (let i = this.techniques.length - 1; i >= 0; i--) {
+      const tc = this.techniques[i];
+      tc.age += dt;
+      const p = tc.age / tc.life;
+      if (p >= 1) {
+        this.scene.remove(tc.group);
+        tc.group.traverse((o) => {
+          o.geometry?.dispose();
+          o.material?.dispose();
+        });
+        this.techniques.splice(i, 1);
+      } else {
+        tc.tick?.(dt, p);
       }
     }
 
@@ -2899,6 +2926,15 @@ export class PkVfx {
       pl.mesh.material.dispose();
     }
     this.pillars.length = 0;
+
+    for (const tc of this.techniques) {
+      this.scene.remove(tc.group);
+      tc.group.traverse((o) => {
+        o.geometry?.dispose();
+        o.material?.dispose();
+      });
+    }
+    this.techniques.length = 0;
 
     for (const d of this.damagePopups) {
       this.scene.remove(d.sprite);
