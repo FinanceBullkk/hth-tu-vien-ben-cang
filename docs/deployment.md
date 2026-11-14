@@ -1,6 +1,26 @@
 # Deployment
 
-## Current release: 2026-11-15 Stone yard (Đập đá) gacha, 01:15 UTC+7
+## Current release: 2026-11-15 Gunny-style equipment tab in the bag, 02:36 UTC+7
+
+Deploy run [43632989889](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43632989889)
+released main `1d711c5` as `hth:261115-0236-1d711c5`, replacing
+`hth:261115-0115-8318926`. Includes PR #110 (bag gets an "Trang bị" tab: auras, outfits,
+weapons, hats, hair and shirt colours become bag items; left column shows a rotatable 3D
+portrait of the player between six equipment slots, collection bar and wardrobe stats;
+grid holds free and owned items not worn, with per-item SVG icons, rarity borders by price
+and a category filter; double-click to equip or unequip, client throttles `look:set` to one
+per second; old wardrobe button and shop wardrobe tab removed, shop gets a "Túi đồ" chip).
+Client only, server unchanged. Public bundle `index-BhSUWbfZ.js` served at
+`https://game.hthlogistics.top/`.
+
+Docker tests 465/465. Candidate passed with DB `quick_check` ok (57 players,
+24 wishes, 121 fish).
+
+Rollback container `hth-rollback-261115-0236-1d711c5` preserves
+`hth:261115-0115-8318926`. Private backup is in the data volume at
+`backups/cutover-261115-0236-1d711c5/`.
+
+## Previous release: 2026-11-15 Stone yard (Đập đá) gacha, 01:15 UTC+7
 
 Deploy run [43625504100](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43625504100)
 released main `8318926` as `hth:261115-0115-8318926`, replacing
