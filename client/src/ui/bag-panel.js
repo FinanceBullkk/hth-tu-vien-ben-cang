@@ -1,21 +1,30 @@
-// Túi đồ kiểu game thùng đồ: cột Thông tin bên trái, lưới 7 x 7 ô bên phải với hai thẻ Cá / Đạo cụ.
+// Túi đồ kiểu game thùng đồ: cột bên trái, lưới 7 x 7 ô bên phải với ba thẻ Trang bị / Cá / Đạo cụ.
+// Thẻ Trang bị: cột Nhân vật có nhân vật 3D và sáu ô trang bị; hào quang, trang phục, vũ khí, mũ, tóc, màu áo
+// là vật phẩm trong lưới, bấm đúp để mặc hay tháo. Thẻ Cá, Đạo cụ: cột Thông tin của người câu.
 // Bảng chi tiết chỉ hiện khi rê chuột đúng ô (máy cảm ứng: khi chạm ô, chạm chỗ khác là tắt); bấm ô để chọn rồi
-// bán, khoá hay mua ở thanh dưới. Server quyết định mọi thứ: bán theo id món, giá đã chốt lúc câu.
+// bán, khoá, mua hay mặc ở thanh dưới. Server quyết định mọi thứ: bán theo id món, mặc món đã sở hữu.
 import { fishById } from '../../../shared/fish-catalog.js';
 import { BAG_SORTS, itemRarity, sortBag } from '../../../shared/fish-bag.js';
 import { FISH_RODS } from '../../../shared/fish-gear.js';
 import { selectionButtons, updateQuickSell } from './bag-action-bar.js';
 import { buyGear, sellItems, toggleLock } from './bag-actions.js';
 import { countTo, floatText, playSold } from './bag-effects.js';
+import { EQUIP_FILTERS, canUnequip, equipLook, gridEntries, unequipLook } from './bag-equip-items.js';
+import { renderEquipInfo } from './bag-equip-info.js';
 import { renderInfoPanel } from './bag-info-panel.js';
+import { mountPortrait } from './bag-portrait.js';
 import { placeTooltip, rarityColor, rodGlyphSvg, thinhGlyphSvg, tipContent } from './bag-tooltip.js';
 import { h, store } from './dom.js';
 import { fishPortraitSvg } from './fish-portrait.js';
 import { inkIcon } from './ink-icons.js';
+import { lookGlyphSvg } from './look-glyphs.js';
 import { openModal } from './modal.js';
+import { openShop } from './shop-panel.js';
 
 const CONFIRM_MS = 3000;
+const DOUBLE_MS = 380; // hai lần bấm cùng ô trong khoảng này là bấm đúp: mặc hoặc tháo
 const QUICK_LABELS = { 1: 'Thường', 2: 'Quý trở xuống', 3: 'Hiếm trở xuống', 4: 'Sử thi trở xuống' };
+const TABS = ['equip', 'fish', 'gear'];
 let active = null;
 
 /** tilt: cá thật xoay chéo cho to bằng ô vuông, như icon vật phẩm; đồ thất lạc và đồ câu giữ thẳng. */
@@ -25,10 +34,16 @@ const art = (svg, tilt = false) => {
   return el;
 };
 
-export function openBag(app, tab = 'fish') {
-  if (active) return active.setTab(tab);
-  const { bag, wallet } = app;
-  let tabNow = tab === 'gear' ? 'gear' : 'fish';
+/** tab: 'equip' | 'fish' | 'gear'; bỏ trống thì mở lại thẻ dùng lần trước. */
+export function openBag(app, tab) {
+  if (active) return active.setTab(tab ?? store.get('bagTab'));
+  const { bag, wallet, looks } = app;
+  const pickTab = (t) => (TABS.includes(t) ? t : 'equip');
+  let tabNow = pickTab(tab ?? store.get('bagTab'));
+  let filterId = store.get('bagFilter') ?? 'all';
+  let portrait = null; // nhân vật 3D, chỉ chạy khi đang ở thẻ Trang bị
+  const portraitHost = h('div', { class: 'bagx-portrait-host' });
+  let lastTap = { key: null, at: 0 };
   let selected = null; // key ô đang chọn: chỉ để tô viền và hiện nút, không giữ bảng chi tiết
   let tipKey = null; // key ô đang rê chuột (hoặc vừa chạm trên máy cảm ứng)
   let shownTip = null; // key bảng chi tiết đang hiện, để chỉ chạy hiệu ứng hiện lên khi đổi ô
@@ -42,6 +57,7 @@ export function openBag(app, tab = 'fish') {
   const info = h('section', { class: 'bagx-info' });
   const grid = h('div', { class: 'bagx-grid', role: 'listbox', 'aria-label': 'Ô túi đồ' });
   const tabs = {
+    equip: h('button', { type: 'button', class: 'bagx-tab' }, inkIcon('robe'), h('span', {}, 'Trang bị')),
     fish: h('button', { type: 'button', class: 'bagx-tab' }, inkIcon('fish'), h('span', {}, 'Cá')),
     gear: h('button', { type: 'button', class: 'bagx-tab' }, inkIcon('bag'), h('span', {}, 'Đạo cụ')),
   };
@@ -57,23 +73,27 @@ export function openBag(app, tab = 'fish') {
   const tip = h('div', { class: 'bagx-tip', role: 'tooltip', hidden: true });
   const bagSec = h('section', { class: 'bagx-bag' },
     h('div', { class: 'bagx-bag-head' }, h('div', { class: 'bagx-title' }, 'Túi'), sortBtn, capEl),
-    h('div', { class: 'bagx-mid' }, grid, h('nav', { class: 'bagx-tabs' }, tabs.fish, tabs.gear)),
+    h('div', { class: 'bagx-mid' }, grid, h('nav', { class: 'bagx-tabs' }, tabs.equip, tabs.fish, tabs.gear)),
     h('div', { class: 'bagx-foot' }, coin, actions, quick));
 
   const ownsRod = (rod) => rod.tier === 0 || wallet.has(rod.item);
-  const entries = () => (tabNow === 'fish'
-    ? sortBag(bag.items, sortId).map((item) => ({ key: `f${item.id}`, kind: 'fish', item, rarity: itemRarity(item) }))
-    : [
+  const entries = () => {
+    if (tabNow === 'equip') return gridEntries(wallet.owned, looks.current, filterId);
+    if (tabNow === 'fish') return sortBag(bag.items, sortId).map((item) => ({ key: `f${item.id}`, kind: 'fish', item, rarity: itemRarity(item) }));
+    return [
       ...FISH_RODS.map((rod) => ({ key: `rod${rod.tier}`, kind: 'rod', tier: rod.tier, rarity: rod.rarity, owned: ownsRod(rod), inUse: rod.tier === bag.rod })),
       { key: 'thinh', kind: 'thinh', count: bag.thinh, rarity: 2 },
-    ]);
+    ];
+  };
 
   function slotOf(entry, i) {
     const { kind } = entry;
-    const svg = kind === 'fish' ? fishPortraitSvg(entry.item.ref) : kind === 'rod' ? rodGlyphSvg(entry.tier) : thinhGlyphSvg();
+    const svg = kind === 'look' ? lookGlyphSvg(entry.slot, entry.index)
+      : kind === 'fish' ? fishPortraitSvg(entry.item.ref) : kind === 'rod' ? rodGlyphSvg(entry.tier) : thinhGlyphSvg();
     // Góc ô ghi giá bán (thứ hay so nhất khi dọn túi); cân nặng xem trong bảng chi tiết.
-    const label = kind === 'fish' ? String(entry.item.price)
-      : kind === 'thinh' ? `×${entry.count}` : entry.inUse ? 'Dùng' : entry.owned ? '' : `${FISH_RODS[entry.tier].price}`;
+    const label = kind === 'look' ? ''
+      : kind === 'fish' ? String(entry.item.price)
+        : kind === 'thinh' ? `×${entry.count}` : entry.inUse ? 'Dùng' : entry.owned ? '' : `${FISH_RODS[entry.tier].price}`;
     const dim = kind === 'rod' && !entry.owned;
     const slot = h('button', {
       type: 'button', role: 'option', 'data-key': entry.key, 'data-rarity': String(entry.rarity),
@@ -86,8 +106,24 @@ export function openBag(app, tab = 'fish') {
     return slot;
   }
 
+  /** Mặc món trong lưới, hoặc tháo món ở ô trang bị. Nhân vật đổi ngay, server nhận qua LookSync. */
+  const wear = (entry) => {
+    const look = looks.current;
+    if (entry.worn && !canUnequip(look, entry.slot)) return;
+    looks.wear(entry.worn ? unequipLook(look, entry.slot) : equipLook(look, entry.slot, entry.index));
+    app.audio.pop?.();
+    selected = null;
+    tipKey = null;
+  };
+
   const select = (key) => {
-    selected = selected === key ? null : key;
+    // Bấm đúp ô đồ ngoại hình: mặc hoặc tháo luôn, như game thùng đồ.
+    const now = performance.now();
+    const double = lastTap.key === key && now - lastTap.at < DOUBLE_MS;
+    lastTap = { key, at: double ? 0 : now };
+    const entry = entryByKey.get(key);
+    if (double && entry?.kind === 'look' && !entry.empty) wear(entry);
+    else selected = selected === key ? null : key;
     armed = null;
     render();
   };
@@ -142,9 +178,16 @@ export function openBag(app, tab = 'fish') {
   const lock = (item) => run(() => toggleLock(app, item));
   const buy = (item) => run(() => buyGear(app, item));
 
+  const toShop = () => { api.close(); openShop(app, 'shop'); };
+  const wearSelected = (entry) => { wear(entry); render(); };
+
   function renderActions() {
     const entry = selected ? entryByKey.get(selected) : null;
-    actions.replaceChildren(...selectionButtons({ entry, tab: tabNow, armed, busy, bag, wallet, sell, lock, buy }));
+    const look = looks.current;
+    actions.replaceChildren(...selectionButtons({
+      entry, tab: tabNow, armed, busy, bag, wallet, sell, lock, buy, wear: wearSelected, toShop,
+      canStrip: entry?.worn ? canUnequip(look, entry.slot) : false,
+    }));
   }
 
   function renderQuick() {
@@ -153,8 +196,9 @@ export function openBag(app, tab = 'fish') {
     updateQuickSell(quickBtn, { items: bag.items, maxRarity: quickMax, armed, busy, sell });
   }
 
-  /** Bấm ô ở cột Thông tin: chọn đúng món đó trong lưới (cá ở thẻ Cá, cần và thính ở thẻ Đạo cụ). */
+  /** Bấm ô ở cột bên trái: ô trang bị thì chọn (bấm đúp là tháo); ô Thông tin thì chọn đúng món đó trong lưới. */
   function pick(entry) {
+    if (entry.kind === 'look') return select(entry.key);
     if (entry.kind === 'bait') return;
     tabNow = entry.kind === 'fish' ? 'fish' : 'gear';
     selected = entry.kind === 'fish' ? `f${entry.item.id}` : entry.kind === 'rod' ? `rod${entry.tier}` : 'thinh';
@@ -162,21 +206,40 @@ export function openBag(app, tab = 'fish') {
     render();
   }
 
+  /** Cột bên trái theo thẻ: Nhân vật (có nhân vật 3D) ở thẻ Trang bị, Thông tin người câu ở thẻ Cá, Đạo cụ. */
+  function renderInfo() {
+    const equip = tabNow === 'equip';
+    info.classList.toggle('equip', equip);
+    if (!equip) {
+      portrait?.stop();
+      portrait = null;
+      return renderInfoPanel(info, { name: app.myName, bag, bait: app.activities.fishing?.bait, onPick: pick });
+    }
+    const look = looks.current;
+    const out = renderEquipInfo(info, { name: app.myName, look, owned: wallet.owned, selected, portrait: portraitHost, onPick: pick });
+    if (!portrait) portrait = mountPortrait(portraitHost, look, app.me.avatar);
+    else portrait.setLook(look);
+    return out;
+  }
+
   function render(animate = false) {
     const list = entries();
-    const infoEntries = renderInfoPanel(info, { name: app.myName, bag, bait: app.activities.fishing?.bait, onPick: pick });
+    const infoEntries = renderInfo();
     entryByKey = new Map([...list, ...infoEntries].map((e) => [e.key, e]));
     if (selected && !entryByKey.has(selected)) selected = null;
     for (const [id, el] of Object.entries(tabs)) el.classList.toggle('on', id === tabNow);
-    const empty = Math.max(0, bag.capacity - list.length);
+    // Túi cá có sức chứa thật; thẻ khác hiện đủ hàng 7 ô, tối thiểu bằng túi cá cho khung không nhảy.
+    const cells = tabNow === 'fish' ? bag.capacity : Math.max(bag.capacity, Math.ceil(list.length / 7) * 7);
+    const empty = Math.max(0, cells - list.length);
     grid.replaceChildren(...list.map(slotOf), ...Array.from({ length: empty }, () => h('span', { class: 'bagx-slot', 'aria-hidden': 'true' })));
     // Chỉ chạy hiệu ứng ô hiện dần khi đổi thẻ hay đổi cách xếp, không phải mỗi lần bấm chọn.
     grid.classList.toggle('enter', animate);
     if (animate) setTimeout(() => grid.classList.remove('enter'), 700);
-    sortBtn.replaceChildren('Sắp xếp túi', h('small', {}, BAG_SORTS.find((s) => s.id === sortId)?.label ?? BAG_SORTS[0].label));
-    sortBtn.hidden = tabNow !== 'fish';
-    capEl.textContent = `${bag.items.length} / ${bag.capacity}`;
-    capEl.classList.toggle('full', bag.full);
+    if (tabNow === 'equip') sortBtn.replaceChildren('Lọc đồ', h('small', {}, EQUIP_FILTERS.find((f) => f.id === filterId)?.label ?? EQUIP_FILTERS[0].label));
+    else sortBtn.replaceChildren('Sắp xếp túi', h('small', {}, BAG_SORTS.find((s) => s.id === sortId)?.label ?? BAG_SORTS[0].label));
+    sortBtn.hidden = tabNow === 'gear';
+    capEl.textContent = tabNow === 'equip' ? `${list.length} món` : `${bag.items.length} / ${bag.capacity}`;
+    capEl.classList.toggle('full', tabNow === 'fish' && bag.full);
     if (wallet.teu !== teuShown) {
       countTo(teuEl, teuShown, wallet.teu);
       teuShown = wallet.teu;
@@ -187,6 +250,14 @@ export function openBag(app, tab = 'fish') {
   }
 
   sortBtn.addEventListener('click', () => {
+    if (tabNow === 'equip') {
+      const i = EQUIP_FILTERS.findIndex((f) => f.id === filterId);
+      filterId = EQUIP_FILTERS[(i + 1) % EQUIP_FILTERS.length].id;
+      store.set('bagFilter', filterId);
+      selected = null;
+      render(true);
+      return;
+    }
     const i = BAG_SORTS.findIndex((s) => s.id === sortId);
     sortId = BAG_SORTS[(i + 1) % BAG_SORTS.length].id;
     store.set('bagSort', sortId);
@@ -202,12 +273,19 @@ export function openBag(app, tab = 'fish') {
 
   const offBag = bag.onChange(() => render());
   const offWallet = wallet.onChange(() => render());
+  const offLooks = looks.onChange(() => render());
   const modal = openModal({
     title: 'Túi đồ',
     content: [h('div', { class: 'bagx-wrap' }, info, bagSec), tip],
     className: 'bagx',
     wide: true,
-    onClose: () => { offBag(); offWallet(); active = null; },
+    onClose: () => {
+      offBag();
+      offWallet();
+      offLooks();
+      portrait?.stop();
+      active = null;
+    },
   });
   const card = modal.el.querySelector('.modal-card');
   const body = modal.body;
@@ -233,7 +311,8 @@ export function openBag(app, tab = 'fish') {
   const api = {
     close: () => modal.close(),
     setTab(next) {
-      tabNow = next === 'gear' ? 'gear' : 'fish';
+      tabNow = pickTab(next);
+      store.set('bagTab', tabNow);
       selected = null;
       tipKey = null;
       armed = null;

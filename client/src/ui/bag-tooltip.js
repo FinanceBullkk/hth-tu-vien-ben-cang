@@ -4,6 +4,7 @@ import { FISH_RARITY, fishById } from '../../../shared/fish-catalog.js';
 import { BAG_TAGS } from '../../../shared/fish-bag.js';
 import { THINH, rodOf } from '../../../shared/fish-gear.js';
 import { BAITS, fishForBait, fishHint } from '../../../shared/fish.js';
+import { lookTip } from './bag-equip-tooltip.js';
 import { h } from './dom.js';
 
 const kg = (v) => `${v.toLocaleString('vi-VN')} kg`;
@@ -95,8 +96,12 @@ function baitTip(baitId) {
   ];
 }
 
-/** Nội dung bảng chi tiết cho một ô: { kind: 'fish', item } | { kind: 'rod', tier, owned, inUse } | { kind: 'thinh', count } | { kind: 'bait', bait }. */
+/**
+ * Nội dung bảng chi tiết cho một ô: { kind: 'fish', item } | { kind: 'rod', tier, owned, inUse } | { kind: 'thinh', count }
+ * | { kind: 'bait', bait } | { kind: 'look', slot, index, ... } (đồ ngoại hình, xem bag-equip-tooltip.js).
+ */
 export function tipContent(entry) {
+  if (entry.kind === 'look') return lookTip(entry);
   if (entry.kind === 'rod') return rodTip(entry.tier, entry);
   if (entry.kind === 'bait') return baitTip(entry.bait);
   if (entry.kind === 'thinh') return thinhTip(entry.count);

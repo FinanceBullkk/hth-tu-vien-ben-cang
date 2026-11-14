@@ -4,13 +4,28 @@ import { bagValue, quickSellable } from '../../../shared/fish-bag.js';
 import { FISH_RODS, THINH } from '../../../shared/fish-gear.js';
 import { h } from './dom.js';
 
+const HINT = {
+  equip: 'Bấm đúp để mặc hay tháo.',
+  fish: 'Rê chuột vào ô để xem, bấm để chọn bán hoặc khoá.',
+  gear: 'Rê chuột để xem, bấm để chọn cần hay thính muốn mua.',
+};
+
 /**
  * Các nút cho ô đang chọn.
- * ctx: { entry, tab, armed, busy, bag, wallet, sell(ids, confirmKey), lock(item), buy(itemId) }
+ * ctx: { entry, tab, armed, busy, bag, wallet, sell(ids, confirmKey), lock(item), buy(itemId), wear(entry), toShop(), canStrip }
  */
-export function selectionButtons({ entry, tab, armed, busy, bag, wallet, sell, lock, buy }) {
+export function selectionButtons({ entry, tab, armed, busy, bag, wallet, sell, lock, buy, wear, toShop, canStrip }) {
   const btn = (label, cls, onClick, disabled = false) => h('button', { type: 'button', class: `bagx-btn ${cls}`, disabled: busy || disabled, onClick }, label);
-  if (!entry) return [h('p', { class: 'bagx-hint' }, tab === 'fish' ? 'Rê chuột vào ô để xem, bấm để chọn bán hoặc khoá.' : 'Rê chuột để xem, bấm để chọn cần hay thính muốn mua.')];
+  if (!entry) {
+    const hint = h('p', { class: 'bagx-hint' }, HINT[tab] ?? HINT.fish);
+    return tab === 'equip' ? [hint, btn('Thêm đồ ở Cửa hàng', 'cool', toShop)] : [hint];
+  }
+  if (entry.kind === 'look') {
+    if (entry.empty) return [h('p', { class: 'bagx-hint' }, 'Ô đang trống, bấm đúp món trong túi để mặc.')];
+    return entry.worn
+      ? [btn(canStrip ? 'Tháo' : 'Đồ gốc, không tháo được', 'cool', () => wear(entry), !canStrip)]
+      : [btn('Mặc', 'warm', () => wear(entry))];
+  }
   if (entry.kind === 'fish') {
     const { item } = entry;
     // Cá sử thi, huyền thoại phải bấm hai lần mới bán, khỏi lỡ tay.
