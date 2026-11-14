@@ -1,7 +1,7 @@
 // Run after npm run build; PUPPETEER_MODULE may point to an existing puppeteer ESM entry.
-// Mỗi hệ aura giờ có pháp tướng riêng trong client/src/player/vfx/ — kiểm tra chung: danh hiệu
-// đi theo hệ, đổi hệ giải phóng tài nguyên cũ, dữ liệu hữu hạn, có chuyển động, và giảm
-// chuyển động của hệ điều hành làm chậm mà không tắt hình.
+// Mỗi hệ aura có pháp tướng riêng trong client/src/player/vfx/ (hệ 1 Sen kim là nền inline +
+// aura-signature) — kiểm tra chung: danh hiệu đi theo hệ, đổi hệ không lỗi, dữ liệu hữu hạn,
+// có chuyển động, và giảm chuyển động của hệ điều hành làm chậm mà không tắt hình.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -82,7 +82,9 @@ try {
       assert.ok(result.finite);
       assert.ok(result.standing);
       if (effect) {
-        assert.ok(result.name?.endsWith('-aura'), `aura ${effect} has its own module (${result.name})`);
+        // Hệ 1 dùng nền inline + aura-signature (không đặt tên group); hệ khác có module riêng.
+        assert.ok(['', 'aura-signature'].includes(result.name) || result.name?.endsWith('-aura'),
+          `aura ${effect} renders (${JSON.stringify(result.name)})`);
         assert.ok(result.animated, `aura ${effect} must move`);
       } else {
         assert.equal(result.name, null);
@@ -147,7 +149,7 @@ try {
     await page.close();
   }
   assert.deepEqual(errors, []);
-  console.log(`PASS: all ${EFFECT_NAMES.length} aura/title states, desktop/mobile, dispose, finite data, reduced motion, clearing title, no page errors`);
+  console.log(`PASS: all ${EFFECT_NAMES.length} aura/title states, desktop/mobile, finite data, reduced motion, clearing title, no page errors`);
 } finally {
   await browser?.close();
   const stopped = new Promise(resolve => server.once('exit', resolve));

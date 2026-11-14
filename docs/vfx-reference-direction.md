@@ -78,13 +78,13 @@ Lượt nghiên cứu chưa sửa renderer. Lượt tiếp theo đã thêm ba l�
 ID 9–11: Xích diễm, Kim long, Kiếm vũ; xem `avatar-appearance.md`. Tám aura cũ
 giữ nguyên. Chưa triển khai game.
 
-Sau đó từng hệ đã được nâng thành pháp tướng riêng theo đúng bảng "Áp dụng tám hệ"
-(#67–#88, xem `git log`). Ngày 14/11/2026: Sen kim — hệ cuối còn nền inline cũ — nâng
-thành **Cửu Phẩm Kim Liên**, module riêng `client/src/player/vfx/sen-kim-aura.js`: đài sen
-ba tầng cuốn ngược ôm chân, gân cánh mảnh có dòng khí chảy, viền fresnel chọn lọc, cánh nở
-lệch nhịp, hoạt lộ lăn gân rồi rụng, bụi vàng dâng; bồ nhụy hé lộ sau lưng. Lớp inline
-vẽ tay canvas và chuỗi aura-signature/aura-manifestation/aura-flow/aura-sigil (từ V9–V10,
-chỉ còn hệ 1 dùng) được thanh lý.
+Sau đó các hệ lần lượt có pháp tướng riêng (#67–#88, xem `git log`). Ngày 14/11/2026:
+lượt nâng Sen kim theo hướng thay mới bị chủ dự án từ chối và đã revert — giữ nguyên
+bố cục gốc (đài sen, pháp trận, chân ngôn 禪, pháp giới, Ngọc Liên Bảo Tọa), chỉ nâng
+chất liệu (V10.4): gân khắc trong đài sen và cánh dâng, đốm sáng chọn lọc ở đầu cánh,
+mép hòa mềm, dòng khí trên cánh tòa sen 3D lệch pha từng cánh, viền sáng dồn về đầu
+cánh, âu đài quét ánh chậm; kèm sửa rò rỉ dispose bản clone material khi mờ dần.
+Bài học: nâng aura = nâng chất trên nhận diện đã duyệt, không thay silhouette.
 
 ## Thần bài (effect 13): tham chiếu và bài học
 
