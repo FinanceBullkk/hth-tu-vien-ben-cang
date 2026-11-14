@@ -61,6 +61,7 @@ import './ui/stone.css';
 import './ui/xidach.css';
 import './ui/trade.css';
 import './ui/pet.css';
+import './ui/game-menu.css';
 
 const isTouch = matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch', isTouch);
