@@ -34,6 +34,7 @@ import { applyLook, lookOf, openShop, rememberLook } from './ui/shop-panel.js';
 import { Wallet } from './ui/wallet.js';
 import { BagState } from './ui/bag-state.js';
 import { openBag } from './ui/bag-panel.js';
+import { LookSync } from './ui/look-sync.js';
 import { visitBenaBanca } from './ui/bena-banca-dialog.js';
 import { closeTopModal, modalOpen, openModal } from './ui/modal.js';
 import { nudgePlacesMenu, openPlacesMenu } from './ui/places-menu.js';
@@ -139,6 +140,7 @@ function main() {
   app.hud = new Hud(app);
   app.wallet = new Wallet();
   app.bag = new BagState();
+  app.looks = new LookSync(app); // mặc, tháo đồ từ túi đồ
   app.chat = new Chat(app);
   app.activities = new Activities(app);
   app.voice = new ProximityVoice(app);
@@ -435,7 +437,6 @@ function main() {
   $('bookBtn').addEventListener('click', () => openBook(app));
   $('shopBtn').addEventListener('click', () => openShop(app, 'shop'));
   $('bagBtn').addEventListener('click', () => openBag(app));
-  $('wardrobeBtn').addEventListener('click', () => openShop(app, 'wardrobe'));
   $('walletBtn').addEventListener('click', () => openShop(app, 'shop'));
   $('boardBtn').addEventListener('click', () => openBoard(app));
   $('shareBtn').addEventListener('click', () => openShare(app));

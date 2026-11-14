@@ -1,15 +1,16 @@
-// Cửa hàng + Tủ đồ: một bảng neo cạnh phải để vẫn thấy nhân vật thử đồ.
-// Bấm món là mặc thử ngay (chỉ máy mình thấy); "Mua" trừ TEU trên server; "Mặc bộ này" lưu và cả phòng cùng thấy.
-// Đóng bảng khi chưa lưu thì nhân vật về lại bộ đang mặc.
-import { AVATAR, SHIRT_COLORS } from '../../../shared/protocol.js';
-import { HAT_SHOP_START, LOOK_SLOTS, SHOP_SECTIONS, canWear, itemId, itemName, meetsRequirement, paidItems, priceOf, requirementOf } from '../../../shared/shop.js';
+// Cửa hàng: một bảng neo cạnh phải để vẫn thấy nhân vật thử đồ.
+// Bấm món là mặc thử ngay (chỉ máy mình thấy); "Mua" trừ TEU trên server, món mua xong vào thẻ Trang bị của Túi đồ;
+// "Mặc bộ này" lưu và cả phòng cùng thấy. Đóng bảng khi chưa lưu thì nhân vật về lại bộ đang mặc.
+// Thay đồ đã có thì làm ở Túi đồ (bag-panel.js), như game thùng đồ: tủ đồ cũ đã gộp vào đó.
+import { SHIRT_COLORS } from '../../../shared/protocol.js';
+import { LOOK_SLOTS, SHOP_SECTIONS, canWear, itemId, itemName, meetsRequirement, paidItems, priceOf, requirementOf } from '../../../shared/shop.js';
 import { trimShadowCasters } from '../player/avatar-lod.js';
+import { openBag } from './bag-panel.js';
 import { h, store } from './dom.js';
+import { EFFECT_TINT } from './look-glyphs.js';
 import { openModal } from './modal.js';
 import { requirementStatus, vipCard } from './shop-vip-card.js';
 
-const SLOT_COUNT = { color: AVATAR.colors, hair: AVATAR.hairs, hat: AVATAR.hats, attire: AVATAR.attires, weapon: AVATAR.weapons, effect: AVATAR.effects };
-const SLOT_START = { hat: HAT_SHOP_START };
 const HANZI = Object.fromEntries(SHOP_SECTIONS.map((s) => [s.slot, s.hanzi]));
 
 let active = null; // Chỉ một bảng mở cùng lúc; mở lại thì chuyển thẻ.
@@ -27,10 +28,8 @@ export function rememberLook(app, look) {
   Object.assign(app.profile, look);
   const { name, color, hair, hat, attire, weapon, effect } = app.profile;
   store.setJson('profile', { name, color, hair, hat, attire, weapon, effect });
+  app.looks?.emit(); // Túi đồ đang mở thì vẽ lại ô trang bị theo bộ mới.
 }
-
-// Màu chủ đạo của từng hào quang trả phí, để ô trong sạp không giống hệt nhau.
-const EFFECT_TINT = { 3: '#5b6fd6', 4: '#e2672a', 7: '#c9d6e8', 8: '#4b2f63', 9: '#d4a017', 10: '#c0392b', 11: '#e8c34a', 12: '#5fb7d9', 13: '#d4a52a', 14: '#2aa7c4' };
 
 /** Ô vẽ món: màu áo là ô màu, hào quang nhuộm theo màu riêng, món khác là triện chữ Hán theo loại. */
 export function itemSwatch(slot, index, owned) {
@@ -39,11 +38,13 @@ export function itemSwatch(slot, index, owned) {
   return h('span', { class: `shopx-swatch slot-${slot}`, style, 'aria-hidden': 'true' }, owned ? '✓' : slot === 'color' ? '' : HANZI[slot]);
 }
 
+/** tab 'wardrobe' (lối tắt cũ của Tủ đồ) giờ mở thẻ Trang bị trong Túi đồ. */
 export function openShop(app, tab = 'shop') {
-  if (active) {
-    active.setTab(tab);
-    return active;
+  if (tab === 'wardrobe') {
+    active?.close();
+    return openBag(app, 'equip');
   }
+  if (active) return active;
   const { wallet, me } = app;
   let current = lookOf(app.profile);
   let draft = { ...current };
@@ -59,9 +60,9 @@ export function openShop(app, tab = 'shop') {
   // Quay mặt nhân vật về phía camera để nhìn rõ bộ đồ đang thử.
   me.rot = Math.atan2(app.camera.position.x - me.x, app.camera.position.z - me.z);
 
-  const tabs = { shop: h('button', { class: 'chip', type: 'button' }, 'Cửa hàng'), wardrobe: h('button', { class: 'chip', type: 'button' }, 'Tủ đồ') };
+  const toBag = h('button', { class: 'chip', type: 'button', title: 'Mặc, tháo đồ đã có trong Túi đồ' }, 'Túi đồ');
   const teuEl = h('b', {});
-  const head = h('div', { class: 'shopx-head' }, h('div', { class: 'chips' }, tabs.shop, tabs.wardrobe), h('span', { class: 'shopx-teu' }, teuEl, ' TEU'));
+  const head = h('div', { class: 'shopx-head' }, h('div', { class: 'chips' }, h('span', { class: 'chip on' }, 'Cửa hàng'), toBag), h('span', { class: 'shopx-teu' }, teuEl, ' TEU'));
   const list = h('div', { class: 'shopx-list' });
   const status = h('p', { class: 'shopx-status' });
   const primary = h('button', { class: 'btn primary', type: 'button' });
@@ -94,34 +95,14 @@ export function openShop(app, tab = 'shop') {
       return card;
     }))));
 
-  const wardrobeList = () => SHOP_SECTIONS.map(({ slot, label, hanzi }) => {
-    const chips = [];
-    for (let i = SLOT_START[slot] ?? 0; i < SLOT_COUNT[slot]; i++) {
-      if (!canWear(wallet.owned, slot, i)) continue;
-      const on = draft[slot] === i;
-      const chip = slot === 'color'
-        ? h('button', { class: `swatch${on ? ' on' : ''}`, type: 'button', style: `background:${SHIRT_COLORS[i]}`, 'aria-label': itemName(slot, i), 'aria-pressed': String(on) })
-        : h('button', { class: `chip${on ? ' on' : ''}`, type: 'button', 'aria-pressed': String(on) }, itemName(slot, i));
-      chip.addEventListener('click', () => pick(slot, i));
-      chips.push(chip);
-    }
-    return h('section', {}, h('h3', { 'data-hanzi': hanzi }, label), h('div', { class: slot === 'color' ? 'swatches' : 'hat-list' }, chips));
-  });
-
-  let tabNow = tab;
   const render = () => {
     const scroll = list.scrollTop;
-    tabs.shop.classList.toggle('on', tabNow === 'shop');
-    tabs.wardrobe.classList.toggle('on', tabNow === 'wardrobe');
     teuEl.textContent = String(wallet.teu);
-    list.replaceChildren(...(tabNow === 'shop' ? shopList() : [
-      h('p', { class: 'muted small' }, 'Chỉ hiện đồ miễn phí và đồ đã mua. Muốn thêm đồ thì qua thẻ Cửa hàng.'),
-      ...wardrobeList(),
-    ]));
+    list.replaceChildren(...shopList());
     list.scrollTop = scroll;
 
     const dirty = !sameLook(draft, current);
-    const buying = tabNow === 'shop' && selected && priceOf(selected) > 0 && !wallet.has(selected);
+    const buying = selected && priceOf(selected) > 0 && !wallet.has(selected);
     undo.hidden = !dirty;
     if (buying) {
       const price = priceOf(selected);
@@ -156,7 +137,7 @@ export function openShop(app, tab = 'shop') {
     if (res?.ok) {
       wallet.grant(item);
       app.audio.pop?.();
-      app.hud.toast(res.already ? 'Món này bạn có rồi.' : `Đã mua! Bấm "Mặc bộ này" để mặc luôn.`);
+      app.hud.toast(res.already ? 'Món này bạn có rồi.' : 'Đã mua, món mới vào Túi đồ. Bấm "Mặc bộ này" để mặc luôn.');
     } else {
       app.hud.toast(res?.error || 'Chưa mua được, thử lại nhé.');
     }
@@ -190,8 +171,11 @@ export function openShop(app, tab = 'shop') {
     preview();
     render();
   });
-  tabs.shop.addEventListener('click', () => api.setTab('shop'));
-  tabs.wardrobe.addEventListener('click', () => api.setTab('wardrobe'));
+  // Đóng sạp trước (cởi đồ đang thử) rồi mở túi ở thẻ Trang bị.
+  toBag.addEventListener('click', () => {
+    modal.close();
+    openBag(app, 'equip');
+  });
 
   const unsubscribe = wallet.onChange(() => render());
   const modal = openModal({
@@ -207,14 +191,7 @@ export function openShop(app, tab = 'shop') {
   });
   modal.el.classList.add('modal-dock');
 
-  const api = {
-    close: () => modal.close(),
-    setTab(next) {
-      tabNow = next === 'wardrobe' ? 'wardrobe' : 'shop';
-      selected = null;
-      render();
-    },
-  };
+  const api = { close: () => modal.close() };
   active = api;
   render();
   return api;

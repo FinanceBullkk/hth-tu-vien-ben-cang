@@ -39,7 +39,7 @@ export class FishingActivity {
       onExit: () => app.activities.exit(),
       onBuy: (item) => this.supplies.buy(item),
       onThinh: () => this.supplies.toggle(),
-      onBag: () => openBag(app),
+      onBag: () => openBag(app, 'fish'),
     });
     this.supplies = new FishingSuppliesControl({ app, panel: this.panel });
     const phase = { app, panel: this.panel, lines: this.lines };
