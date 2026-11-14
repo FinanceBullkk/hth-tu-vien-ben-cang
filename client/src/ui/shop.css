@@ -1,16 +1,16 @@
 /* Ví TEU, Sạp Kim Bảo (cửa hàng + tủ đồ) và món khoá ở màn chào. Cùng tông mực tàu + chỉ vàng của HUD. */
 
-/* ----- Ví TEU: dưới số người online, chữ vàng trên vệt mực ----- */
+/* ----- Ví TEU: dưới số người online, chữ vàng trên vệt navy ----- */
 #walletBtn {
   position: relative; display: inline-flex; align-items: center; gap: 5px;
-  margin-top: 4px; padding: 3px 10px 3px 4px; border: 0; border-left: 2px solid rgba(224, 164, 88, .85);
-  background: linear-gradient(90deg, rgba(10, 8, 6, .72), rgba(10, 8, 6, 0));
-  color: #f6ecd8; font: 700 15px/1.2 var(--sans); text-shadow: 0 1px 2px #000;
+  margin-top: 4px; padding: 3px 10px 3px 4px; border: 0; border-left: 2px solid rgba(255, 207, 77, .85);
+  background: linear-gradient(90deg, rgba(6, 11, 36, .72), rgba(6, 11, 36, 0));
+  color: #e6eeff; font: 700 15px/1.2 var(--sans); text-shadow: 0 1px 2px #000;
   touch-action: manipulation;
 }
 #walletBtn .ink-icon { width: 19px; height: 19px; color: var(--gold); }
 #walletBtn b { color: var(--gold); font-variant-numeric: tabular-nums; }
-#walletBtn small { font-size: 11px; letter-spacing: .08em; color: rgba(246, 236, 216, .75); }
+#walletBtn small { font-size: 11px; letter-spacing: .08em; color: rgba(230, 238, 255, .75); }
 #walletBtn:hover b, #walletBtn:focus-visible b { color: #ffd78f; }
 #walletBtn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 #presence { display: flex; flex-direction: column; align-items: flex-start; }
@@ -23,66 +23,69 @@
 @keyframes walletBump { 40% { transform: scale(1.12); } }
 @keyframes walletFloat { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-16px); } }
 
-/* ----- Bảng neo cạnh phải: nhân vật thử đồ vẫn hiện bên trái ----- */
-.modal.modal-dock { justify-content: flex-end; align-items: stretch; padding: 0; background: linear-gradient(90deg, transparent 40%, rgba(20, 10, 4, .35)); }
+/* ----- Bảng neo cạnh phải: nhân vật thử đồ vẫn hiện bên trái. Panel cao toàn màn nên dùng nền navy trơn, không khung bitmap. ----- */
+.modal.modal-dock { justify-content: flex-end; align-items: stretch; padding: 0; background: linear-gradient(90deg, transparent 40%, rgba(3, 7, 26, .35)); }
 .modal-card.shopx {
   width: min(430px, 100%); max-height: none; height: 100dvh; border-radius: 0; border-width: 0 0 0 1px;
+  background: linear-gradient(90deg, #131f5e, #0d1747);
+  border-left: 2px solid rgba(148, 196, 240, .5);
+  padding: 0;
   animation: shopIn .2s ease-out;
 }
 @keyframes shopIn { from { transform: translateX(24px); opacity: 0; } }
 .shopx .modal-head { padding: calc(14px + var(--safe-t)) 18px 8px; border-bottom: 2px solid transparent;
-  border-image: linear-gradient(90deg, rgba(224, 164, 88, .95), rgba(224, 164, 88, .2) 70%, transparent) 1; }
-.shopx .modal-head h2::after { content: '金寶'; margin-left: 10px; font: 600 12px var(--serif); color: rgba(154, 106, 46, .55); letter-spacing: .3em; }
+  border-image: linear-gradient(90deg, rgba(255, 207, 77, .95), rgba(255, 207, 77, .2) 70%, transparent) 1; }
+.shopx .modal-head h2::after { content: '金寶'; margin-left: 10px; font: 600 12px var(--sans); color: rgba(255, 207, 77, .55); letter-spacing: .3em; }
 .shopx .modal-body { display: flex; flex-direction: column; flex: 1; min-height: 0; padding: 0; overflow: hidden; }
 .shopx-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 18px 6px; }
 .shopx-head .chips { display: flex; gap: 6px; }
 .shopx-teu { font: 600 13px var(--sans); color: var(--muted); white-space: nowrap; }
-.shopx-teu b { font: 700 20px var(--serif); color: #8a5a1e; }
-.shopx-list { flex: 1; min-height: 0; overflow-y: auto; padding: 0 18px 12px; overscroll-behavior: contain; }
-.shopx-list h3 { display: flex; align-items: baseline; gap: 8px; margin: 16px 0 8px; font: 700 16px var(--serif); color: #4a1c10; }
+.shopx-teu b { font: 800 20px var(--serif); color: var(--gold); }
+.shopx-list { flex: 1; min-height: 0; overflow-y: auto; padding: 0 18px 12px; overscroll-behavior: contain; scrollbar-color: rgba(148, 196, 240, .5) transparent; scrollbar-width: thin; }
+.shopx-list h3 { display: flex; align-items: baseline; gap: 8px; margin: 16px 0 8px; font: 800 16px var(--serif); color: #fff; text-shadow: 0 1px 0 #14245e; }
 .shopx-list h3::before { content: '❖'; color: var(--gold); font-size: 11px; }
-.shopx-list h3::after { content: attr(data-hanzi); margin-left: auto; padding: 2px 5px; border: 1px solid rgba(143, 106, 56, .4); border-radius: 3px; font: 600 13px/1 var(--serif); color: rgba(90, 31, 20, .34); transform: rotate(5deg); }
+.shopx-list h3::after { content: attr(data-hanzi); margin-left: auto; padding: 2px 5px; border: 1px solid rgba(148, 196, 240, .4); border-radius: 6px; font: 600 13px/1 var(--sans); color: rgba(159, 180, 228, .6); transform: rotate(5deg); }
 .shopx-list .muted.small { margin: 10px 0 0; }
 
 .shopx-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .shopx-card {
   display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 1px 10px;
   padding: 9px 10px; text-align: left;
-  border: 1px solid rgba(143, 106, 56, .45); border-radius: 8px;
-  background: linear-gradient(180deg, #fffcf3, #f5ebd4);
+  border: 1px solid rgba(148, 196, 240, .45); border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .04));
   transition: border-color .15s, transform .12s, box-shadow .15s;
 }
-.shopx-card:hover, .shopx-card:focus-visible { border-color: var(--gold); transform: translateY(-1px); box-shadow: 0 6px 14px rgba(90, 50, 20, .18); }
+.shopx-card:hover, .shopx-card:focus-visible { border-color: var(--gold); transform: translateY(-1px); box-shadow: 0 6px 14px rgba(2, 6, 24, .3); }
 .shopx-card:focus-visible { outline: 3px solid var(--gold); outline-offset: 1px; }
-.shopx-card.on { border-color: #a8432a; box-shadow: inset 0 0 0 1.5px rgba(168, 67, 42, .55); }
-.shopx-card.owned { background: linear-gradient(180deg, #f1f7ec, #e5efe0); border-color: rgba(63, 143, 95, .55); }
-.shopx-card.owned.on { border-color: var(--jade); box-shadow: inset 0 0 0 1.5px rgba(63, 143, 95, .6); }
+.shopx-card.on { border-color: var(--accent); box-shadow: inset 0 0 0 1.5px rgba(63, 196, 220, .55); }
+.shopx-card.owned { background: linear-gradient(180deg, rgba(53, 182, 201, .16), rgba(53, 182, 201, .08)); border-color: rgba(53, 182, 201, .55); }
+.shopx-card.owned.on { border-color: var(--jade); box-shadow: inset 0 0 0 1.5px rgba(53, 182, 201, .6); }
 .shopx-card.poor:not(.on) { opacity: .72; }
 .shopx-swatch {
-  grid-row: 1 / span 2; width: 34px; height: 34px; border-radius: 6px;
+  grid-row: 1 / span 2; width: 34px; height: 34px; border-radius: 8px;
   display: grid; place-items: center;
-  background: var(--sw, #3a2618); color: #f6d99a; font: 700 17px/1 var(--serif);
-  box-shadow: inset 0 0 0 2px rgba(255, 253, 248, .6), inset 0 0 0 3.5px rgba(43, 28, 19, .3), 0 2px 5px rgba(43, 28, 19, .3);
+  background: var(--sw, #101c54); color: #ffd98a; font: 700 17px/1 var(--sans);
+  box-shadow: inset 0 0 0 2px rgba(244, 248, 255, .5), inset 0 0 0 3.5px rgba(6, 11, 36, .35), 0 2px 5px rgba(6, 11, 36, .4);
   text-shadow: 0 1px 3px rgba(0, 0, 0, .55);
 }
-.shopx-card.owned .shopx-swatch { color: #eafbe9; }
-.shopx-swatch.slot-effect { background: radial-gradient(circle at 50% 38%, var(--sw, #6b4a1e), #1d140d 78%); }
-.shopx-head .chip.on { background: #4a1c10; border-color: #4a1c10; color: #f6d99a; box-shadow: inset 0 -2px 0 var(--gold); }
-.shopx-swatch.slot-attire { background: linear-gradient(160deg, #7a2c1c, #3a160e); }
+.shopx-card.owned .shopx-swatch { color: #bdf0f6; }
+.shopx-swatch.slot-effect { background: radial-gradient(circle at 50% 38%, var(--sw, #2b4aae), #060b24 78%); }
+.shopx-head .chip.on { background: var(--gn-navy-3); border-color: var(--gn-navy-3); color: var(--gold); box-shadow: inset 0 -2px 0 var(--gold); }
+.shopx-swatch.slot-attire { background: linear-gradient(160deg, #8a3a1c, #3a160e); }
 .shopx-swatch.slot-weapon { background: linear-gradient(160deg, #39475a, #161d27); }
-.shopx-name { font: 700 14px/1.25 var(--serif); color: #4a1c10; }
-.shopx-price { font-size: 12.5px; font-weight: 600; color: #8a5a1e; }
-.shopx-card.owned .shopx-name { color: var(--jade-ink); }
+.shopx-name { font: 700 14px/1.25 var(--sans); color: #fff; }
+.shopx-price { font-size: 12.5px; font-weight: 600; color: var(--gold); }
+.shopx-card.owned .shopx-name { color: #bdf0f6; }
 .shopx-card.owned .shopx-price { color: var(--jade); }
 
-/* ----- Hào quang chí tôn: thẻ cả hàng, nền sơn mài, ấn triện hai chữ, viền vàng có vệt sáng lướt ----- */
+/* ----- Hào quang chí tôn: thẻ cả hàng, nền sơn mài cam-vàng kiểu Gunny, viền vàng có vệt sáng lướt ----- */
 .shopx-card.vip, .shopx-card.vip.owned {
-  --vip-bg: radial-gradient(120% 150% at 0% 0%, #7a1712 0%, #2e0b0a 55%, #140606 100%);
-  --vip-line: #e0ac48; --vip-ink: #ffe3a0;
+  --vip-bg: radial-gradient(120% 150% at 0% 0%, #8a4a0e 0%, #3a2005 55%, #140a02 100%);
+  --vip-line: #ffcf4d; --vip-ink: #ffe3a0;
   grid-column: 1 / -1; grid-template-columns: auto 1fr auto; gap: 2px 12px; padding: 12px 14px;
   position: relative; overflow: hidden; isolation: isolate;
   border: 1px solid var(--vip-line); background: var(--vip-bg); color: #fbefd2;
-  box-shadow: inset 0 0 0 1px rgba(255, 214, 120, .22), 0 4px 14px rgba(60, 10, 0, .3);
+  box-shadow: inset 0 0 0 1px rgba(255, 214, 120, .22), 0 4px 14px rgba(40, 20, 0, .3);
 }
 .shopx-card.vip.vip-sea { --vip-bg: radial-gradient(120% 150% at 0% 0%, #0f5f78 0%, #0a2834 55%, #05121a 100%); --vip-line: #7fd6e4; --vip-ink: #c9f6ff; }
 .shopx-card.vip::before {
@@ -123,19 +126,19 @@
 
 .shopx-foot {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  padding: 10px 18px calc(12px + var(--safe-b)); border-top: 1px solid rgba(143, 106, 56, .3);
-  background: linear-gradient(180deg, rgba(239, 227, 201, .6), var(--paper));
+  padding: 10px 18px calc(12px + var(--safe-b)); border-top: 1px solid rgba(148, 196, 240, .3);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .04), transparent);
 }
 .shopx-status { margin: 0; font: italic 600 13.5px var(--serif); color: var(--muted); }
 .shopx-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
 /* ----- Món khoá ở màn chào ----- */
-.chip.locked { color: #8a7a68; border-style: dashed; background: #f7f1e6; }
-.chip.locked .chip-price { margin-left: 4px; font-size: 11px; color: #9a6a2e; }
+.chip.locked { color: #8ea6d8; border-style: dashed; background: rgba(255, 255, 255, .04); }
+.chip.locked .chip-price { margin-left: 4px; font-size: 11px; color: var(--muted); }
 
 @media (max-width: 560px) {
   /* Điện thoại: bảng trượt từ đáy lên, nửa trên vẫn thấy nhân vật. */
-  .modal.modal-dock { align-items: flex-end; justify-content: stretch; background: linear-gradient(180deg, transparent 30%, rgba(20, 10, 4, .35)); }
+  .modal.modal-dock { align-items: flex-end; justify-content: stretch; background: linear-gradient(180deg, transparent 30%, rgba(3, 7, 26, .35)); }
   .modal-card.shopx { width: 100%; height: 58dvh; border-width: 1px 0 0; border-radius: 10px 10px 0 0; animation-name: shopUp; }
   .shopx .modal-head { padding-top: 12px; }
   @keyframes shopUp { from { transform: translateY(24px); opacity: 0; } }
