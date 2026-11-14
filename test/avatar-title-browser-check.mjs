@@ -1,14 +1,11 @@
 // Run after npm run build; PUPPETEER_MODULE may point to an existing puppeteer ESM entry.
-// Mỗi hệ aura giờ có pháp tướng riêng trong client/src/player/vfx/ — kiểm tra chung: danh hiệu
-// đi theo hệ, đổi hệ giải phóng tài nguyên cũ, dữ liệu hữu hạn, có chuyển động, và giảm
-// chuyển động của hệ điều hành làm chậm mà không tắt hình.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { AURA_TITLES } from '../client/src/player/avatar-title.js';
-import { AVATAR, EFFECT_NAMES } from '../shared/protocol.js';
+import { AVATAR } from '../shared/protocol.js';
 
 const { default: puppeteer } = await import(process.env.PUPPETEER_MODULE || 'puppeteer');
 assert.equal(AURA_TITLES.length, AVATAR.effects);
@@ -46,47 +43,80 @@ try {
     for (let effect = 0; effect < AVATAR.effects; effect++) {
       const result = await page.evaluate(effect => {
         const a = window.__hth.me.avatar;
+        const previous = a.aura.points?.userData.qiOwned ? a.aura.points : a.aura.points?.getObjectByName('aura-signature');
+        const resources = new Set();
+        previous?.traverse(p => { if (p.geometry) resources.add(p.geometry); if (p.material?.dispose) resources.add(p.material); });
+        let disposed = 0;
+        resources.forEach(r => r.addEventListener('dispose', () => disposed++));
         a.setLook(0, 6, 0, 1, 1, effect);
         a.aura.update(2, 0);
-        // Ảnh chụp trạng thái: vị trí/xoay từng khối, ma trận instance, đồng hồ shader và
-        // thuộc tính động — đủ bắt mọi kiểu chuyển động của các pháp tướng riêng.
-        const snapshot = () => {
-          const out = [];
-          a.aura.points?.traverse(o => {
-            out.push(...o.position.toArray(), ...o.rotation.toArray());
-            if (o.isInstancedMesh) out.push(...Array.from(o.instanceMatrix.array));
-            if (o.material?.uniforms?.time) out.push(o.material.uniforms.time.value);
-            const pos = o.geometry?.attributes.position;
-            if (pos && pos.usage !== 35044) out.push(...Array.from(pos.array).slice(0, 720));
-          });
-          return JSON.stringify(out);
-        };
-        const before = snapshot();
+        const seal = a.aura.points?.getObjectByName('aura-seal');
+        const signature = a.aura.points?.getObjectByName('aura-signature');
+        const swords = signature?.getObjectByName('aura-sword-formation');
+        const forms = signature?.getObjectByName('aura-manifestation')?.children[0];
+        const formBefore = forms && Array.from(forms.instanceMatrix.array);
+        const swordBefore = swords && Array.from(swords.instanceMatrix.array);
+        const positions = () => signature?.children.filter(p => p.geometry?.attributes.position)
+          .map(p => Array.from(p.geometry.attributes.position.array));
+        const before = JSON.stringify(positions());
         a.aura.update(3, 0);
-        const animated = before !== snapshot();
+        const animated = before !== JSON.stringify(positions());
+        const swordMotion = swords && JSON.stringify(swordBefore) !== JSON.stringify(Array.from(swords.instanceMatrix.array));
+        const formMotion = forms && JSON.stringify(formBefore) !== JSON.stringify(Array.from(forms.instanceMatrix.array));
         a.aura.update(2, 0);
-        let finite = true;
-        a.aura.points?.traverse(o => {
-          if (o.isInstancedMesh && ![...o.instanceMatrix.array].every(Number.isFinite)) finite = false;
-          for (const attr of Object.values(o.geometry?.attributes || {})) {
-            if (![...attr.array].every(Number.isFinite)) finite = false;
-          }
-        });
-        return { title: a.titleEl.textContent, hidden: a.titleEl.hidden,
-          name: a.aura.points?.name ?? null, animated,
-          finite, standing: !a.aura.points || a.aura.points.children.every(p => Number.isFinite(p.position.y)) };
+        const qi = a.aura.points?.userData.qiOwned;
+        return { title: a.titleEl.textContent, hidden: a.titleEl.hidden, qi,
+          qiLayers: qi && a.aura.points.children.length,
+          qiDepth: qi && a.aura.points.children.every(p => p.material.depthTest && !p.material.depthWrite),
+          seal: Boolean(seal), rotation: seal?.rotation.z,
+          animated, disposed: disposed === resources.size,
+          swordCount: swords?.count,
+          swordMotion,
+          formMotion, finiteForms: !forms || Array.from(forms.instanceMatrix.array).every(Number.isFinite),
+          formCount: forms?.count,
+          surfaceDepth: !forms || forms.material.depthWrite,
+          glowDepth: !forms || signature.getObjectByName('aura-surface-glow').material.depthWrite,
+          emblemSide: signature?.getObjectByName('aura-emblem').material.side,
+          finiteGeometry: !signature || positions().flat(2).every(Number.isFinite),
+          finite: !a.aura.points || a.aura.points.children.every(p => Number.isFinite(p.position.y)) };
       }, effect);
       assert.equal(result.title, AURA_TITLES[effect].title);
-      // Hệ không có danh hiệu (Long quyền) hoặc hệ 0: titleEl ẩn.
-      assert.equal(result.hidden, !AURA_TITLES[effect].title);
+      assert.equal(result.hidden, effect === 0);
+      assert.equal(result.seal, effect !== 0);
       assert.ok(result.finite);
-      assert.ok(result.standing);
-      if (effect) {
-        assert.ok(result.name?.endsWith('-aura'), `aura ${effect} has its own module (${result.name})`);
-        assert.ok(result.animated, `aura ${effect} must move`);
-      } else {
-        assert.equal(result.name, null);
-        assert.equal(result.animated, false);
+      assert.ok(result.disposed, 'replacing aura releases signature geometry and materials');
+      assert.ok(result.finiteGeometry);
+      if (result.qi) {
+        assert.equal(result.qiLayers, 3, 'qi replaces old layers instead of stacking them');
+        assert.ok(result.qiDepth, 'qi tests scene depth without writing transparent depth');
+      }
+      if (effect && !result.qi) assert.ok(result.animated, `aura ${effect} must move`);
+      if (effect && !result.qi) assert.ok(result.formMotion && result.finiteForms, `aura ${effect} needs moving finite 3D forms`);
+      if (effect && !result.qi) {
+        assert.ok(result.surfaceDepth, 'solid aura surfaces occlude hidden layers');
+        assert.equal(result.glowDepth, false, 'glow does not occlude transparent effects');
+        assert.equal(result.emblemSide, 0, 'flat emblem stays on the front face');
+        const motion = await page.evaluate(async () => {
+          const forms = window.__hth.me.avatar.aura.points.getObjectByName('aura-manifestation').children[0];
+          const flow = window.__hth.me.avatar.aura.points.getObjectByName('aura-flow');
+          const flowTime = flow.children[0].material.uniforms.time.value;
+          await new Promise(resolve => requestAnimationFrame(resolve));
+          const before = Array.from(forms.instanceMatrix.array);
+          await new Promise(resolve => setTimeout(resolve, 600));
+          const after = Array.from(forms.instanceMatrix.array);
+          return { finite: after.every(Number.isFinite), delta: Math.max(...after.map((v, i) => Math.abs(v - before[i]))),
+            flowing: flow.children.every(p => p.material.uniforms.time.value > flowTime && !p.material.depthWrite),
+            particles: flow.children[1].geometry.attributes.position.count,
+            fire: flow.children[0].material.uniforms.fire.value };
+        });
+        assert.ok(motion.finite && motion.delta > 0.02, `aura ${effect} must visibly animate in the live render loop`);
+        assert.ok(motion.flowing && motion.particles >= (effect === 4 ? 16 : 32), `aura ${effect} must advance mist and sparks together`);
+        assert.equal(motion.fire, effect === 4 ? 1 : 0, 'flame motion is isolated to the fire aura');
+      }
+      if (effect) assert.equal(result.rotation, result.qi ? 0 : -0.18);
+      if (effect === 6) {
+        assert.ok(result.swordCount >= 18, 'sword formation keeps its radial silhouette on low quality');
+        assert.ok(result.swordMotion, 'swords rotate and gather over time');
       }
       if (effect && !mobile && process.env.AVATAR_SCREENSHOT_DIR) {
         await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
@@ -106,33 +136,23 @@ try {
         }
       }
     }
-    // Giảm chuyển động: aura vẫn hiện và vẫn chuyển động chậm, không đứng hình.
     await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
     assert.equal(await page.evaluate(() => {
       const a = window.__hth.me.avatar;
-      a.setLook(0, 6, 0, 1, 1, 1);
       a.aura.update(10, 0);
-      return a.aura.points?.visible !== false && Boolean(a.aura.points?.children.length);
+      return a.aura.points.getObjectByName('aura-seal').rotation.z === 0;
     }), true);
     assert.equal(await page.evaluate(() => {
       const aura = window.__hth.me.avatar.aura;
-      const snapshot = () => {
-        const out = [];
-        aura.points?.traverse(o => {
-          out.push(...o.position.toArray(), ...o.rotation.toArray());
-          if (o.isInstancedMesh) out.push(...Array.from(o.instanceMatrix.array));
-          if (o.material?.uniforms?.time) out.push(o.material.uniforms.time.value);
-        });
-        return JSON.stringify(out);
-      };
+      const snapshot = () => aura.points.children.map(p => [...p.position.toArray(), ...p.rotation.toArray()]);
       aura.update(10, 0);
       const before = JSON.stringify(snapshot());
       aura.update(11, 0);
       return before !== JSON.stringify(snapshot());
     }), true, 'existing aura stays animated with reduced motion');
-    await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'no-preference' }]);
     await page.evaluate(() => {
       const a = window.__hth.me.avatar;
+      a.setLook(0, 6, 0, 1, 1, 1);
       a.say('Chúc bạn một ngày bình an');
       document.querySelectorAll('.tutorial').forEach(el => el.remove());
     });
@@ -147,7 +167,7 @@ try {
     await page.close();
   }
   assert.deepEqual(errors, []);
-  console.log(`PASS: all ${EFFECT_NAMES.length} aura/title states, desktop/mobile, dispose, finite data, reduced motion, clearing title, no page errors`);
+  console.log('PASS: all 9 aura/title states, desktop/mobile, surface depth, reduced motion, clearing title, no page errors');
 } finally {
   await browser?.close();
   const stopped = new Promise(resolve => server.once('exit', resolve));

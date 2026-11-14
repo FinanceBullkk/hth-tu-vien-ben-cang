@@ -77,11 +77,3 @@ Tiêu chí trước khi nhân sang hệ khác:
 Lượt nghiên cứu chưa sửa renderer. Lượt tiếp theo đã thêm ba lựa chọn độc lập
 ID 9–11: Xích diễm, Kim long, Kiếm vũ; xem `avatar-appearance.md`. Tám aura cũ
 giữ nguyên. Chưa triển khai game.
-
-Sau đó từng hệ đã được nâng thành pháp tướng riêng theo đúng bảng "Áp dụng tám hệ"
-(#67–#88, xem `git log`). Ngày 14/11/2026: Sen kim — hệ cuối còn nền inline cũ — nâng
-thành **Cửu Phẩm Kim Liên**, module riêng `client/src/player/vfx/sen-kim-aura.js`: đài sen
-ba tầng cuốn ngược ôm chân, gân cánh mảnh có dòng khí chảy, viền fresnel chọn lọc, cánh nở
-lệch nhịp, hoạt lộ lăn gân rồi rụng, bụi vàng dâng; bồ nhụy hé lộ sau lưng. Lớp inline
-vẽ tay canvas và chuỗi aura-signature/aura-manifestation/aura-flow/aura-sigil (từ V9–V10,
-chỉ còn hệ 1 dùng) được thanh lý.
