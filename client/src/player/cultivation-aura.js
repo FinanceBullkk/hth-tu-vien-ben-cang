@@ -12,6 +12,8 @@ const PALETTES = [
 PALETTES[10] = ['#ff4a2e', '#ffcf7a']; // Xích Diễm: đỏ son, viền vàng kim.
 PALETTES[11] = ['#f0ad2e', '#fff0bf']; // Kim Long: vàng kim, viền mây sáng.
 PALETTES[12] = ['#5fd6c4', '#e9fff9']; // Kiếm Vũ.
+PALETTES[13] = ['#f2b632', '#ff6b5e']; // Thần Bài: vàng kim, viền đỏ son.
+PALETTES[14] = ['#3fc6dc', '#ffe39a']; // Vua Câu Cá: lam biển, viền vàng.
 
 const groundGeometry = new THREE.PlaneGeometry(2.8, 2.8);
 groundGeometry.rotateX(-Math.PI / 2);

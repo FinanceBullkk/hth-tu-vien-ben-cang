@@ -1,7 +1,7 @@
 // Cửa hàng và tủ đồ: mua món ngoại hình bằng TEU, thay đồ ngay trong game.
 // Server là nguồn sự thật: client chỉ gửi id món hoặc bộ đồ muốn mặc, giá và quyền sở hữu do server kiểm tra.
 import { AVATAR } from '../shared/protocol.js';
-import { LOOK_SLOTS, canWear, parseItemId, priceOf } from '../shared/shop.js';
+import { LOOK_SLOTS, canWear, meetsRequirement, parseItemId, priceOf, requirementHave, requirementOf } from '../shared/shop.js';
 import { localDate } from './time.js';
 
 const LOOK_INTERVAL_MS = 1000;
@@ -32,10 +32,23 @@ export class Shop {
     const parsed = parseItemId(item);
     const price = priceOf(item);
     if (!parsed || price <= 0 || parsed.index >= SLOT_COUNT[parsed.slot]) return { ok: false, error: 'Món này không bán.' };
+    // Hào quang chí tôn: phải đạt thành tích trước (người đã có thì để db trả "đã có" như thường).
+    const req = requirementOf(item);
+    if (req && !this.owned(p.pid).has(item)) {
+      const progress = this.db.shop.progress(p.pid);
+      if (!meetsRequirement(item, progress)) {
+        return { ok: false, error: `Chưa đủ điều kiện: ${req.label} (đang ${requirementHave(item, progress)}/${req.need}).`, progress };
+      }
+    }
     const res = this.db.shop.buy(p.pid, item, price, localDate(now, this.config.timezone), now);
     if (res.owned) return { ok: true, already: true, item, teu: res.teu };
     if (res.poor) return { ok: false, error: `Còn thiếu ${price - res.teu} TEU, chơi thêm đã nhé.`, teu: res.teu };
     return { ok: true, item, price, teu: res.teu };
+  }
+
+  /** Tiến độ thành tích để sạp hiện "37/100" cho hào quang chí tôn. */
+  status(p) {
+    return { ok: true, progress: this.db.shop.progress(p.pid) };
   }
 
   /**

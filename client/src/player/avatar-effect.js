@@ -10,6 +10,9 @@
 // 7 Nguyệt bạch — trăng lưỡi liềm bạc treo sau vai, dải sao bạc nghiêng, bụi trăng rơi, chân ngôn 月;
 // 8 Hắc ám — hắc viêm lửa đen lõi tím vờn quanh người, vũng âm khí nuốt sáng, trận lục lăng, quỷ hỏa, chân ngôn 魔;
 // 9 Long Quyền — module riêng vfx/long-quyen-aura.js (hỏa long xoắn ốc vươn quyền, ấn quyền 拳, vết nứt chấn địa).
+// 13 Thần Bài, 14 Vua Câu Cá — hào quang chí tôn (cần thành tích mới mua): vfx/than-bai-aura.js
+// (quạt Thùng Phá Sảnh 3D, bánh xe Vận Mệnh, xúc xắc vàng, cao trào "tất tay") và vfx/vua-cau-ca-aura.js
+// (cá chép vàng 3D khổng lồ vượt sóng, cần câu Ngư Vương, đàn cá vọt, mặt biển, cao trào hoá rồng và thuỷ trụ).
 import * as THREE from 'three';
 import { createKiemVuAura } from './vfx/kiem-vu-aura.js';
 import { createTinhHaAura } from './vfx/tinh-ha-aura.js';
@@ -22,6 +25,8 @@ import { createHuyenDaAura } from './vfx/huyen-da-aura.js';
 import { createLongQuyenAura } from './vfx/long-quyen-aura.js';
 import { createXichDiemAura } from './vfx/xich-diem-aura.js';
 import { createKimLongAura } from './vfx/kim-long-aura.js';
+import { createThanBaiAura } from './vfx/than-bai-aura.js';
+import { createVuaCauCaAura } from './vfx/vua-cau-ca-aura.js';
 import { createAuraSignature } from './aura-signature.js';
 import { store } from '../ui/dom.js';
 
@@ -76,6 +81,13 @@ function petalTexture() {
     ctx.bezierCurveTo(14, 44, 12, 16, 32, 4);
     ctx.bezierCurveTo(52, 16, 50, 44, 32, 60);
     ctx.fill();
+    // Gân giữa mảnh: cánh dâng đọc được chiều cong thay vì mảng trắng dẹt.
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(32, 54);
+    ctx.quadraticCurveTo(29, 32, 32, 10);
+    ctx.stroke();
   });
 }
 
@@ -116,6 +128,8 @@ function swordTexture() {
 }
 
 // Kim đài sen: 12 cánh ngoài + 12 cánh trong so le + tâm đài, nhìn từ trên như đài Phật.
+// V10.4 nâng chất giữ bố cục: gân khắc trong từng cánh (giữa đậm, hai phụ mảnh), đốm sáng
+// chọn lọc ở đầu cánh ngoài, mép hòa mềm theo guideline "mép tan".
 function lotusTexture() {
   return canvasTex('lotus', 512, 512, (ctx) => {
     ctx.translate(256, 256);
@@ -133,6 +147,18 @@ function lotusTexture() {
       ctx.strokeStyle = `rgba(255,255,255,${alpha * 0.9})`;
       ctx.lineWidth = 3;
       ctx.stroke();
+      // Gân sống giữa và hai gân phụ cong nhẹ — cánh có sống, không dán hình.
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = `rgba(255,255,255,${alpha * 0.5})`;
+      ctx.beginPath(); ctx.moveTo(0, -len * 0.24); ctx.quadraticCurveTo(3, -len * 0.55, 0, -len * 0.86); ctx.stroke();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = `rgba(255,255,255,${alpha * 0.32})`;
+      for (const s of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(0, -len * 0.32);
+        ctx.quadraticCurveTo(s * spread * 0.42, -len * 0.56, s * spread * 0.2, -len * 0.84);
+        ctx.stroke();
+      }
     };
     for (let k = 0; k < 12; k++) {
       ctx.save();
@@ -146,6 +172,12 @@ function lotusTexture() {
       petal(225, 56, 0.95);
       ctx.restore();
     }
+    // Sáng chọn lọc: đốm nhỏ ở đỉnh mỗi cánh ngoài, đọc rõ nhịp cánh từ góc nào cũng thấy.
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    for (let k = 0; k < 12; k++) {
+      const a = (k / 12) * Math.PI * 2;
+      ctx.beginPath(); ctx.arc(Math.cos(a) * 218, Math.sin(a) * 218, 6, 0, Math.PI * 2); ctx.fill();
+    }
     const core = ctx.createRadialGradient(0, 0, 2, 0, 0, 60);
     core.addColorStop(0, 'rgba(255,255,255,1)');
     core.addColorStop(0.6, 'rgba(255,255,255,0.5)');
@@ -158,6 +190,7 @@ function lotusTexture() {
     ctx.lineWidth = 2;
     ctx.strokeStyle = 'rgba(255,255,255,0.8)';
     ctx.beginPath(); ctx.arc(0, 0, 66, 0, Math.PI * 2); ctx.stroke();
+    softEdge(ctx, 250, 0.8, 0.3); // mép cả đài hòa vào nền, không còn vành cứng
   });
 }
 
@@ -385,6 +418,9 @@ export function createEffect(effect, lowQuality = false) {
   if (effect === 10) return createXichDiemAura(lowQuality, reducedMotion);
   // 11: Kim Long Nguyệt Ảnh có pháp tướng riêng (rồng vàng vắt vòm qua đầu, long châu, nửa trăng, biển mây).
   if (effect === 11) return createKimLongAura(lowQuality, reducedMotion);
+  // 13, 14: hào quang chí tôn Thần Bài và Vua Câu Cá.
+  if (effect === 13) return createThanBaiAura(lowQuality, reducedMotion);
+  if (effect === 14) return createVuaCauCaAura(lowQuality, reducedMotion);
 
   const colors = PALETTES[effect - 1] ?? PALETTES[0];
   const group = new THREE.Group();
@@ -729,6 +765,8 @@ export function createEffect(effect, lowQuality = false) {
       if (signature) signature.dispose();
       geos.forEach((g) => g.dispose?.());
       parts.forEach(({ mat }) => mat.dispose());
+      // beginFade clone material chủ để mỗi nhân vật mờ dần riêng — bản clone cũng phải giải phóng.
+      if (group.material !== master) group.material.dispose();
       master.dispose();
     },
   };

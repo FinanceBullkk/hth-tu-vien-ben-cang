@@ -268,6 +268,7 @@ export class Room {
     }
     on('slot:spin', (p, data) => this.slot.spin(p, data));
     on('shop:buy', (p, data) => this.onBuy(p, data));
+    on('shop:progress', (p) => this.shop.status(p));
     on('look:set', (p, data) => this.onLook(p, data));
     on('trade:invite', (p, data) => this.trade.invite(p, data));
     on('trade:respond', (p, data) => this.trade.respond(p, data));

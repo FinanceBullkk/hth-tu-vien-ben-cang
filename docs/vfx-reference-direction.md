@@ -77,3 +77,40 @@ Tiêu chí trước khi nhân sang hệ khác:
 Lượt nghiên cứu chưa sửa renderer. Lượt tiếp theo đã thêm ba lựa chọn độc lập
 ID 9–11: Xích diễm, Kim long, Kiếm vũ; xem `avatar-appearance.md`. Tám aura cũ
 giữ nguyên. Chưa triển khai game.
+
+Sau đó các hệ lần lượt có pháp tướng riêng (#67–#88, xem `git log`). Ngày 14/11/2026:
+lượt nâng Sen kim theo hướng thay mới bị chủ dự án từ chối và đã revert — giữ nguyên
+bố cục gốc (đài sen, pháp trận, chân ngôn 禪, pháp giới, Ngọc Liên Bảo Tọa), chỉ nâng
+chất liệu (V10.4): gân khắc trong đài sen và cánh dâng, đốm sáng chọn lọc ở đầu cánh,
+mép hòa mềm, dòng khí trên cánh tòa sen 3D lệch pha từng cánh, viền sáng dồn về đầu
+cánh, âu đài quét ánh chậm; kèm sửa rò rỉ dispose bản clone material khi mờ dần.
+Bài học: nâng aura = nâng chất trên nhận diện đã duyệt, không thay silhouette.
+
+## Thần bài (effect 13): tham chiếu và bài học
+
+Ngày 14/11/2026, qua bốn bản; chủ dự án chấm từng bản:
+
+1. Đạo cụ phẳng (lá bài, phỉnh vẽ trên tấm phẳng): "cơ bản quá".
+2. Pháp tướng 3D dày lớp — quạt Thùng Phá Sảnh, lốc bài, xúc xắc, phỉnh, bàn cò quay, cao trào
+   tất tay: chỉ bị chê "bay nhanh quá". Đây là hướng đúng.
+3. Bản 2 làm rất chậm, thay lốc bài bằng vành bài: "nghiệp dư".
+4. Tối giản kiểu Art Deco (hào quang nan quạt, ba lá bài kình lực, lá Át khổng lồ): "xấu hơn", "cơ bản".
+
+Bản hiện tại lấy bản 2 làm gốc, tốc độ khoảng 60%, nhịp 10 giây; nâng chất liệu vàng (phản chiếu
+studio nhiều dải đèn, vân xước, kim tuyến lóe), quầng sáng sau lá bài, sao lóe; thêm pháp tướng phía
+sau **Vận Mệnh Luân** (bánh xe vận mệnh vàng khổng lồ, đèn sòng bài chạy đuổi, quay vòng may mắn lúc
+tất tay; mờ khi nhìn từ sau lưng để không che nhân vật của chính người chơi).
+
+Bài học cho các aura "chí tôn":
+
+- Chủ dự án muốn **hoành tráng, dày lớp, ra chất chủ đề ngay khi nhìn**; tối giản và tiết chế bị chê.
+- Chuyển động phải **vừa**: động nhưng không lộn nhào loạn (bản quá nhanh và bản quá chậm đều bị chê).
+- Chất lượng chất liệu quyết định cảm giác "đắt": vàng cần phản chiếu nhiều dải sáng và lấp lánh,
+  không để vàng phẳng một màu.
+- Vật lớn phía sau lưng phải mờ đi khi camera ở sau lưng (`onBeforeRender` đo hướng camera).
+- Hoành tráng nằm ở **vài khối lớn** (bánh xe, quạt bài, mặt bàn), không ở số lượng vật nhỏ bay quanh:
+  lốc 30 lá, phỉnh tung, mưa tiền, hạt dày bị chê "lộn xộn, nhìn như rác". Lúc thường chỉ để vài vật bay
+  có trật tự (ba xúc xắc); vật đông chỉ hiện lúc cao trào và phải xếp hàng ngay ngắn (vòng trận bài).
+
+Tham chiếu đã xem: [sketchbook realtimevfx — lá bài vỡ, lật theo lực cản](https://realtimevfx.com/t/bravepotatos-vfx-sketchbook/20382);
+hình tượng *God of Gamblers* (1989); ngôn ngữ Art Deco sòng bài (vàng trên đen, tia nan quạt).

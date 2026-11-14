@@ -53,6 +53,12 @@ function club(g) {
 // Cùng thứ tự với SUITS trong shared/xidach.js: ♠ ♣ ♦ ♥.
 const SHAPES = [spade, club, diamond, heart];
 
+/** Vạch đường viền một chất lên đối tượng có API kiểu canvas (moveTo, lineTo, bezierCurveTo, quadraticCurveTo,
+    arc, closePath) — dùng lại cùng hình chất cho khối 3D đúc vàng của hào quang Thần bài. */
+export function traceSuit(g, suit) {
+  SHAPES[suit](g);
+}
+
 /** Tô một chất tại (x, y), cao size px; flip = true thì quay ngược (nửa dưới lá bài). */
 export function drawSuit(g, suit, x, y, size, color, flip = false) {
   g.save();

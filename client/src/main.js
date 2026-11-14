@@ -47,6 +47,7 @@ import './ui/melody.css';
 import './ui/cultivation.css';
 import './ui/shop.css';
 import './ui/bag.css';
+import './ui/vip-name-board.css';
 import './ui/table-hud.css';
 import './ui/baucua.css';
 import './ui/casino-round-hud.css';

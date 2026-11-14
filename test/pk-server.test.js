@@ -59,6 +59,27 @@ test('hồi sinh đầy HP, bảo hộ 30 giây; tấn công phá khiên và g�
   assert.equal(b.combat.satKhiUntil, 0);
 });
 
+test('chiêu thức mang effect của kẻ ra chiêu, số liệu vẫn trùng baseline', () => {
+  const { pk, a, b, events } = fixture();
+  a.effect = 4;
+  assert.equal(pk.attack(a, { type: 'strike' }).isHit, true);
+  const strike = events.find(([name]) => name === 'pk:strike')[1];
+  assert.equal(strike.effect, 4);
+  assert.equal(strike.hits[0].damage, 20);
+  a.combat.cooldowns.dash = 0;
+  pk.attack(a, { type: 'dash', rot: 0 });
+  assert.equal(events.filter(([name]) => name === 'pk:skill').at(-1)[1].effect, 4);
+  a.combat.cooldowns.shield = 0;
+  pk.attack(a, { type: 'shield' });
+  assert.equal(events.filter(([name]) => name === 'pk:skill').at(-1)[1].effect, 4);
+  a.x = 0; a.z = 0;
+  a.combat.cooldowns.slashQ = 0;
+  pk.attack(a, { type: 'slashQ', rot: 0, aimDistance: 1.5 });
+  const slash = events.filter(([name]) => name === 'pk:skill').at(-1)[1];
+  assert.equal(slash.effect, 4);
+  assert.equal(slash.type, 'slashQ');
+});
+
 test('hộ thể giảm sát thương, lướt né tránh đòn và không phá bảo hộ', () => {
   const { pk, a, b } = fixture();
   b.combat = { hp: 100, cooldowns: {}, shieldUntil: 0, iframeUntil: 0, protectedUntil: Date.now() + 30_000, satKhiUntil: 0 };

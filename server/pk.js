@@ -1,6 +1,6 @@
 import { ACTIVITY } from '../shared/protocol.js';
 import { SPAWN, resolveCollision } from '../shared/layout.js';
-import { PK, PK_ATTACK, PK_SKILLS } from '../shared/pk.js';
+import { PK, PK_ATTACK, PK_SKILLS, pkKitForEffect } from '../shared/pk.js';
 
 const round2 = (n) => Math.round(n * 100) / 100;
 const fresh = () => ({ hp: PK.baseHp, cooldowns: {}, shieldUntil: 0, iframeUntil: 0, protectedUntil: 0, satKhiUntil: 0 });
@@ -17,8 +17,8 @@ export class PkGame {
     this.io.emit('pk:status', { sid: player.sid, ...this.state(player, now) });
     player.dirty = true;
   }
-  targets(attacker, type, center) {
-    const range = PK_ATTACK.range + 0.4;
+  targets(attacker, type, center, skill) {
+    const range = (skill?.range ?? PK_ATTACK.range) + 0.4;
     const fx = Math.sin(attacker.rot), fz = Math.cos(attacker.rot);
     const targets = [];
     for (const p of this.players.values()) {
@@ -27,8 +27,8 @@ export class PkGame {
       const forward = dx * fx + dz * fz;
       const d = Math.hypot(dx, dz);
       const aligned = type === 'strike'
-        ? d <= range && forward / (d || 1) >= PK_ATTACK.coneAngleCos
-        : Math.hypot(p.x - center.x, p.z - center.z) <= PK_SKILLS.slashQ.burstRadius;
+        ? d <= range && forward / (d || 1) >= (skill?.coneAngleCos ?? PK_ATTACK.coneAngleCos)
+        : Math.hypot(p.x - center.x, p.z - center.z) <= (skill?.burstRadius ?? PK_SKILLS.slashQ.burstRadius);
       if (aligned) targets.push({ player: p, distance: d });
     }
     targets.sort((a, b) => a.distance - b.distance);
@@ -40,7 +40,8 @@ export class PkGame {
     if (!player.socket || player.activity !== ACTIVITY.none) return { ok: false, error: 'Đang bận.' };
     const now = Date.now();
     const c = player.combat ??= fresh();
-    const skill = type === 'strike' ? PK_ATTACK : PK_SKILLS[type];
+    const kit = pkKitForEffect(player.effect);
+    const skill = type === 'strike' ? (kit.skills.attack ?? PK_ATTACK) : kit.skills[type];
     if (data?.rot !== undefined && (!Number.isFinite(data.rot) || Math.abs(data.rot) > 1e6)) {
       return { ok: false, error: 'Hướng đánh không hợp lệ.' };
     }
@@ -58,12 +59,12 @@ export class PkGame {
       const pos = resolveCollision(fromX + Math.sin(player.rot) * skill.distance, fromZ + Math.cos(player.rot) * skill.distance);
       player.x = round2(pos.x); player.z = round2(pos.z); player.anim = 0; player.dirty = true;
       c.iframeUntil = now + skill.iframe;
-      this.io.emit('pk:skill', { type, attackerSid: player.sid, fromX, fromZ, toX: player.x, toZ: player.z, rot: player.rot, at: now });
+      this.io.emit('pk:skill', { type, attackerSid: player.sid, effect: player.effect, fromX, fromZ, toX: player.x, toZ: player.z, rot: player.rot, at: now });
       return { ok: true, type, x: player.x, z: player.z, cooldownUntil: c.cooldowns[type] };
     }
     if (type === 'shield') {
       c.shieldUntil = now + skill.duration;
-      this.io.emit('pk:skill', { type, attackerSid: player.sid, duration: skill.duration, at: now });
+      this.io.emit('pk:skill', { type, attackerSid: player.sid, effect: player.effect, duration: skill.duration, at: now });
       return { ok: true, type, cooldownUntil: c.cooldowns[type] };
     }
     // Xuất chiêu gây hại phá bảo hộ, kể cả khi đòn trượt.
@@ -75,7 +76,7 @@ export class PkGame {
     const center = type === 'slashQ'
       ? { x: round2(player.x + Math.sin(player.rot) * aimDistance), z: round2(player.z + Math.cos(player.rot) * aimDistance) }
       : null;
-    const targets = this.targets(player, type, center);
+    const targets = this.targets(player, type, center, skill);
     const hits = [];
     for (const target of targets) {
       const hitX = target.x, hitZ = target.z;
@@ -101,7 +102,7 @@ export class PkGame {
       hits.push({ sid: target.sid, x: hitX, z: hitZ, damage, targetHp });
     }
     const first = hits[0];
-    const event = { type, attackerSid: player.sid, targetSid: first?.sid, isHit: hits.some((hit) => hit.damage > 0),
+    const event = { type, attackerSid: player.sid, effect: player.effect, targetSid: first?.sid, isHit: hits.some((hit) => hit.damage > 0),
       damage: first?.damage ?? 0, targetHp: first?.targetHp, hits,
       fromX: player.x, fromZ: player.z, rot: player.rot, at: now };
     if (type === 'slashQ') {
