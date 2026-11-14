@@ -307,9 +307,12 @@ export function createAuraSignature(effect, lowQuality) {
     ], lowQuality ? 24 : 40);
     geometries.push(dishGeo);
     lotusMats = [];
-    const lotusVert = `varying vec2 vUv; varying vec3 vTint;
+    const lotusVert = `varying vec2 vUv; varying vec3 vTint; varying float vSeed;
       void main(){
         vUv = uv;
+        // V10.4: seed lệch pha từng cánh (tầng giữa so le sẵn) — dòng khí trên gân không
+        // đồng loạt một nhịp nữa, cánh nở lệch nhịp đọc rõ ở chất liệu.
+        vSeed = float(gl_InstanceID) * 1.37;
         #ifdef USE_INSTANCING_COLOR
           vTint = instanceColor;
         #else
@@ -330,12 +333,12 @@ export function createAuraSignature(effect, lowQuality) {
         return { mesh, cfg, tier };
       });
     } else {
-      // Cánh sen: gradient gốc vàng ấm → đầu ngọc, gân chính + gân phụ có dòng khí chạy,
-      // viền sáng mảnh; đầu cánh trong nhẹ đọc được chồng lớp; mặt sau tối hơn cho dày.
+      // Cánh sen: gradient gốc vàng ấm → đầu ngọc, gân chính + gân phụ có dòng khí chạy
+      // LỆCH PHA TỪNG CÁNH (vSeed), viền sáng dồn về đầu cánh; mặt sau tối hơn cho dày.
       lotusPetalMat = new THREE.ShaderMaterial({
         uniforms: { fade: { value: 1 }, time: { value: 0 }, glow: { value: 0 } },
         vertexShader: lotusVert,
-        fragmentShader: `uniform float fade, time, glow; varying vec2 vUv; varying vec3 vTint;
+        fragmentShader: `uniform float fade, time, glow; varying vec2 vUv; varying vec3 vTint; varying float vSeed;
         void main(){
           float u = vUv.x, v = vUv.y;
           // Palette Sen Kim: gốc vàng ấm ~30% chiều cánh, thân và đầu ngọc bích chủ đạo.
@@ -343,14 +346,14 @@ export function createAuraSignature(effect, lowQuality) {
           vec3 base = mix(goldC, jadeC, smoothstep(.1, .48, v));
           base = mix(base, tipC, smoothstep(.55, 1., v) * .65);
           vec3 col = base * vTint * mix(.88, 1.15, smoothstep(0., .5, v));
-          // Gân: sống giữa đậm + hai gân phụ; dòng khí vàng chạy root → tip theo nhịp.
+          // Gân: sống giữa đậm + hai gân phụ mảnh hơn; dòng khí vàng chạy root → tip lệch pha.
           float mid = 1. - abs(u * 2. - 1.);
           float spine = pow(mid, 6.);
-          float side = pow(max(0., 1. - abs(abs(u * 2. - 1.) - .45) / .16), 2.) * .5;
-          float qi = pow(.5 + .5 * sin(v * 9. - time * 1.6), 6.) * .35;
+          float side = pow(max(0., 1. - abs(abs(u * 2. - 1.) - .45) / .12), 2.) * .5;
+          float qi = pow(.5 + .5 * sin(v * 9. - time * 1.6 + vSeed), 6.) * .35;
           col += vec3(1., .92, .55) * (spine * .55 + side * .3) * (.55 + qi);
-          // Viền phát quang mảnh, mặt sau tối hơn — cánh có thể tích, không tinh thể.
-          col += vec3(.9, 1., .92) * pow(abs(u * 2. - 1.), 5.) * .22;
+          // Viền phát quang mảnh dồn về đầu cánh (sáng chọn lọc); mặt sau tối hơn cho dày.
+          col += vec3(.9, 1., .92) * pow(abs(u * 2. - 1.), 5.) * .22 * (.7 + .3 * smoothstep(.5, 1., v));
           if (!gl_FrontFacing) col *= .82;
           float alpha = mix(1., .82, smoothstep(.55, 1., v));
           gl_FragColor = vec4(col * (1. + glow * .3), alpha * fade);
@@ -370,6 +373,9 @@ export function createAuraSignature(effect, lowQuality) {
           vec3 col = mix(deepC, lightC, smoothstep(.1, .5, vUv.y));
           float pulse = pow(.5 + .5 * sin(time * .785398), 3.);
           col += lightC * pulse * (1. - vUv.y) * .22;
+          // V10.4: vệt ánh quét chậm quanh âu đài (uv.x chạy vòng Lathe) — đài sống động
+          // mà không lóe gắt.
+          col += lightC * pow(.5 + .5 * cos(vUv.x * 12.566 - time * .4), 18.) * .16;
           gl_FragColor = vec4(col, fade);
         }`,
         transparent: true, side: THREE.DoubleSide, toneMapped: false,
