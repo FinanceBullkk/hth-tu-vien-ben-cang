@@ -1,6 +1,6 @@
 /* DANH HIỆU CHÍ TÔN KIỂU VÕ LÂM CHI MỘNG — chỉ người đeo hào quang chí tôn (avatar-title.js đặt .tag[data-board]).
-   Từ trên xuống: danh hiệu chữ viết tay tô màu viền tối, hai bên đồ trang trí đúng chủ đề (bài + phỉnh / cá chép);
-   dòng hiệu phụ chữ xanh ngọc viền đen với ô ấn vàng chữ đỏ treo bên trái; tên chữ trắng viền đen, không khung.
+   Từ trên xuống: danh hiệu chữ viết tay tô màu viền tối, hai bên đồ trang trí kiếm hiệp Hồng Kông đúng chủ đề;
+   dòng hiệu phụ chữ xanh ngọc viền đen với con dấu son chữ Hán treo bên trái; tên chữ trắng viền đen, không khung.
    Cấu trúc ở client/src/player/vip-title-badge.js. */
 
 .tag[data-board="than-bai"] {
@@ -47,7 +47,7 @@
   animation: vttSweep 3.6s ease-in-out infinite;
 }
 
-/* Đồ trang trí hai bên (xấp bài + phỉnh / cá chép nhảy sóng; SVG đã lật sẵn cho bên phải). Đứng yên để vector vẽ
+/* Đồ trang trí hai bên (mây vàng, xúc xắc, nguyên bảo / sóng, cần trúc, cá chép; SVG lật sẵn bên phải). Đứng yên để vector vẽ
    nét sắc (xoay cả khối thì trình duyệt vẽ lại thành ảnh nên nhoè); chỉ các chi tiết bên trong SVG chuyển động. */
 .vtt-side { display: block; width: 60px; height: 36px; line-height: 0; }
 .vtt-wing { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 1px 0 rgba(0, 0, 0, .75)); }
@@ -71,33 +71,32 @@
   font: 700 14.5px/1.25 "Times New Roman", var(--serif); color: #7cfbe6; text-shadow: var(--vt-ink);
 }
 .vtt-seal {
-  position: absolute; right: 100%; top: 1px; margin-right: 8px; min-width: 25px; height: 25px; padding: 0 2px; box-sizing: border-box;
-  display: grid; place-items: center; border: 2px solid #2a1000; border-radius: 3px;
-  background: radial-gradient(circle at 35% 30%, #fffbd8, transparent 55%), linear-gradient(180deg, #fff3a0, #ffcf2a 45%, #e08a08);
-  box-shadow: inset 0 0 0 1px #fff6c0, inset 0 0 0 2.5px #b86a00, 0 1.5px 0 rgba(0, 0, 0, .8);
-  font: 700 10.5px/1 "Segoe Script", "Brush Script MT", var(--serif); letter-spacing: -.03em; color: #c40818;
+  /* Con dấu son kiểu ấn triện: nền đỏ son, viền đôi, chữ Hán trắng nét Khải thư, hơi nghiêng như vừa đóng. */
+  position: absolute; right: 100%; top: 0; margin-right: 8px; width: 25px; height: 25px; box-sizing: border-box;
+  display: grid; place-items: center; border: 1.5px solid #fff1e0; border-radius: 3px; transform: rotate(-6deg);
+  background: radial-gradient(circle at 30% 25%, #ef3a2a, transparent 60%), #b8140e;
+  box-shadow: 0 0 0 1.5px #5a0400, 0 2px 0 rgba(0, 0, 0, .6);
+  font: 700 15px/1 "KaiTi", "STKaiti", "Kaiti SC", "Kaiti TC", "BiauKai", "Microsoft YaHei", serif; color: #fff4e6;
   text-shadow: none; /* không kế thừa viền đen của dòng hiệu phụ */
 }
 
-/* Chuyển động bên trong đồ trang trí: phỉnh lật, nguyên bảo loé, cá nhấp nhô, giọt nước lấp lánh. */
-.vtto-flip, .vtto-bob { transform-box: fill-box; transform-origin: center; }
-.vtto-flip { animation: vttoFlip 2.4s ease-in-out infinite; }
+/* Chuyển động bên trong đồ trang trí: tiền xu đung đưa, nguyên bảo loé, cá nhấp nhô, giọt nước lấp lánh. */
+.vtto-bob { transform-box: fill-box; transform-origin: center; }
+.vtto-swing { transform-box: fill-box; transform-origin: 50% 0; animation: vttoSwing 2.4s ease-in-out infinite alternate; }
 .vtto-bob { animation: vttoBob 2.2s ease-in-out infinite alternate; }
 .vtto-glint { animation: vttoGlint 2.6s ease-in-out infinite; }
 .vtto-drop { animation: vttoGlint 1.8s ease-in-out infinite; }
 .vtto-drop:nth-of-type(2) { animation-delay: .6s; }
 .vtto-drop:nth-of-type(3) { animation-delay: 1.2s; }
 
-/* Sao theo chủ đề: Thần bài là chất bài vàng ♠ ♥ ♦ bật lên; Vua câu cá là bọt nước nổi. */
+/* Sao theo chủ đề: Thần bài là đồng xu vàng lỗ vuông bật lên; Vua câu cá là bọt nước nổi. */
 .tag[data-board="than-bai"] .vtt-star {
-  width: 12px; height: 12px; margin: -6px 0 0 -6px; background: none; text-align: center;
-  font: 700 11px/12px var(--serif); color: #ffd84a;
-  text-shadow: 1px 0 0 #4a1a00, -1px 0 0 #4a1a00, 0 1px 0 #4a1a00, 0 -1px 0 #4a1a00;
+  width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
+  background:
+    linear-gradient(#4a2000, #4a2000) center / 3px 3px no-repeat,
+    radial-gradient(circle at 38% 32%, #fffbe0 0 18%, #ffcc2a 45%, #b06a00 70%, #3a1600 74%, transparent 78%);
   animation-name: vttSuit;
 }
-.tag[data-board="than-bai"] .vtt-star.s1::before { content: '\2660\FE0E'; }
-.tag[data-board="than-bai"] .vtt-star.s2::before { content: '\2665\FE0E'; }
-.tag[data-board="than-bai"] .vtt-star.s3::before { content: '\2666\FE0E'; }
 .tag[data-board="vua-cau-ca"] .vtt-star {
   width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px;
   background:
@@ -106,7 +105,7 @@
   animation-name: vttBubble;
 }
 
-@keyframes vttoFlip { 0%, 40%, 100% { transform: scaleX(1); } 55% { transform: scaleX(.12); } 70% { transform: scaleX(-1); } 85% { transform: scaleX(.12); } }
+@keyframes vttoSwing { from { transform: rotate(-9deg); } to { transform: rotate(9deg); } }
 @keyframes vttoBob { from { transform: translateY(1px) rotate(2deg); } to { transform: translateY(-1.8px) rotate(-3deg); } }
 @keyframes vttoGlint { 0%, 100% { opacity: .1; } 40% { opacity: 1; } }
 @keyframes vttSuit {
@@ -136,5 +135,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vtt-text, .vtt-star, .vtto-flip, .vtto-bob, .vtto-glint, .vtto-drop { animation: none; }
+  .vtt-text, .vtt-star, .vtto-swing, .vtto-bob, .vtto-glint, .vtto-drop { animation: none; }
 }
