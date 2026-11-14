@@ -1,6 +1,27 @@
 # Deployment
 
-## Current release: 2026-11-14 Xianxia monastery and casino redesign, 05:08 UTC+7
+## Current release: 2026-11-14 Thần bài and Vua câu cá supreme auras, PK kits per aura, 20:27 UTC+7
+
+Deploy run [43599793921](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43599793921)
+released main `3f32ead` as `hth:261114-2027-3f32ead`, replacing
+`hth:261114-0508-127a9aa`. Includes PR #96 (two supreme auras for 888 TEU each that
+require an achievement: Thần bài, effect 13, for 100 casino wins, with a fortune
+wheel, royal-flush fan, gold dice and an "all-in" climax; Vua câu cá, effect 14, for
+a complete fish book, with a giant golden carp, Ngư Vương rod, leaping fish, sea and
+a dragon-carp climax; plus wuxia-style name tags with glowing side ornaments and a
+red seal), PR #97 and PR #98 (Sen kim reworked, then reverted to its original layout
+with material upgrades), PR #99 (PK skill kit per aura) and PR #100 (PK attack poses
+per aura). Public bundle `index-B6Eo3Nig.js`, confirmed served at
+`https://game.hthlogistics.top/` with `/api/health` 200.
+
+Docker tests 427/427. Candidate passed with DB `quick_check` ok (57 players,
+24 wishes, 105 fish).
+
+Rollback container `hth-rollback-261114-2027-3f32ead` preserves
+`hth:261114-0508-127a9aa`. Private backup is in the data volume at
+`backups/cutover-261114-2027-3f32ead/`.
+
+## Previous release: 2026-11-14 Xianxia monastery and casino redesign, 05:08 UTC+7
 
 Deploy run [43516697923](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43516697923)
 released main `127a9aa` as `hth:261114-0508-127a9aa`, replacing
