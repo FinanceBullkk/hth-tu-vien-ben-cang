@@ -1,6 +1,7 @@
 // Túi đồ kiểu game thùng đồ: khung gỗ, cột Thông tin bên trái, lưới 7 x 7 ô bên phải với hai thẻ Cá / Đạo cụ.
 // Rê chuột (hoặc chạm) vào ô để xem bảng chi tiết; chọn ô rồi bán, khoá, hay mua cần ở thanh dưới.
 // Server quyết định mọi thứ: bán theo id món, giá đã chốt lúc câu; client chỉ vẽ lại theo kết quả trả về.
+import { fishById } from '../../../shared/fish-catalog.js';
 import { BAG_SORTS, bagValue, itemRarity, quickSellable, sortBag } from '../../../shared/fish-bag.js';
 import { FISH_RODS, THINH } from '../../../shared/fish-gear.js';
 import { buyGear, sellItems, toggleLock } from './bag-actions.js';
@@ -15,8 +16,9 @@ const CONFIRM_MS = 3000;
 const QUICK_LABELS = { 1: 'Thường', 2: 'Quý trở xuống', 3: 'Hiếm trở xuống', 4: 'Sử thi trở xuống' };
 let active = null;
 
-const art = (svg) => {
-  const el = h('span', { class: 'bagx-art' });
+/** tilt: cá thật xoay chéo cho to bằng ô vuông, như icon vật phẩm; đồ thất lạc và đồ câu giữ thẳng. */
+const art = (svg, tilt = false) => {
+  const el = h('span', { class: `bagx-art${tilt ? ' tilt' : ''}` });
   el.innerHTML = svg; // SVG dựng từ hằng số và bảng ngoại hình trong mã
   return el;
 };
@@ -39,7 +41,7 @@ export function openBag(app, tab = 'fish') {
     fish: h('button', { type: 'button', class: 'bagx-tab' }, inkIcon('fish'), h('span', {}, 'Cá')),
     gear: h('button', { type: 'button', class: 'bagx-tab' }, inkIcon('bag'), h('span', {}, 'Đạo cụ')),
   };
-  const sortBtn = h('button', { type: 'button', class: 'bagx-btn small' });
+  const sortBtn = h('button', { type: 'button', class: 'bagx-btn sort', title: 'Đổi cách xếp: mới câu, giá cao, phẩm chất' });
   const capEl = h('span', { class: 'bagx-cap' });
   const teuEl = h('b', {});
   const actions = h('div', { class: 'bagx-actions' });
@@ -49,7 +51,7 @@ export function openBag(app, tab = 'fish') {
   const quick = h('div', { class: 'bagx-quick' }, h('span', {}, 'Bán nhanh'), quickSel, quickBtn);
   const tip = h('div', { class: 'bagx-tip', role: 'tooltip', hidden: true });
   const bagSec = h('section', { class: 'bagx-bag' },
-    h('div', { class: 'bagx-bag-head' }, h('div', { class: 'bagx-label' }, 'Túi'), sortBtn, capEl),
+    h('div', { class: 'bagx-bag-head' }, h('div', { class: 'bagx-title' }, 'Túi'), sortBtn, capEl),
     h('div', { class: 'bagx-mid' }, grid, h('nav', { class: 'bagx-tabs' }, tabs.fish, tabs.gear)),
     h('div', { class: 'bagx-foot' }, h('span', { class: 'bagx-coin' }, inkIcon('coin'), teuEl, h('small', {}, 'TEU')), actions, quick));
 
@@ -65,14 +67,15 @@ export function openBag(app, tab = 'fish') {
   function slotOf(entry) {
     const { kind } = entry;
     const svg = kind === 'fish' ? fishPortraitSvg(entry.item.ref) : kind === 'rod' ? rodGlyphSvg(entry.tier) : thinhGlyphSvg();
-    const label = kind === 'fish' ? `${entry.item.weight.toLocaleString('vi-VN')}kg`
+    // Góc ô ghi giá bán (thứ hay so nhất khi dọn túi); cân nặng xem trong bảng chi tiết.
+    const label = kind === 'fish' ? String(entry.item.price)
       : kind === 'thinh' ? `×${entry.count}` : entry.inUse ? 'Dùng' : entry.owned ? '' : `${FISH_RODS[entry.tier].price}`;
     const dim = kind === 'rod' && !entry.owned;
     const slot = h('button', {
       type: 'button', role: 'option', 'data-key': entry.key, 'data-rarity': String(entry.rarity),
       class: `bagx-slot filled${selected === entry.key ? ' on' : ''}${dim ? ' dim' : ''}`,
       style: `--rc:${rarityColor(entry.rarity)}`, 'aria-selected': String(selected === entry.key),
-    }, art(svg), label ? h('em', {}, label) : '', kind === 'fish' && entry.item.locked ? h('i', { class: 'bagx-lock', 'aria-label': 'Đang khoá' }) : '');
+    }, art(svg, kind === 'fish' && fishById(entry.item.ref)?.bait != null), label ? h('em', { class: kind === 'fish' ? 'price' : '' }, label) : '', kind === 'fish' && entry.item.locked ? h('i', { class: 'bagx-lock', 'aria-label': 'Đang khoá' }) : '');
     slot.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') { hover = { entry }; placeTip(); } });
     slot.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') { hover = null; placeTip(); } });
     slot.addEventListener('click', () => { selected = selected === entry.key ? null : entry.key; pinned = null; armed = null; render(); });
@@ -152,12 +155,18 @@ export function openBag(app, tab = 'fish') {
 
   function render() {
     if (selected && !findEntry(selected)) selected = null;
-    renderInfoPanel(info, { name: app.myName, bag, onHover: (entry, pin) => { if (pin) pinned = pinned?.key === entry?.key ? null : entry; else hover = entry && { entry }; placeTip(); } });
+    renderInfoPanel(info, {
+      name: app.myName,
+      bag,
+      bait: app.activities.fishing?.bait,
+      onHover: (entry, pin) => { if (pin) pinned = pinned?.key === entry?.key ? null : entry; else hover = entry && { entry }; placeTip(); },
+      onPick: (id) => { tabNow = 'fish'; selected = `f${id}`; hover = null; pinned = null; armed = null; render(); },
+    });
     for (const [id, el] of Object.entries(tabs)) el.classList.toggle('on', id === tabNow);
     const list = entries();
     const empty = Math.max(0, bag.capacity - list.length);
     grid.replaceChildren(...list.map(slotOf), ...Array.from({ length: empty }, () => h('span', { class: 'bagx-slot', 'aria-hidden': 'true' })));
-    sortBtn.textContent = `Sắp xếp: ${BAG_SORTS.find((s) => s.id === sortId)?.label ?? BAG_SORTS[0].label}`;
+    sortBtn.replaceChildren('Sắp xếp túi', h('small', {}, BAG_SORTS.find((s) => s.id === sortId)?.label ?? BAG_SORTS[0].label));
     sortBtn.hidden = tabNow !== 'fish';
     capEl.textContent = `${bag.items.length} / ${bag.capacity}`;
     capEl.classList.toggle('full', bag.full);

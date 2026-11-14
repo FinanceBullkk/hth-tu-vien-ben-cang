@@ -50,6 +50,13 @@ const ANGLER_TITLES = [
 ];
 export const anglerTitle = (species) => ANGLER_TITLES.find((t) => species >= t.species).title;
 
+/** Danh hiệu kế tiếp và số loài cần có; null khi đã lên bậc cao nhất. */
+export function nextAnglerTitle(species) {
+  const next = [...ANGLER_TITLES].reverse().find((t) => t.species > species);
+  const now = ANGLER_TITLES.find((t) => species >= t.species);
+  return next ? { title: next.title, species: next.species, from: now.species } : null;
+}
+
 /** Đọc danh sách id món client gửi lên: số nguyên dương, không trùng, tối đa bằng sức chứa túi. */
 export function readItemIds(raw) {
   if (!Array.isArray(raw) || raw.length === 0 || raw.length > BAG.capacity) return null;

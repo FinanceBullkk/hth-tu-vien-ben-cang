@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { Db } from '../server/db.js';
 import { Fishing } from '../server/fishing.js';
 import { FISH, FISH_RARITY, MAX_RARITY, fightGreen, fightTune, fishRoll } from '../shared/fish.js';
-import { BAG, anglerTitle, quickSellable, readItemIds, sortBag } from '../shared/fish-bag.js';
+import { BAG, anglerTitle, nextAnglerTitle, quickSellable, readItemIds, sortBag } from '../shared/fish-bag.js';
 import { FISH_RODS, THINH } from '../shared/fish-gear.js';
 import { FISH_LOOKS } from '../client/src/scene/fish-looks.js';
 
@@ -188,6 +188,8 @@ test('xếp túi, bán nhanh theo phẩm chất, danh hiệu ngư phủ, đọc 
   assert.equal(anglerTitle(0), 'Tân thủ');
   assert.equal(anglerTitle(12), 'Lão ngư');
   assert.equal(anglerTitle(99), 'Ngư vương');
+  assert.deepEqual(nextAnglerTitle(12), { title: 'Ngư sư', species: 15, from: 10 }, 'thanh lên hạng đo từ bậc hiện tại');
+  assert.equal(nextAnglerTitle(20), null, 'bậc cao nhất thì hết thanh');
   assert.deepEqual(readItemIds([3, 3, 7]), [3, 7]);
   assert.equal(readItemIds([3, 'x']), null);
 });

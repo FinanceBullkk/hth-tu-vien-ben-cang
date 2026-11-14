@@ -3,7 +3,7 @@
 import { FISH_RARITY, fishById } from '../../../shared/fish-catalog.js';
 import { BAG_TAGS } from '../../../shared/fish-bag.js';
 import { THINH, rodOf } from '../../../shared/fish-gear.js';
-import { fishHint } from '../../../shared/fish.js';
+import { BAITS, fishForBait, fishHint } from '../../../shared/fish.js';
 import { h } from './dom.js';
 
 const kg = (v) => `${v.toLocaleString('vi-VN')} kg`;
@@ -85,9 +85,20 @@ function thinhTip(count) {
   ];
 }
 
-/** Nội dung bảng chi tiết cho một ô: { kind: 'fish', item } | { kind: 'rod', tier, owned, inUse } | { kind: 'thinh', count }. */
+function baitTip(baitId) {
+  const bait = BAITS.find((b) => b.id === baitId) ?? BAITS[0];
+  return [
+    line('Tên', colored(bait.name, rarityColor(1))),
+    line('Loại', 'Mồi câu · miễn phí'),
+    line('Hay cắn', fishForBait(bait.id).join(', '), 'stat'),
+    h('p', { class: 'bag-tip-note' }, 'Đổi mồi ở hồ (phím Q) để gặp loài khác.'),
+  ];
+}
+
+/** Nội dung bảng chi tiết cho một ô: { kind: 'fish', item } | { kind: 'rod', tier, owned, inUse } | { kind: 'thinh', count } | { kind: 'bait', bait }. */
 export function tipContent(entry) {
   if (entry.kind === 'rod') return rodTip(entry.tier, entry);
+  if (entry.kind === 'bait') return baitTip(entry.bait);
   if (entry.kind === 'thinh') return thinhTip(entry.count);
   return fishTip(entry.item);
 }
