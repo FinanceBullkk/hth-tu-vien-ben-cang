@@ -79,20 +79,6 @@ export function cardAtlas() {
   });
 }
 
-/** Mặt phỉnh dạng mặt nạ kênh màu: R = nền (tô màu phỉnh), G = vạch và vòng trắng, B = khảm vàng (chữ 財). */
-export function chipMaskTexture() {
-  return canvasTexture('than-bai-chip-mask', 256, ({ c }) => {
-    c.beginPath(); c.arc(0, 0, 500, 0, Math.PI * 2); c.fillStyle = '#ff0000'; c.fill();
-    for (let i = 0; i < 8; i++) {
-      c.save(); c.rotate(i * Math.PI / 4); c.fillStyle = '#00ff00'; c.fillRect(-55, -500, 110, 130); c.restore();
-    }
-    c.beginPath(); c.arc(0, 0, 330, 0, Math.PI * 2); c.lineWidth = 30; c.strokeStyle = '#0000ff'; c.stroke();
-    c.beginPath(); c.arc(0, 0, 290, 0, Math.PI * 2); c.lineWidth = 10; c.strokeStyle = '#00ff00'; c.stroke();
-    c.fillStyle = '#0000ff'; c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.font = `380px ${CJK_FONT}`; c.fillText('財', 0, 24);
-  });
-}
-
 // Mặt xúc xắc: atlas 3×3 (dùng 6 ô). Nền trắng = thân vàng, chấm đỏ = hồng ngọc (shader tô màu).
 export const DICE_ATLAS = 3;
 const PIPS = {

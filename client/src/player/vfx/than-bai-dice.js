@@ -3,7 +3,7 @@ import { bell } from './aura-rhythm.js';
 import { diceFragment, instancedLayer, litMaterial } from './vip-aura-shaders.js';
 import { DICE_ATLAS, diceAtlas } from './than-bai-textures.js';
 
-// Ba xúc xắc vàng ròng của Thần bài: khối bo góc, chấm hồng ngọc; bay vòng ngang hông, lộn nhào chậm,
+// Ba xúc xắc vàng ròng của Thần bài: khối bo góc, chấm hồng ngọc; trôi vòng ngang hông, đứng nghiêng xoay chậm,
 // lúc "tất tay" cùng nảy vọt lên và chấm đỏ rực sáng. Mặt đối nhau cộng bằng 7 như xúc xắc thật.
 export const DICE = { radius: 1.0, y: 0.6, size: 0.17 };
 // Thứ tự nhóm mặt của BoxGeometry: +x, -x, +y, -y, +z, -z → số chấm.
@@ -46,7 +46,8 @@ export function createThanBaiDice(parent, colors, lowQuality) {
       for (let i = 0; i < 3; i++) {
         const a = i / 3 * Math.PI * 2 - time * 0.24;
         p.set(Math.sin(a) * DICE.radius, DICE.y + 0.08 * Math.sin(time * 0.8 + i * 2) + 0.6 * jump, Math.cos(a) * DICE.radius);
-        q.setFromEuler(e.set(time * (0.4 + i * 0.1) + i, time * 0.3 + i * 2, time * (0.24 + i * 0.08) + jump * Math.PI * 2));
+        // Đứng nghiêng kiểu trưng bày (lộ ba mặt), chỉ xoay chậm quanh trục đứng; tất tay mới lật một vòng.
+        q.setFromEuler(e.set(0.62 + jump * Math.PI * 2, time * 0.35 + i * 2.1, 0.785, 'YXZ'));
         dice.set(i, m.compose(p, q, s), f);
       }
       dice.commit();

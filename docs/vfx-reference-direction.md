@@ -108,6 +108,9 @@ Bài học cho các aura "chí tôn":
 - Chất lượng chất liệu quyết định cảm giác "đắt": vàng cần phản chiếu nhiều dải sáng và lấp lánh,
   không để vàng phẳng một màu.
 - Vật lớn phía sau lưng phải mờ đi khi camera ở sau lưng (`onBeforeRender` đo hướng camera).
+- Hoành tráng nằm ở **vài khối lớn** (bánh xe, quạt bài, mặt bàn), không ở số lượng vật nhỏ bay quanh:
+  lốc 30 lá, phỉnh tung, mưa tiền, hạt dày bị chê "lộn xộn, nhìn như rác". Lúc thường chỉ để vài vật bay
+  có trật tự (ba xúc xắc); vật đông chỉ hiện lúc cao trào và phải xếp hàng ngay ngắn (vòng trận bài).
 
 Tham chiếu đã xem: [sketchbook realtimevfx — lá bài vỡ, lật theo lực cản](https://realtimevfx.com/t/bravepotatos-vfx-sketchbook/20382);
 hình tượng *God of Gamblers* (1989); ngôn ngữ Art Deco sòng bài (vàng trên đen, tia nan quạt).

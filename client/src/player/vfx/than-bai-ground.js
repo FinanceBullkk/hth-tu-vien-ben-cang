@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { billboardLayer } from './aura-billboard-layer.js';
+import { billboardLayer, hash } from './aura-billboard-layer.js';
 import { bell, softDot } from './aura-rhythm.js';
 import { goldFragment, litMaterial } from './vip-aura-shaders.js';
 import { tableSealTexture } from './than-bai-textures.js';
@@ -100,6 +100,10 @@ export function createThanBaiGround(parent, colors, lowQuality) {
   const ballGeo = new THREE.SphereGeometry(0.045, 16, 10); owned.push(ballGeo);
   const ball = add(ballGeo, goldMat(), 'than-bai-roulette-ball', 3);
   const trail = billboardLayer(parent, 'than-bai-ball-trail', softDot(), TRAIL, colors.light.clone(), THREE.AdditiveBlending);
+  // Hạt vàng thưa bay lên chậm từ mặt bàn (ít hạt, không thành bụi rác).
+  const sparkCount = lowQuality ? 6 : 10;
+  const sparks = billboardLayer(parent, 'than-bai-gold-sparks', softDot(), sparkCount, colors.light.clone(), THREE.AdditiveBlending);
+  const sparkSeeds = Array.from({ length: sparkCount }, (_, i) => ({ a: hash(i + 71) * Math.PI * 2, off: i / sparkCount, r: 0.6 + 0.9 * hash(i + 91) }));
 
   const suitGeos = createSuitGeometries(lowQuality); owned.push(...suitGeos);
   const suitMat = goldMat();
@@ -120,6 +124,11 @@ export function createThanBaiGround(parent, colors, lowQuality) {
 
   return {
     update(time, rhythm, f) {
+      sparkSeeds.forEach(({ a, off, r }, i) => {
+        const u = ((time / 7 + off) % 1 + 1) % 1, tw = 0.75 + 0.25 * Math.sin(time * 1.6 + i * 2.3), size = 0.035 * tw;
+        sparks.set(i, Math.sin(a) * r, 0.1 + u * 1.8, Math.cos(a) * r, size, size, Math.sin(Math.PI * u) * tw * (0.5 + 0.4 * rhythm.pulse) * f);
+      });
+      sparks.commit();
       const flash = bell(0.45, 0.035, rhythm.phase), shock = Math.max(0, Math.min(1, (rhythm.phase - 0.44) / 0.22));
       diskMat.uniforms.time.value = time; diskMat.uniforms.wheel.value = time * WHEEL_SPEED; diskMat.uniforms.hub.value = time * HUB_SPEED;
       diskMat.uniforms.pulse.value = rhythm.pulse; diskMat.uniforms.flash.value = flash; diskMat.uniforms.opacity.value = 0.88 * f;
@@ -146,6 +155,6 @@ export function createThanBaiGround(parent, colors, lowQuality) {
       wave.scale.setScalar(0.4 + 4.6 * shock);
       waveMat.opacity = (shock > 0 && shock < 1 ? Math.pow(1 - shock, 1.3) : 0) * f;
     },
-    dispose() { owned.forEach(o => o.dispose()); mats.forEach(m => m.dispose()); trail.dispose(); },
+    dispose() { owned.forEach(o => o.dispose()); mats.forEach(m => m.dispose()); trail.dispose(); sparks.dispose(); },
   };
 }

@@ -107,39 +107,6 @@ export const cardFragment = `
   }
 `;
 
-// Phỉnh 3D (trụ dẹt): mặt trên/dưới lấy texture mặt nạ kênh màu (R nền, G vạch trắng, B khảm vàng),
-// thân trụ là vạch sọc quanh mép. vCells.x chọn màu phỉnh: 0 đỏ son, 1 đen, 2 ngọc bích, 3 đồng vàng (khảm đỏ).
-export const chipFragment = `
-  uniform sampler2D map;
-  uniform vec3 white, gold, light;
-  uniform float time, opacity;
-  varying vec3 vN; varying vec3 vV; varying vec3 vObjN; varying vec2 vUv;
-  varying float vAlpha; varying vec2 vCells; varying float vSeed; varying float vLocalY;
-  void main() {
-    vec3 n = normalize(vN), v = normalize(vV);
-    float ndl = max(dot(n, ${LIGHT}), 0.0), fres = 1.0 - abs(dot(n, v));
-    float k = floor(vCells.x + 0.5);
-    bool coin = k > 2.5;
-    vec3 base = k < 0.5 ? vec3(0.72, 0.05, 0.09) : k < 1.5 ? vec3(0.06, 0.05, 0.08) : k < 2.5 ? vec3(0.03, 0.42, 0.3) : gold;
-    vec3 col; float a = 1.0;
-    if (abs(vObjN.y) > 0.5) {
-      vec4 m = texture2D(map, vUv);
-      a = m.a;
-      col = coin ? gold * (m.r + m.g * 1.15) + vec3(0.62, 0.05, 0.08) * m.b : base * m.r + white * m.g + gold * m.b;
-    } else {
-      col = coin ? gold * (0.8 + 0.3 * step(0.5, fract(vUv.x * 30.0))) : mix(base, white, step(0.5, fract(vUv.x * 12.0)) * 0.9);
-    }
-    col *= 0.55 + 0.45 * ndl;
-    col += light * pow(max(dot(reflect(-${LIGHT}, n), v), 0.0), 24.0) * 0.8;
-    col += gold * fres * 0.3;
-    a *= vAlpha * opacity;
-    if (a < 0.02) discard;
-    gl_FragColor = vec4(col, a);
-    #include <tonemapping_fragment>
-    #include <colorspace_fragment>
-  }
-`;
-
 // Xúc xắc vàng: atlas 3×3 ô (sáu mặt chấm), thân vàng kim loại, chấm hồng ngọc rực lên theo nhịp.
 export const diceFragment = `
   uniform sampler2D map;

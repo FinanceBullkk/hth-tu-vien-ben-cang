@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { Color, Matrix4, Vector3 } from 'three';
 import { createThanBaiAura, thanBaiRhythm, THAN_BAI_CYCLE } from '../client/src/player/vfx/than-bai-aura.js';
-import { FAN, FORMATION, STORM, allIn } from '../client/src/player/vfx/than-bai-cards.js';
+import { FAN, FORMATION, allIn } from '../client/src/player/vfx/than-bai-cards.js';
 import { thunder } from '../client/src/player/vfx/than-bai-lightning.js';
 import { WHEEL } from '../client/src/player/vfx/than-bai-fortune-wheel.js';
 import { createVuaCauCaAura } from '../client/src/player/vfx/vua-cau-ca-aura.js';
@@ -24,9 +24,9 @@ const AURAS = [
   { effect: 13, make: low => createThanBaiAura(low, { matches: false }), name: 'than-bai-aura',
     layers: ['than-bai-roulette', 'than-bai-roulette-rims', 'than-bai-roulette-frets', 'than-bai-roulette-ball', 'than-bai-ball-trail',
       'than-bai-gold-suit-0', 'than-bai-gold-suit-3', 'than-bai-gold-pillars', 'than-bai-shockwave', 'than-bai-sunburst', 'than-bai-seal-stamp',
-      'than-bai-royal-fan', 'than-bai-card-storm', 'than-bai-dice', 'than-bai-chips', 'than-bai-gold-sparks', 'than-bai-light-arcs',
+      'than-bai-royal-fan', 'than-bai-card-formation', 'than-bai-dice', 'than-bai-gold-sparks',
       'than-bai-lightning', 'than-bai-footprint-cards', 'than-bai-fortune-wheel-face', 'than-bai-fortune-wheel-frame',
-      'than-bai-fortune-wheel-pointer', 'than-bai-fortune-wheel-bulbs', 'than-bai-fan-glow', 'than-bai-storm-glow', 'than-bai-fan-glints'],
+      'than-bai-fortune-wheel-pointer', 'than-bai-fortune-wheel-bulbs', 'than-bai-fan-glow', 'than-bai-fan-glints'],
     lowSkip: /pillars/ },
   { effect: 14, make: low => createVuaCauCaAura(low, { matches: false }), name: 'vua-cau-ca-aura',
     layers: ['vua-cau-ca-ocean', 'vua-cau-ca-wave-crests', 'vua-cau-ca-ripples', 'vua-cau-ca-bubbles', 'vua-cau-ca-gold-sparks',
@@ -100,7 +100,7 @@ for (const { effect, make, name, layers, lowSkip } of AURAS) {
   });
 }
 
-test('Thần Bài: quạt Thùng Phá Sảnh 3D sau đầu cao hơn đầu; lốc bài xoắn quanh thân từ chân lên quá đầu', () => {
+test('Thần Bài: quạt Thùng Phá Sảnh 3D sau đầu cao hơn đầu; lúc thường không có lá bài bay quanh người', () => {
   const aura = createThanBaiAura(false, { matches: false });
   aura.update(2);
   const fan = one(aura, 'than-bai-royal-fan');
@@ -111,19 +111,15 @@ test('Thần Bài: quạt Thùng Phá Sảnh 3D sau đầu cao hơn đầu; lố
     assert.ok(p.z < -0.5, 'quạt nằm sau lưng');
     assert.ok(p.y > 1.3, 'quạt cao hơn đầu');
   }
-  const storm = one(aura, 'than-bai-card-storm');
-  let low = 0, high = 0;
-  for (const t of [0, 1.1, 2.3, 3.7]) {
+  const ring = one(aura, 'than-bai-card-formation');
+  for (const t of [0, 1.1, 2.3, 7.7]) {
     aura.update(t);
-    for (let i = 0; i < storm.count; i++) {
-      const p = instancePos(storm, i);
-      assert.ok(Math.hypot(p.x, p.z) > 0.5, 'lá bài không xuyên người');
-      if (p.y < 0.6) low++;
-      if (p.y > 1.5) high++;
-    }
+    for (let i = 0; i < ring.count; i++) assert.ok(ring.instanceColor.array[i * 3] < 1e-6, 'không có lá bài bay lộn xộn lúc thường');
   }
-  assert.ok(low > 0 && high > 0, 'lốc bài trải từ chân lên quá đầu');
-  assert.ok(STORM.height > 1.8);
+  // Toàn aura lúc thường: số vật thể bay quanh người (ngoài quạt, bánh xe, mặt bàn) chỉ là ba xúc xắc.
+  assert.equal(one(aura, 'than-bai-dice').count, 3);
+  assert.equal(one(aura, 'than-bai-chips'), null, 'không còn phỉnh tung');
+  assert.equal(one(aura, 'than-bai-light-arcs'), null, 'không còn dải kim quang uốn lượn');
   aura.dispose();
 });
 
@@ -211,11 +207,13 @@ test('Vua Câu Cá: thuỷ trụ chỉ phun quanh đỉnh nhịp 12 giây', () =
   aura.dispose();
 });
 
-test('Thần Bài: Vạn Bài Quy Tông — lúc tất tay lốc bài xếp thành vòng trận bài quanh người, sét chỉ giật lúc đó', () => {
+test('Thần Bài: Vạn Bài Quy Tông — lúc tất tay mười hai lá hiện ngay ngắn thành vòng trận bài, sét chỉ giật lúc đó', () => {
   const aura = createThanBaiAura(false, { matches: false });
-  const storm = one(aura, 'than-bai-card-storm'), bolts = one(aura, 'than-bai-lightning');
-  aura.update(THAN_BAI_CYCLE * 0.47);
+  const storm = one(aura, 'than-bai-card-formation'), bolts = one(aura, 'than-bai-lightning');
+  aura.update(THAN_BAI_CYCLE * 0.52);
+  assert.ok(storm.count <= 12, 'ít lá, ngay ngắn');
   for (let i = 0; i < storm.count; i++) {
+    assert.ok(storm.instanceColor.array[i * 3] > 0.9, 'lá hiện rõ lúc tất tay');
     const p = instancePos(storm, i), r = Math.hypot(p.x, p.z);
     assert.ok(r > FORMATION.radius - 0.15 && r < FORMATION.radius + 0.8, 'lá về vòng trận ' + r);
     assert.ok(Math.abs(p.y - FORMATION.y) < 0.5, 'vòng trận ngang ngực');
