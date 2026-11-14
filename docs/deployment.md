@@ -1,6 +1,25 @@
 # Deployment
 
-## Current release: 2026-11-15 Visual Bena Banca stall, 00:23 UTC+7
+## Current release: 2026-11-15 Stone yard (Đập đá) gacha, 01:15 UTC+7
+
+Deploy run [43625504100](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43625504100)
+released main `8318926` as `hth:261115-0115-8318926`, replacing
+`hth:261115-0023-31152f4`. Includes PR #112 (new stone yard by the container yard: four
+anvils, free common stones from a per-player stock of 1 per 3 minutes up to 12, paid jade
+stones 10 TEU and raw spirit stones 30 TEU with about 95% return, server-scored power bar
+hits, gems paid straight to TEU, auto-break and payout when a player leaves mid-stone; also
+removes the duplicated `slot:spin` listener in `main.js`). Server and client changed; new
+tables `stone_stock` and `stone_pending` are created on start. Public bundle
+`index-BTgJQ4Ly.js` served at `https://game.hthlogistics.top/`.
+
+Docker tests 458/458. Candidate passed with DB `quick_check` ok (57 players,
+24 wishes, 119 fish).
+
+Rollback container `hth-rollback-261115-0115-8318926` preserves
+`hth:261115-0023-31152f4`. Private backup is in the data volume at
+`backups/cutover-261115-0115-8318926/`.
+
+## Previous release: 2026-11-15 Visual Bena Banca stall, 00:23 UTC+7
 
 Deploy run [43620774020](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43620774020)
 released main `31152f4` as `hth:261115-0023-31152f4`, replacing
