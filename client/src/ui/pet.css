@@ -1,0 +1,131 @@
+/* Bảng thú cưng: khung giấy dó như các hộp thoại khác; sân khấu tối nhuộm màu bậc thú (--rc),
+   trứng linh thú men ngọc có vân vàng, thẻ sổ thú sáng khi đã có và mờ khi chưa. */
+.modal-card.pet-modal { width: min(720px, 100%); }
+.pet-modal .modal-head h2::after {
+  content: 'Ấp trứng · dắt thú · cho ăn cá'; display: block; margin-top: 2px;
+  font: 600 12px var(--sans); letter-spacing: .12em; text-transform: uppercase; color: #8a6a3a;
+}
+.pet { display: flex; flex-direction: column; gap: 12px; }
+.pet h3 { margin: 0; }
+.pet .btn:not(.primary) { background: #fffaf0; border-color: rgba(143, 106, 56, .45); color: var(--ink); }
+.pet .btn.on { background: #241f29; color: #f7cdb8; }
+.pet-top { display: grid; grid-template-columns: 1fr 230px; gap: 12px; }
+
+/* Sân khấu: ô xem 3D + thông tin */
+.pet-stage {
+  --rc: #e6dfcf;
+  position: relative; display: grid; grid-template-columns: 210px 1fr; gap: 12px; min-height: 230px; padding: 12px;
+  overflow: hidden; border-radius: 14px; color: #f6eedd;
+  background: radial-gradient(90% 120% at 22% 30%, color-mix(in srgb, var(--rc) 34%, #2a2133), #17131c 70%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 55%, transparent), 0 6px 18px rgba(0, 0, 0, .25);
+}
+.pet-view { position: relative; min-height: 206px; border-radius: 12px; background: radial-gradient(60% 40% at 50% 82%, rgba(255, 255, 255, .14), transparent 70%); }
+.pet-view-canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+.pet-view-fallback { display: grid; place-items: center; height: 100%; font-size: 64px; }
+.pet-stage.locked .pet-view-canvas { filter: grayscale(.75) brightness(.7); }
+.pet-info { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.pet-title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pet .pet-title h3 { font: 700 22px/1.15 var(--serif); color: #fff3dc; text-shadow: 0 0 14px color-mix(in srgb, var(--rc) 60%, transparent); }
+.pet-rarity {
+  padding: 2px 9px; border-radius: 999px; font: 800 11px var(--sans); letter-spacing: .1em; text-transform: uppercase;
+  color: #1b141f; background: var(--rc); box-shadow: 0 0 10px color-mix(in srgb, var(--rc) 70%, transparent);
+}
+.pet-blurb { margin: 0; color: #e7dccb; font: italic 14px/1.4 var(--serif); }
+.pet-missing { margin: 0; padding: 8px 10px; border-radius: 10px; background: rgba(255, 255, 255, .08); color: #e9dcc6; font-size: 13.5px; }
+.pet-hatched { color: #cbb995; }
+.pet-bond { display: flex; flex-direction: column; gap: 5px; padding: 8px 10px; border-radius: 10px; background: rgba(0, 0, 0, .28); box-shadow: inset 0 0 0 1px rgba(255, 140, 170, .25); }
+.pet-bond-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 8px; font: 700 13.5px var(--sans); color: #ffb3c6; }
+.pet-bond-head > * { white-space: nowrap; }
+.pet-bond-head b { color: #f6eedd; font-variant-numeric: tabular-nums; font-size: 12.5px; }
+.pet-bond-meter { position: relative; display: block; height: 9px; overflow: hidden; border-radius: 5px; background: rgba(255, 255, 255, .12); }
+.pet-bond-meter u { position: absolute; inset: 0 auto 0 0; border-radius: 5px; background: linear-gradient(90deg, #ff8fb1, #ffd36a); box-shadow: 0 0 10px rgba(255, 150, 180, .7); transition: width .4s; }
+.pet-bond small { color: #d8c9b2; font-size: 12px; }
+.pet-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+.pet-actions .btn { padding: 8px 16px; }
+
+/* Lớp loé sáng khi trứng nở */
+.pet-hatch {
+  position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px;
+  padding-bottom: 18px; pointer-events: none; text-align: center;
+  background: radial-gradient(circle at 30% 45%, color-mix(in srgb, var(--rc) 80%, #fff) 0%, color-mix(in srgb, var(--rc) 45%, transparent) 22%, transparent 60%);
+  animation: petHatchFlash 1.9s ease-out forwards;
+}
+.pet-hatch b { font: 800 26px var(--serif); color: #fff8e6; text-shadow: 0 0 12px var(--rc), 0 2px 4px rgba(0, 0, 0, .6); animation: petHatchName .5s .15s both cubic-bezier(.2, 1.6, .5, 1); }
+.pet-hatch small { font: 700 13px var(--sans); color: #fff0d0; text-shadow: 0 1px 3px rgba(0, 0, 0, .7); }
+.pet-hatch.r3, .pet-hatch.r4 { background: repeating-conic-gradient(from 0deg at 30% 45%, color-mix(in srgb, var(--rc) 55%, transparent) 0 8deg, transparent 8deg 22deg), radial-gradient(circle at 30% 45%, #fff 0, color-mix(in srgb, var(--rc) 70%, transparent) 20%, transparent 62%); }
+@keyframes petHatchFlash { 0% { opacity: 0; } 12% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes petHatchName { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Ô trứng */
+.pet-egg {
+  display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px; border-radius: 14px; text-align: center;
+  background: linear-gradient(180deg, #fffaf0, #f3e4c4); box-shadow: inset 0 0 0 1px rgba(143, 106, 56, .35);
+}
+.pet-egg-text { display: flex; flex-direction: column; gap: 4px; }
+.pet-egg-text h3 { font: 700 17px var(--serif); color: #5a3416; }
+.pet-egg-text p { margin: 0; font-size: 12px; line-height: 1.35; color: #6b5640; }
+.pet-egg-pity { color: #8a3d6a !important; font-weight: 700; }
+.pet-egg-btn { width: 100%; }
+.pet-egg-price { display: inline-flex; align-items: center; gap: 3px; padding: 1px 8px 1px 5px; border-radius: 999px; background: rgba(0, 0, 0, .25); color: #ffd56a; font-weight: 800; }
+.pet-egg-price .ink-icon { width: 15px; height: 15px; }
+.pet-egg-shell {
+  position: relative; width: 74px; height: 94px; border-radius: 50% 50% 46% 46% / 60% 60% 40% 40%;
+  background: radial-gradient(60% 50% at 35% 30%, #fffef6, #9fe3c8 45%, #3e9f86 100%);
+  box-shadow: inset -6px -8px 14px rgba(0, 60, 50, .35), 0 6px 14px rgba(40, 90, 70, .35), 0 0 18px rgba(130, 240, 200, .5);
+}
+.pet-egg-shell i { position: absolute; left: 14%; right: 14%; height: 7px; border-radius: 50%; border-top: 2px solid #f2c14e; opacity: .9; }
+.pet-egg-shell i:nth-child(1) { top: 28%; }
+.pet-egg-shell i:nth-child(2) { top: 50%; left: 6%; right: 6%; }
+.pet-egg-shell i:nth-child(3) { top: 72%; left: 16%; right: 16%; }
+.pet-egg-shell.shake { animation: petEggShake .28s ease-in-out infinite; }
+.pet-egg-shell.crack { animation: petEggPop .6s ease-out forwards; }
+@keyframes petEggShake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-12deg) translateY(-2px); } 75% { transform: rotate(12deg) translateY(-2px); } }
+@keyframes petEggPop { 0% { transform: scale(1); filter: brightness(1); } 40% { transform: scale(1.18); filter: brightness(2.2); } 100% { transform: scale(.2); opacity: 0; } }
+
+/* Cho ăn */
+.pet-feed { padding: 10px 12px; border-radius: 12px; background: rgba(255, 250, 240, .8); box-shadow: inset 0 0 0 1px rgba(143, 106, 56, .3); }
+.pet-feed-hint, .pet-feed-empty { margin: 0 0 8px; font-size: 13px; color: #5c4630; }
+.pet-feed-empty { margin: 0; }
+.pet-feed-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; max-height: 190px; overflow-y: auto; }
+.pet-feed-row {
+  display: grid; grid-template-columns: 1fr auto; gap: 1px 8px; padding: 7px 10px; border: 0; border-radius: 10px; text-align: left;
+  background: #241f29; color: #f6eedd; box-shadow: inset 3px 0 0 var(--rc); touch-action: manipulation;
+}
+.pet-feed-row:hover:not(:disabled) { filter: brightness(1.2); }
+.pet-feed-name { font-weight: 700; font-size: 13.5px; }
+.pet-feed-name small { color: var(--rc); }
+.pet-feed-gain { grid-row: span 2; align-self: center; color: #ff9fbd; font: 800 15px var(--sans); }
+.pet-feed-price { color: #bfae93; font-size: 11.5px; }
+
+/* Sổ thú */
+.pet-grid-head { display: flex; align-items: baseline; justify-content: space-between; }
+.pet-grid-head h3 { font: 700 16px var(--serif); color: #5a3416; }
+.pet-count { color: #8a6a3a; font: 700 13px var(--sans); }
+.pet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+.pet-card {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 9px 6px 8px; border: 0; border-radius: 12px;
+  background: linear-gradient(180deg, #2c2433, #1b161f); color: #f6eedd; touch-action: manipulation;
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--rc) 70%, transparent), 0 3px 8px rgba(0, 0, 0, .2);
+}
+.pet-card:hover { filter: brightness(1.15); }
+.pet-card.on { box-shadow: inset 0 0 0 2.5px var(--rc), 0 0 14px color-mix(in srgb, var(--rc) 60%, transparent); }
+.pet-card-glyph { font-size: 30px; line-height: 1.1; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--rc) 70%, transparent)); }
+.pet-card-name { font: 700 13px/1.2 var(--sans); text-align: center; }
+.pet-card small { color: #ff9fbd; font-size: 11.5px; min-height: 14px; }
+.pet-card.locked .pet-card-glyph { filter: grayscale(1) brightness(.5); }
+.pet-card.locked .pet-card-name { color: #a99c88; }
+.pet-card.locked small { color: #8c8070; }
+.pet-card-out {
+  position: absolute; top: -6px; right: -4px; padding: 1px 7px; border-radius: 999px; font: 800 10px var(--sans); font-style: normal;
+  background: #e0a458; color: #2b1c13; box-shadow: 0 2px 5px rgba(0, 0, 0, .3);
+}
+
+@media (max-width: 640px) {
+  .pet-top { grid-template-columns: 1fr; }
+  .pet-stage { grid-template-columns: 1fr; }
+  .pet-view { min-height: 180px; }
+  .pet-egg { flex-direction: row; text-align: left; }
+  .pet-egg-shell { flex: none; width: 54px; height: 70px; }
+  .pet-egg-btn { width: auto; }
+  .pet-grid { grid-template-columns: repeat(3, 1fr); }
+}

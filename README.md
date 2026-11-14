@@ -95,6 +95,16 @@ Bảng gỗ mái ngói bên lối đi từ trục chính sang Sạp Kim Bảo. H
 - **Chốt:** cả hai bấm **Chốt đổi** thì đổi. Ai sửa đề nghị thì cả hai mất chốt và phải chốt lại, nên không ai bị tráo đồ phút chót. Món đang mặc mà đưa đi thì nhân vật tự cởi ra.
 - **Huỷ:** đóng bảng, bấm **Huỷ giao dịch**, đi khỏi trạm, mất kết nối, hoặc để yên 3 phút. TEU nhận qua trạm là chuyển tay, không tính vào bảng tuần.
 
+## Thú cưng
+
+Bấm nút **Thú cưng** trên menu (hoặc phím **P**) để mở chuồng thú. Mỗi người dắt một bé đi theo; cả tu viện cùng thấy.
+
+- **Ấp trứng:** trứng linh thú 25 TEU, nở ngẫu nhiên một trong chín bé. Tỉ lệ theo bậc: Thường 58% (mèo mướp, chó cỏ, thỏ trắng), Quý 27% (gấu trúc con, rùa ngọc), Linh thú 11% (hồ ly chín đuôi, hạc tiên), Thần thú 4% (kỳ lân con, rồng con). Liền 12 trứng chưa ra Linh thú thì trứng thứ 12 chắc chắn ra Linh thú hoặc Thần thú. Nở trúng bé đã có thì cộng thân thiết cho bé đó (15/25/50/100 theo bậc). Ai nở được Linh thú, Thần thú lần đầu thì cả tu viện được báo.
+- **Dắt đi, cất về:** chọn bé trong **Sổ thú** rồi bấm **Dắt đi**. Bé chạy theo chếch sau lưng, đứng yên thì ngồi thở, vẫy đuôi; hạc tiên và rồng con bay ngang vai. Bé đầu tiên nở ra được dắt luôn. Bấm vào thú (của mình hay người khác) để vuốt ve.
+- **Cho ăn cá:** dắt bé ra rồi bấm **Cho ăn cá**, chọn một con cá chưa khoá trong túi. Thân thiết cộng theo phẩm chất cá: 4, 8, 16, 40, 90. Cá đã ăn thì không bán được nữa. Cả sân thấy bé cúi đầu nhai.
+- **Thân thiết:** 0–300, bốn bậc Mới quen (0), Thân quen (40), Gắn bó (120), Tri kỷ (300). Thân quen thì thỉnh thoảng có tim bay lên; Gắn bó thêm vòng sáng dưới chân và đốm sáng; Tri kỷ thêm vầng hào quang vàng trên đầu. Tri kỷ rồi thì không cho ăn thêm.
+- Thú cưng không đưa lên trạm giao thương được. Giá và tỉ lệ nằm trong `shared/pets.js`.
+
 ## Đầu hồ
 
 Tới sân cạnh bãi container, bấm **Chơi đầu hồ** rồi chọn đối thủ. Mỗi trận tối đa 2 phút, dẫn 50 điểm hoặc chạm 250 điểm trước là thắng; hết giờ thì so điểm.
@@ -303,6 +313,7 @@ server/
   bell.js        Chuông cá nhân, lịch và sự kiện chuông
   fishing.js     Câu cá: định giờ cắn, roll loài, tự mô phỏng pha giằng co
   bag.js         Túi đồ: bán cá lấy TEU, khoá món (bag-store.js: bảng bag_items)
+  pets.js        Thú cưng: ấp trứng, dắt thú, cho ăn cá (pet-store.js: bảng pets, cột players.pet/pet_pity)
   meditation.js  Giữ chỗ chiếu, nhịp thở chung
   rhythm.js      Minigame Audition chuông
   riddle.js      Đố thuật ngữ với Mặc Vũ

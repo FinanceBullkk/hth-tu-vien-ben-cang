@@ -35,6 +35,8 @@ import { Wallet } from './ui/wallet.js';
 import { BagState } from './ui/bag-state.js';
 import { openBag } from './ui/bag-panel.js';
 import { LookSync } from './ui/look-sync.js';
+import { PetManager } from './player/pets.js';
+import { openPets } from './ui/pet-panel.js';
 import { visitBenaBanca } from './ui/bena-banca-dialog.js';
 import { closeTopModal, modalOpen, openModal } from './ui/modal.js';
 import { nudgePlacesMenu, openPlacesMenu } from './ui/places-menu.js';
@@ -58,6 +60,7 @@ import './ui/slot.css';
 import './ui/stone.css';
 import './ui/xidach.css';
 import './ui/trade.css';
+import './ui/pet.css';
 
 const isTouch = matchMedia('(pointer:coarse)').matches;
 document.body.classList.toggle('touch', isTouch);
@@ -141,6 +144,7 @@ function main() {
   app.wallet = new Wallet();
   app.bag = new BagState();
   app.looks = new LookSync(app); // mặc, tháo đồ từ túi đồ
+  app.pets = new PetManager(app); // thú cưng đi theo của mọi người + chuồng thú của mình
   app.chat = new Chat(app);
   app.activities = new Activities(app);
   app.voice = new ProximityVoice(app);
@@ -177,6 +181,7 @@ function main() {
 
   // ---------- Mạng ----------
   const { net, hud, me, remotes } = app;
+  app.pets.bind(net);
   let entered = false;
   let wasLost = false;
   let mySid = 0;
@@ -225,6 +230,8 @@ function main() {
     app.activities.bellEvent.apply(snap.bellEvent);
     app.wallet.apply({ teu: snap.teu, owned: snap.owned });
     app.bag.apply(snap.bag);
+    app.pets.applyMine(snap.pets);
+    app.pets.sync(snap.me, snap.players);
     app.activities.baucua.setSnapshot(snap.baucua);
     app.activities.xidach.setSnapshot(snap.xidach);
     app.activities.taixiu.setSnapshot(snap.taixiu);
@@ -442,6 +449,7 @@ function main() {
   $('bookBtn').addEventListener('click', () => openBook(app));
   $('shopBtn').addEventListener('click', () => openShop(app, 'shop'));
   $('bagBtn').addEventListener('click', () => openBag(app));
+  $('petBtn').addEventListener('click', () => openPets(app));
   $('walletBtn').addEventListener('click', () => openShop(app, 'shop'));
   $('boardBtn').addEventListener('click', () => openBoard(app));
   $('shareBtn').addEventListener('click', () => openShare(app));
@@ -466,6 +474,10 @@ function main() {
     // Túi đồ mở được cả lúc đang câu: túi đầy thì bán bớt ngay bên hồ.
     if (e.code === 'KeyB' && !modalOpen()) {
       openBag(app);
+      return true;
+    }
+    if (e.code === 'KeyP' && !modalOpen()) {
+      openPets(app);
       return true;
     }
     if (modalOpen() || app.activities.current) return false;
@@ -541,6 +553,7 @@ function main() {
       visitBenaBanca(app);
       return;
     }
+    if (app.pets.petAtRay(raycaster.ray)) return; // vuốt ve thú cưng (của mình hay người khác)
     const cat = world.animals.catAtRay(raycaster.ray);
     if (cat) {
       app.audio.meow();
@@ -638,6 +651,7 @@ function main() {
     me.locked = !entered || (app.isBusy() && app.activities.current?.lockMove !== false) || Boolean(app.activities.current?.lockMove);
     me.update(dt, app.input, app.follow.yaw + look.yaw, net);
     remotes.update(dt, nowMs, camera);
+    app.pets.update(dt);
     app.activities.update(dt);
     app.reader.update(dt);
     world.wishes.setViewer(me.x, me.z, camera);
