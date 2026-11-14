@@ -1,5 +1,5 @@
 /* DANH HIỆU CHÍ TÔN KIỂU VÕ LÂM CHI MỘNG — chỉ người đeo hào quang chí tôn (avatar-title.js đặt .tag[data-board]).
-   Từ trên xuống: danh hiệu chữ viết tay tô màu viền tối kẹp giữa hai cánh lông vũ ngang đầu cuộn xoáy;
+   Từ trên xuống: danh hiệu chữ viết tay tô màu viền tối, hai bên đồ trang trí đúng chủ đề (bài + phỉnh / cá chép);
    dòng hiệu phụ chữ xanh ngọc viền đen với ô ấn vàng chữ đỏ treo bên trái; tên chữ trắng viền đen, không khung.
    Cấu trúc ở client/src/player/vip-title-badge.js. */
 
@@ -47,11 +47,11 @@
   animation: vttSweep 3.6s ease-in-out infinite;
 }
 
-/* Cánh lông vũ ngang (SVG đã lật sẵn cho bên phải), khẽ phập phồng quanh gốc sát chữ. */
-.vtt-side { display: block; width: 56px; height: 24.5px; line-height: 0; }
+/* Đồ trang trí hai bên (xấp bài + phỉnh / cá chép nhảy sóng; SVG đã lật sẵn cho bên phải), khẽ lắc quanh gốc sát chữ. */
+.vtt-side { display: block; width: 52px; height: 31px; line-height: 0; }
 .vtt-wing { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 2.5px var(--vt-glow)) drop-shadow(0 1px 1px rgba(0, 0, 0, .6)); }
-.vtt-side.l { transform-origin: 100% 55%; animation: vttFlapL 2.6s ease-in-out infinite; }
-.vtt-side.r { transform-origin: 0 55%; animation: vttFlapR 2.6s ease-in-out infinite; }
+.vtt-side.l { transform-origin: 90% 90%; animation: vttFlapL 2.6s ease-in-out infinite; }
+.vtt-side.r { transform-origin: 10% 90%; animation: vttFlapR 2.6s ease-in-out infinite; }
 
 /* Sao lấp lánh bốn cánh (sao vàng như sprite danh hiệu). */
 .vtt-star {

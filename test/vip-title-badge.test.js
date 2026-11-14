@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createTitleBadge, TITLE_BOARDS } from '../client/src/player/vip-title-badge.js';
+import { sideOrnamentSvg } from '../client/src/player/vip-title-side-ornaments.js';
 import { AURA_TITLES } from '../client/src/player/avatar-title.js';
 
 // DOM giả tối thiểu: đủ cho createElement, className, textContent, innerHTML, setAttribute, append.
@@ -53,4 +54,14 @@ test('danh hiệu kiểu Võ Lâm Chi Mộng: cánh + chữ hai lớp + sao, r�
   } finally {
     delete globalThis.document;
   }
+});
+
+test('trang trí hai bên đúng chủ đề: Thần bài có lá bài + phỉnh, Vua câu cá có cá chép + sóng', () => {
+  const bai = sideOrnamentSvg('than-bai', false);
+  assert.equal((bai.match(/<rect x="-7.5"/g) ?? []).length, 3, 'ba lá bài xoè');
+  assert.match(bai, /stroke-dasharray/, 'phỉnh có vành đứt khúc');
+  const ca = sideOrnamentSvg('vua-cau-ca', false);
+  assert.match(ca, /url\(#vtto-carp\)/);
+  assert.match(ca, /url\(#vtto-sea\)/);
+  assert.equal(sideOrnamentSvg('khong-co', false), '');
 });
