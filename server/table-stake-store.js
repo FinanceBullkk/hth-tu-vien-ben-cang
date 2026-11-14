@@ -4,12 +4,12 @@
 // Mọi thao tác nằm trong transaction nên TEU không bao giờ âm và không bị trừ hay hoàn hai lần.
 
 /** Các trò dùng kho này. Tên trò là tiền tố lý do trong teu_log; bảng tuần tính lãi/lỗ ròng theo tiền tố này. */
-export const TABLE_GAMES = ['baucua', 'xidach', 'taixiu', 'coquay', 'slot'];
+export const TABLE_GAMES = ['baucua', 'xidach', 'taixiu', 'coquay', 'slot', 'stone'];
 
 export class TableStakeStore {
   /**
    * @param {import('better-sqlite3').Database} sqlite
-   * @param {'baucua'|'xidach'|'taixiu'|'coquay'|'slot'} game tên trò, đồng thời là tên bảng giữ tiền (<trò>_pending)
+   * @param {'baucua'|'xidach'|'taixiu'|'coquay'|'slot'|'stone'} game tên trò, đồng thời là tên bảng giữ tiền (<trò>_pending)
    */
   constructor(sqlite, game) {
     if (!TABLE_GAMES.includes(game)) throw new Error(`Trò không có trong TABLE_GAMES: ${game}`);

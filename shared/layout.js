@@ -179,6 +179,36 @@ export const PITCH_ZONE = {
   camera: { pos: { x: 26.2, y: 2.05, z: 2.9 }, look: { x: 18.2, y: 0.95, z: 2.9 } },
 };
 
+// Bãi đá cạnh bãi container (giữa lối ra sân đầu hồ và lối ven hồ câu): dãy bốn đe đá, mỗi đe kê một tảng đá.
+// Người đập đứng phía nam đe (stand), quay mặt về bắc. Đống đá thô cuối dãy phía đông chỉ để nhìn và là vật cản.
+// Đe là vật cản tròn; ai đứng trong useRadius quanh chỗ đứng của một đe thì bấm E để đập ở đe đó.
+const STONE_ROW_Z = 9.6;
+const STONE_STAND_GAP = 1.25;
+export const STONE_YARD = {
+  x: 18, z: STONE_ROW_Z + STONE_STAND_GAP,
+  useRadius: 0.9, anvilRadius: 0.42,
+  heap: { x: 23.1, z: STONE_ROW_Z + 0.2, r: 0.95 },
+  // Khe giữa hai đe (và giữa đe cuối với đống đá) rộng hơn thân người để không ai bị kẹt giữa hai vật cản.
+  spots: [15.5, 17.2, 18.9, 20.6].map((x) => ({
+    x, z: STONE_ROW_Z,
+    stand: { x, z: STONE_ROW_Z + STONE_STAND_GAP, rot: Math.PI },
+  })),
+};
+
+/** Đe gần chỗ (x, z) nhất mà còn trong tầm đập (useRadius + margin quanh chỗ đứng), hoặc -1. */
+export function stoneSpotAt(x, z, margin = 0) {
+  let best = -1;
+  let bestD = STONE_YARD.useRadius + margin;
+  STONE_YARD.spots.forEach((s, i) => {
+    const d = Math.hypot(x - s.stand.x, z - s.stand.z);
+    if (d <= bestD) {
+      bestD = d;
+      best = i;
+    }
+  });
+  return best;
+}
+
 // Menu "Chơi gì?": mỗi trò một chỗ đứng hợp lệ, chọn là được đưa tới và bắt đầu luôn.
 export const PLACES = [
   { key: 'melody', icon: '♫', name: 'Tấu nhạc', desc: 'Độc tấu đàn nhị · sáu phím theo nhạc', x: 8, z: 21.5 },
@@ -186,6 +216,7 @@ export const PLACES = [
   { key: 'bell', icon: '🔔', name: 'Audition chuông', desc: 'Nhập chuỗi mũi tên, chốt đúng nhịp', x: BELL.x, z: BELL.z + 3.2 },
   { key: 'mat', icon: '🪷', name: 'Ngồi thiền', desc: 'Ngồi yên, thở chậm và tích Chân khí', x: HALL.x, z: HALL.z + 4.4 },
   { key: 'pitch', icon: '🏺', name: 'Đầu hồ', desc: 'Ném tên vào bình, so tài cùng cao thủ', x: 23.4, z: 3 },
+  { key: 'stone', icon: '⛏️', name: 'Đập đá', desc: 'Đập đá tìm ngọc, đổi ra TEU', x: STONE_YARD.spots[1].stand.x, z: STONE_YARD.spots[1].stand.z },
   { key: 'baucua', icon: '🎲', name: 'Bầu cua', desc: 'Đặt TEU, xóc đĩa cùng cả sân', x: BAUCUA_ZONE.seat.x, z: BAUCUA_ZONE.seat.z },
   { key: 'xidach', icon: '🃏', name: 'Xì dách', desc: 'Rút bài đấu nhà cái, luật miền Nam', x: XIDACH_ZONE.seat.x, z: XIDACH_ZONE.seat.z },
   { key: 'taixiu', icon: '🎲', name: 'Tài xỉu', desc: 'Đoán tài hay xỉu, tay to nhất được tung', x: TAIXIU_ZONE.seat.x, z: TAIXIU_ZONE.seat.z },
@@ -362,6 +393,9 @@ export const CIRCLES = [
   { x: PITCH_ZONE.jar.x, z: PITCH_ZONE.jar.z, r: PITCH_ZONE.jar.r },
   { x: PITCH_ZONE.opponent.x, z: PITCH_ZONE.opponent.z, r: 0.35 },
   ...PITCH_ZONE.pots.map((p) => ({ x: p.x, z: p.z, r: 0.28 })),
+  // Bãi đá: bốn đe và đống đá thô
+  ...STONE_YARD.spots.map((s) => ({ x: s.x, z: s.z, r: STONE_YARD.anvilRadius })),
+  STONE_YARD.heap,
   // Cây bồ đề, hồ sen (chừa dải cầu vòm đi ngang qua)
   { x: TREE.x, z: TREE.z, r: 1.4 },
   { x: POND.x, z: POND.z, r: POND.radius, gapZ: BRIDGE.z, gapHalf: 1.0 },

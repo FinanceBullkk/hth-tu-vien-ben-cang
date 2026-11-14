@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BELL, CASINO, COURT_PATHS, HALL, LAKE, PAGODA, PITCH_ZONE, SITE, TREE } from '../../../shared/layout.js';
+import { BELL, CASINO, COURT_PATHS, HALL, LAKE, PAGODA, PITCH_ZONE, SITE, STONE_YARD, TREE } from '../../../shared/layout.js';
 
 // Phố chợ lát đá từ quán trà tới trạm giao thương, ôm cả đoạn phố trước cổng nam Kim Ngân Phường.
 const MARKET_PLAZA = { minX: -56, maxX: -23, minZ: 11.5, maxZ: 28.5 };
@@ -47,14 +47,14 @@ function surface(group, points, material, y = 0.018) {
   group.add(mesh);
 }
 
-function clearing(group, x, z, rx, rz, material, seed) {
+function clearing(group, x, z, rx, rz, material, seed, y = 0.012) {
   const random = rng(seed);
   const points = Array.from({ length: 32 }, (_, i) => {
     const angle = i / 32 * Math.PI * 2;
     const edge = 0.95 + random() * 0.1;
     return [x + Math.cos(angle) * rx * edge, z + Math.sin(angle) * rz * edge];
   });
-  surface(group, points, material, 0.012);
+  surface(group, points, material, y);
 }
 
 export function buildCampusGround(group, b) {
@@ -75,6 +75,8 @@ export function buildCampusGround(group, b) {
   clearing(group, TREE.x, TREE.z, 5.6, 5.1, stone, 12);
   clearing(group, PAGODA.x, PAGODA.z, 5.4, 5.5, stone, 19);
   clearing(group, PITCH_ZONE.x - 4, PITCH_ZONE.z, 5.2, 5.8, soil, 17);
+  // Bãi đá: nền sỏi xám, nhích cao hơn nền sân đầu hồ một chút để chỗ hai bãi chạm nhau không nhấp nháy.
+  clearing(group, STONE_YARD.x + 0.9, STONE_YARD.z - 0.9, 4.7, 2.5, new THREE.MeshLambertMaterial({ color: '#a8a296' }), 23, 0.018);
   for (const lobe of LAKE.lobes) clearing(group, lobe.x, lobe.z, lobe.r + 0.9, lobe.r + 0.9, soil, 26);
 
   // ponytail: paths remain flush; true terrain steps must also change shared floorHeight.
