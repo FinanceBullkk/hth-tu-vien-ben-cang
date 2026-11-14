@@ -85,3 +85,27 @@ ba tầng cuốn ngược ôm chân, gân cánh mảnh có dòng khí chảy, vi
 lệch nhịp, hoạt lộ lăn gân rồi rụng, bụi vàng dâng; bồ nhụy hé lộ sau lưng. Lớp inline
 vẽ tay canvas và chuỗi aura-signature/aura-manifestation/aura-flow/aura-sigil (từ V9–V10,
 chỉ còn hệ 1 dùng) được thanh lý.
+
+## Thần bài (effect 13): tham chiếu và nguyên tắc
+
+Ngày 14/11/2026. Hai bản đầu bị chủ dự án chê "nghiệp dư": bày đạo cụ sòng bài (xúc xắc,
+phỉnh, bàn quay, lốc bài) quanh người, nhiều thứ bay nhanh, không có hình tượng chủ đạo.
+Bản hiện tại "Đổ Thần · Kình Lực Kim Bài" dựng lại theo các tham chiếu:
+
+- Hình tượng Đổ Thần (phim *God of Gamblers*, 1989): điềm tĩnh, rồi lật con Át đúng lúc
+  quyết định. Ý đó thành cao trào "Át chủ bài".
+- Ngôn ngữ Art Deco của sòng bài (vàng trên đen, đối xứng, tia nan quạt). Ý đó thành
+  hào quang nan quạt và đĩa sơn mài chỉ vàng.
+- VFX lá bài trong [sketchbook realtimevfx](https://realtimevfx.com/t/bravepotatos-vfx-sketchbook/20382):
+  tụ sáng báo trước, lá bài bung ra, lật theo lực cản khi rơi rồi tan.
+- Nhận xét của đội VFX Hearthstone: hiệu ứng huyền thoại phải kể chuyện nhân vật và
+  đọc được ngay.
+
+Nguyên tắc rút ra, áp dụng cho các aura "chí tôn" sau:
+
+- Một hình tượng chủ đạo (hào quang), phần còn lại tiết chế. Không bày đạo cụ vụn.
+- Phần lớn thời gian tĩnh và uy; chỉ một khoảnh khắc ra tay dứt khoát theo nhịp
+  tụ → bùng → giữ → vỡ (`than-bai-climax.js` là bảng thời gian chung).
+- Phần "động" phải dùng đúng ngôn ngữ chất liệu ở trên: dải khí bụng–cổ–đuôi xói, không
+  dùng vòng sáng đều.
+- Test giữ giới hạn tốc độ để aura không bị nhanh trở lại.
