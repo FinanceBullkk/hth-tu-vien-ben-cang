@@ -34,6 +34,7 @@ import { applyLook, lookOf, openShop, rememberLook } from './ui/shop-panel.js';
 import { Wallet } from './ui/wallet.js';
 import { BagState } from './ui/bag-state.js';
 import { openBag } from './ui/bag-panel.js';
+import { visitBenaBanca } from './ui/bena-banca-dialog.js';
 import { closeTopModal, modalOpen, openModal } from './ui/modal.js';
 import { nudgePlacesMenu, openPlacesMenu } from './ui/places-menu.js';
 import { showTutorial } from './ui/tutorial.js';
@@ -47,6 +48,7 @@ import './ui/melody.css';
 import './ui/cultivation.css';
 import './ui/shop.css';
 import './ui/bag.css';
+import './ui/bena-banca.css';
 import './ui/vip-name-board.css';
 import './ui/table-hud.css';
 import './ui/baucua.css';
@@ -529,6 +531,10 @@ function main() {
       world.zoeyy.advise();
       return;
     }
+    if (world.benaBanca.atRay(raycaster.ray)) {
+      visitBenaBanca(app);
+      return;
+    }
     const cat = world.animals.catAtRay(raycaster.ray);
     if (cat) {
       app.audio.meow();
@@ -632,6 +638,7 @@ function main() {
     world.update(dt, nowMs);
     world.abbot.update(dt, me.x, me.z, camera);
     world.zoeyy.update(dt, me.x, me.z, camera);
+    world.benaBanca.update(dt, me.x, me.z, camera);
     world.monk.update(dt, me.x, me.z, camera);
     world.shopStall.update(dt, me.x, me.z, camera);
     world.baucuaTable.update(dt, camera, nowMs);

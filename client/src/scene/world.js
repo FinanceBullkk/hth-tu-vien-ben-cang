@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { Abbot } from './abbot.js';
 import { BauCuaTable } from './baucua-table.js';
+import { BenaBanca } from './bena-banca.js';
 import { XiDachTable } from './xidach-table.js';
 import { TaiXiuTable } from './taixiu-table.js';
 import { CoQuayTable } from './coquay-table.js';
@@ -49,6 +50,7 @@ export class World {
     this.celestial = new Celestial(scene, lowQuality);
     this.abbot = new Abbot(scene);
     this.zoeyy = new Abbot(scene, 'Zoeyy Gay', ZOEYY);
+    this.benaBanca = new BenaBanca(scene);
     this.monk = new GateMonk(scene);
     this.shopStall = new ShopStall(scene);
     this.tradePost = new TradePost(scene);

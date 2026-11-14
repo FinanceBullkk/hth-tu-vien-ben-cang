@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { CatmullRomCurve3, Vector3 } from 'three';
 import {
-  BAUCUA_ZONE, BELL, BRIDGE, CASINO, CASINO_HALL, CASINO_POLES, GATE_LIONS, SLOT_ZONE, MATS, TERRACE, COQUAY_ZONE, COURT_PATHS, GALLERIES, HALL, PAGODA, PLACES, POND, TAIXIU_ZONE, TREASURE_BASIN, TREE,
-  XIDACH_ZONE, floorHeight, resolveCollision,
+  BAUCUA_ZONE, BELL, BENA_BANCA, BOUNDS, BRIDGE, CIRCLES, LAKE, CASINO, CASINO_HALL, CASINO_POLES, GATE_LIONS, SLOT_ZONE, MATS, TERRACE, COQUAY_ZONE, COURT_PATHS, GALLERIES, HALL, PAGODA, PLACES, POND, TAIXIU_ZONE, TREASURE_BASIN, TREE,
+  XIDACH_ZONE, floorHeight, lakeDistance, resolveCollision,
 } from '../shared/layout.js';
 
 test('main axis stays clear from the gate through the hall entrance', () => {
@@ -109,4 +109,29 @@ test('Kim Ngân Lâu và cột đèn không lấn bàn, Tụ Bảo Bồn, máy g
     assert.ok(Math.abs(p.z - CASINO.gateEast.z) > CASINO.gateEast.half + 1, 'cột đèn không chắn cổng đông');
     for (const m of SLOT_ZONE.machines) assert.ok(Math.hypot(p.x - m.stand.x, p.z - m.stand.z) > 2, 'cột đèn không chắn máy');
   }
+});
+
+test('Bena Banca đứng trên bờ hồ câu: không lấn nước, không đè vật khác, khách đứng trước mặt bấm được', () => {
+  const pieces = [BENA_BANCA, BENA_BANCA.crate, BENA_BANCA.rack];
+  for (const p of pieces) {
+    assert.ok(lakeDistance(p.x, p.z) > LAKE.shoreWidth, `${p.x},${p.z} lấn vào bờ câu`);
+    assert.ok(p.x < BOUNDS.maxX - 0.5 && p.z < BOUNDS.maxZ - 0.5, 'nằm trong sân');
+  }
+  // Cô, thùng cá, giá cần không chồng lên nhau hay lên cây, cột đèn quanh đó.
+  const mine = new Set([BENA_BANCA.crate, BENA_BANCA.rack]);
+  const others = CIRCLES.filter((c) => !mine.has(c) && !(c.x === BENA_BANCA.x && c.z === BENA_BANCA.z));
+  for (const p of pieces) {
+    const r = p.r ?? p.radius;
+    for (const q of [...others, ...pieces.filter((o) => o !== p)]) {
+      const gap = Math.hypot(p.x - q.x, p.z - q.z) - r - (q.r ?? q.radius);
+      assert.ok(gap > 0.05, `${p.x},${p.z} chạm vật ở ${q.x},${q.z}`);
+    }
+  }
+  // Chỗ đứng trước mặt cô (phía tây, phía hồ) đi tới được và trong tầm bấm E.
+  const spot = { x: BENA_BANCA.x - 1.4, z: BENA_BANCA.z };
+  assert.deepEqual(resolveCollision(spot.x, spot.z), spot);
+  assert.ok(Math.hypot(spot.x - BENA_BANCA.x, spot.z - BENA_BANCA.z) < BENA_BANCA.actionRadius);
+  // Điểm "Câu cá" trong menu vẫn là câu cá, không rơi vào vùng bắt chuyện với Bena.
+  const fish = PLACES.find((place) => place.key === 'fish');
+  assert.ok(Math.hypot(fish.x - BENA_BANCA.x, fish.z - BENA_BANCA.z) > BENA_BANCA.actionRadius + 2);
 });

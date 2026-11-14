@@ -1,6 +1,7 @@
 // Điều phối hoạt động: phát hiện điểm gần người chơi, bật/tắt hoạt động, khoá di chuyển.
-import { ABBOT, BAUCUA_ZONE, BELL, COQUAY_ZONE, LAKE, PITCH_ZONE, POND, SHOP, TAIXIU_ZONE, TEA, TREE, XIDACH_ZONE, ZOEYY, dist2d, isInsideHall, lakeDistance, slotMachineAt } from '../../../shared/layout.js';
+import { ABBOT, BAUCUA_ZONE, BENA_BANCA, BELL, COQUAY_ZONE, LAKE, PITCH_ZONE, POND, SHOP, TAIXIU_ZONE, TEA, TREE, XIDACH_ZONE, ZOEYY, dist2d, isInsideHall, lakeDistance, slotMachineAt } from '../../../shared/layout.js';
 import { openShop } from '../ui/shop-panel.js';
+import { visitBenaBanca } from '../ui/bena-banca-dialog.js';
 import { BauCuaActivity } from './baucua.js';
 import { XiDachActivity } from './xidach.js';
 import { createTaiXiuActivity } from './taixiu.js';
@@ -129,6 +130,10 @@ export class Activities {
     }
     if (dist2d(x, z, BELL.x, BELL.z) < BELL.radius) {
       return { key: 'bell', label: 'Chơi Audition chuông', run: () => this.bell.start() };
+    }
+    // Bena đứng sát bờ hồ: xét trước câu cá để đứng cạnh cô thì E là mở quầy.
+    if (dist2d(x, z, BENA_BANCA.x, BENA_BANCA.z) < BENA_BANCA.actionRadius) {
+      return { key: 'bena', label: 'Gặp Bena Banca', run: () => visitBenaBanca(this.app) };
     }
     if (lakeDistance(x, z) < LAKE.shoreWidth) {
       return { key: 'fish', label: 'Câu cá', run: () => this.fishing.start() };

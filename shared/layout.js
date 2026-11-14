@@ -59,6 +59,15 @@ export const NONBO = [
 export const ABBOT = { x: 5.2, z: HALL.z + 7.6, rot: 0, radius: 0.35, actionRadius: 2.6 };
 export const ZOEYY = { x: -5.2, z: HALL.z + 7.6, rot: 0, radius: 0.35, actionRadius: 2.6 };
 // Sư chú giữ cổng: đứng trong sân cạnh tam quan, đưa câu đố cho người vào.
+// Bena Banca: thương lái đứng ở góc đông bắc hồ câu, cuối lối đi ven hồ, mặt quay về phía tây nhìn ra chỗ câu.
+// Thu mua cá trong túi và bán cần câu, thính. Thùng cá ướp đá đặt bên trái, giá cần câu dựng sau lưng.
+const BENA_X = 27.5;
+const BENA_Z = 16.3;
+export const BENA_BANCA = {
+  x: BENA_X, z: BENA_Z, rot: -Math.PI / 2, radius: 0.35, actionRadius: 2.5,
+  crate: { x: BENA_X - 0.45, z: BENA_Z - 1.15, r: 0.42 },
+  rack: { x: BENA_X + 0.85, z: BENA_Z + 0.75, r: 0.32 },
+};
 // Sạp Kim Bảo ở phố chợ: bà chủ đứng sau quầy, quầy quay về phía phố; khách đứng phía phố bấm E mở cửa hàng.
 const SHOP_X = -42;
 const SHOP_Z = 23;
@@ -359,6 +368,10 @@ export const CIRCLES = [
   // Hồ câu và bảng tên trên bờ
   ...LAKE.lobes,
   LAKE.sign,
+  // Bena Banca, thùng cá và giá cần câu của cô
+  { x: BENA_BANCA.x, z: BENA_BANCA.z, r: BENA_BANCA.radius },
+  BENA_BANCA.crate,
+  BENA_BANCA.rack,
   // Quán trà: cột + bàn
   ...[[-4.4, -3.2], [4.4, -3.2], [-4.4, 3.8], [4.4, 3.8]].map(([dx, dz]) => ({ x: TEA.x + dx, z: TEA.z + dz, r: 0.28 })),
   ...TEA_TABLES.map((t) => ({ x: t.x, z: t.z, r: 0.75 })),
