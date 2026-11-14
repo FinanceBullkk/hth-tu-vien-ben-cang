@@ -1,58 +1,50 @@
-// Huy hiệu danh hiệu chí tôn và khung bảng tên: SVG đúng cấu trúc, chỉ dành cho hai danh hiệu chí tôn,
-// không có script hay tài nguyên ngoài, URL dữ liệu an toàn khi đặt trong url("...") của CSS.
+// Danh hiệu chí tôn kiểu MMO 2D: chỉ hai danh hiệu chí tôn có kiểu riêng; cấu trúc cánh, chữ hai lớp, sao;
+// chữ lấy đúng danh hiệu qua textContent; cánh là SVG hằng số an toàn.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { titleBadgeSvg, nameFrameSvg, nameFrameCss } from '../client/src/player/vip-title-badge.js';
+import { createTitleBadge, TITLE_BOARDS } from '../client/src/player/vip-title-badge.js';
 import { AURA_TITLES } from '../client/src/player/avatar-title.js';
 
-// Kiểm tra thẻ mở/đóng cân bằng (đủ để bắt lỗi ghép chuỗi SVG).
-function assertBalanced(svg) {
-  const stack = [];
-  for (const [, close, name, selfClose] of svg.matchAll(/<(\/?)([a-zA-Z]+)[^>]*?(\/?)>/g)) {
-    if (selfClose) continue;
-    if (!close) stack.push(name);
-    else assert.equal(stack.pop(), name, `thẻ đóng </${name}> lệch`);
-  }
-  assert.deepEqual(stack, [], 'còn thẻ chưa đóng');
+// DOM giả tối thiểu: đủ cho createElement, className, textContent, innerHTML, setAttribute, append.
+function fakeDocument() {
+  const make = tag => ({
+    tag, className: '', textContent: '', innerHTML: '', attrs: {}, props: {}, children: [],
+    style: { setProperty(k, v) { this.owner.props[k] = v; } },
+    setAttribute(k, v) { this.attrs[k] = v; },
+    append(...nodes) { this.children.push(...nodes); },
+  });
+  return { createElement(tag) { const node = make(tag); node.style.owner = node; return node; } };
 }
 
-const BOARDS = AURA_TITLES.filter(t => t.board);
-
-test('chỉ hai danh hiệu chí tôn có bảng tên riêng', () => {
-  assert.deepEqual(BOARDS.map(t => t.board), ['than-bai', 'vua-cau-ca']);
-  assert.ok(BOARDS.every(t => t.vip));
+test('chỉ hai danh hiệu chí tôn có kiểu riêng', () => {
+  assert.deepEqual(AURA_TITLES.filter(t => t.board).map(t => t.board), TITLE_BOARDS);
+  assert.ok(AURA_TITLES.filter(t => t.board).every(t => t.vip));
 });
 
-test('huy hiệu: SVG cân bằng, có chữ danh hiệu, vàng đúc và ngọc; không script, không tải ngoài', () => {
-  for (const { board, title } of BOARDS) {
-    const svg = titleBadgeSvg(board, title.toUpperCase());
-    assert.match(svg, /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
-    assertBalanced(svg);
-    assert.ok(svg.includes(`>${title.toUpperCase()}</text>`), board);
-    assert.match(svg, /feSpecularLighting/);
-    assert.match(svg, /url\(#gem\)/);
-    assert.doesNotMatch(svg, /<script|href=|\son[a-z]+=|https?:\/\/(?!www\.w3\.org\/2000\/svg)/i);
-  }
-  assert.match(titleBadgeSvg('than-bai', 'THẦN BÀI'), />A<\/text>/, 'quạt bài có lá A');
-  assert.match(titleBadgeSvg('vua-cau-ca', 'VUA CÂU CÁ'), /url\(#fin\)/, 'cá chép có vây ngọc lam');
-});
-
-test('khung bảng tên: SVG 120×32 cân bằng, có ngọc hai đầu', () => {
-  for (const { board } of BOARDS) {
-    const svg = nameFrameSvg(board);
-    assert.match(svg, /viewBox="0 0 120 32"/);
-    assertBalanced(svg);
-    assert.equal(svg.match(/fill="url\(#gem\)"/g).length, 2);
-  }
-});
-
-test('bảng không tồn tại trả rỗng; URL CSS không phá được url("...")', () => {
-  assert.equal(titleBadgeSvg('khong-co', 'X'), '');
-  assert.equal(nameFrameSvg('khong-co'), '');
-  assert.equal(nameFrameCss('khong-co'), '');
-  for (const { board } of BOARDS) {
-    const css = nameFrameCss(board);
-    assert.match(css, /^url\("data:image\/svg\+xml;charset=utf-8,[^"'\s]+"\)$/);
-    assert.equal(nameFrameCss(board), css, 'dùng lại bản đã mã hoá');
+test('danh hiệu: cánh trái + chữ (viền dưới, chữ màu trên) + cánh phải + sao; board lạ không dựng gì', () => {
+  globalThis.document = fakeDocument();
+  try {
+    assert.equal(createTitleBadge('khong-co', 'X'), null);
+    for (const board of TITLE_BOARDS) {
+      const root = createTitleBadge(board, 'Thần Bài');
+      assert.equal(root.className, 'vtt');
+      const [left, word, right, ...stars] = root.children;
+      assert.equal(left.className, 'vtt-side l');
+      assert.equal(right.className, 'vtt-side r');
+      assert.equal(stars.length, 3);
+      const [outline, text] = word.children;
+      assert.equal(outline.attrs['aria-hidden'], 'true');
+      assert.equal(text.className, 'vtt-text');
+      assert.equal(text.textContent, 'Thần Bài');
+      // Cánh là SVG hằng số: không script, không tải ngoài; bên phải lật gương.
+      for (const side of [left, right]) {
+        assert.match(side.innerHTML, /^<svg class="vtt-wing"/);
+        assert.doesNotMatch(side.innerHTML, /<script|href=|\son[a-z]+=|https?:/i);
+      }
+      assert.doesNotMatch(left.innerHTML, /scale\(-1 1\)/);
+      assert.match(right.innerHTML, /scale\(-1 1\)/);
+    }
+  } finally {
+    delete globalThis.document;
   }
 });

@@ -1,8 +1,8 @@
 // Danh hiệu đi cùng aura. Phần lớn chỉ để trang trí; riêng hào quang chí tôn (vip) phải đạt thành tích
 // mới mua được (SHOP_REQUIREMENTS) nên danh hiệu của chúng chạy ánh kim để người khác nhận ra, và cả nhãn
-// tên đổi thành BẢNG TÊN riêng theo chủ đề: danh hiệu là huy hiệu vàng đúc (vip-title-badge.js), tên nằm trong
-// khung sơn mài viền vàng (biến --nb-frame, kiểu ở client/src/ui/vip-name-board.css).
-import { createTitleBadge, nameFrameCss } from './vip-title-badge.js';
+// tên đổi kiểu riêng theo chủ đề kiểu MMO 2D: danh hiệu là chữ viết tay tô màu viền tối có cánh hai bên
+// (vip-title-badge.js), tên là chữ vàng viền đen có ô huy hiệu, không đóng hộp (client/src/ui/vip-name-board.css).
+import { createTitleBadge } from './vip-title-badge.js';
 
 export const AURA_TITLES = [
   { title: '', color: '#e9d6ab' },
@@ -26,8 +26,8 @@ export function applyAvatarTitle(tag, title, effect) {
   const theme = AURA_TITLES[effect] ?? AURA_TITLES[0];
   tag.style.setProperty('--tag-accent', theme.color);
   if (theme.board) {
-    // Huy hiệu chí tôn: ảnh dựng từ hằng số của game (không chứa dữ liệu người chơi), chữ in hoa.
-    title.replaceChildren(createTitleBadge(theme.board, theme.title.toUpperCase()));
+    // Danh hiệu chí tôn: dựng từ hằng số của game (không chứa dữ liệu người chơi).
+    title.replaceChildren(createTitleBadge(theme.board, theme.title));
     title.setAttribute('aria-label', theme.title);
   } else {
     title.textContent = theme.title;
@@ -35,12 +35,7 @@ export function applyAvatarTitle(tag, title, effect) {
   }
   title.hidden = !theme.title;
   title.classList.toggle('vip', Boolean(theme.vip));
-  // Bảng tên chí tôn: nhãn tên nằm trong khung sơn mài viền vàng (border-image từ --nb-frame).
-  if (theme.board) {
-    tag.dataset.board = theme.board;
-    tag.style.setProperty('--nb-frame', nameFrameCss(theme.board));
-  } else {
-    delete tag.dataset.board;
-    tag.style.removeProperty('--nb-frame');
-  }
+  // Kiểu chí tôn cho cả nhãn (màu quầng, tên sáng) theo chủ đề.
+  if (theme.board) tag.dataset.board = theme.board;
+  else delete tag.dataset.board;
 }
