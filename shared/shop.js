@@ -2,6 +2,7 @@
 // Id món là "slot:index" theo đúng số thứ tự trong protocol.js. Món không có trong SHOP_PRICES là miễn phí.
 // Đổi giá thoải mái; thêm món trả phí mới thì người đang mặc món đó sẽ rớt về mặc định ở lần vào sau.
 import { ATTIRE_NAMES, EFFECT_NAMES, HAIR_NAMES, HAT_NAMES, PREMIUM_COLORS, SHIRT_COLORS, WEAPON_NAMES } from './protocol.js';
+import { FISH } from './fish.js';
 
 export const LOOK_SLOTS = ['color', 'hair', 'hat', 'attire', 'weapon', 'effect'];
 
@@ -38,7 +39,34 @@ export const SHOP_PRICES = {
   'effect:9': 60, // Long quyền
   'effect:12': 60, // Kiếm vũ
   'effect:11': 80, // Kim long
+  'effect:13': 888, // Thần bài (hào quang chí tôn, cần thành tích)
+  'effect:14': 888, // Vua câu cá (hào quang chí tôn, cần thành tích)
 };
+
+// Hào quang chí tôn: ngoài TEU còn phải đạt thành tích mới mua được, và không trao đổi được
+// (danh hiệu trên đầu phải đúng là của người đeo). Server đếm tiến độ ở server/shop-store.js,
+// client chỉ hiển thị. stat là khoá trong object tiến độ server trả về.
+export const SHOP_REQUIREMENTS = {
+  'effect:13': { stat: 'tableWins', need: 100, unit: 'ván thắng ở sòng', label: 'Thắng 100 ván ở bàn bầu cua, xì dách, tài xỉu hoặc cò quay' },
+  'effect:14': { stat: 'fishSpecies', need: FISH.length, unit: 'loài trong Sổ cá', label: `Câu đủ ${FISH.length} loài trong Sổ cá` },
+};
+
+export const requirementOf = (id) => SHOP_REQUIREMENTS[id] ?? null;
+
+/** Số đã đạt của một món có điều kiện (0 nếu chưa có dữ liệu tiến độ). */
+export const requirementHave = (id, progress) => {
+  const req = requirementOf(id);
+  return req ? Math.max(0, Math.floor(Number(progress?.[req.stat]) || 0)) : 0;
+};
+
+/** Đủ điều kiện mua chưa: món thường luôn đủ. */
+export const meetsRequirement = (id, progress) => {
+  const req = requirementOf(id);
+  return !req || requirementHave(id, progress) >= req.need;
+};
+
+/** Món gắn với thành tích thì không đưa lên trạm giao thương được. */
+export const isTradable = (id) => !requirementOf(id);
 
 export const itemId = (slot, index) => `${slot}:${index}`;
 

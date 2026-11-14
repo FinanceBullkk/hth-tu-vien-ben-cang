@@ -16,7 +16,7 @@ export const LIMITS = {
 // Nhịp đồng bộ vị trí. Hai bên cùng nhịp để mỗi gói phát đi đều có mẫu mới, tốc độ không dao động.
 export const MOTION = { sendHz: 20, tickMs: 50, stampMaxAgeMs: 1000 };
 
-export const AVATAR = { colors: 10, hairs: 6, hats: 11, attires: 8, weapons: 4, effects: 13 };
+export const AVATAR = { colors: 10, hairs: 6, hats: 11, attires: 8, weapons: 4, effects: 15 };
 
 // Màu áo: 4 màu đầu là màu cơ bản ai cũng có; phần sau là màu quý mở bằng TEU,
 // bitmask theo thứ tự trong PREMIUM_COLORS. Hai màu quý đầu giữ nguyên vị trí
@@ -53,7 +53,7 @@ export const ATTIRE_NAMES = [
   'Hán phục vân kiêm', 'Hàn phục đan thanh', 'Hòa phục hồng diệp', 'Áo dài quốc hương',
 ];
 export const WEAPON_NAMES = ['Không', 'Kiếm', 'Phất trần', 'Băng quyền'];
-export const EFFECT_NAMES = ['Không', 'Sen kim', 'Lưu ly', 'Tinh hà', 'Hỏa diễm', 'Đào hoa', 'Bích ngọc', 'Nguyệt bạch', 'Hắc ám', 'Long quyền', 'Xích diễm', 'Kim long', 'Kiếm vũ'];
+export const EFFECT_NAMES = ['Không', 'Sen kim', 'Lưu ly', 'Tinh hà', 'Hỏa diễm', 'Đào hoa', 'Bích ngọc', 'Nguyệt bạch', 'Hắc ám', 'Long quyền', 'Xích diễm', 'Kim long', 'Kiếm vũ', 'Thần bài', 'Vua câu cá'];
 
 export const EMOJIS = ['🙏', '🌸', '😊', '❤️', '👋', '🍵'];
 

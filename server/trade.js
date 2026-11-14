@@ -3,7 +3,7 @@
 // Đề nghị đổi thì cả hai mất chốt và số phiên bản rev tăng; lệnh chốt phải mang đúng rev đang hiện,
 // nên không ai bị tráo đồ phút chót. Server kiểm tra vị trí, sở hữu, số dư; đổi đồ trong một transaction (TradeStore).
 import { TRADE_POST, dist2d } from '../shared/layout.js';
-import { LOOK_SLOTS, itemName, parseItemId, sanitizeLook } from '../shared/shop.js';
+import { LOOK_SLOTS, isTradable, itemName, parseItemId, sanitizeLook } from '../shared/shop.js';
 import { TRADE, offerEmpty, readOffer } from '../shared/trade.js';
 import { localDate } from './time.js';
 
@@ -80,6 +80,8 @@ export class Trade {
     p.lastTradeOffer = now;
     const offer = readOffer(data);
     if (offer.error) return { ok: false, error: offer.error };
+    const bound = offer.items.find((id) => !isTradable(id));
+    if (bound) return { ok: false, error: `${nameOf(bound)} gắn với thành tích của bạn, không trao đổi được.` };
     const [mine, theirs] = this.sides(s, p);
     const owned = this.db.shop.owned(p.pid);
     const missing = offer.items.find((id) => !owned.has(id));
