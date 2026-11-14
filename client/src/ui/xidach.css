@@ -1,4 +1,4 @@
-/* Xì dách: dùng chung khung đỏ viền vàng và chip của bầu cua (baucua.css), đầu bảng / khay / ví của table-hud.css; ở đây có
+/* Xì dách: dùng chung khung navy viền vàng và chip của bầu cua (baucua.css), đầu bảng / khay / ví của table-hud.css; ở đây có
    bài nhà cái thu nhỏ trên đầu bảng, mặt dạ, lá bài, hàng ghế, nút rút/dằn và chữ kết quả.
    Bảng mang cả lớp .baucua-hud nên lớp phủ cũng để chuột lọt qua như bầu cua. */
 
@@ -7,20 +7,20 @@
 .xd-dealer > small { font: 700 10.5px var(--sans); letter-spacing: .06em; color: #f1d9a8; }
 .xd-dealer .xd-total { margin-left: 0; padding: 1px 8px; font-size: 13px; }
 
-/* Mặt dạ: thớ vải lấm tấm (nhiễu SVG), sáng ở giữa như dưới đèn bàn, viền đệm da nâu bọc quanh. */
+/* Mặt dạ: thớ vải lấm tấm (nhiễu SVG), sáng ở giữa như dưới đèn bàn, viền navy đậm bọc quanh. */
 .xd-felt {
   position: relative; display: flex; flex-direction: column; gap: 8px; padding: 9px 12px;
-  border: 5px solid #3a2115; border-radius: 14px;
+  border: 5px solid #0a1236; border-radius: 14px;
   background:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
-    radial-gradient(ellipse at 50% 35%, #2f8a57, #1d5c39 55%, #133f27);
-  box-shadow: inset 0 0 0 1px rgba(233, 196, 106, .55), inset 0 0 24px rgba(0, 0, 0, .5), 0 0 0 1px #e9c46a, 0 2px 0 2px #20110a;
+    radial-gradient(ellipse at 50% 35%, #1e3a9e, #14256e 55%, #0a1236);
+  box-shadow: inset 0 0 0 1px rgba(255, 207, 77, .55), inset 0 0 24px rgba(2, 6, 24, .5), 0 0 0 1px #ffcf4d, 0 2px 0 2px #060b24;
 }
 /* Dòng chữ in vàng trên mặt dạ, cong như vạch bàn thật. */
 .xd-print {
   align-self: center; width: 86%; margin: -2px 0 -4px; padding-bottom: 3px; text-align: center;
-  border-bottom: 1.5px solid rgba(233, 196, 106, .5); border-radius: 0 0 50% 50% / 0 0 100% 100%;
-  font: 700 10px var(--serif); letter-spacing: .22em; text-transform: uppercase; color: rgba(255, 232, 168, .62); text-shadow: none;
+  border-bottom: 1.5px solid rgba(255, 207, 77, .5); border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  font: 700 10px var(--sans); letter-spacing: .22em; text-transform: uppercase; color: rgba(255, 232, 168, .62); text-shadow: none;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 /* Chip trong bảng: đồng chip sòng bài, viền sọc trắng, lõi tròn in mệnh giá. */
@@ -33,9 +33,9 @@
 .xidach-hud .baucua-chip.ivory { --c: #ece3cf; }
 .xidach-hud .baucua-chip.red { --c: #b52a1e; }
 .xidach-hud .baucua-chip.gold { --c: #d39a22; }
-.xidach-hud .baucua-chip.ivory span { color: #6e140e; }
+.xidach-hud .baucua-chip.ivory span { color: #12245e; }
 .xd-row { display: flex; align-items: center; gap: 10px; min-height: 58px; }
-.xd-row.me { min-height: 84px; padding: 6px 6px 0; border-top: 1px dashed rgba(233, 196, 106, .45); }
+.xd-row.me { min-height: 84px; padding: 6px 6px 0; border-top: 1px dashed rgba(255, 207, 77, .45); }
 .xd-row.me.empty .xd-hand::before { content: attr(data-hint); font: 600 13px var(--sans); color: rgba(255, 232, 168, .65); }
 .xd-seats:not([hidden]) + .xd-row.me { margin-top: 2px; }
 .xd-who { width: 70px; flex: none; display: flex; flex-direction: column; font: 700 13px var(--serif); letter-spacing: .06em; color: #ffe8a8; }
@@ -126,12 +126,12 @@
 
 .xd-banner {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 6px 22px; border-radius: 999px;
-  border: 2px solid #e9c46a; background: rgba(110, 16, 10, .94); font: 900 26px/1.2 var(--serif); color: #fff; white-space: nowrap;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, .5); pointer-events: none; animation: baucuaPop .45s cubic-bezier(.2, 1.6, .4, 1) both;
+  border: 2px solid #ffcf4d; background: rgba(10, 17, 56, .94); font: 800 26px/1.2 var(--serif); color: #fff; white-space: nowrap;
+  box-shadow: 0 8px 22px rgba(2, 6, 24, .5); pointer-events: none; animation: baucuaPop .45s cubic-bezier(.2, 1.6, .4, 1) both;
 }
 .xd-banner[hidden] { display: none; }
 .xd-banner[data-tone='win'] { color: #ffe08a; }
-.xd-banner[data-tone='push'] { background: rgba(30, 60, 40, .94); }
+.xd-banner[data-tone='push'] { background: rgba(13, 90, 118, .94); }
 
 .xd-betbox { display: flex; align-items: center; gap: 10px; flex: 1; flex-wrap: wrap; }
 .xd-betbox[hidden], .xd-actions[hidden] { display: none; }
@@ -143,8 +143,8 @@
   border: 2px solid #e9c46a; border-radius: 8px; font: 800 16px var(--serif); letter-spacing: .06em; color: #fff; cursor: pointer;
   box-shadow: 0 3px 8px rgba(0, 0, 0, .4); touch-action: manipulation;
 }
-.xd-action.hit { background: linear-gradient(180deg, #2f8a55, #1e5e39); }
-.xd-action.stand { background: linear-gradient(180deg, #b52a1e, #7a1510); }
+.xd-action.hit { background: linear-gradient(180deg, #23aecd, #0e8aa8); }
+.xd-action.stand { background: linear-gradient(180deg, #d0451c, #8a2410); }
 .xd-action:disabled { opacity: .4; cursor: default; }
 .xd-action span { font-size: 18px; line-height: 1; }
 .xd-action { white-space: nowrap; }
