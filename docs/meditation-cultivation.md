@@ -11,7 +11,7 @@ Gửi lại yêu cầu hoàn thành không cộng thêm lần nữa.
 | Kết đan | 1.000 | Thêm lớp thứ hai |
 | Hóa cảnh | 2.500 | Đủ ba lớp hình thái |
 
-Sen kim tạo cánh sen, Lưu ly tạo sóng nước, Tinh hà tạo quỹ đạo sao,
+Sen kim tạo đài sen vàng hai tầng, Lưu ly tạo sóng nước, Tinh hà tạo quỹ đạo sao,
 Hỏa diễm tạo lửa dâng, Đào hoa tạo cánh hoa rơi, Bích ngọc tạo trúc,
 Nguyệt bạch tạo trăng khuyết, Hắc ám tạo xoáy khí.
 Hiệu ứng tồn tại cả khi đi lại, rõ hơn khi ngồi thiền; giữ màu và aura gốc.
