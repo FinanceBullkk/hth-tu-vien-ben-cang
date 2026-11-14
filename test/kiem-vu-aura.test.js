@@ -120,7 +120,7 @@ test('Kiếm Vũ khi ngồi thiền: tòa kiếm riêng thay cho tòa sen mặc 
     const aura = new CultivationAura(false, 12);
     assert.equal(aura.effect, 12);
     assert.equal(aura.uniforms.theme.value, 12);
-    aura.setEffect(13);
+    aura.setEffect(99); // effect không có thật rớt về 0
     assert.equal(aura.effect, 0);
     aura.dispose();
   } finally {

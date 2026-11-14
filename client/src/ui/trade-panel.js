@@ -2,7 +2,7 @@
 // - Sảnh: lời mời đang chờ, người đang đứng ở trạm để mời.
 // - Phiên: chọn món và TEU muốn đưa, xem đối phương đưa gì, cả hai cùng chốt thì đổi.
 // Đề nghị gom lại rồi gửi sau 300 ms; bản hiển thị luôn chỉnh theo trade:state server gửi về. Đóng bảng giữa phiên là huỷ.
-import { SHOP_SECTIONS, isPaid, itemName, parseItemId } from '../../../shared/shop.js';
+import { SHOP_SECTIONS, isPaid, isTradable, itemName, parseItemId } from '../../../shared/shop.js';
 import { TRADE } from '../../../shared/trade.js';
 import { h } from './dom.js';
 import { openModal } from './modal.js';
@@ -118,7 +118,7 @@ export function openTradePanel(app, trade, onClosed) {
   const updateSession = () => {
     const s = trade.state;
     if (!pending || !draft) draft = { items: new Set(s.me.items), teu: s.me.teu };
-    const mine = sortItems([...wallet.owned].filter(isPaid));
+    const mine = sortItems([...wallet.owned].filter((id) => isPaid(id) && isTradable(id))); // Hào quang chí tôn không trao đổi.
     const full = draft.items.size >= TRADE.maxItems;
     refs.mineGrid.replaceChildren(...(mine.length
       ? mine.map((it) => itemCard(it, {

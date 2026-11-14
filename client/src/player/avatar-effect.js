@@ -10,6 +10,9 @@
 // 7 Nguyệt bạch — trăng lưỡi liềm bạc treo sau vai, dải sao bạc nghiêng, bụi trăng rơi, chân ngôn 月;
 // 8 Hắc ám — hắc viêm lửa đen lõi tím vờn quanh người, vũng âm khí nuốt sáng, trận lục lăng, quỷ hỏa, chân ngôn 魔;
 // 9 Long Quyền — module riêng vfx/long-quyen-aura.js (hỏa long xoắn ốc vươn quyền, ấn quyền 拳, vết nứt chấn địa).
+// 13 Thần Bài, 14 Vua Câu Cá — hào quang chí tôn (cần thành tích mới mua): vfx/than-bai-aura.js
+// (quạt Tứ Át, vòng bài bay, phỉnh 財, trận bàn sòng) và vfx/vua-cau-ca-aura.js (cần câu vàng treo
+// cá chép, đàn cá vọt toé nước, trận biển 漁王).
 import * as THREE from 'three';
 import { createKiemVuAura } from './vfx/kiem-vu-aura.js';
 import { createTinhHaAura } from './vfx/tinh-ha-aura.js';
@@ -22,6 +25,8 @@ import { createHuyenDaAura } from './vfx/huyen-da-aura.js';
 import { createLongQuyenAura } from './vfx/long-quyen-aura.js';
 import { createXichDiemAura } from './vfx/xich-diem-aura.js';
 import { createKimLongAura } from './vfx/kim-long-aura.js';
+import { createThanBaiAura } from './vfx/than-bai-aura.js';
+import { createVuaCauCaAura } from './vfx/vua-cau-ca-aura.js';
 import { createAuraSignature } from './aura-signature.js';
 import { store } from '../ui/dom.js';
 
@@ -385,6 +390,9 @@ export function createEffect(effect, lowQuality = false) {
   if (effect === 10) return createXichDiemAura(lowQuality, reducedMotion);
   // 11: Kim Long Nguyệt Ảnh có pháp tướng riêng (rồng vàng vắt vòm qua đầu, long châu, nửa trăng, biển mây).
   if (effect === 11) return createKimLongAura(lowQuality, reducedMotion);
+  // 13, 14: hào quang chí tôn Thần Bài và Vua Câu Cá.
+  if (effect === 13) return createThanBaiAura(lowQuality, reducedMotion);
+  if (effect === 14) return createVuaCauCaAura(lowQuality, reducedMotion);
 
   const colors = PALETTES[effect - 1] ?? PALETTES[0];
   const group = new THREE.Group();
