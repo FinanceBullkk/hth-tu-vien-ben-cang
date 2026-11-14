@@ -1,6 +1,7 @@
 // PUPPETEER_MODULE may point to an installed Puppeteer ESM entry. No game server/DB needed.
-// Kiểm tra aura Sen kim (effect 1) trên trang Bộ sưu tập hào quang: module mới chạy qua vòng
-// render thật, mờ dần không loang sang avatar khác, dispose đủ, và chụp khung các góc.
+// Kiểm tra aura Sen kim (effect 1) trên trang Bộ sưu tập hào quang: nền inline + aura-signature
+// chạy qua vòng render thật, mờ dần không loang sang avatar khác, dispose đủ, giảm chuyển động
+// đúng nhịp, và chụp khung các góc.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { mkdir } from 'node:fs/promises';
@@ -26,38 +27,39 @@ try {
   await page.waitForFunction(() => window.__gallery?.entries?.[0]?.avatar?.aura);
   const checks = await page.evaluate(async () => {
     const { createEffect } = await import('/client/src/player/avatar-effect.js');
-    const { petalGeometry, dishGeometry } = await import('/client/src/player/vfx/sen-kim-petal-geometry.js');
     const result = [];
     const entry = window.__gallery.entries[0]; // effect 1 — Sen kim
     if (!entry || entry.effect !== 1) throw Error('Gallery Sen kim entry missing');
-    if (entry.avatar.aura.points?.name !== 'sen-kim-aura') throw Error('Gallery avatar does not use sen-kim module');
     const op = m => m.uniforms ? m.uniforms.opacity.value : m.opacity;
     for (const low of [false, true]) {
       const aura = createEffect(1, low), other = createEffect(1, low);
+      const signature = aura.points.getObjectByName('aura-signature');
+      if (!signature) throw Error('aura-signature missing');
+      if (!aura.points.getObjectByName('aura-seal')) throw Error('aura-seal missing');
+      const streams = signature.children.filter(o => o.name === 'aura-streams');
+      if (streams.length !== 2 || streams[0].geometry === streams[1].geometry) throw Error('Shared stream geometry');
       for (const time of [0, .8, 2.7, 5, 8, 1234567]) {
-        aura.update(time);
+        aura.update(time, 0);
+        aura.points.updateMatrixWorld(true);
         aura.points.traverse(o => {
-          if (o.instanceMatrix && ![...o.instanceMatrix.array].every(Number.isFinite)) throw Error('Non-finite instances');
           for (const attr of Object.values(o.geometry?.attributes || {})) {
             if (![...attr.array].every(Number.isFinite)) throw Error('Non-finite geometry');
           }
+          if (o.instanceMatrix && ![...o.instanceMatrix.array].every(Number.isFinite)) throw Error('Non-finite instances');
         });
       }
-      // Tắt một avatar không làm tắt avatar kia.
-      aura.points.material.opacity = 0; aura.update(4);
-      if (op(aura.points.getObjectByName('sen-kim-petals').material) > 0.001) throw Error('Fade did not propagate');
-      other.update(4);
-      if (op(other.points.getObjectByName('sen-kim-petals').material) <= 0) throw Error('Fade leaked to other avatar');
-      // Dispose giải phóng đúng phần riêng, giữ hình cánh và đế đài dùng chung (cả biến thể low).
-      const shared = new Set([petalGeometry(), petalGeometry(true), dishGeometry(), dishGeometry(true)]);
-      const owned = new Set([aura.points.material]);
-      aura.points.traverse(o => {
-        if (o.isInstancedMesh && o.geometry.attributes.position.count === 4) shared.add(o.geometry);
-        else if (o.geometry && !shared.has(o.geometry)) owned.add(o.geometry);
-        if (o.material) owned.add(o.material);
-        for (const u of Object.values(o.material?.uniforms ?? {})) if (u.value?.isTexture) shared.add(u.value);
-        if (o.material?.map) shared.add(o.material.map);
-      });
+      let cylinders = 0;
+      aura.points.traverse(o => { if (o.geometry?.type === 'CylinderGeometry') cylinders++; });
+      if (cylinders) throw Error('Closed dome retained');
+      // Tắt một avatar không làm tắt avatar kia (V10.3: halo là ShaderMaterial — opacity nằm ở uniform).
+      aura.beginFade(); aura.points.material.opacity = 0; aura.update(4, 0);
+      if (op(signature.getObjectByName('aura-heart-lower').material) !== 0
+        || streams[0].material.uniforms.fade.value !== 0) throw Error('Fade did not propagate');
+      other.update(4, 0); other.update(9, 0);
+      if (op(other.points.getObjectByName('aura-heart-lower').material) <= 0) throw Error('Fade leaked to other avatar');
+      const owned = new Set();
+      // Three.js owns one shared quad geometry for every Sprite.
+      aura.points.traverse(o => { if (o.geometry && !o.isSprite) owned.add(o.geometry); if (o.material) owned.add(o.material); });
       let disposed = 0;
       owned.forEach(o => o.addEventListener('dispose', () => disposed++));
       aura.dispose(); other.dispose();
@@ -67,16 +69,15 @@ try {
     const match = globalThis.matchMedia;
     const { store } = await import('/client/src/ui/dom.js');
     try {
-      // Trang gallery bật fullFx=1 để khỏi dính giảm chuyển động của hệ điều hành — tắt tạm
-      // để đi đúng nhánh wrapper trong createEffect, xong trả lại như cũ.
+      // Trang gallery bật fullFx=1 — tắt tạm để đi đúng nhánh wrapper trong createEffect.
       store.set('fullFx', '0');
       globalThis.matchMedia = () => ({ matches: true });
       const reduced = createEffect(1);
       globalThis.matchMedia = () => ({ matches: false });
       const normal = createEffect(1);
-      reduced.update(10); normal.update(3.5);
-      const t = a => a.points.getObjectByName('sen-kim-dish').material.uniforms.time.value;
-      if (Math.abs(t(reduced) - 10 / 3) > 1e-9 || t(normal) !== 3.5) throw Error('Reduced motion timing');
+      reduced.update(10, 0); normal.update(3.5, 0);
+      const ring = a => a.points.getObjectByName('aura-heart-lower');
+      if (Math.abs(ring(reduced).rotation.z - ring(normal).rotation.z) > 1e-8) throw Error('Reduced motion timing');
       reduced.dispose(); normal.dispose();
     } finally {
       globalThis.matchMedia = match;

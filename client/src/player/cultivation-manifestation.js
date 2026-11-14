@@ -10,7 +10,6 @@ import { buildHuyenDaThrone } from './vfx/huyen-da-meditation-throne.js';
 import { buildLongQuyenThrone } from './vfx/long-quyen-meditation-throne.js';
 import { buildXichDiemThrone } from './vfx/xich-diem-meditation-throne.js';
 import { buildKimLongThrone } from './vfx/kim-long-meditation-throne.js';
-import { buildSenKimThrone } from './vfx/sen-kim-meditation-throne.js';
 
 const cache = new Map();
 const petal = new THREE.PlaneGeometry(1, 1, 8, 12);
@@ -131,9 +130,6 @@ function build(effect, stage) {
   } else if (effect === 11) {
     // Kim Long: vòm rồng vàng thu nhỏ qua đầu, long châu, cung bán nguyệt, đài mây.
     buildKimLongThrone(stage, add);
-  } else if (effect === 1) {
-    // Sen kim: tòa đài sen vàng riêng hai tầng cánh cuốn quanh hông, không mượn đoá sen chung.
-    buildSenKimThrone(stage, add);
   } else if (stage === 0) {
   // Tier three is a small spirit seed; later tiers introduce a new silhouette.
     if (effect === 1 || effect === 0) bloom(0, 0.18, -0.42, 0.42, 8);
