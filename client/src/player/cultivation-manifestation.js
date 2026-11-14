@@ -10,6 +10,7 @@ import { buildHuyenDaThrone } from './vfx/huyen-da-meditation-throne.js';
 import { buildLongQuyenThrone } from './vfx/long-quyen-meditation-throne.js';
 import { buildXichDiemThrone } from './vfx/xich-diem-meditation-throne.js';
 import { buildKimLongThrone } from './vfx/kim-long-meditation-throne.js';
+import { buildSenKimThrone } from './vfx/sen-kim-meditation-throne.js';
 import { buildThanBaiThrone } from './vfx/than-bai-meditation-throne.js';
 import { buildVuaCauCaThrone } from './vfx/vua-cau-ca-meditation-throne.js';
 
@@ -132,6 +133,9 @@ function build(effect, stage) {
   } else if (effect === 11) {
     // Kim Long: vòm rồng vàng thu nhỏ qua đầu, long châu, cung bán nguyệt, đài mây.
     buildKimLongThrone(stage, add);
+  } else if (effect === 1) {
+    // Sen kim: tòa sen vàng riêng — vòm hai tầng so le, vòng cánh ôm hông, chén đài, túi nhụy.
+    buildSenKimThrone(stage, add, petal);
   } else if (effect === 13) {
     // Thần Bài: lá Át xoè trước gối → vòng bài dựng quanh tòa → quạt bài lớn sau đầu, vành phỉnh.
     buildThanBaiThrone(stage, add);
@@ -183,18 +187,23 @@ export function createManifestation(effect, tint, accent, lowQuality = false) {
     return geometry;
   }));
   const group = new THREE.Group();
+  // V10.4 nâng chất tòa thiền: thân khối có độ đầy (gradient theo chiều cao, gốc đậm neo xuống
+  // sàn) thay vì chỉ viền fresnel mỏng; nét mực hậu kiểm giảm trắng để không còn vẻ "bản vẽ".
   const material = new THREE.ShaderMaterial({
     uniforms: { tint: { value: tint.clone() }, accent: { value: accent.clone() }, opacity: { value: 0.6 } },
-    vertexShader: `varying vec3 n, eye; void main(){vec4 p=modelViewMatrix*vec4(position,1.0); n=normalize(normalMatrix*normal); eye=normalize(-p.xyz); gl_Position=projectionMatrix*p;}`,
-    fragmentShader: `uniform vec3 tint,accent; uniform float opacity; varying vec3 n,eye;
+    vertexShader: `varying vec3 n, eye; varying float vY;
+      void main(){vec4 p=modelViewMatrix*vec4(position,1.0); n=normalize(normalMatrix*normal); eye=normalize(-p.xyz); vY=position.y; gl_Position=projectionMatrix*p;}`,
+    fragmentShader: `uniform vec3 tint,accent; uniform float opacity; varying vec3 n,eye; varying float vY;
       void main(){float edge=pow(1.0-abs(dot(normalize(n),normalize(eye))),1.5);
-      gl_FragColor=vec4(mix(tint,accent,edge),opacity*(0.32+edge*0.62));
+      float lift=smoothstep(-0.1,1.6,vY);
+      vec3 col=mix(tint*0.88,accent,clamp(lift*0.35+edge*0.65,0.0,1.0));
+      gl_FragColor=vec4(col,opacity*(0.34+edge*0.52+lift*0.16));
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
       }`,
     transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
   });
-  const ink = new THREE.LineBasicMaterial({ color: tint.clone().lerp(accent, 0.4), transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending });
+  const ink = new THREE.LineBasicMaterial({ color: tint.clone().lerp(accent, 0.4), transparent: true, opacity: 0.28, depthWrite: false, blending: THREE.AdditiveBlending });
   const layers = cache.get(theme).map(geometry => {
     const m = new THREE.Mesh(geometry, material);
     if (!lowQuality) m.add(new THREE.LineSegments(geometry.userData.outline, ink));
@@ -211,7 +220,7 @@ export function createManifestation(effect, tint, accent, lowQuality = false) {
         mesh.rotation.y = Math.sin(time * 0.35 + i) * (i ? 0.08 : 0.15);
       });
       material.uniforms.opacity.value = (0.65 + Math.sin(time * 0.9) * 0.08) * sit * fading;
-      ink.opacity = 0.42 * sit * fading;
+      ink.opacity = 0.26 * sit * fading;
     },
     dispose() { group.removeFromParent(); material.dispose(); ink.dispose(); },
   };
