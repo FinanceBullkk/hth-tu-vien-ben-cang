@@ -27,7 +27,7 @@ const SIT_INTERVAL_MS = 1000; // Ngồi xuống phát tin cho cả phòng nên p
 const round2 = (n) => Math.round(n * 100) / 100;
 
 export class Room {
-  constructor({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch, melody, pk, shop, baucua, xidach, taixiu, coquay, slot, stone, trade }) {
+  constructor({ io, db, filter, config, wishes, bell, meditation, rhythm, riddle, fishing, pitch, melody, pk, shop, baucua, xidach, taixiu, coquay, slot, stone, trade, pets }) {
     this.io = io;
     this.broadcast = io.to(PLAYERS_ROOM);
     this.db = db;
@@ -46,6 +46,7 @@ export class Room {
     this.baucua = baucua;
     this.xidach = xidach;
     this.slot = slot; // Máy gạt cần: mỗi lần gạt chấm ngay, không có ván chung nên không cần sweep hay snapshot.
+    this.pets = pets; // Thú cưng: ấp trứng, dắt thú, cho ăn cá. Không có phiên nên không cần sweep.
     this.stone = stone; // Bãi đá: mỗi người một tảng trên đe mình đứng; sweep đập nốt cho người đi khỏi bãi.
     // Tài xỉu, cò quay: cùng lõi CasinoRoundTable, sự kiện <trò>:bet|clear|throw.
     this.casinoTables = [taixiu, coquay].filter(Boolean);
@@ -109,6 +110,8 @@ export class Room {
       attire: p.attire,
       weapon: p.weapon,
       effect: p.effect,
+      pet: p.pet ?? -1,
+      petTier: p.petTier ?? 0,
       cultivationTier: p.cultivationTier ?? 0,
       qi: p.qi ?? 0,
       x: p.x,
@@ -271,6 +274,9 @@ export class Room {
     on('slot:spin', (p, data) => this.slot.spin(p, data));
     on('stone:start', (p, data) => this.stone.start(p, data));
     on('stone:hit', (p, data) => this.stone.hit(p, data));
+    on('pet:hatch', (p) => this.pets.hatch(p));
+    on('pet:summon', (p, data) => this.pets.summon(p, data));
+    on('pet:feed', (p, data) => this.pets.feed(p, data));
     on('shop:buy', (p, data) => this.onBuy(p, data));
     on('shop:progress', (p) => this.shop.status(p));
     on('look:set', (p, data) => this.onLook(p, data));
@@ -396,6 +402,7 @@ export class Room {
     if (isNewcomer) this.db.addTeu(pid, TEU.welcomeGift, 'welcome', date, now);
     player.cultivationTier = this.db.cultivation(pid).tier;
     player.qi = Math.floor((this.db.playerRow(pid)?.cultivation_ms ?? 0) / QI_INTERVAL_MS);
+    this.pets?.load(player);
     if (!isResume) {
       this.db.bumpStat(date, { visits: 1 });
       socket.to(PLAYERS_ROOM).emit('player:join', this.publicPlayer(player));
@@ -425,6 +432,7 @@ export class Room {
         owned: [...owned],
         teu: this.db.shop.teu(pid),
         bag: this.fishing.bag.state(pid),
+        pets: this.pets?.state(pid) ?? null,
         welcomeGift: isNewcomer ? TEU.welcomeGift : 0,
         baucua: this.baucua.snapshot(pid),
         xidach: this.xidach.snapshot(pid),
