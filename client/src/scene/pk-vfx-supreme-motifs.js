@@ -68,9 +68,7 @@ export function twoSidedCard(cell, facing) {
 export function goldDie(t) {
   const geo = new THREE.BoxGeometry(.12, .12, .12);
   DICE_FACES.forEach((value, face) => mapUvToCell(geo, DICE_ATLAS, DICE_ATLAS, value - 1, face * 4, 4));
-  const die = new THREE.Mesh(geo, basic(t.main, { additive: false, opacity: .97, map: diceAtlas() }));
-  die.userData.tumble = 9; // projectile update lật xúc xắc theo trục x trên đường bay
-  return die;
+  return new THREE.Mesh(geo, basic(t.main, { additive: false, opacity: .97, map: diceAtlas() }));
 }
 
 function casinoChip(t, i) {
