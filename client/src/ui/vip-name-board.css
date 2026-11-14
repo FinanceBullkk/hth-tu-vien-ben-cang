@@ -1,0 +1,59 @@
+/* BẢNG TÊN CHÍ TÔN — chỉ người đeo hào quang chí tôn (avatar-title.js đặt .tag[data-board] và --nb-frame).
+   Danh hiệu: ảnh huy hiệu vàng đúc (vip-title-badge.js) + lớp chuyển động rẻ: quầng thở phía sau, vệt sáng lướt
+   (mask theo chính ảnh nên chỉ chạy trên vàng, sơn mài), ba sao lóe. Tên: khung sơn mài viền vàng có ngọc hai đầu,
+   vẽ bằng border-image nên dài ngắn theo tên mà hai đầu không méo. */
+
+.tag[data-board="than-bai"] { --vtb-glow: rgba(255, 120, 50, .5); --nb-glow: rgba(255, 190, 90, .7); }
+.tag[data-board="vua-cau-ca"] { --vtb-glow: rgba(60, 210, 240, .45); --nb-glow: rgba(110, 230, 245, .65); }
+.tag[data-board] { gap: 0; }
+
+/* ----- Huy hiệu danh hiệu ----- */
+.tag[data-board] .tag-title {
+  z-index: 1; padding: 0; margin: 0 0 -24px; line-height: 0; background: none; text-shadow: none; animation: none;
+  -webkit-text-fill-color: initial; /* .tag-title.vip làm chữ trong suốt; không để lan vào lớp con */
+}
+.tag[data-board] .tag-title::before,
+.tag[data-board] .tag-title::after { content: none; }
+
+.vtb { position: relative; display: block; width: 240px; aspect-ratio: 300 / 124; isolation: isolate; }
+.vtb::before {
+  content: ''; position: absolute; inset: 14% 4% 10%; z-index: -1; border-radius: 50%;
+  background: radial-gradient(closest-side, var(--vtb-glow), transparent);
+  animation: vtbGlow 3.8s ease-in-out infinite alternate;
+}
+.vtb-art { display: block; width: 100%; height: 100%; user-select: none; }
+.vtb-shine {
+  position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen;
+  -webkit-mask: var(--vtb-art) center / 100% 100% no-repeat; mask: var(--vtb-art) center / 100% 100% no-repeat;
+  background: linear-gradient(108deg, transparent 44%, rgba(255, 248, 220, .8) 50%, transparent 56%) 150% 0 / 250% 100% no-repeat;
+  animation: vtbShine 5s ease-in-out infinite;
+}
+/* Sao lóe bốn cánh: hai vệt sáng chéo nhau quanh một tâm trắng. */
+.vtb-star {
+  position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; opacity: 0; pointer-events: none;
+  background:
+    radial-gradient(circle, #fff 0 1.4px, rgba(255, 240, 190, .6) 2.4px, transparent 4px),
+    linear-gradient(transparent 46%, rgba(255, 246, 214, .9) 50%, transparent 54%),
+    linear-gradient(90deg, transparent 46%, rgba(255, 246, 214, .9) 50%, transparent 54%);
+  animation: vtbStar 3.4s ease-in-out infinite;
+}
+.vtb-star.s1 { left: 6%; top: 21%; }
+.vtb-star.s2 { left: 64%; top: 12%; animation-delay: 1.1s; }
+.vtb-star.s3 { left: 91%; top: 88%; animation-delay: 2.2s; }
+
+@keyframes vtbGlow { from { opacity: .55; transform: scale(.96); } to { opacity: 1; transform: scale(1.04); } }
+@keyframes vtbShine { 0% { background-position: 150% 0; } 50%, 100% { background-position: -50% 0; } }
+@keyframes vtbStar { 0%, 100% { opacity: 0; transform: scale(.3) rotate(0); } 12% { opacity: 1; transform: scale(1) rotate(45deg); } 26% { opacity: 0; transform: scale(.4) rotate(90deg); } }
+
+/* ----- Tên người chơi ----- */
+.tag[data-board] .tag-name {
+  position: relative; box-sizing: border-box; height: 32px; padding: 0 4px;
+  border: solid transparent; border-width: 0 30px; border-radius: 0;
+  border-image: var(--nb-frame) 0 30 fill / 0 30px / 0 stretch;
+  background: none; font: 600 14px/32px var(--serif); letter-spacing: .06em; color: #fff7e4;
+  text-shadow: 0 0 8px var(--nb-glow), 0 1px 2px #000, 0 0 2px #000;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vtb::before, .vtb-shine, .vtb-star { animation: none; }
+}
