@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { PkGame } from '../server/pk.js';
-import { PK, PK_ATTACK } from '../shared/pk.js';
+import { PK, PK_ATTACK, PK_KITS, pkKitForEffect } from '../shared/pk.js';
 import { SPAWN } from '../shared/layout.js';
 import { ACTIVITY } from '../shared/protocol.js';
 
@@ -117,6 +117,66 @@ test('kit xung kích (Hỏa diễm): lướt chém xuyên người trên đườ
   assert.equal(skillEvent.hits[0].sid, b.sid);
   assert.equal(skillEvent.hits[0].damage, 12);
   assert.equal(pk.state(b).hp, 88);
+});
+
+test('Thần bài (13): quạt bài quét hai người, tất tay hút máu, bài tẩy phản đòn', () => {
+  const kit = pkKitForEffect(13);
+  assert.notEqual(kit.id, PK_KITS.none.id);
+  {
+    const { pk, a, b, events } = fixture();
+    a.effect = 13;
+    const c = { sid: 3, pid: 'secret-c', x: 0.6, z: 2, rot: 0, activity: ACTIVITY.none, socket: {}, dirty: false };
+    pk.players.set(3, c);
+    pk.state(c);
+    pk.attack(a, { type: 'strike', rot: 0, damage: 999 });
+    const strike = events.find(([name]) => name === 'pk:strike')[1];
+    assert.equal(strike.effect, 13);
+    assert.deepEqual(strike.hits.map((h) => h.sid).sort(), [2, 3]);
+    assert.equal(pk.state(b).hp, 100 - kit.skills.strike.damage);
+    assert.equal(pk.state(c).hp, 100 - kit.skills.strike.damage);
+    // Tất tay: sát thương kit, hồi round(24 × .3) = 7 cho kẻ ra chiêu đang mất máu.
+    a.combat.hp = 50;
+    pk.attack(a, { type: 'slashQ', rot: 0, aimDistance: 1.5 });
+    const q = events.filter(([name]) => name === 'pk:skill').at(-1)[1];
+    assert.deepEqual([q.type, q.effect, q.radius], ['slashQ', 13, kit.skills.slashQ.burstRadius]);
+    assert.equal(q.hits.find((h) => h.sid === b.sid).damage, kit.skills.slashQ.damage);
+    assert.equal(pk.state(a).hp, 50 + Math.round(kit.skills.slashQ.damage * kit.skills.slashQ.lifesteal * 2));
+    assert.equal(JSON.stringify(events).includes('secret-'), false);
+  }
+  {
+    // Bài tẩy: B (Thần bài) bật khiên, đòn 20 còn round(20 × .4) = 8, dội lại round(8 × .3) = 2.
+    const { pk, a, b, events } = fixture();
+    b.effect = 13;
+    assert.equal(pk.attack(b, { type: 'shield' }).ok, true);
+    const shield = events.filter(([name]) => name === 'pk:skill').at(-1)[1];
+    assert.deepEqual([shield.effect, shield.duration], [13, kit.skills.shield.duration]);
+    pk.attack(a, { type: 'strike' });
+    assert.equal(pk.state(b).hp, 92);
+    assert.equal(pk.state(a).hp, 98);
+  }
+});
+
+test('Vua câu cá (14): quất cần tầm xa, tuyệt kỹ giật dây kéo địch về tâm', () => {
+  const kit = pkKitForEffect(14);
+  assert.notEqual(kit.id, PK_KITS.none.id);
+  const { pk, a, b, events } = fixture();
+  a.effect = 14;
+  b.z = 3; // ngoài tầm đánh thường baseline (2.2 + 0.4) nhưng trong tầm cần câu (3 + 0.4)
+  assert.equal(pk.attack(a, { type: 'strike', rot: 0 }).isHit, true);
+  assert.equal(pk.state(b).hp, 100 - kit.skills.strike.damage);
+  // Giật dây: B trúng tuyệt kỹ ở z = 5 bị kéo 2m về phía A.
+  b.z = 5;
+  pk.attack(a, { type: 'slashQ', rot: 0, aimDistance: 5 });
+  const q = events.filter(([name]) => name === 'pk:skill').at(-1)[1];
+  assert.deepEqual([q.type, q.effect], ['slashQ', 14]);
+  assert.equal(q.hits[0].damage, kit.skills.slashQ.damage);
+  assert.equal(b.z, 5 - kit.skills.slashQ.pull);
+  // Lướt sóng: đúng quãng của kit, không gây sát thương trên đường lướt.
+  a.x = 0; a.z = 0; b.x = 5;
+  pk.attack(a, { type: 'dash', rot: 0 });
+  const dash = events.filter(([name]) => name === 'pk:skill').at(-1)[1];
+  assert.deepEqual([dash.type, dash.effect, dash.hits.length], ['dash', 14, 0]);
+  assert.ok(Math.abs(dash.toZ - dash.fromZ - kit.skills.dash.distance) < 0.01);
 });
 
 test('kit quét đa mục tiêu (Kiếm vũ): một trảm chém hai người đứng cạnh', () => {

@@ -63,7 +63,7 @@ export const pkDamage = (base = PK_ATTACK.damage) => Number(base) || PK_ATTACK.d
 export const pkShieldReduction = () => 0;
 
 // ===== Kit kỹ năng theo aura — REBUILD CƠ CHẾ =====
-// Mỗi aura (EFFECT_NAMES, id 1–12) một kit với SỐ LIỆU VÀ CƠ CHẾ RIÊNG:
+// Mỗi aura (EFFECT_NAMES, id 1–14) một kit với SỐ LIỆU VÀ CƠ CHẾ RIÊNG:
 //   strike — damage/range/cooldown/coneAngleCos riêng, maxTargets (chém quét đa mục tiêu),
 //     lifesteal (hút khí huyết hồi HP);
 //   slashQ — damage/range/burstRadius/cooldown riêng, pull (kéo địch về tâm kiểu "Lam");
@@ -293,6 +293,40 @@ export const PK_KITS = Object.freeze({
       distance: 3.8, iframe: 300, cooldown: 600,
       desc: 'Đạp kiếm quang lướt gió, thân ảnh tan vào làn gió xanh.' },
   }),
+  // ----- Hào quang chí tôn (888 TEU, cần thành tích): cơ chế riêng nhưng cùng biên độ cân bằng
+  // như mọi kit — đắt để khoe dáng, không phải để mua thắng.
+  // 13 Thần bài — con bạc: phi bài quét hai người, tất tay nặng tay ăn trọn sòng, bài tẩy phản đòn.
+  'than-bai': makeKit({
+    id: 'than-bai', name: 'Thần Bài', effect: 13, color: '#ffcf3f',
+    attack: { name: 'Thần Bài Phi Diệp', shortLabel: 'Phi Bài', type: 'Bài Thuật · Quét Đa Mục Tiêu',
+      damage: 15, range: 2.8, cooldown: 550, coneAngleCos: .65, maxTargets: 2,
+      desc: 'Xòe Thùng Phá Sảnh bích phóng như phi đao — quạt bài rộng, một lần trúng hai người.' },
+    slashQ: { name: 'Tất Tay Định Càn Khôn', shortLabel: 'Tất Tay', type: 'Tuyệt Kỹ Chí Tôn · Đổ Thần',
+      damage: 24, range: 8.5, burstRadius: 3.4, cooldown: 1000, lifesteal: .3,
+      desc: 'Tất tay một ván: xúc xắc vàng ném tới, sét vàng giáng xuống — thắng thì ôm ba phần sát thương về làm sinh lực.' },
+    shield: { name: 'Thùng Phá Sảnh Hộ Thể', shortLabel: 'Phá Sảnh', type: 'Bài Trận · Phản Kích',
+      duration: 1400, reduction: .6, cooldown: 650, reflect: .3,
+      desc: 'Năm lá 10 J Q K Át bích đứng vòng hộ thân — lật bài tẩy, ba phần sát thương dội ngược kẻ đánh.' },
+    dash: { name: 'Lục Lục Đại Thuận', shortLabel: 'Lục Lục', type: 'Thân Pháp · Tung Thân',
+      distance: 3.6, iframe: 300, cooldown: 600,
+      desc: 'Gieo xúc xắc ra sáu sáu, thân theo vận đỏ lướt đi, để lại vệt phỉnh vàng lăn tròn.' },
+  }),
+  // 14 Vua câu cá — ngư ông: quất cần tầm xa, tuyệt kỹ giật dây kéo địch về tâm, lướt sóng xa.
+  'vua-cau-ca': makeKit({
+    id: 'vua-cau-ca', name: 'Ngư Vương', effect: 14, color: '#5fe3f0',
+    attack: { name: 'Thần Câu Quất Thủy', shortLabel: 'Quất Câu', type: 'Cần Pháp · Công Kích Chính',
+      damage: 17, range: 3, cooldown: 550, coneAngleCos: .75,
+      desc: 'Vung cần câu vàng quất thành vòm — dây câu với xa ba thước, xé nước bắn bọt sóng.' },
+    slashQ: { name: 'Lý Ngư Vượt Vũ Môn', shortLabel: 'Vũ Môn', type: 'Tuyệt Kỹ Chí Tôn · Ngư Vương',
+      damage: 16, range: 9.5, burstRadius: 3.8, cooldown: 750, pull: 2,
+      desc: 'Cá chép vàng vượt vũ môn lao tới điểm ngắm, cột nước phun trời giật dây kéo địch về tâm (2m).' },
+    shield: { name: 'Hải Triều Hộ Thể', shortLabel: 'Hải Triều', type: 'Thủy Trận · Phòng Ngự',
+      duration: 1600, reduction: .65, cooldown: 700,
+      desc: 'Đàn cá chép vàng bơi vòng quanh thân trong màn sóng gợn, sóng loang hóa giải sát khí.' },
+    dash: { name: 'Phi Ngư Lướt Sóng', shortLabel: 'Phi Ngư', type: 'Thân Pháp · Tung Thân',
+      distance: 4, iframe: 250, cooldown: 600,
+      desc: 'Như cá chuồn vọt khỏi mặt nước, lướt 4m trên sóng để lại vệt bọt bạc.' },
+  }),
 });
 
 // Index theo effect id cho tra nhanh; aura 0 hoặc id lạ → kit Vô Môn.
@@ -301,6 +335,7 @@ export const PK_KIT_BY_EFFECT = Object.freeze([
   PK_KITS['kim-lien'], PK_KITS['luu-ly'], PK_KITS['tinh-ha'], PK_KITS['hong-lien'],
   PK_KITS['dao-hoa'], PK_KITS['bich-ngoc'], PK_KITS['nguyet-bach'], PK_KITS['hac-am'],
   PK_KITS['long-quyen'], PK_KITS['xich-diem'], PK_KITS['kim-long'], PK_KITS['kiem-vu'],
+  PK_KITS['than-bai'], PK_KITS['vua-cau-ca'], // 13–14 — hào quang chí tôn
 ]);
 
 export function pkKitForEffect(effect) {

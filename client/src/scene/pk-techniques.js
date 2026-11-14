@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { SUPREME_DOMAINS, SUPREME_Q_TECHNIQUES } from './pk-techniques-supreme.js';
 
 // ===== Tuyệt kỹ PK theo anime (Jujutsu Kaisen, Naruto, Bleach, Dragon Ball…) =====
 // Mỗi aura một tuyệt kỹ Q hoàn toàn riêng (spawnQTechnique) và một Lãnh vực thu nhỏ
@@ -25,7 +26,7 @@ function beamBetween(from, to, radius, mat) {
 
 const petal = (color) => new THREE.Mesh(new THREE.PlaneGeometry(.16, .34), normMat(color, .95));
 
-// ===== 12 tuyệt kỹ Q — ctx: { vfx, effect, t, fromX/Y/Z, toX/Y/Z, rot, radius, isHit } =====
+// ===== Tuyệt kỹ Q (1–12 ở đây, 13–14 chí tôn ở pk-techniques-supreme.js) — ctx: { vfx, effect, t, fromX/Y/Z, toX/Y/Z, rot, radius, isHit } =====
 const Q_TECHNIQUES = {
   // Sen kim — Ngàn Tay Phật Quang: bát bộ Phật chưởng hợp nhất dâng cột kim quang.
   1: (ctx) => {
@@ -519,6 +520,7 @@ const Q_TECHNIQUES = {
       }
     } };
   },
+  ...SUPREME_Q_TECHNIQUES, // 13 Thần bài, 14 Vua câu cá — pk-techniques-supreme.js
 };
 
 // ===== Lãnh vực thu nhỏ (mini Domain Expansion) cho hộ thể =====
@@ -706,6 +708,7 @@ const DOMAINS = {
       }
     };
   },
+  ...SUPREME_DOMAINS, // 13 Thần bài, 14 Vua câu cá — pk-techniques-supreme.js
 };
 
 // Sinh tuyệt kỹ Q cho effect; trả true nếu đã đảm nhiệm (PkVfx bỏ qua đường bay cũ).

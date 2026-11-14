@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Db } from '../server/db.js';
-import { PK, PK_ATTACK, PK_SKILLS, PK_KIT_BY_EFFECT, pkDamage, pkKitForEffect, pkMaxHp, pkTitleMask } from '../shared/pk.js';
+import { PK, PK_ATTACK, PK_KITS, PK_SKILLS, PK_KIT_BY_EFFECT, pkDamage, pkKitForEffect, pkMaxHp, pkTitleMask } from '../shared/pk.js';
+import { EFFECT_NAMES } from '../shared/protocol.js';
+
+// Mọi aura trong EFFECT_NAMES (kể cả hào quang chí tôn 13–14) đều phải có kit riêng.
+const AURA_COUNT = EFFECT_NAMES.length - 1;
 
 test('pk stats are flat and server authoritative for P0 slice', () => {
   assert.equal(pkMaxHp(), 100);
@@ -25,7 +29,8 @@ test('pk kits expose clean single melee kit', () => {
 });
 
 test('mỗi aura một kit rebuild: số liệu riêng trong biên độ cân bằng', () => {
-  for (let effect = 1; effect <= 12; effect++) {
+  assert.equal(PK_KIT_BY_EFFECT.length, EFFECT_NAMES.length, 'aura nào trong EFFECT_NAMES cũng phải có kit');
+  for (let effect = 1; effect <= AURA_COUNT; effect++) {
     const kit = pkKitForEffect(effect);
     assert.equal(kit.effect, effect);
     assert.ok(kit.name);
@@ -61,7 +66,33 @@ test('mỗi aura một kit rebuild: số liệu riêng trong biên độ cân b�
     }
   }
   const names = new Set(PK_KIT_BY_EFFECT.slice(1).map((kit) => kit.name));
-  assert.equal(names.size, 12);
+  assert.equal(names.size, AURA_COUNT);
+  const skillNames = new Set(PK_KIT_BY_EFFECT.slice(1).flatMap((kit) =>
+    ['strike', 'slashQ', 'shield', 'dash'].map((type) => kit.skills[type].name)));
+  assert.equal(skillNames.size, AURA_COUNT * 4, 'tên chiêu không được trùng giữa các kit');
+});
+
+test('hai hào quang chí tôn có kit riêng, không rơi về Vô Môn', () => {
+  const thanBai = pkKitForEffect(13);
+  const vuaCauCa = pkKitForEffect(14);
+  assert.equal(EFFECT_NAMES[13], 'Thần bài');
+  assert.equal(EFFECT_NAMES[14], 'Vua câu cá');
+  assert.deepEqual([thanBai.id, thanBai.effect, thanBai.color], ['than-bai', 13, '#ffcf3f']);
+  assert.deepEqual([vuaCauCa.id, vuaCauCa.effect, vuaCauCa.color], ['vua-cau-ca', 14, '#5fe3f0']);
+  for (const kit of [thanBai, vuaCauCa]) {
+    assert.notEqual(kit, PK_KITS.none);
+    assert.notEqual(kit.skills.strike.name, PK_SKILLS.strike.name);
+    assert.ok(Object.isFrozen(kit) && Object.isFrozen(kit.skills.slashQ));
+  }
+  // Cơ chế đúng chủ đề: Thần bài quạt bài hai mục tiêu, tất tay hút máu, bài tẩy phản đòn.
+  assert.equal(thanBai.skills.strike.maxTargets, 2);
+  assert.ok(thanBai.skills.slashQ.lifesteal > 0);
+  assert.ok(thanBai.skills.shield.reflect > 0);
+  assert.match(thanBai.skills.slashQ.name, /Tất Tay/);
+  // Vua câu cá giật dây kéo địch về tâm và quất cần tầm xa hơn baseline.
+  assert.ok(vuaCauCa.skills.slashQ.pull > 0);
+  assert.ok(vuaCauCa.skills.strike.range > PK_SKILLS.strike.range);
+  assert.match(vuaCauCa.skills.slashQ.name, /Vũ Môn/);
 });
 
 test('mỗi kit lệch baseline ở ít nhất một chiêu — rebuild thật, không chỉ đổi tên', () => {
@@ -69,7 +100,7 @@ test('mỗi kit lệch baseline ở ít nhất một chiêu — rebuild thật, 
   const same = (a, b) =>
     a.damage === b.damage && a.cooldown === b.cooldown && a.range === b.range
     && a.duration === b.duration && a.distance === b.distance && a.reduction === b.reduction;
-  for (let effect = 1; effect <= 12; effect++) {
+  for (let effect = 1; effect <= AURA_COUNT; effect++) {
     const kit = pkKitForEffect(effect).skills;
     const differs = ['strike', 'slashQ', 'shield', 'dash'].some((key) => !same(kit[key], base[key]));
     assert.ok(differs, `kit ${effect} trùng baseline ở cả 4 chiêu`);
@@ -77,7 +108,7 @@ test('mỗi kit lệch baseline ở ít nhất một chiêu — rebuild thật, 
 });
 
 test('aura ngoài bảng thì rơi về kit Vô Môn', () => {
-  for (const effect of [undefined, 0, 99, -1, 1.5, '3']) {
+  for (const effect of [undefined, 0, 15, 99, -1, 1.5, '3', '13']) {
     assert.equal(pkKitForEffect(effect).id, 'none');
   }
 });
