@@ -79,7 +79,58 @@ export function cardAtlas() {
   });
 }
 
-/** Hào quang tia: 36 tia vàng xen dài ngắn, lõi sáng, tan dần ra ngoài (sau hào quang nan quạt, sau lá Át). */
+/** Mặt phỉnh dạng mặt nạ kênh màu: R = nền (tô màu phỉnh), G = vạch và vòng trắng, B = khảm vàng (chữ 財). */
+export function chipMaskTexture() {
+  return canvasTexture('than-bai-chip-mask', 256, ({ c }) => {
+    c.beginPath(); c.arc(0, 0, 500, 0, Math.PI * 2); c.fillStyle = '#ff0000'; c.fill();
+    for (let i = 0; i < 8; i++) {
+      c.save(); c.rotate(i * Math.PI / 4); c.fillStyle = '#00ff00'; c.fillRect(-55, -500, 110, 130); c.restore();
+    }
+    c.beginPath(); c.arc(0, 0, 330, 0, Math.PI * 2); c.lineWidth = 30; c.strokeStyle = '#0000ff'; c.stroke();
+    c.beginPath(); c.arc(0, 0, 290, 0, Math.PI * 2); c.lineWidth = 10; c.strokeStyle = '#00ff00'; c.stroke();
+    c.fillStyle = '#0000ff'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.font = `380px ${CJK_FONT}`; c.fillText('財', 0, 24);
+  });
+}
+
+// Mặt xúc xắc: atlas 3×3 (dùng 6 ô). Nền trắng = thân vàng, chấm đỏ = hồng ngọc (shader tô màu).
+export const DICE_ATLAS = 3;
+const PIPS = {
+  1: [[0, 0]], 2: [[-1, -1], [1, 1]], 3: [[-1, -1], [0, 0], [1, 1]], 4: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+  5: [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]], 6: [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]],
+};
+export function diceAtlas() {
+  return canvasTexture('than-bai-dice', 512, ({ c }) => {
+    const cell = 1024 / DICE_ATLAS;
+    c.fillStyle = '#ffffff'; c.fillRect(-512, -512, 1024, 1024);
+    for (let face = 1; face <= 6; face++) {
+      const i = face - 1, cx = -512 + cell * (i % 3 + 0.5), cy = -512 + cell * (Math.floor(i / 3) + 0.5);
+      for (const [px, py] of PIPS[face]) {
+        c.beginPath(); c.arc(cx + px * cell * 0.27, cy + py * cell * 0.27, face === 1 ? cell * 0.17 : cell * 0.1, 0, Math.PI * 2);
+        c.fillStyle = '#ff0000'; c.fill();
+      }
+    }
+  });
+}
+
+/** Sao lóe bốn cánh: lõi trắng, hai gai dài ngang dọc, hai gai chéo ngắn, quầng mềm (lấp lánh trên mép vàng). */
+export function starFlareTexture() {
+  return canvasTexture('than-bai-star-flare', 256, ({ c }) => {
+    const halo = c.createRadialGradient(0, 0, 0, 0, 0, 260);
+    halo.addColorStop(0, 'rgba(255,255,255,1)'); halo.addColorStop(0.15, 'rgba(255,240,200,.55)'); halo.addColorStop(1, 'rgba(255,220,150,0)');
+    c.fillStyle = halo; c.beginPath(); c.arc(0, 0, 260, 0, Math.PI * 2); c.fill();
+    const spike = (len, w, rot, a) => {
+      c.save(); c.rotate(rot);
+      const g = c.createLinearGradient(0, -len, 0, len);
+      g.addColorStop(0, 'rgba(255,240,200,0)'); g.addColorStop(0.5, `rgba(255,255,255,${a})`); g.addColorStop(1, 'rgba(255,240,200,0)');
+      c.fillStyle = g; c.beginPath(); c.moveTo(0, -len); c.lineTo(w, 0); c.lineTo(0, len); c.lineTo(-w, 0); c.closePath(); c.fill();
+      c.restore();
+    };
+    spike(510, 26, 0, 1); spike(510, 26, Math.PI / 2, 1); spike(260, 14, Math.PI / 4, 0.6); spike(260, 14, -Math.PI / 4, 0.6);
+  });
+}
+
+/** Hào quang tia sau quạt bài: 36 tia vàng xen dài ngắn, lõi sáng, tan dần ra ngoài. */
 export function sunburstTexture() {
   return canvasTexture('than-bai-sunburst-v2', 512, ({ c }) => {
     for (let i = 0; i < 36; i++) {
@@ -93,5 +144,43 @@ export function sunburstTexture() {
     const core = c.createRadialGradient(0, 0, 0, 0, 0, 300);
     core.addColorStop(0, 'rgba(255,250,225,1)'); core.addColorStop(0.35, 'rgba(255,220,120,.6)'); core.addColorStop(1, 'rgba(255,200,90,0)');
     c.fillStyle = core; c.beginPath(); c.arc(0, 0, 300, 0, Math.PI * 2); c.fill();
+  });
+}
+
+/** Ấn triện 賭神: khung vuông đỏ son viền vàng, chữ vàng — đóng xuống sau đầu lúc "tất tay". */
+export function sealStampTexture() {
+  return canvasTexture('than-bai-seal-stamp', 512, ({ c }) => {
+    c.save(); c.rotate(-0.06);
+    c.fillStyle = '#b3121f'; c.fillRect(-400, -400, 800, 800);
+    c.lineWidth = 34; c.strokeStyle = GOLD_HI; c.strokeRect(-360, -360, 720, 720);
+    c.lineWidth = 10; c.strokeRect(-315, -315, 630, 630);
+    c.fillStyle = GOLD_HI; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.font = `300px ${CJK_FONT}`;
+    c.fillText('賭', 0, -140); c.fillText('神', 0, 160);
+    c.restore();
+  });
+}
+
+/** Trận bàn sòng dưới chân: vành ô đỏ đen như cò quay, bốn chất lớn, chữ 賭神財運, sao tám cánh ở tâm. */
+export function tableSealTexture() {
+  return canvasTexture('than-bai-table-seal', 1024, ({ c, around, ring, star, glyph }) => {
+    const n = 37;
+    for (let i = 0; i < n; i++) {
+      const a0 = i * Math.PI * 2 / n - Math.PI / 2, a1 = a0 + Math.PI * 2 / n;
+      c.beginPath(); c.arc(0, 0, 500, a0, a1); c.arc(0, 0, 400, a1, a0, true); c.closePath();
+      c.fillStyle = i === 0 ? 'rgba(10,110,70,.95)' : i % 2 ? 'rgba(24,10,14,.95)' : 'rgba(176,18,31,.95)'; c.fill();
+    }
+    c.strokeStyle = GOLD; c.fillStyle = GOLD;
+    ring(500, 2.6); ring(400, 2.4); ring(382, 1.2, 0.7);
+    around(n, () => { c.beginPath(); c.moveTo(0, -400); c.lineTo(0, -500); c.lineWidth = 4; c.stroke(); });
+    [0, 3, 1, 2].forEach((suit, i) => {
+      c.save(); c.rotate(i * Math.PI / 2);
+      drawSuit(c, suit, 0, -285, 120, GOLD_HI);
+      c.restore();
+    });
+    c.fillStyle = GOLD_HI;
+    ['賭', '神', '財', '運'].forEach((ch, i) => { c.save(); c.rotate(Math.PI / 4 + i * Math.PI / 2); glyph(ch, 285, 96, 0.95); c.restore(); });
+    ring(190, 2, 0.9); ring(176, 1, 0.6);
+    star(8, 3, 170, 1.4, 0.8);
   });
 }

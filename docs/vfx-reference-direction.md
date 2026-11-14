@@ -86,26 +86,28 @@ lệch nhịp, hoạt lộ lăn gân rồi rụng, bụi vàng dâng; bồ nhụ
 vẽ tay canvas và chuỗi aura-signature/aura-manifestation/aura-flow/aura-sigil (từ V9–V10,
 chỉ còn hệ 1 dùng) được thanh lý.
 
-## Thần bài (effect 13): tham chiếu và nguyên tắc
+## Thần bài (effect 13): tham chiếu và bài học
 
-Ngày 14/11/2026. Hai bản đầu bị chủ dự án chê "nghiệp dư": bày đạo cụ sòng bài (xúc xắc,
-phỉnh, bàn quay, lốc bài) quanh người, nhiều thứ bay nhanh, không có hình tượng chủ đạo.
-Bản hiện tại "Đổ Thần · Kình Lực Kim Bài" dựng lại theo các tham chiếu:
+Ngày 14/11/2026, qua bốn bản; chủ dự án chấm từng bản:
 
-- Hình tượng Đổ Thần (phim *God of Gamblers*, 1989): điềm tĩnh, rồi lật con Át đúng lúc
-  quyết định. Ý đó thành cao trào "Át chủ bài".
-- Ngôn ngữ Art Deco của sòng bài (vàng trên đen, đối xứng, tia nan quạt). Ý đó thành
-  hào quang nan quạt và đĩa sơn mài chỉ vàng.
-- VFX lá bài trong [sketchbook realtimevfx](https://realtimevfx.com/t/bravepotatos-vfx-sketchbook/20382):
-  tụ sáng báo trước, lá bài bung ra, lật theo lực cản khi rơi rồi tan.
-- Nhận xét của đội VFX Hearthstone: hiệu ứng huyền thoại phải kể chuyện nhân vật và
-  đọc được ngay.
+1. Đạo cụ phẳng (lá bài, phỉnh vẽ trên tấm phẳng): "cơ bản quá".
+2. Pháp tướng 3D dày lớp — quạt Thùng Phá Sảnh, lốc bài, xúc xắc, phỉnh, bàn cò quay, cao trào
+   tất tay: chỉ bị chê "bay nhanh quá". Đây là hướng đúng.
+3. Bản 2 làm rất chậm, thay lốc bài bằng vành bài: "nghiệp dư".
+4. Tối giản kiểu Art Deco (hào quang nan quạt, ba lá bài kình lực, lá Át khổng lồ): "xấu hơn", "cơ bản".
 
-Nguyên tắc rút ra, áp dụng cho các aura "chí tôn" sau:
+Bản hiện tại lấy bản 2 làm gốc, tốc độ khoảng 60%, nhịp 10 giây; nâng chất liệu vàng (phản chiếu
+studio nhiều dải đèn, vân xước, kim tuyến lóe), quầng sáng sau lá bài, sao lóe; thêm pháp tướng phía
+sau **Vận Mệnh Luân** (bánh xe vận mệnh vàng khổng lồ, đèn sòng bài chạy đuổi, quay vòng may mắn lúc
+tất tay; mờ khi nhìn từ sau lưng để không che nhân vật của chính người chơi).
 
-- Một hình tượng chủ đạo (hào quang), phần còn lại tiết chế. Không bày đạo cụ vụn.
-- Phần lớn thời gian tĩnh và uy; chỉ một khoảnh khắc ra tay dứt khoát theo nhịp
-  tụ → bùng → giữ → vỡ (`than-bai-climax.js` là bảng thời gian chung).
-- Phần "động" phải dùng đúng ngôn ngữ chất liệu ở trên: dải khí bụng–cổ–đuôi xói, không
-  dùng vòng sáng đều.
-- Test giữ giới hạn tốc độ để aura không bị nhanh trở lại.
+Bài học cho các aura "chí tôn":
+
+- Chủ dự án muốn **hoành tráng, dày lớp, ra chất chủ đề ngay khi nhìn**; tối giản và tiết chế bị chê.
+- Chuyển động phải **vừa**: động nhưng không lộn nhào loạn (bản quá nhanh và bản quá chậm đều bị chê).
+- Chất lượng chất liệu quyết định cảm giác "đắt": vàng cần phản chiếu nhiều dải sáng và lấp lánh,
+  không để vàng phẳng một màu.
+- Vật lớn phía sau lưng phải mờ đi khi camera ở sau lưng (`onBeforeRender` đo hướng camera).
+
+Tham chiếu đã xem: [sketchbook realtimevfx — lá bài vỡ, lật theo lực cản](https://realtimevfx.com/t/bravepotatos-vfx-sketchbook/20382);
+hình tượng *God of Gamblers* (1989); ngôn ngữ Art Deco sòng bài (vàng trên đen, tia nan quạt).
