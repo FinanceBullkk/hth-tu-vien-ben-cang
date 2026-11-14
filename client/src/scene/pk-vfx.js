@@ -1,4 +1,9 @@
 import * as THREE from 'three';
+import { spawnQTechnique, spawnDomain } from './pk-techniques.js';
+import {
+  SUPREME_MOTIF_SCALE, SUPREME_SIGIL_MOTIFS, buildCasinoWheel, buildSupremeStrike, supremeMotifMesh,
+  supremeRainGeometry, supremeRainMap, updateCasinoWheel,
+} from './pk-vfx-supreme-motifs.js';
 
 // Cánh sen có độ cong và chuyển sắc; dùng chung cho các pháp trận PK ngắn hạn.
 function createPkPetal() {
@@ -703,7 +708,7 @@ function createDamageTexture(text, color = '#ff5500', isSpecial = false) {
   return tex;
 }
 
-// ===== Theme PK theo aura (EFFECT_NAMES 1–12) =====
+// ===== Theme PK theo aura (EFFECT_NAMES 1–14; 13–14 chí tôn, linh vật ở pk-vfx-supreme-motifs.js) =====
 // Mỗi aura một tông: pháp trận, bảng màu và "linh vật" bay theo chiêu. effect 0 hoặc
 // id lạ → null, builder dùng đúng dáng Bát Quái hiện có. Mesh theme sinh lúc ra chiêu
 // và gắn vào group chiêu nên dispose theo đúng pattern traverse sẵn có của update();
@@ -787,6 +792,7 @@ const SIGIL_MOTIFS = {
     ctx.beginPath(); ctx.moveTo(-10, 14); ctx.lineTo(10, 14); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(0, 14); ctx.lineTo(0, 28); ctx.stroke();
   },
+  ...SUPREME_SIGIL_MOTIFS, // suit (♠♣♦♥ lần lượt), carp (cá chép)
 };
 
 // Hoạ sĩ pháp trận tham số hoá dùng chung cho các aura mới: quầng nền, hai vành ngoài,
@@ -819,7 +825,7 @@ function createSigilTexture({ bg, rim, rim2, tick, glyph, glyphColor, motif, mot
     ctx.save();
     ctx.translate(cx + Math.cos(a) * 178, cy + Math.sin(a) * 178);
     ctx.rotate(a + Math.PI / 2);
-    SIGIL_MOTIFS[motif](ctx, motifColor);
+    SIGIL_MOTIFS[motif](ctx, motifColor, i);
     ctx.restore();
   }
   ctx.font = '110px "Microsoft YaHei", "SimSun", serif';
@@ -851,11 +857,17 @@ const SIGIL_SPECS = {
     tick: '#ffe4a0', glyph: '龍', glyphColor: '#fff6d8', motif: 'ember', motifColor: '#f0c46b' },
   sword: { bg: ['rgba(123,224,207,.25)', 'rgba(12,58,52,.08)'], rim: '#d9fff2', rim2: '#2c8c7e',
     tick: '#7be0cf', glyph: '劍', glyphColor: '#e8fff8', motif: 'sword', motifColor: '#9be8da' },
+  gamble: { bg: ['rgba(255,207,63,.30)', 'rgba(90,20,6,.10)'], rim: '#ffe08a', rim2: '#e0142c',
+    tick: '#ffcf3f', glyph: '賭', glyphColor: '#fff1c2', motif: 'suit', motifColor: '#ffd75a' },
+  fishing: { bg: ['rgba(95,227,240,.28)', 'rgba(10,61,88,.10)'], rim: '#ecfdff', rim2: '#f5b83a',
+    tick: '#5fe3f0', glyph: '魚', glyphColor: '#fff3c4', motif: 'carp', motifColor: '#f5b83a' },
 };
 
 // Mesh nhỏ theo motif: mỗi lần gọi tạo geometry/material mới (gắn vào group chiêu nên
 // dispose theo traverse); 'sword' trả Group phi kiếm như bản gốc.
 function motifMesh(kind, t, i = 0) {
+  const supreme = supremeMotifMesh(kind, t, i); // card, cardRing, dice, chip, fish, swimFish
+  if (supreme) return supreme;
   const mat = (color) => new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .9,
     depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending });
   switch (kind) {
@@ -884,17 +896,21 @@ function motifMesh(kind, t, i = 0) {
 }
 
 // Kích thước cân lại so với phi kiếm (~1.15 đơn vị) — motif nhỏ cần phóng to để đọc được.
-const MOTIF_SCALE = { petal: 2.6, leaf: 2.4, star: 2.6, moon: 2.4, ember: 2.2, orb: 2.2, shard: 2.4, claw: 2.4, sword: 1 };
+const MOTIF_SCALE = { petal: 2.6, leaf: 2.4, star: 2.6, moon: 2.4, ember: 2.2, orb: 2.2, shard: 2.4, claw: 2.4, sword: 1,
+  ...SUPREME_MOTIF_SCALE };
 
 // Bảng tông màu theo effect id; các builder đọc `pkTheme(effect)?.x ?? <mặc định cũ>`.
 // Ngoài màu, mỗi tông còn có DÁNG CHIÊU RIÊNG:
 //   slashStyle — hình đòn chính (crescent vòm chém, petalBurst nở cánh, waves sóng nước,
 //     starBurst sao băng, emberFan quạt lửa, spike trúc tiễn, moonArc liềm trăng đứng,
-//     voidWave vòng tối nở, claw long trảo, fanSwords xòe kiếm);
+//     voidWave vòng tối nở, claw long trảo, fanSwords xòe kiếm, cardFan quạt bài phóng,
+//     rodWhip dây câu quất vòm);
 //   rain + rainMode — vật rơi ở vùng nổ AOE (blade mưa kiếm, petal cánh hoa, star sao,
-//     spike cột mọc từ đất, shard mảnh, moon liềm, ember tàn lửa) và rơi xuống / bùng lên;
+//     spike cột mọc từ đất, shard mảnh, moon liềm, ember tàn lửa, card Át bích, fish cá chép vọt)
+//     và rơi xuống / bùng lên; rainTint tuỳ chọn thay cặp màu main/core của vật rơi;
 //   pillar — cột năng lượng dâng ở đích; orbitR/orbitW/wobble — nhịp bay đạn;
-//   guards + dome — số linh vật hộ thể và kiểu vòm (sphere/hex lục lăng/halo nguyệt/rings gợn sóng);
+//   guards + dome — số linh vật hộ thể và kiểu vòm (sphere/hex lục lăng/halo nguyệt/rings gợn sóng/
+//     wheel vòng đèn sòng bạc);
 //   dashWake — vệt lướt thêm (sparks bụi, petals cánh hoa, ripples gợn sóng).
 const PK_THEMES = {
   1: { // Sen kim — đòn nở cánh sen, mưa cánh vàng
@@ -993,6 +1009,23 @@ const PK_THEMES = {
     slashStyle: 'fanSwords', rain: 'blade', rainMode: 'fall', pillar: false,
     orbitR: .46, orbitW: 24, wobble: .2, guards: 6, dome: 'sphere', dashWake: 'sparks',
   },
+  // ----- Hào quang chí tôn: vàng–đỏ sòng bạc và vàng–ngọc biển cả, đúng linh vật của aura.
+  13: { // Thần bài — quạt Thùng Phá Sảnh phóng tới, xúc xắc vàng ném đích, sét vàng + mưa Át bích, vòng đèn sòng bạc
+    sigil: 'gamble', main: 0xffcf3f, accent: 0xff3b2f, core: 0xfff1c2, edge: 0x7a4106,
+    fan: 'chip', coreMesh: 'dice', satellite: 'card', guardian: 'cardRing', ghost: 'dice', blade: 'chip',
+    burstGeo: 'petal', burst: [0xffcf3f, 0xff3b2f, 0xfff1c2], trail: [0xffe08a, 0xffcf3f, 0xff3b2f],
+    groundDark: 0x3a0d06,
+    slashStyle: 'cardFan', rain: 'card', rainMode: 'fall', pillar: true,
+    orbitR: .55, orbitW: 12, wobble: .14, guards: 5, dome: 'wheel', dashWake: 'sparks',
+  },
+  14: { // Vua câu cá — dây câu quất vòm, cá chép vượt vũ môn, cột nước + đàn cá vọt khỏi sóng, cá bơi hộ thể
+    sigil: 'fishing', main: 0x5fe3f0, accent: 0xf5b83a, core: 0xecfdff, edge: 0x0a3d58,
+    fan: 'shard', coreMesh: 'fish', satellite: 'fish', guardian: 'swimFish', ghost: 'fish', blade: 'orb',
+    burstGeo: 'shard', burst: [0x5fe3f0, 0xecfdff, 0xf5b83a], trail: [0x9ff2fa, 0x5fe3f0, 0xf5b83a],
+    groundDark: 0x0a2e44, rainTint: [0xf5b83a, 0xecfdff],
+    slashStyle: 'rodWhip', rain: 'fish', rainMode: 'rise', pillar: true,
+    orbitR: .66, orbitW: 14, wobble: .3, guards: 6, dome: 'rings', dashWake: 'ripples',
+  },
 };
 const pkTheme = (effect) => PK_THEMES[effect] ?? null;
 
@@ -1019,6 +1052,8 @@ function buildSlashStrike(t) {
         { vx: Math.cos(a) * speed, vy: Math.sin(a) * speed * .8, spin: (i % 2 ? 1 : -1) * spin });
     }
   };
+  const supreme = buildSupremeStrike(style, t, { arc, mat, push, radial, extras }); // cardFan, rodWhip
+  if (supreme) return supreme;
 
   if (style === 'petalBurst') { // Sen kim / Đào hoa — vòng cung + cánh nở toả
     const wave = arc(1.14, 1.3);
@@ -1165,6 +1200,7 @@ export class PkVfx {
     this.shockwaves = [];
     this.aoeFields = [];
     this.pillars = [];
+    this.techniques = [];
     this.aoeDummy = new THREE.Object3D();
 
     // Bộ texture và geometry dùng chung
@@ -1298,8 +1334,13 @@ export class PkVfx {
    */
   projectile({ fromX, fromY = 0, fromZ, toX, toY = 0, toZ, rot = 0, radius = 4, isHit = false, effect = 0 }) {
     const t = pkTheme(effect);
-    const group = new THREE.Group();
     this.areaBurst({ x: toX, y: toY, z: toZ, radius, effect });
+
+    // Aura có tuyệt kỹ riêng (pk-techniques.js): tuyệt kỹ đảm nhiệm toàn bộ hành trình
+    // và đòn nổ, PkVfx chỉ giữ trận đồ đích ở trên làm mốc vùng sát thương.
+    if (effect && spawnQTechnique(this, { effect, t, fromX, fromY, fromZ, toX, toY, toZ, rot, radius, isHit })) return;
+
+    const group = new THREE.Group();
 
     // 1. Trận đồ bốc lên từ mặt đất dưới chân người thi triển (đổi theo aura)
     const startSigilGeo = new THREE.PlaneGeometry(3.2, 3.2);
@@ -1582,6 +1623,9 @@ export class PkVfx {
       haloRing.position.y = .4;
       group.add(haloRing);
     }
+    // Vòng đèn sòng bạc chạy đuổi (Thần bài).
+    const wheel = dome === 'wheel' ? buildCasinoWheel(t) : null;
+    if (wheel) group.add(wheel);
 
     // 3. Hai vành đai phù chú cổ ngữ xoay quanh (orbital rings - thanh thoát)
     const ringGeo = new THREE.TorusGeometry(1.28, 0.055, 8, 36);
@@ -1632,6 +1676,8 @@ export class PkVfx {
       lotus,
       ripples,
       haloRing,
+      wheel,
+      tech: spawnDomain(group, effect, t),
       targetFn,
       age: 0,
       life: duration / 1000,
@@ -2120,21 +2166,22 @@ export class PkVfx {
     blade.closePath();
     // Vật rơi/bùng ở vùng nổ theo tông: kiếm (mặc định), cánh hoa, sao, cột mọc, mảnh, liềm trăng, tàn lửa.
     const rainKind = t?.rain ?? 'blade';
-    const rainGeo = rainKind === 'blade' ? new THREE.ShapeGeometry(blade)
+    const rainGeo = supremeRainGeometry(rainKind) ?? (rainKind === 'blade' ? new THREE.ShapeGeometry(blade)
       : rainKind === 'petal' ? new THREE.PlaneGeometry(.5, .9)
       : rainKind === 'star' ? new THREE.OctahedronGeometry(.28)
       : rainKind === 'spike' ? new THREE.ConeGeometry(.16, 1.5, 6)
       : rainKind === 'shard' ? new THREE.TetrahedronGeometry(.34)
       : rainKind === 'moon' ? new THREE.RingGeometry(.3, .46, 20, 1, 0, Math.PI * .85)
-      : new THREE.ConeGeometry(.2, .8, 6); // ember
+      : new THREE.ConeGeometry(.2, .8, 6)); // ember
     const rise = t?.rainMode === 'rise';
     const swords = new THREE.InstancedMesh(
       rainGeo,
-      new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true,
-        opacity: 0.82, depthWrite: false, blending: THREE.AdditiveBlending }), 24,
+      new THREE.MeshBasicMaterial({ color: 0xffffff, map: supremeRainMap(rainKind), side: THREE.DoubleSide,
+        transparent: true, opacity: 0.82, depthWrite: false, blending: THREE.AdditiveBlending }), 24,
     );
     swords.position.set(x, y, z);
-    for (let i = 0; i < 24; i++) swords.setColorAt(i, new THREE.Color(i % 3 ? (t?.main ?? 0xffdc7b) : (t?.core ?? 0xb8fff0)));
+    const [rainA, rainB] = t?.rainTint ?? [t?.main ?? 0xffdc7b, t?.core ?? 0xb8fff0];
+    for (let i = 0; i < 24; i++) swords.setColorAt(i, new THREE.Color(i % 3 ? rainA : rainB));
     this.scene.add(swords);
     this.aoeFields.push({ ground, mesh, rim, swords, radius, age: 0, life: 0.9, rise });
   }
@@ -2452,8 +2499,7 @@ export class PkVfx {
       // Thần Long uốn lượn nhấp nhô — biên độ/tần số theo tông
       if (pr.dragon) {
         pr.dragon.position.y = Math.sin(pr.age * 16) * (pr.wobble ?? .15) * .9;
-        pr.dragon.rotation.z = Math.sin(pr.age * 14) * .25;
-      }
+        pr.dragon.rotation.z = Math.sin(pr.age * 14) * .25;      }
 
       // 6 vệ tinh xoắn ốc quanh tâm — bán kính/tốc độ theo tông
       for (let k = 0; k < pr.swords.length; k++) {
@@ -2636,6 +2682,9 @@ export class PkVfx {
         sh.haloRing.scale.set(hp, hp, 1);
         sh.haloRing.rotation.z += dt * .6;
       }
+      if (sh.wheel) updateCasinoWheel(sh.wheel, sh.age, dt);
+      // Lãnh vực thu nhỏ riêng từng tông (pk-techniques.js)
+      sh.tech?.tick?.(dt, sh.age / sh.life, sh);
 
       if (p >= 1) {
         this.shatterIce(sh.x, sh.y, sh.z);
@@ -2709,6 +2758,23 @@ export class PkVfx {
       } else {
         pl.mesh.scale.set(1 + p * .7, 1 + p * .35, 1 + p * .7);
         pl.mesh.material.opacity = .5 * (1 - p);
+      }
+    }
+
+    // 4c. Tuyệt kỹ riêng theo aura (pk-techniques.js) — tick tự lo chuyển động từng phần.
+    for (let i = this.techniques.length - 1; i >= 0; i--) {
+      const tc = this.techniques[i];
+      tc.age += dt;
+      const p = tc.age / tc.life;
+      if (p >= 1) {
+        this.scene.remove(tc.group);
+        tc.group.traverse((o) => {
+          o.geometry?.dispose();
+          o.material?.dispose();
+        });
+        this.techniques.splice(i, 1);
+      } else {
+        tc.tick?.(dt, p);
       }
     }
 
@@ -2899,6 +2965,15 @@ export class PkVfx {
       pl.mesh.material.dispose();
     }
     this.pillars.length = 0;
+
+    for (const tc of this.techniques) {
+      this.scene.remove(tc.group);
+      tc.group.traverse((o) => {
+        o.geometry?.dispose();
+        o.material?.dispose();
+      });
+    }
+    this.techniques.length = 0;
 
     for (const d of this.damagePopups) {
       this.scene.remove(d.sprite);
