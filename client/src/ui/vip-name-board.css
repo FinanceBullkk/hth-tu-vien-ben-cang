@@ -4,15 +4,19 @@
    Cấu trúc ở client/src/player/vip-title-badge.js. */
 
 .tag[data-board="than-bai"] {
-  --vt-fill: linear-gradient(180deg, #fffbc8 10%, #ffd84a 38%, #ff9a1c 64%, #e8501a 92%);
-  --vt-edge: #4a0a00; --vt-glow: rgba(255, 90, 60, .6);
+  --vt-fill: linear-gradient(180deg, #fffef0 6%, #ffe466 30%, #ffb21e 55%, #ff6a18 78%, #e2281a 96%);
+  --vt-edge: #420600; --vt-glow: rgba(255, 70, 70, .85);
 }
 .tag[data-board="vua-cau-ca"] {
-  --vt-fill: linear-gradient(180deg, #ffffff 10%, #d8f9ff 38%, #6fd6ff 64%, #2a8ee0 92%);
-  --vt-edge: #03264a; --vt-glow: rgba(60, 180, 255, .6);
+  --vt-fill: linear-gradient(180deg, #ffffff 6%, #e2fbff 30%, #7fdcff 55%, #3a9cf0 78%, #1a5fd0 96%);
+  --vt-edge: #021e40; --vt-glow: rgba(60, 190, 255, .85);
 }
-/* Chữ nhỏ kiểu MMO 2D: font chân phương, viền đen 1px bốn phía. */
-.tag[data-board] { gap: 1px; --vt-ink: 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000, 0 0 2px #000; }
+/* Chữ nhỏ kiểu MMO 2D: font chân phương, viền đen 1px tám phía + bóng tối mềm để nổi trên nền hào quang rực. */
+.tag[data-board] {
+  gap: 1px;
+  --vt-ink: 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000, 1px 1px 0 #000, -1px 1px 0 #000,
+    1px -1px 0 #000, -1px -1px 0 #000, 0 0 6px rgba(0, 0, 0, .85);
+}
 
 /* ----- Danh hiệu ----- */
 .tag[data-board] .tag-title {
@@ -27,12 +31,12 @@
 .vtt-word { position: relative; display: block; margin: 0 -4px; }
 .vtt-outline, .vtt-text {
   display: block; padding: 1px 8px 3px 5px; white-space: nowrap; /* phải rộng hơn vì nét nghiêng vươn ra */
-  font: 700 19px/1.25 "Segoe Script", "Brush Script MT", var(--serif);
+  font: 700 22px/1.25 "Segoe Script", "Brush Script MT", var(--serif);
 }
 /* Viền tối dày dưới chữ màu (chữ HTML không có paint-order nên tách lớp). */
 .vtt-outline {
-  position: absolute; inset: 0; color: var(--vt-edge); -webkit-text-stroke: 4px var(--vt-edge);
-  filter: drop-shadow(0 0 2px var(--vt-glow));
+  position: absolute; inset: 0; color: var(--vt-edge); -webkit-text-stroke: 5px var(--vt-edge);
+  filter: drop-shadow(0 0 3px var(--vt-glow)) drop-shadow(0 1px 2px rgba(0, 0, 0, .8));
 }
 .vtt-text {
   position: relative; color: transparent; -webkit-text-fill-color: transparent;
@@ -44,35 +48,36 @@
 }
 
 /* Cánh lông vũ ngang (SVG đã lật sẵn cho bên phải), khẽ phập phồng quanh gốc sát chữ. */
-.vtt-side { display: block; width: 44px; height: 19px; line-height: 0; }
-.vtt-wing { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 1.5px var(--vt-glow)); }
+.vtt-side { display: block; width: 56px; height: 24.5px; line-height: 0; }
+.vtt-wing { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 2.5px var(--vt-glow)) drop-shadow(0 1px 1px rgba(0, 0, 0, .6)); }
 .vtt-side.l { transform-origin: 100% 55%; animation: vttFlapL 2.6s ease-in-out infinite; }
 .vtt-side.r { transform-origin: 0 55%; animation: vttFlapR 2.6s ease-in-out infinite; }
 
 /* Sao lấp lánh bốn cánh (sao vàng như sprite danh hiệu). */
 .vtt-star {
-  position: absolute; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; opacity: 0; pointer-events: none;
+  position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; opacity: 0; pointer-events: none;
   background:
     radial-gradient(circle, #fff 0 1.2px, rgba(255, 240, 150, .6) 2px, transparent 3.4px),
     linear-gradient(transparent 46%, rgba(255, 246, 190, .95) 50%, transparent 54%),
     linear-gradient(90deg, transparent 46%, rgba(255, 246, 190, .95) 50%, transparent 54%);
   animation: vttStar 2.8s ease-in-out infinite;
 }
-.vtt-star.s1 { left: 9%; top: 22%; }
-.vtt-star.s2 { left: 55%; top: 6%; animation-delay: .95s; }
-.vtt-star.s3 { left: 91%; top: 72%; animation-delay: 1.9s; }
+.vtt-star.s1 { left: 7%; top: 14%; }
+.vtt-star.s2 { left: 56%; top: 4%; animation-delay: .95s; }
+.vtt-star.s3 { left: 94%; top: 80%; animation-delay: 1.9s; }
 
 /* ----- Hiệu phụ xanh ngọc + ô ấn vàng treo trái ----- */
 .vtt-epithet {
   position: relative; display: block; margin-top: 1px; white-space: nowrap;
-  font: 700 13px/1.25 "Times New Roman", var(--serif); color: #74f2e2; text-shadow: var(--vt-ink);
+  font: 700 14.5px/1.25 "Times New Roman", var(--serif); color: #7cfbe6; text-shadow: var(--vt-ink);
 }
 .vtt-seal {
-  position: absolute; right: 100%; top: 1px; margin-right: 7px; min-width: 21px; height: 21px; padding: 0 2px; box-sizing: border-box;
-  display: grid; place-items: center; border: 1.5px solid #2a1200; border-radius: 2px;
-  background: linear-gradient(180deg, #fff6a8, #ffd22e 48%, #e39a0c);
-  box-shadow: inset 0 0 0 1px #fff7c4, 0 1px 2px rgba(0, 0, 0, .6);
-  font: 700 9px/1 "Segoe Script", "Brush Script MT", var(--serif); letter-spacing: -.03em; color: #c80f1e; text-shadow: none;
+  position: absolute; right: 100%; top: 1px; margin-right: 8px; min-width: 25px; height: 25px; padding: 0 2px; box-sizing: border-box;
+  display: grid; place-items: center; border: 2px solid #2a1000; border-radius: 3px;
+  background: radial-gradient(circle at 35% 30%, #fffbd8, transparent 55%), linear-gradient(180deg, #fff3a0, #ffcf2a 45%, #e08a08);
+  box-shadow: inset 0 0 0 1px #fff6c0, inset 0 0 0 2.5px #b86a00, 0 0 5px var(--vt-glow), 0 1px 3px rgba(0, 0, 0, .8);
+  font: 700 10.5px/1 "Segoe Script", "Brush Script MT", var(--serif); letter-spacing: -.03em; color: #c40818;
+  text-shadow: 0 0 1px #fff6c0;
 }
 
 @keyframes vttSweep { 0% { background-position: 150% 0, 0 0; } 55%, 100% { background-position: -50% 0, 0 0; } }
@@ -87,7 +92,7 @@
 /* ----- Tên người chơi: chữ trắng viền đen, không khung ----- */
 .tag[data-board] .tag-name {
   padding: 0 2px; border: 0; border-radius: 0; background: none;
-  font: 700 13.5px/1.25 "Times New Roman", var(--serif); letter-spacing: .01em; color: #fffbec;
+  font: 700 15px/1.25 "Times New Roman", var(--serif); letter-spacing: .01em; color: #ffffff;
   text-shadow: var(--vt-ink);
 }
 
