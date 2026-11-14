@@ -1,6 +1,25 @@
 # Deployment
 
-## Current release: 2026-11-14 Fishing bag and fish market, PK techniques per aura, 21:32 UTC+7
+## Current release: 2026-11-14 Bena Banca fish merchant by the lake, 22:06 UTC+7
+
+Deploy run [43608324002](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43608324002)
+released main `0276c0e` as `hth:261114-2206-0276c0e`, replacing
+`hth:261114-2132-78ca844`. Includes PR #107 (NPC Bena Banca at the north-east corner
+of the fishing lake: black bob, black satin pajamas with peach print, tabby cat in a
+flower crown on her shoulder; press E or click her to open her stall, which sells bag
+fish grouped by rarity with a second click for epic and legendary fish, and sells rods
+and bait through the existing `bag:sell` and `fish:buy` events). Public bundle
+`index-CbPwIriK.js`, production health, page, Socket.IO and bundle checks passed on
+localhost and `https://game.hthlogistics.top/`.
+
+Docker tests 446/446. Candidate passed with DB `quick_check` ok (57 players,
+24 wishes, 108 fish).
+
+Rollback container `hth-rollback-261114-2206-0276c0e` preserves
+`hth:261114-2132-78ca844`. Private backup is in the data volume at
+`backups/cutover-261114-2206-0276c0e/`.
+
+## Previous release: 2026-11-14 Fishing bag and fish market, PK techniques per aura, 21:32 UTC+7
 
 Deploy run [43605333229](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43605333229)
 released main `78ca844` as `hth:261114-2132-78ca844`, replacing
