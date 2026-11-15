@@ -1,9 +1,10 @@
-/* Quầy Bena Banca bên hồ câu: khung giấy dó như các hộp thoại khác; thẻ hàng đen satin nhuộm màu phẩm chất,
+/* Quầy Bena Banca bên hồ câu: khung navy như các hộp thoại khác; thẻ hàng đen satin nhuộm màu phẩm chất,
    điểm nhấn hồng đào theo bộ pyjama của cô, vàng kim cho tiền TEU. */
 .modal-card.bena-modal { width: min(500px, 100%); }
 .bena-modal .modal-head h2::after {
   content: 'Thương lái bên hồ'; display: block; margin-top: 2px;
-  font: 600 12px var(--sans); letter-spacing: .12em; text-transform: uppercase; color: #b4675a;
+  font: 700 12px var(--sans); letter-spacing: .12em; text-transform: uppercase; color: #f0a993;
+  -webkit-text-stroke: 0; background: none; filter: none;
 }
 .bena { position: relative; display: flex; flex-direction: column; gap: 12px; }
 .bena .ink-icon { width: 17px; height: 17px; }
@@ -28,13 +29,13 @@
 
 /* Thẻ và ví */
 .bena-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
-.bena-tabs { display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: rgba(36, 31, 41, .07); box-shadow: inset 0 0 0 1px rgba(143, 106, 56, .3); }
+.bena-tabs { display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: rgba(255, 255, 255, .08); box-shadow: inset 0 0 0 1px rgba(148, 196, 240, .3); }
 .bena-tab {
   display: inline-flex; align-items: center; gap: 6px; padding: 6px 13px; border: 0; border-radius: 999px;
   background: none; color: var(--muted); font: 700 13.5px var(--sans); touch-action: manipulation;
 }
-.bena-tab:hover:not(.on) { color: #5a1f14; }
-.bena-tab.on { background: #241f29; color: #f7cdb8; box-shadow: 0 2px 6px rgba(0, 0, 0, .28); }
+.bena-tab:hover:not(.on) { color: #fff; }
+.bena-tab.on { background: var(--gn-navy-3); color: #ffd9c4; box-shadow: 0 2px 6px rgba(2, 6, 24, .4); }
 .bena-coin {
   display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px 4px 7px; border-radius: 999px;
   background: linear-gradient(180deg, #3a2a14, #22180b); color: #ffd56a; box-shadow: inset 0 0 0 1px rgba(255, 213, 106, .4);
@@ -43,7 +44,7 @@
 .bena-coin small { color: #d9b86a; font-size: 11px; font-weight: 700; }
 .bena-body { display: flex; flex-direction: column; gap: 10px; }
 .bena-stars { color: var(--rc); font-size: 11px; letter-spacing: 1px; }
-.bena-meter { position: relative; display: block; height: 8px; overflow: hidden; border-radius: 4px; background: rgba(43, 28, 19, .15); }
+.bena-meter { position: relative; display: block; height: 8px; overflow: hidden; border-radius: 4px; background: rgba(255, 255, 255, .14); }
 .bena-meter u { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: linear-gradient(90deg, #8fdc9a, #45a663); }
 
 /* Bán cá: tổng tiền và túi */
@@ -55,23 +56,23 @@
 .bena-total b { display: inline-flex; align-items: center; gap: 4px; color: #ffd56a; font: 900 27px/1.1 var(--sans); font-variant-numeric: tabular-nums; text-shadow: 0 0 12px rgba(255, 190, 60, .55); }
 .bena-total b .ink-icon { width: 21px; height: 21px; }
 .bena-total small { color: #d9b86a; font-size: 11.5px; font-weight: 700; }
-.bena-cap { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 9px 12px; border-radius: 12px; background: rgba(255, 250, 240, .72); box-shadow: inset 0 0 0 1px rgba(143, 106, 56, .3); }
-.bena-cap-head { display: flex; align-items: center; gap: 6px; color: #4a3016; font: 700 13.5px var(--sans); }
+.bena-cap { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 9px 12px; border-radius: 12px; background: rgba(255, 255, 255, .1); box-shadow: inset 0 0 0 1px rgba(148, 196, 240, .3); }
+.bena-cap-head { display: flex; align-items: center; gap: 6px; color: #fff; font: 700 13.5px var(--sans); }
 .bena-cap-head b { margin-left: auto; font-variant-numeric: tabular-nums; }
 .bena-cap small { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 12px; }
-.bena-cap .bena-locked { color: #a8432a; }
+.bena-cap .bena-locked { color: #ff9a86; }
 .bena-cap.warn .bena-meter u { background: linear-gradient(90deg, #f3b9a5, #d9534a); }
-.bena-cap.warn .bena-cap-head b { color: #b3261e; }
-.bena-mix { display: flex; gap: 2px; height: 10px; padding: 2px; overflow: hidden; border-radius: 5px; background: #241f29; }
+.bena-cap.warn .bena-cap-head b { color: #ff8a76; }
+.bena-mix { display: flex; gap: 2px; height: 10px; padding: 2px; overflow: hidden; border-radius: 5px; background: #060b24; }
 .bena-mix span { flex-basis: 0; min-width: 5px; border-radius: 3px; background: var(--rc); box-shadow: 0 0 6px var(--rc); }
 
 /* Bán cá: mỗi phẩm chất một thẻ */
 .bena-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(142px, 1fr)); gap: 8px; }
 .bena-card {
   position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px; border-radius: 12px;
-  color: #f6e6da; text-align: center;
-  background: radial-gradient(120% 85% at 50% 0%, color-mix(in srgb, var(--rc) 30%, #28222d), #1c1820 72%);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 55%, transparent), 0 3px 8px rgba(0, 0, 0, .18);
+  color: #f2e6dc; text-align: center;
+  background: radial-gradient(120% 85% at 50% 0%, color-mix(in srgb, var(--rc) 30%, #131c56), #0c123c 72%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 55%, transparent), 0 3px 8px rgba(2, 6, 24, .25);
 }
 .bena-card::before { content: ''; position: absolute; top: 0; left: 22%; right: 22%; height: 3px; border-radius: 0 0 3px 3px; background: var(--rc); box-shadow: 0 0 10px var(--rc); }
 .bena-card[data-rarity="5"] { box-shadow: inset 0 0 0 1px var(--rc), 0 0 16px color-mix(in srgb, var(--rc) 45%, transparent); }
@@ -115,13 +116,13 @@
 .bena-btn.ask, .bena-cta.ask { justify-content: center; background: #a8432a; color: #fff3e6; box-shadow: 0 2px 0 #6a2412; animation: benaAsk .9s ease-in-out infinite; }
 .bena-ghost {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 46px; padding: 8px 14px;
-  border: 1px solid rgba(143, 106, 56, .45); border-radius: 10px; background: rgba(255, 250, 240, .6); color: #5a1f14; font: 700 13.5px var(--sans);
+  border: 1px solid rgba(148, 196, 240, .45); border-radius: 10px; background: rgba(255, 255, 255, .08); color: #cfe2ff; font: 700 13.5px var(--sans);
 }
-.bena-ghost:hover { background: #fff8ec; }
+.bena-ghost:hover { background: rgba(255, 255, 255, .15); }
 .bena-tab:focus-visible, .bena-btn:focus-visible, .bena-cta:focus-visible, .bena-ghost:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
 /* Túi trống */
-.bena-empty { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px; border: 1.5px dashed rgba(143, 106, 56, .45); border-radius: 12px; color: var(--muted); font: italic 14px var(--serif); }
+.bena-empty { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px; border: 1.5px dashed rgba(148, 196, 240, .45); border-radius: 12px; color: var(--muted); font: italic 14px var(--serif); }
 .bena-empty-art { width: 116px; opacity: .3; }
 .bena-empty-art svg { display: block; width: 100%; height: auto; }
 .bena-empty p { margin: 0; }
@@ -129,15 +130,15 @@
 /* Cần câu và thính */
 .bena-gears { display: flex; flex-direction: column; gap: 8px; }
 .bena-gear {
-  display: flex; flex-direction: column; gap: 9px; padding: 10px 12px; border-radius: 12px; color: #f6e6da;
-  background: linear-gradient(100deg, color-mix(in srgb, var(--rc) 24%, #28222d), #1c1820 58%);
+  display: flex; flex-direction: column; gap: 9px; padding: 10px 12px; border-radius: 12px; color: #f2e6dc;
+  background: linear-gradient(100deg, color-mix(in srgb, var(--rc) 24%, #131c56), #0c123c 58%);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 45%, transparent);
 }
 .bena-gear.using { box-shadow: inset 0 0 0 2px var(--rc), 0 0 14px color-mix(in srgb, var(--rc) 40%, transparent); }
 .bena-gear-top { display: flex; align-items: center; gap: 10px; }
 .bena-gear-art {
   flex: none; display: grid; place-items: center; width: 50px; height: 50px; border-radius: 10px;
-  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--rc) 45%, #3a3040), #15121a 75%);
+  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--rc) 45%, #1e2a6e), #0a102e 75%);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 60%, transparent);
 }
 .bena-gear-art svg { display: block; width: 42px; height: 42px; }
