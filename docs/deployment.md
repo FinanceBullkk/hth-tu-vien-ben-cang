@@ -1,6 +1,23 @@
 # Deployment
 
-## Current release: 2026-11-15 Pets and navy-gold HUD, 23:03 UTC+7
+## Current release: 2026-11-15 Unlimited casino bets, 23:13 UTC+7
+
+Deploy run [43734204504](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43734204504)
+released main `b5812ee` as `hth:261115-2313-b5812ee`, replacing
+`hth:261115-2303-f0b9182`. Includes PR #117 (no bet caps at bầu cua, tài xỉu, cò quay and
+xì dách: removed per-symbol/per-target caps, per-round caps and the 20 TEU per-hand cap; a bet
+is refused only when the player lacks TEU, xì dách still holds double the stake; Double and
+xì dách chips no longer lock at the old caps). Public bundle `index-JF6uPugV.js` served at
+`https://game.hthlogistics.top/`.
+
+Docker tests 481/481. Candidate passed with DB `quick_check` ok (59 players,
+24 wishes, 142 fish).
+
+Rollback container `hth-rollback-261115-2313-b5812ee` preserves
+`hth:261115-2303-f0b9182`. Private backup is in the data volume at
+`backups/cutover-261115-2313-b5812ee/`.
+
+## Previous release: 2026-11-15 Pets and navy-gold HUD, 23:03 UTC+7
 
 Deploy run [43733291456](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43733291456)
 released main `f0b9182` as `hth:261115-2303-f0b9182`, replacing
