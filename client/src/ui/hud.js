@@ -1,12 +1,14 @@
 // HUD: đếm người, danh sách, nút góc màn hình, nút hành động, thông báo nhỏ, banner sự kiện.
 import { $, h, store } from './dom.js';
-import { inkIcon, mountInkIcons } from './ink-icons.js';
+import { gameIcon, mountGameIcons } from './game-menu-icons.js';
+import { mountInkIcons } from './ink-icons.js';
 
 export class Hud {
   constructor(app) {
     this.app = app;
     this.root = $('hud');
     mountInkIcons(this.root);
+    mountGameIcons(this.root); // icon màu của thanh menu góc phải
     this.onlineCount = $('onlineCount');
     this.visitsEl = $('visitsToday');
     this.onlineList = $('onlineList');
@@ -95,7 +97,7 @@ export class Hud {
 
   syncMute() {
     const muted = this.app.audio.muted;
-    this.muteBtn.replaceChildren(inkIcon(muted ? 'mute' : 'sound'));
+    this.muteBtn.replaceChildren(gameIcon(muted ? 'mute' : 'sound'), h('em', {}, muted ? 'Tắt tiếng' : 'Âm thanh'));
     const label = muted ? 'Mở tiếng game' : 'Tắt tiếng game';
     this.muteBtn.title = label;
     this.muteBtn.setAttribute('aria-label', label);
