@@ -1,6 +1,27 @@
 # Deployment
 
-## Current release: 2026-11-15 Gunny-style equipment tab in the bag, 02:36 UTC+7
+## Current release: 2026-11-15 Pets and navy-gold HUD, 23:03 UTC+7
+
+Deploy run [43733291456](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43733291456)
+released main `f0b9182` as `hth:261115-2303-f0b9182`, replacing
+`hth:261115-0236-1d711c5`. Includes PR #115 (pets: 25 TEU egg hatches one of nine pets in
+four tiers 58/27/11/4%, guaranteed Linh thú or better on the 12th egg without one, duplicates
+add bond; one pet follows its owner and everyone sees it; feeding unlocked bag fish adds bond
+4/8/16/40/90 by fish rarity, four bond tiers with layered effects; pet panel on the menu and
+key P with a 3D preview; top-right menu redrawn as illustrated icons on a strip, 2×5 grid on
+phones) and PR #116 (HUD and dialogs reskinned navy-gold: carved frame, cyan buttons, bubble
+titles). Server adds table `pets`, columns `players.pet` and `players.pet_pity` (created at
+start) and events `pet:hatch|summon|feed`. Public bundle `index-Diq6eChM.js` served at
+`https://game.hthlogistics.top/`.
+
+Docker tests 481/481. Candidate passed with DB `quick_check` ok (59 players,
+24 wishes, 131 fish).
+
+Rollback container `hth-rollback-261115-2303-f0b9182` preserves
+`hth:261115-0236-1d711c5`. Private backup is in the data volume at
+`backups/cutover-261115-2303-f0b9182/`.
+
+## Previous release: 2026-11-15 Gunny-style equipment tab in the bag, 02:36 UTC+7
 
 Deploy run [43632989889](https://github.com/FinanceBullkk/hth-tu-vien-ben-cang/actions/runs/43632989889)
 released main `1d711c5` as `hth:261115-0236-1d711c5`, replacing
