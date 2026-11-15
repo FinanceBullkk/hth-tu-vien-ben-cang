@@ -15,8 +15,6 @@ export const BAUCUA = {
   symbols: BAUCUA_SYMBOLS.length,
   dice: 3,
   chips: [1, 5, 10], // Mệnh giá TEU mỗi lần bấm.
-  maxPerSymbol: 30, // Tổng TEU tối đa cược vào một mặt trong một ván.
-  maxPerRound: 50, // Tổng TEU tối đa của một người trong một ván.
   betMs: 8_000, // Thời gian đặt cược, tính từ lúc có người đặt cược đầu tiên.
   rollMs: 2_000, // Xóc đĩa; trong lúc này không nhận cược nữa.
   resultMs: 3_000, // Giữ kết quả trên bàn; cược tiếp trong lúc này là mở ván mới ngay.

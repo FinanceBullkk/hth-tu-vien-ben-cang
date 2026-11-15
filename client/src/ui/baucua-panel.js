@@ -156,7 +156,7 @@ export class BauCuaPanel {
     this.clearBtn.disabled = phase !== 'betting' || total === 0;
     this.repeatBtn.disabled = !open || lastTotal === 0 || (phase === 'betting' && total > 0);
     this.repeatBtn.textContent = lastTotal ? `Cược lại ${lastTotal}` : 'Cược lại';
-    this.doubleBtn.disabled = phase !== 'betting' || total === 0 || total * 2 > BAUCUA.maxPerRound;
+    this.doubleBtn.disabled = phase !== 'betting' || total === 0;
     countTo(this.teu, teu);
   }
 }

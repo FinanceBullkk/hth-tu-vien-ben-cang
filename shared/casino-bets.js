@@ -1,5 +1,5 @@
 // Phần chấm cược dùng chung cho các bàn "đặt cửa rồi chờ kết quả" (tài xỉu, cò quay).
-// Mỗi bàn mô tả các cửa bằng một mảng: pays là tỉ lệ ăn (1 là 1 ăn 1), max là TEU tối đa một người đặt vào cửa đó mỗi ván.
+// Mỗi bàn mô tả các cửa bằng một mảng: pays là tỉ lệ ăn (1 là 1 ăn 1). Không giới hạn mức cược: chỉ cần đủ TEU.
 // Cược của một người là mảng số TEU theo đúng thứ tự cửa; id cửa là chỉ số nên chỉ được nối thêm cửa mới vào cuối.
 
 export const CASINO_CHIPS = [1, 5, 10];

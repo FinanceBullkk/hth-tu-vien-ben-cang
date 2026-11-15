@@ -19,7 +19,6 @@ export const RED_SUITS = new Set([2, 3]);
 export const XIDACH = {
   seats: 5, // Số ghế người chơi mỗi bàn.
   chips: [1, 5, 10],
-  maxBet: 20, // Tổng cược tối đa một tay.
   holdMult: 2, // Giữ gấp đôi tiền cược phòng nhà cái thắng bằng bài đặc biệt.
   minStand: 16, // Dằn dưới mức này là non.
   dealerStand: 17, // Nhà cái rút khi dưới mức này...

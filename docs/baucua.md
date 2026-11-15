@@ -8,7 +8,7 @@ Bàn chung ở sân trước thiền đường, phía tây trục chính (`BAUCU
 - Sáu mặt: Nai, Bầu, Gà, Cá, Cua, Tôm. Ba viên xúc xắc, server gieo bằng `crypto.randomInt`.
 - Cược một mặt, ra `n` viên trùng thì nhận lại tiền cược cộng `n` lần tiền cược; không trùng thì mất cược.
 - Hoàn vốn kỳ vọng mỗi mặt là 199/216 (nhà cái lợi 7,9%), nên TEU bị rút dần khỏi nền kinh tế.
-- Chip 1, 5, 10 TEU. Tối đa 30 TEU một mặt và 50 TEU một người mỗi ván.
+- Chip 1, 5, 10 TEU. Không giới hạn mức cược, chỉ cần đủ TEU.
 
 ## Vòng đời một ván
 

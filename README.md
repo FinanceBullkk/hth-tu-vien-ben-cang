@@ -108,7 +108,7 @@ Tới sân cạnh bãi container, bấm **Chơi đầu hồ** rồi chọn đố
 
 Bàn bầu cua ở sân trước thiền đường, phía tây trục chính (bàn xì dách đối xứng phía đông). Bấm **Chơi gì?** rồi chọn **Bầu cua**, hoặc đứng quanh bàn bấm **E**. Cả sân chơi chung một bàn: ai đặt cược đầu tiên thì mở ván, có 8 giây cho mọi người đặt, rồi nhà cái PhucGay xóc đĩa 2 giây và mở bát cho cả bàn. Ba viên xúc xắc hiện to giữa màn hình kèm số TEU thắng/thua; ván mới mở ngay khi có người cược tiếp.
 
-- **Đặt cược:** chọn chip 1, 5 hoặc 10 TEU rồi bấm ô Nai, Bầu, Gà, Cá, Cua, Tôm (hoặc phím **1–6**). Tối đa 30 TEU một mặt và 50 TEU một ván. Còn đang đếm ngược thì **Rút cược** hoàn lại đủ. **Cược lại** đặt đúng như ván trước, **Gấp đôi** đặt thêm bằng cược đang có. Đầu bảng có đồng hồ đếm ngược và kết quả các ván trước.
+- **Đặt cược:** chọn chip 1, 5 hoặc 10 TEU rồi bấm ô Nai, Bầu, Gà, Cá, Cua, Tôm (hoặc phím **1–6**). Không giới hạn mức cược, chỉ cần đủ TEU. Còn đang đếm ngược thì **Rút cược** hoàn lại đủ. **Cược lại** đặt đúng như ván trước, **Gấp đôi** đặt thêm bằng cược đang có. Đầu bảng có đồng hồ đếm ngược và kết quả các ván trước.
 - **Trả thưởng:** ra `n` viên trùng mặt bạn cược thì nhận lại tiền cược cộng `n` lần tiền cược. Không trùng là mất. Nhà cái lợi khoảng 8%, nên chơi lâu thì TEU có xu hướng hao dần.
 - **Bảng tuần:** bầu cua tính lãi/lỗ ròng cả tuần: thắng cộng, thua trừ. Cược nhiều không tự đẩy ai lên hạng.
 - Đi ra xa bàn là tự thôi chơi; cược đã đặt vẫn được chấm và trả vào ví. Server có khởi động lại giữa ván thì tiền cược được hoàn.
@@ -118,7 +118,7 @@ Bàn bầu cua ở sân trước thiền đường, phía tây trục chính (b�
 
 Bàn xì dách ở sân trước thiền đường, phía đông trục chính. Bấm **Chơi gì?** rồi chọn **Xì dách**, hoặc đứng quanh bàn bấm **E**. Tối đa 5 người cùng đấu với nhà cái Mikumilu, luật miền Nam.
 
-- **Cược:** bấm chip +1/+5/+10 (hoặc phím **1–3**) trong 8 giây nhận cược, tối đa 20 TEU một tay. **Cược lại** đặt đúng tiền ván trước. Server giữ **gấp đôi** tiền cược phòng nhà cái ăn x2, chấm xong hoàn phần dư.
+- **Cược:** bấm chip +1/+5/+10 (hoặc phím **1–3**) trong 8 giây nhận cược, không giới hạn mức cược. **Cược lại** đặt đúng tiền ván trước. Server giữ **gấp đôi** tiền cược phòng nhà cái ăn x2, chấm xong hoàn phần dư.
 - **Nặn bài:** chia hai lá, lá đầu ngửa, lá thứ hai úp; kéo lá úp lên để hé dần, kéo quá nửa hoặc chạm một cái là lật hẳn. Lá rút thêm tới tay là ngửa luôn.
 - **Rút / dằn:** lần lượt từng người theo ghế, mỗi người 15 giây (vòng giờ vàng chạy quanh người đang tới lượt): rút (**R**) hoặc dằn (**F**). Dưới 16 là non, không được dằn; hết giờ mà vẫn non thì thua.
 - **Xét bài:** nhà cái rút xong thì đi xét từng nhà: lật bài, đóng dấu (THẮNG, THUA, QUẮC, XÌ DÁCH…), chip của người thua về nhà cái, người thắng được đẩy chip sang và nhận tiền ngay.
@@ -134,9 +134,9 @@ Hai bàn ngay sau bầu cua và xì dách, phía thiền đường: tài xỉu p
 
 - **Ngồi vào là thấy bàn:** góc máy hạ xuống ngang tầm mắt, nhà cái đối diện. Rê chuột lên mặt bạt thì ô sáng, bấm (hoặc chạm) là đặt chip vào ô đó. Chọn chip 1/5/10 ở dải dưới đáy; **Rút cược** hoàn đủ khi còn đang nhận cược.
 - **Ai cược to nhất được tung:** hết giờ cược, người đặt nhiều TEU nhất ván có 5 giây: **giữ chuột hoặc Space** để lấy đà, **thả ra** là tung xúc xắc hoặc búng bi. Không kịp thì bàn tự tung. Lực tung chỉ đổi cách bay, kết quả server bốc.
-- **Tài xỉu:** ba viên. Xỉu 4–10, Tài 11–17 ăn 1 ăn 1; ra bộ ba thì cả hai thua. Bão (bộ ba bất kỳ) ăn 1 ăn 30, tối đa 3 TEU. Phím **1–3**: Xỉu, Tài, Bão.
-- **Cò quay:** bánh xe châu Âu 0–36. Số đơn ăn 35 (tối đa 5 TEU một số), tá ăn 2, đỏ/đen/chẵn/lẻ/nhỏ/lớn ăn 1; ra 0 thì cửa ngoài thua. Phím **1–4**: Đỏ, Đen, Chẵn, Lẻ.
-- Tối đa 50 TEU một ván. Nhà cái lợi chút ít (2,7–2,8%, riêng Bão 13,9%) nên chơi lâu TEU vẫn hao; bảng tuần tính lãi/lỗ ròng như bầu cua. Chi tiết và giao thức xem `docs/taixiu-coquay.md`.
+- **Tài xỉu:** ba viên. Xỉu 4–10, Tài 11–17 ăn 1 ăn 1; ra bộ ba thì cả hai thua. Bão (bộ ba bất kỳ) ăn 1 ăn 30. Phím **1–3**: Xỉu, Tài, Bão.
+- **Cò quay:** bánh xe châu Âu 0–36. Số đơn ăn 35, tá ăn 2, đỏ/đen/chẵn/lẻ/nhỏ/lớn ăn 1; ra 0 thì cửa ngoài thua. Phím **1–4**: Đỏ, Đen, Chẵn, Lẻ.
+- Không giới hạn mức cược. Nhà cái lợi chút ít (2,7–2,8%, riêng Bão 13,9%) nên chơi lâu TEU vẫn hao; bảng tuần tính lãi/lỗ ròng như bầu cua. Chi tiết và giao thức xem `docs/taixiu-coquay.md`.
 
 ## Gạt cần
 

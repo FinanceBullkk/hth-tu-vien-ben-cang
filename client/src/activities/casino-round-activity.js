@@ -15,7 +15,7 @@ const CHARGE_S = 1.1; // Giữ chừng này là đầy lực; giữ tiếp thì 
  * @property {string} name 'taixiu' | 'coquay': tên sự kiện socket và mã hoạt động
  * @property {string} title
  * @property {any} zone
- * @property {{name:string, max:number}[]} targets
+ * @property {{name:string}[]} targets
  * @property {(app:any)=>any} table bàn 3D trong world
  * @property {Record<string, number>} keys phím -> cửa
  * @property {string} help câu hướng dẫn khi mới vào bàn

@@ -274,8 +274,11 @@ test('cược giả mạo, vượt mức, thiếu tiền giữ, sai chỗ, bàn 
   assert.equal(game.phase, 'idle');
   act(a, 'bet', { amount: 10 });
   act(a, 'bet', { amount: 10 });
-  assert.match(act(a, 'bet', { amount: 1 }).error, /tối đa 20/);
-  assert.equal(db.shop.teu(A), 60);
+  assert.equal(act(a, 'bet', { amount: 10 }).bet, 30, 'một tay không còn trần 20');
+  act(a, 'bet', { amount: 10 });
+  act(a, 'bet', { amount: 10 });
+  assert.match(act(a, 'bet', { amount: 1 }).error, /Cần 2 TEU/, 'chỉ bị chặn khi không đủ tiền giữ');
+  assert.equal(db.shop.teu(A), 0);
 
   const poor = player(B, 9);
   assert.match(act(poor, 'bet', { amount: 5 }).error, /Cần 10 TEU/, 'phải đủ tiền giữ gấp đôi');

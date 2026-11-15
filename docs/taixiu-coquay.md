@@ -24,7 +24,7 @@ Hai bàn đỏ đen thứ ba và thứ tư, ngay sau bầu cua và xì dách, ph
 | Cò quay | Tá 1–12, 13–24, 25–36 | 1 ăn 2 | 20 | 36/37 |
 | Cò quay | Đỏ, Đen, Chẵn, Lẻ, 1–18, 19–36; ra 0 thì thua | 1 ăn 1 | 30 | 36/37 |
 
-- Chip 1/5/10, tối đa 50 TEU một người một ván. Bánh xe châu Âu một số 0, thứ tự ô chuẩn (`WHEEL_ORDER`).
+- Chip 1/5/10, không giới hạn mức cược, chỉ cần đủ TEU. Bánh xe châu Âu một số 0, thứ tự ô chuẩn (`WHEEL_ORDER`).
 - Test `nhà cái luôn lợi thế` / `nhà cái lợi đúng 1/37` duyệt hết mọi kết quả để giữ các con số trên khi ai đó sửa luật.
 
 ## Vòng đời một ván

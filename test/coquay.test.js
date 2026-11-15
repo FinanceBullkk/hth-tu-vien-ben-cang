@@ -80,15 +80,15 @@ test('một ván cò quay: cược trải nhiều cửa, người tung búng bi,
   const a = player(A, 100, 1);
   const b = player(B, 100, 2);
   assert.equal(bet(a, 0, 5).ok, true);
-  assert.match(bet(a, 0, 1).error, /tối đa 5/, 'số đơn tối đa 5');
+  assert.equal(bet(a, 0, 1).ok, true, 'số đơn không còn trần 5');
   assert.equal(bet(b, OUTSIDE_ID.red, 10).ok, true);
   game.sweep(game.endsAt);
   assert.equal(game.publicState().thrower.sid, b.sid);
   game.throw(b, { power: 0.4 });
   assert.equal(game.result, 0);
   game.sweep(game.endsAt);
-  // Ra 0: A trúng 5 × 36 = 180 → 95 + 180 = 275; B mất đỏ → 90.
-  assert.deepEqual([db.shop.teu(A), db.shop.teu(B)], [275, 90]);
+  // Ra 0: A trúng 6 × 36 = 216 → 94 + 216 = 310; B mất đỏ → 90.
+  assert.deepEqual([db.shop.teu(A), db.shop.teu(B)], [310, 90]);
   assert.deepEqual(game.publicState().history, [0]);
   assert.equal(payouts.length, 2);
   db.close();
