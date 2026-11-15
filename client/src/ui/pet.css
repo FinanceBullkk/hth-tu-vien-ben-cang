@@ -1,22 +1,22 @@
-/* Bảng thú cưng: khung giấy dó như các hộp thoại khác; sân khấu tối nhuộm màu bậc thú (--rc),
+/* Bảng thú cưng: ruột navy như các hộp thoại khác (tông navy-vàng); sân khấu tối nhuộm màu bậc thú (--rc),
    trứng linh thú men ngọc có vân vàng, thẻ sổ thú sáng khi đã có và mờ khi chưa. */
 .modal-card.pet-modal { width: min(720px, 100%); }
 .pet-modal .modal-head h2::after {
   content: 'Ấp trứng · dắt thú · cho ăn cá'; display: block; margin-top: 2px;
-  font: 600 12px var(--sans); letter-spacing: .12em; text-transform: uppercase; color: #8a6a3a;
+  font: 600 12px var(--sans); letter-spacing: .12em; text-transform: uppercase; color: #ffd98a;
 }
 .pet { display: flex; flex-direction: column; gap: 12px; }
 .pet h3 { margin: 0; }
-.pet .btn:not(.primary) { background: #fffaf0; border-color: rgba(143, 106, 56, .45); color: var(--ink); }
-.pet .btn.on { background: #241f29; color: #f7cdb8; }
-.pet-top { display: grid; grid-template-columns: 1fr 230px; gap: 12px; }
+.pet .btn:not(.primary) { background: linear-gradient(180deg, #2b4aae, #16266e 60%, #101c54); border-color: #0a1c52; color: #e6eeff; box-shadow: inset 0 2px 0 rgba(160, 200, 255, .45); }
+.pet .btn.on { background: linear-gradient(180deg, #ffd980, #f29418 60%, #e07c12); border-color: #7a3c06; color: #fff8ea; text-shadow: 0 1px 0 #7a3c06; }
+.pet-top { display: grid; grid-template-columns: 1fr 210px; gap: 12px; }
 
 /* Sân khấu: ô xem 3D + thông tin */
 .pet-stage {
   --rc: #e6dfcf;
-  position: relative; display: grid; grid-template-columns: 210px 1fr; gap: 12px; min-height: 230px; padding: 12px;
+  position: relative; display: grid; grid-template-columns: 170px 1fr; gap: 10px; min-height: 230px; padding: 12px;
   overflow: hidden; border-radius: 14px; color: #f6eedd;
-  background: radial-gradient(90% 120% at 22% 30%, color-mix(in srgb, var(--rc) 34%, #2a2133), #17131c 70%);
+  background: radial-gradient(90% 120% at 22% 30%, color-mix(in srgb, var(--rc) 34%, #1a2466), #0b1240 70%);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 55%, transparent), 0 6px 18px rgba(0, 0, 0, .25);
 }
 .pet-view { position: relative; min-height: 206px; border-radius: 12px; background: radial-gradient(60% 40% at 50% 82%, rgba(255, 255, 255, .14), transparent 70%); }
@@ -41,7 +41,7 @@
 .pet-bond-meter u { position: absolute; inset: 0 auto 0 0; border-radius: 5px; background: linear-gradient(90deg, #ff8fb1, #ffd36a); box-shadow: 0 0 10px rgba(255, 150, 180, .7); transition: width .4s; }
 .pet-bond small { color: #d8c9b2; font-size: 12px; }
 .pet-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
-.pet-actions .btn { padding: 8px 16px; }
+.pet-actions .btn { padding: 7px 12px; white-space: nowrap; }
 
 /* Lớp loé sáng khi trứng nở */
 .pet-hatch {
@@ -59,12 +59,12 @@
 /* Ô trứng */
 .pet-egg {
   display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px; border-radius: 14px; text-align: center;
-  background: linear-gradient(180deg, #fffaf0, #f3e4c4); box-shadow: inset 0 0 0 1px rgba(143, 106, 56, .35);
+  background: linear-gradient(180deg, #22348a, #111b55); box-shadow: inset 0 0 0 2px rgba(255, 207, 77, .55), 0 4px 12px rgba(2, 6, 24, .4);
 }
 .pet-egg-text { display: flex; flex-direction: column; gap: 4px; }
-.pet-egg-text h3 { font: 700 17px var(--serif); color: #5a3416; }
-.pet-egg-text p { margin: 0; font-size: 12px; line-height: 1.35; color: #6b5640; }
-.pet-egg-pity { color: #8a3d6a !important; font-weight: 700; }
+.pet-egg-text h3 { font: 700 17px var(--serif); color: #ffd98a; }
+.pet-egg-text p { margin: 0; font-size: 12px; line-height: 1.35; color: #c9d6f5; }
+.pet-egg-pity { color: #ff9fc6 !important; font-weight: 700; }
 .pet-egg-btn { width: 100%; }
 .pet-egg-price { display: inline-flex; align-items: center; gap: 3px; padding: 1px 8px 1px 5px; border-radius: 999px; background: rgba(0, 0, 0, .25); color: #ffd56a; font-weight: 800; }
 .pet-egg-price .ink-icon { width: 15px; height: 15px; }
@@ -83,13 +83,13 @@
 @keyframes petEggPop { 0% { transform: scale(1); filter: brightness(1); } 40% { transform: scale(1.18); filter: brightness(2.2); } 100% { transform: scale(.2); opacity: 0; } }
 
 /* Cho ăn */
-.pet-feed { padding: 10px 12px; border-radius: 12px; background: rgba(255, 250, 240, .8); box-shadow: inset 0 0 0 1px rgba(143, 106, 56, .3); }
-.pet-feed-hint, .pet-feed-empty { margin: 0 0 8px; font-size: 13px; color: #5c4630; }
+.pet-feed { padding: 10px 12px; border-radius: 12px; background: rgba(6, 11, 36, .55); box-shadow: inset 0 0 0 2px rgba(148, 196, 240, .35); }
+.pet-feed-hint, .pet-feed-empty { margin: 0 0 8px; font-size: 13px; color: #c9d6f5; }
 .pet-feed-empty { margin: 0; }
 .pet-feed-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; max-height: 190px; overflow-y: auto; }
 .pet-feed-row {
   display: grid; grid-template-columns: 1fr auto; gap: 1px 8px; padding: 7px 10px; border: 0; border-radius: 10px; text-align: left;
-  background: #241f29; color: #f6eedd; box-shadow: inset 3px 0 0 var(--rc); touch-action: manipulation;
+  background: #142060; color: #f6eedd; box-shadow: inset 3px 0 0 var(--rc); touch-action: manipulation;
 }
 .pet-feed-row:hover:not(:disabled) { filter: brightness(1.2); }
 .pet-feed-name { font-weight: 700; font-size: 13.5px; }
@@ -99,12 +99,12 @@
 
 /* Sổ thú */
 .pet-grid-head { display: flex; align-items: baseline; justify-content: space-between; }
-.pet-grid-head h3 { font: 700 16px var(--serif); color: #5a3416; }
-.pet-count { color: #8a6a3a; font: 700 13px var(--sans); }
+.pet-grid-head h3 { font: 700 16px var(--serif); color: #ffd98a; }
+.pet-count { color: #ffd98a; font: 700 13px var(--sans); }
 .pet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
 .pet-card {
   position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 9px 6px 8px; border: 0; border-radius: 12px;
-  background: linear-gradient(180deg, #2c2433, #1b161f); color: #f6eedd; touch-action: manipulation;
+  background: linear-gradient(180deg, #24357e, #121b52); color: #f6eedd; touch-action: manipulation;
   box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--rc) 70%, transparent), 0 3px 8px rgba(0, 0, 0, .2);
 }
 .pet-card:hover { filter: brightness(1.15); }

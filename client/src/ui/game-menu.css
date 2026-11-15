@@ -1,12 +1,12 @@
-/* Thanh menu góc phải theo kiểu game thùng đồ: dải tối mờ viền chỉ vàng, icon minh hoạ nổi khối đứng tự do
+/* Thanh menu góc phải theo kiểu game thùng đồ (tông navy-vàng của HUD): dải navy mờ viền chỉ vàng, icon minh hoạ nổi khối đứng tự do
    (game-menu-icons.js), nhô lên khỏi mép trên của dải, đổ bóng xuống dải; nhãn chữ trắng viền đen dưới icon.
    Di chuột thì icon phóng to, sáng lên, toả quầng vàng; bấm thì nhún xuống. "Chơi gì?" to hơn và luôn toả sáng.
    Ghi đè lớp "Mực tàu" trong style.css nên mọi selector bắt đầu bằng #hud #menu cho chắc thắng. */
 #hud #menu {
-  --outline: 1px 1px 0 #1a0c03, -1px -1px 0 #1a0c03, 1px -1px 0 #1a0c03, -1px 1px 0 #1a0c03, 0 2px 3px rgba(0, 0, 0, .7);
+  --outline: 1px 1px 0 #060b24, -1px -1px 0 #060b24, 1px -1px 0 #060b24, -1px 1px 0 #060b24, 0 2px 3px rgba(0, 0, 0, .7);
   align-items: flex-end; gap: 2px; margin-top: 10px; padding: 0 8px 3px; border: 0; border-radius: 14px 14px 12px 12px;
-  background: linear-gradient(180deg, rgba(58, 34, 16, .55) 0%, rgba(26, 15, 7, .84) 45%, rgba(14, 8, 3, .92) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 214, 140, .35), inset 0 -2px 0 rgba(0, 0, 0, .5), 0 6px 16px rgba(0, 0, 0, .45);
+  background: linear-gradient(180deg, rgba(30, 48, 130, .55) 0%, rgba(12, 20, 64, .86) 45%, rgba(6, 10, 36, .93) 100%);
+  box-shadow: inset 0 1px 0 rgba(160, 200, 255, .35), inset 0 0 0 1px rgba(148, 196, 240, .25), 0 6px 16px rgba(2, 6, 24, .5);
 }
 #hud #menu::before { display: none; }
 #hud #menu::after {
