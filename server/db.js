@@ -10,6 +10,7 @@ import { BagStore } from './bag-store.js';
 import { ShopStore } from './shop-store.js';
 import { TradeStore } from './trade-store.js';
 import { StoneStockStore } from './stone-stock-store.js';
+import { PetStore } from './pet-store.js';
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS players (
@@ -155,6 +156,7 @@ export class Db {
     this.trade = new TradeStore(this.db);
     this.fishing = new FishingStore(this.db);
     this.bag = new BagStore(this.db);
+    this.pets = new PetStore(this.db);
     this.baucua = new TableStakeStore(this.db, 'baucua');
     this.xidach = new TableStakeStore(this.db, 'xidach');
     this.taixiu = new TableStakeStore(this.db, 'taixiu');
