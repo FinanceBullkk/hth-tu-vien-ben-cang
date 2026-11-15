@@ -106,7 +106,7 @@ export class BauCua {
   rebet(p, data) {
     const add = data?.bets;
     const valid = Array.isArray(add) && add.length === BAUCUA.symbols
-      && add.every((v) => Number.isInteger(v) && v >= 0 && v <= BAUCUA.maxPerSymbol) && sumBets(add) > 0;
+      && add.every((v) => Number.isSafeInteger(v) && v >= 0) && sumBets(add) > 0;
     if (!valid) return this.#refuse(p) ?? { ok: false, error: 'Cược không hợp lệ.' };
     return this.#place(p, [...add]);
   }
@@ -121,15 +121,13 @@ export class BauCua {
     return null;
   }
 
-  /** Cộng add (6 số) vào cược của p sau khi kiểm tra giới hạn và trừ tiền. */
+  /** Cộng add (6 số) vào cược của p sau khi trừ tiền; không giới hạn mức cược, chỉ cần đủ TEU. */
   #place(p, add) {
     const now = Date.now();
     const refused = this.#refuse(p, now);
     if (refused) return refused;
     const mine = this.bets.get(p.pid) ?? emptyBets();
-    if (add.some((v, i) => mine[i] + v > BAUCUA.maxPerSymbol)) return { ok: false, error: `Mỗi mặt cược tối đa ${BAUCUA.maxPerSymbol} TEU.` };
     const amount = sumBets(add);
-    if (sumBets(mine) + amount > BAUCUA.maxPerRound) return { ok: false, error: `Mỗi ván cược tối đa ${BAUCUA.maxPerRound} TEU.` };
 
     p.lastBaucua = now;
     const date = this.phase === 'betting' ? this.roundDate : localDate(now, this.config.timezone);

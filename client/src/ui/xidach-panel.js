@@ -29,7 +29,7 @@ function seatStatus(seat, state) {
 /** Dòng phụ dưới tên pha: ai đang tới lượt, bàn còn mấy ghế. */
 function subText(state, mySid) {
   const seats = state?.seats ?? [];
-  if (!state || state.phase === 'idle') return `Cược 1–${XIDACH.maxBet} TEU · giữ gấp đôi phòng cái ăn x2`;
+  if (!state || state.phase === 'idle') return `Cược không giới hạn · giữ gấp đôi phòng cái ăn x2`;
   if (state.phase === 'betting') return `${seats.length}/${XIDACH.seats} ghế · dưới ${XIDACH.minStand} là non, phải rút`;
   if (state.phase === 'playing') return state.turn === mySid ? 'Tới lượt bạn: rút hay dằn?' : `Lượt ${seats.find((s) => s.sid === state.turn)?.name ?? '…'}`;
   if (state.phase === 'result') return 'Cược để mở ván mới';
@@ -218,11 +218,10 @@ export class XiDachPanel {
 
     const betPhase = phase === 'idle' || phase === 'betting' || phase === 'result';
     const myBet = phase === 'betting' ? (mine?.bet ?? 0) : 0;
-    const canBet = betPhase && myBet < XIDACH.maxBet;
     this.turn.hidden = !myTurn;
     this.root.classList.toggle('my-turn', myTurn);
     this.betBox.hidden = !betPhase;
-    this.chips.forEach((el, i) => { el.disabled = !canBet || myBet + XIDACH.chips[i] > XIDACH.maxBet; });
+    this.chips.forEach((el) => { el.disabled = !betPhase; });
     this.clearBtn.disabled = !(phase === 'betting' && mine?.bet);
     this.repeatBtn.disabled = !betPhase || !last || myBet > 0;
     this.repeatBtn.textContent = last ? `Cược lại ${last}` : 'Cược lại';

@@ -13,7 +13,7 @@ Bàn chung tối đa 5 khách đấu với nhà cái Mikumilu (NPC) ở sân tr�
 - Bài đặc biệt ăn **x2 hai chiều**: khách thắng bằng nó được gấp đôi, nhà cái thắng bằng nó thu gấp đôi.
   Vì vậy lúc cược, server giữ 2 lần tiền cược; chấm xong hoàn phần dư.
 - Nhà cái rút khi dưới 17, và rút tiếp khi đang 17–18 "mềm" (có Át đang tính 10/11); luôn đạt ít nhất 15.
-- Chip 1/5/10 TEU, tối đa 20 TEU một tay.
+- Chip 1/5/10 TEU, không giới hạn mức cược (cần đủ TEU giữ gấp đôi).
 
 ### Vì sao nhà cái rút như vậy
 

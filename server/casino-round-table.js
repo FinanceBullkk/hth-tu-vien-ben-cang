@@ -21,7 +21,7 @@ const AUTO_POWER = 0.55; // Lực tung khi người tung không bấm kịp.
  * @property {{x:number,z:number,radius:number}} zone khu bàn
  * @property {number} activity mã ACTIVITY người chơi phải đang ở
  * @property {{key:string,pays:number,max:number}[]} targets các cửa
- * @property {{maxPerRound:number,betMs:number,throwMs:number,rollMs:number,resultMs:number,betIntervalMs:number,history:number}} timing
+ * @property {{betMs:number,throwMs:number,rollMs:number,resultMs:number,betIntervalMs:number,history:number}} timing
  * @property {(random:(n:number)=>number)=>any} draw bốc kết quả
  * @property {(bets:number[], result:any)=>{stake:number,payout:number,net:number,profit:number,returned:number}} settle
  * @property {(result:any)=>any} historyEntry bản ghi gọn của một ván cho bảng cầu
@@ -136,9 +136,6 @@ export class CasinoRoundTable {
     }
     const entry = this.phase === 'betting' ? this.bets.get(p.pid) : null;
     const mine = entry?.bets ?? this.emptyBets();
-    const cap = targets[target].max;
-    if (mine[target] + amount > cap) return { ok: false, error: `Cửa ${targets[target].name} tối đa ${cap} TEU.` };
-    if (sumBets(mine) + amount > timing.maxPerRound) return { ok: false, error: `Mỗi ván cược tối đa ${timing.maxPerRound} TEU.` };
 
     p.lastCasinoBet = now;
     const date = this.phase === 'betting' ? this.roundDate : localDate(now, this.config.timezone);

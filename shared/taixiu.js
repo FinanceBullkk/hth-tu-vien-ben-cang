@@ -4,17 +4,15 @@
 import { CASINO_CHIPS, settleBets } from './casino-bets.js';
 
 export const TAIXIU_TARGETS = [
-  { key: 'xiu', name: 'Xỉu', hint: '4–10', pays: 1, max: 30 },
-  { key: 'tai', name: 'Tài', hint: '11–17', pays: 1, max: 30 },
-  // Giữ thấp: 3 TEU trúng bão là +90, ngang mức lãi lớn nhất của bầu cua.
-  { key: 'bao', name: 'Bão', hint: '1 ăn 30', pays: 30, max: 3 },
+  { key: 'xiu', name: 'Xỉu', hint: '4–10', pays: 1 },
+  { key: 'tai', name: 'Tài', hint: '11–17', pays: 1 },
+  { key: 'bao', name: 'Bão', hint: '1 ăn 30', pays: 30 },
 ];
 export const [XIU, TAI, BAO] = [0, 1, 2];
 
 export const TAIXIU = {
   chips: CASINO_CHIPS,
   dice: 3,
-  maxPerRound: 50, // Tổng TEU tối đa của một người trong một ván.
   betMs: 10_000, // Nhận cược, tính từ lúc có người cược đầu tiên.
   throwMs: 5_000, // Người cược lớn nhất có chừng này để tự tung; hết giờ thì tự tung.
   rollMs: 2_600, // Xúc xắc bay, nảy và dừng trên bàn.

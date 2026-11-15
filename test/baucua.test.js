@@ -163,13 +163,12 @@ test('cược giả mạo và vượt mức bị từ chối, không trừ một
   assert.equal(game.phase, 'idle', 'cược hỏng không được mở ván');
   assert.equal(db.shop.teu(A), 100);
 
-  // Mặt tối đa 30, ván tối đa 50.
-  for (let i = 0; i < 3; i++) assert.equal(bet(a, CUA, 10).ok, true);
-  assert.match(bet(a, CUA, 1).error, /tối đa 30/);
+  // Không giới hạn mức cược: một mặt hay cả ván đều cược được tới hết TEU.
+  for (let i = 0; i < 6; i++) assert.equal(bet(a, CUA, 10).ok, true, 'một mặt vượt 30');
   assert.equal(bet(a, GA, 10).ok, true);
   assert.equal(bet(a, GA, 10).ok, true);
-  assert.match(bet(a, TOM, 1).error, /tối đa 50/);
-  assert.equal(db.shop.teu(A), 50);
+  assert.equal(bet(a, TOM, 10).ok, true, 'cả ván vượt 50');
+  assert.equal(db.shop.teu(A), 10);
 
   // Thiếu TEU: không trừ, không ghi cược.
   const poor = player(B, 3);
@@ -191,7 +190,7 @@ test('cược lại cả gói: cộng vào cược hiện có, trừ tiền mộ
     return game.rebet(p, data);
   };
   for (const bad of [null, {}, { bets: 'x' }, { bets: [1, 2, 3] }, { bets: bets({}) }, { bets: bets({ [CUA]: -1 }) },
-    { bets: bets({ [CUA]: 1.5 }) }, { bets: bets({ [CUA]: '5' }) }, { bets: bets({ [CUA]: 31 }) }, { bets: [...bets({ [CUA]: 5 }), 5] }]) {
+    { bets: bets({ [CUA]: 1.5 }) }, { bets: bets({ [CUA]: '5' }) }, { bets: bets({ [CUA]: 2 ** 53 }) }, { bets: [...bets({ [CUA]: 5 }), 5] }]) {
     assert.equal(rebet(a, bad).ok, false, `phải loại ${JSON.stringify(bad)}`);
   }
   assert.equal(game.phase, 'idle', 'gói hỏng không được mở ván');
@@ -202,8 +201,8 @@ test('cược lại cả gói: cộng vào cược hiện có, trừ tiền mộ
   assert.equal(game.phase, 'betting', 'cược lại lúc bàn nghỉ mở ván mới');
   // Gấp đôi: gửi lại đúng cược đang có.
   assert.deepEqual(rebet(a, { bets: first.bets }).bets, bets({ [CUA]: 14, [CA]: 6 }));
-  assert.match(rebet(a, { bets: bets({ [CUA]: 17 }) }).error, /tối đa 30/, 'vượt mức một mặt thì từ chối cả gói');
-  assert.match(rebet(a, { bets: bets({ [NAI]: 20, [GA]: 11 }) }).error, /tối đa 50/);
+  const over = rebet(a, { bets: bets({ [NAI]: 41, [GA]: 40 }) });
+  assert.deepEqual([over.ok, over.teu], [false, 80], 'gói lớn hơn số TEU thì từ chối cả gói, không trừ');
   assert.equal(db.shop.teu(A), 80);
   assert.deepEqual(game.totals().crowd, [0, 0, 0, 1, 1, 0], 'số người cược từng mặt, không có tên');
 

@@ -12,20 +12,20 @@ export const pocketColor = (n) => (n === 0 ? 'green' : RED.has(n) ? 'red' : 'bla
 
 // Cửa 0..36 là số đơn; các cửa ngoài nối sau. Mỗi cửa ngoài có test(n) cho số 1..36 (số 0 luôn thua).
 const OUTSIDE = [
-  { key: 'red', name: 'Đỏ', pays: 1, max: 30, test: (n) => RED.has(n) },
-  { key: 'black', name: 'Đen', pays: 1, max: 30, test: (n) => !RED.has(n) },
-  { key: 'even', name: 'Chẵn', pays: 1, max: 30, test: (n) => n % 2 === 0 },
-  { key: 'odd', name: 'Lẻ', pays: 1, max: 30, test: (n) => n % 2 === 1 },
-  { key: 'low', name: '1–18', pays: 1, max: 30, test: (n) => n <= 18 },
-  { key: 'high', name: '19–36', pays: 1, max: 30, test: (n) => n >= 19 },
-  { key: 'd1', name: '1–12', pays: 2, max: 20, test: (n) => n <= 12 },
-  { key: 'd2', name: '13–24', pays: 2, max: 20, test: (n) => n >= 13 && n <= 24 },
-  { key: 'd3', name: '25–36', pays: 2, max: 20, test: (n) => n >= 25 },
+  { key: 'red', name: 'Đỏ', pays: 1, test: (n) => RED.has(n) },
+  { key: 'black', name: 'Đen', pays: 1, test: (n) => !RED.has(n) },
+  { key: 'even', name: 'Chẵn', pays: 1, test: (n) => n % 2 === 0 },
+  { key: 'odd', name: 'Lẻ', pays: 1, test: (n) => n % 2 === 1 },
+  { key: 'low', name: '1–18', pays: 1, test: (n) => n <= 18 },
+  { key: 'high', name: '19–36', pays: 1, test: (n) => n >= 19 },
+  { key: 'd1', name: '1–12', pays: 2, test: (n) => n <= 12 },
+  { key: 'd2', name: '13–24', pays: 2, test: (n) => n >= 13 && n <= 24 },
+  { key: 'd3', name: '25–36', pays: 2, test: (n) => n >= 25 },
 ];
 
 export const COQUAY_TARGETS = [
-  // Số đơn: tối đa 5 TEU, trúng là +175.
-  ...Array.from({ length: POCKETS }, (_, n) => ({ key: `n${n}`, name: String(n), pays: 35, max: 5 })),
+  // Số đơn: trúng là 1 ăn 35.
+  ...Array.from({ length: POCKETS }, (_, n) => ({ key: `n${n}`, name: String(n), pays: 35 })),
   ...OUTSIDE.map(({ test, ...rest }) => rest),
 ];
 /** Id cửa ngoài theo key, ví dụ OUTSIDE_ID.red. */
@@ -33,7 +33,6 @@ export const OUTSIDE_ID = Object.fromEntries(OUTSIDE.map((o, i) => [o.key, POCKE
 
 export const COQUAY = {
   chips: CASINO_CHIPS,
-  maxPerRound: 50,
   betMs: 12_000, // Mặt bạt nhiều cửa hơn tài xỉu nên cho thêm chút thời gian.
   throwMs: 5_000, // Người cược lớn nhất búng bi; hết giờ thì nhà cái búng.
   rollMs: 6_000, // Bi chạy quanh vành, rơi xuống, nảy vài ô rồi nằm yên.

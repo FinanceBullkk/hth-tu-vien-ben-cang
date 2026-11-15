@@ -104,7 +104,6 @@ export class XiDach {
     if (!XIDACH.chips.includes(amount)) return { ok: false, error: 'Cược không hợp lệ.' };
     const seat = betting ? this.seats.get(p.pid) : null;
     if (!seat && betting && this.seats.size >= XIDACH.seats) return { ok: false, error: `Bàn đủ ${XIDACH.seats} người rồi, chờ ván sau nhé.` };
-    if ((seat?.bet ?? 0) + amount > XIDACH.maxBet) return { ok: false, error: `Mỗi tay cược tối đa ${XIDACH.maxBet} TEU.` };
 
     p.lastXidach = now;
     const hold = amount * XIDACH.holdMult;

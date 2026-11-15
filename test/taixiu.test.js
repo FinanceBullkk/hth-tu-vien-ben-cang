@@ -152,14 +152,10 @@ test('cược giả mạo và vượt mức bị từ chối, không trừ một
   }
   assert.equal(db.shop.teu(A), 100);
   assert.equal(game.phase, 'idle', 'cược hỏng không mở ván');
-  bet(a, BAO, 1);
-  bet(a, BAO, 1);
-  bet(a, BAO, 1);
-  assert.match(bet(a, BAO, 1).error, /tối đa 3/);
-  for (let i = 0; i < 3; i++) bet(a, TAI, 10);
-  assert.equal(bet(a, XIU, 10).ok, true, 'tới 43');
-  assert.match(bet(a, XIU, 10).error, /tối đa 50/);
-  assert.equal(db.shop.teu(A), 57);
+  // Không giới hạn mức cược: chỉ cần đủ TEU.
+  for (let i = 0; i < 5; i++) assert.equal(bet(a, BAO, 1).ok, true, 'bão không còn trần 3');
+  for (let i = 0; i < 6; i++) assert.equal(bet(a, TAI, 10).ok, true, 'ván không còn trần 50');
+  assert.equal(db.shop.teu(A), 35);
   const poor = player(B, 3);
   assert.deepEqual(bet(poor, TAI, 5), { ok: false, error: 'Không đủ TEU để cược 5.', teu: 3 });
   db.close();
