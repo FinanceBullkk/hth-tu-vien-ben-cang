@@ -102,18 +102,19 @@
 .pet-grid-head h3 { font: 700 16px var(--serif); color: #ffd98a; }
 .pet-count { color: #ffd98a; font: 700 13px var(--sans); }
 .pet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+/* Thẻ sổ thú dùng ô kem thật (components/shop-cell.png) như lưới sưu tập Gunny92; khoanh màu phẩm chất giữ nguyên. */
 .pet-card {
   position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 9px 6px 8px; border: 0; border-radius: 12px;
-  background: linear-gradient(180deg, #24357e, #121b52); color: #f6eedd; touch-action: manipulation;
+  background: url("/ui/gunny/components/shop-cell.png") center / 100% 100% no-repeat, linear-gradient(180deg, #24357e, #121b52); color: #5e370e; touch-action: manipulation;
   box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--rc) 70%, transparent), 0 3px 8px rgba(0, 0, 0, .2);
 }
 .pet-card:hover { filter: brightness(1.15); }
 .pet-card.on { box-shadow: inset 0 0 0 2.5px var(--rc), 0 0 14px color-mix(in srgb, var(--rc) 60%, transparent); }
 .pet-card-glyph { font-size: 30px; line-height: 1.1; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--rc) 70%, transparent)); }
 .pet-card-name { font: 700 13px/1.2 var(--sans); text-align: center; }
-.pet-card small { color: #ff9fbd; font-size: 11.5px; min-height: 14px; }
+.pet-card small { color: #b5567a; font-size: 11.5px; min-height: 14px; }
 .pet-card.locked .pet-card-glyph { filter: grayscale(1) brightness(.5); }
-.pet-card.locked .pet-card-name { color: #a99c88; }
+.pet-card.locked .pet-card-name { color: #8a7355; }
 .pet-card.locked small { color: #8c8070; }
 .pet-card-out {
   position: absolute; top: -6px; right: -4px; padding: 1px 7px; border-radius: 999px; font: 800 10px var(--sans); font-style: normal;

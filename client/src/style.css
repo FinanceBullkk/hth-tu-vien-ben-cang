@@ -587,8 +587,9 @@ body:has(#onlineList:not([hidden])) #voicePanel { visibility: hidden; }
 .bookx .fish-book { display: grid; grid-template-columns: 1fr 1fr; column-gap: 20px; }
 .bookx .fish-book li { position: relative; display: grid; grid-template-columns: 62px 1fr; column-gap: 10px; align-items: center; padding: 7px 0; border-bottom: 1px dashed rgba(216, 164, 78, .3); }
 .bookx .fish-book li:not(.caught) { opacity: .58; }
-.bookx .fish-book-art { grid-row: span 2; display: block; }
-.bookx .fish-book-art svg { display: block; width: 62px; height: auto; }
+/* Chân dung cá đặt trong ô kem thật (components/shop-cell.png) như ô sưu tập Gunny92. */
+.bookx .fish-book-art { grid-row: span 2; display: grid; place-items: center; width: 68px; padding: 4px 3px; border-radius: 6px; background: url("/ui/gunny/components/shop-cell.png") center / 100% 100% no-repeat; }
+.bookx .fish-book-art svg { display: block; width: 58px; height: auto; }
 .bookx .fish-book-art svg.dark { opacity: .35; }
 .bookx .fish-book li b { font: 700 14.5px var(--sans); color: #e6eeff; }
 .bookx .fish-book li:not(.caught) b { color: var(--muted); font-weight: 500; }
