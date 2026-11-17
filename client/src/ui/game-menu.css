@@ -1,17 +1,13 @@
-/* Thanh menu góc phải dựng lại theo dải menu Gunny92: nền xanh tím đậm, viền xanh sáng phát quầng,
-   nút icon tròn thật chép từ module ToolBar (toolbar-*.png) nổi trên dải; nhãn chữ trắng viền đen dưới icon.
-   Ghi đè lớp "Mực tàu" trong style.css nên mọi selector bắt đầu bằng #hud #menu cho chắc thắng. */
+/* Thanh menu góc phải: dải chạm khắc thật từ toolbar.swf của Gunn3.0 (components/g3-toolbar-bar.png),
+   10 glyph phẳng nổi trên dải — 4 ảnh thật (túi, shop, cuộn, thư) + 6 SVG cùng phong cách; nhãn trắng viền đen dưới icon. */
 #hud #menu {
   --outline: 1px 1px 0 #060b24, -1px -1px 0 #060b24, 1px -1px 0 #060b24, -1px 1px 0 #060b24, 0 2px 3px rgba(0, 0, 0, .7);
-  align-items: flex-end; gap: 2px; margin-top: 10px; padding: 0 8px 3px; border: 0; border-radius: 9px;
-  background: linear-gradient(180deg, rgba(112, 76, 32, .92) 0%, rgba(84, 55, 23, .94) 48%, rgba(56, 36, 14, .96) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 214, 130, .5), inset 0 0 0 1px rgba(216, 164, 78, .4), 0 0 0 2px rgba(158, 108, 44, .85), 0 0 16px rgba(220, 160, 60, .35), 0 6px 16px rgba(2, 6, 24, .5);
+  align-items: flex-end; gap: 2px; margin-top: 10px; padding: 0 14px 3px; border: 0; border-radius: 9px;
+  background: url("/ui/gunny/components/g3-toolbar-bar.png") center / 100% 100% no-repeat, linear-gradient(180deg, rgba(112, 76, 32, .92), rgba(56, 36, 14, .96));
+  box-shadow: 0 6px 16px rgba(2, 6, 24, .5);
 }
 #hud #menu::before { display: none; }
-#hud #menu::after {
-  left: 10px; right: 10px; top: 0; bottom: auto; height: 2px;
-  background: linear-gradient(90deg, transparent, #c98a2c 12%, #ffe9a8 50%, #c98a2c 88%, transparent); opacity: .9;
-}
+#hud #menu::after { display: none; }
 
 #hud #menu .icon-btn {
   flex-direction: column; justify-content: flex-start; gap: 0; width: 54px; min-width: 0; height: auto; padding: 0;
@@ -25,17 +21,10 @@
   transform-origin: 50% 85%; transition: transform .12s ease-out, filter .15s;
 }
 #hud #menu .game-icon svg { display: block; width: 100%; height: 100%; overflow: visible; }
-#hud #menu .game-icon img { display: block; width: 100%; height: 100%; object-fit: contain; border-radius: 10px; }
-/* Icon SVG (Chơi gì?, Thú cưng, Chia sẻ, Nhạc) đặt trên nền nút tròn bóng bóp cùng phong cách
-   nút ToolBar Gunny92 để cả hàng đồng bộ một gia đình nút tròn. */
-#hud #menu .game-icon-svg { position: relative; }
-#hud #menu .game-icon-svg::before {
-  content: ''; position: absolute; inset: 1px; border-radius: 50%;
-  background: radial-gradient(circle at 50% 30%, #ffefb8 0%, #f6bd48 52%, #b86f06 88%);
-  box-shadow: inset 0 0 0 2.5px #7a3c06, inset 0 3px 4px rgba(255, 255, 255, .75), inset 0 -3px 5px rgba(90, 35, 0, .45), 0 0 0 2px rgba(122, 60, 6, .4);
-}
+#hud #menu .game-icon img { display: block; width: 118%; height: 118%; margin: -9% 0 0 -9%; object-fit: contain; }
+/* Icon SVG nổi trực tiếp trên dải chạm khắc — bỏ nền tròn để đồng bộ phong cách phẳng với 4 ảnh thật. */
 #hud #menu .game-icon-svg svg { position: relative; }
-#hud #menu .icon-btn:hover .game-icon-svg::before { filter: brightness(1.1); }
+#hud #menu .icon-btn:hover .game-icon-svg { filter: brightness(1.15) drop-shadow(0 0 6px rgba(255, 214, 90, .8)); }
 #hud #menu .icon-btn:hover .game-icon, #hud #menu .icon-btn:focus-visible .game-icon {
   transform: translateY(-3px) scale(1.14);
   filter: brightness(1.12) drop-shadow(0 4px 2px rgba(0, 0, 0, .6)) drop-shadow(0 0 7px rgba(255, 214, 90, .9));

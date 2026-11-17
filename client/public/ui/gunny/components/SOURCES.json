@@ -330,6 +330,36 @@
       "file": "shop-card-gift.png",
       "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\62_asset.shop.GoodItemBgGift.png",
       "sha256": "5caaadb1ee53bb64430cbb22b747cc6da61ee0ccfccbffa7738140dbadb99086"
+    },
+    {
+      "file": "g3-toolbar-bar.png",
+      "source": "D:\\gunny3-export-tmp\\toolbar\\45_asset.toolbar.toolBarBg.png",
+      "swf": "Gunn3.0 gunny/flash/ui/vietnam/swf/toolbar.swf",
+      "sha256": "3705dd36b36e7dc558c5b2740ef1435c0bf2d0c290c8ee3297414f60ef85ba42"
+    },
+    {
+      "file": "g3-bag.png",
+      "source": "D:\\gunny3-export-tmp\\toolbar\\48_asset.toolbar.bagScale.png",
+      "swf": "Gunn3.0 gunny/flash/ui/vietnam/swf/toolbar.swf",
+      "sha256": "08d5ddcdbfefa88c3a6a2d441035c3b250453b865d936ad9d5e55601d017c73f"
+    },
+    {
+      "file": "g3-shop.png",
+      "source": "D:\\gunny3-export-tmp\\toolbar\\13_asset.toolbar.shopScale.png",
+      "swf": "Gunn3.0 gunny/flash/ui/vietnam/swf/toolbar.swf",
+      "sha256": "7be5d26f090572701bdce39538060c21eb3a4540ecb649564c7f15b14f7ae9fc"
+    },
+    {
+      "file": "g3-book.png",
+      "source": "D:\\gunny3-export-tmp\\toolbar\\36_asset.toolbar.jobScale.png",
+      "swf": "Gunn3.0 gunny/flash/ui/vietnam/swf/toolbar.swf",
+      "sha256": "d94be234b2540bbc0406de41d3f2a7d6b900ce55d3df2954ceacc1cbfdff0cb0"
+    },
+    {
+      "file": "g3-mail.png",
+      "source": "D:\\gunny3-export-tmp\\toolbar\\34_asset.toolbar.mailScale.png",
+      "swf": "Gunn3.0 gunny/flash/ui/vietnam/swf/toolbar.swf",
+      "sha256": "a7ca267f2c5f230c4c5ec25a2ae129212269f97eb6b37f0bf9f08690c6910a7a"
     }
   ]
 }
