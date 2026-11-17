@@ -1,33 +1,37 @@
 /* Giao diện: tông Gunny/DDTank — khung tinh thể xanh dương chạm khắc, panel navy đậm, nút cyan bóng,
    tiêu đề chữ bong bóng cam-vàng. Ảnh khung ở /ui/gunny/ chép từ Gunny92, chỉ dùng nội bộ.
-   Dùng font hệ thống để chữ Việt đúng dấu, không tải ngoài. */
+   Thân chữ dùng font hệ thống để dấu Việt đúng; tiêu đề/nút dùng Baloo 2 (OFL, tự host ở /fonts/) tròn đậm như Gunny. */
+@font-face { font-family: "Baloo 2"; font-weight: 700; font-style: normal; font-display: swap; src: url("/fonts/baloo-2-vietnamese-700-normal.woff2") format("woff2"); unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB; }
+@font-face { font-family: "Baloo 2"; font-weight: 700; font-style: normal; font-display: swap; src: url("/fonts/baloo-2-latin-700-normal.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Baloo 2"; font-weight: 800; font-style: normal; font-display: swap; src: url("/fonts/baloo-2-vietnamese-800-normal.woff2") format("woff2"); unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB; }
+@font-face { font-family: "Baloo 2"; font-weight: 800; font-style: normal; font-display: swap; src: url("/fonts/baloo-2-latin-800-normal.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
 :root {
   /* Bảng màu Gunny */
-  --gn-navy: #101522;        /* panel đậm nhất */
-  --gn-navy-2: #171d2e;      /* panel thường */
-  --gn-navy-3: #232b44;      /* panel nổi */
+  --gn-navy: #201912;        /* panel đậm nhất */
+  --gn-navy-2: #2c2319;      /* panel thường */
+  --gn-navy-3: #413426;      /* panel nổi */
   --gn-frame: #d8b57c;       /* viền tinh thể sáng */
   --gn-frame-deep: #8a5a2a;  /* viền tinh thể đậm */
-  --gn-cyan: #4cc3d4;        /* mặt nút cyan */
-  --gn-cyan-deep: #0e8aa8;   /* đáy nút cyan */
+  --gn-cyan: #e0962e;        /* mặt nút cyan */
+  --gn-cyan-deep: #b86e0c;   /* đáy nút cyan */
   --gn-orange: #ff8a1e;      /* điểm cam bong bóng */
   --gn-text: #eef0e8;
   --gn-muted: #a8a490;
   --gn-line: rgba(216, 164, 78, .4);
   /* Token cũ giữ nguyên tên, đổi giá trị theo tông mới: mọi file dùng var() tự đổi theo. */
-  --paper: #171d2e;
-  --paper-2: #1f2740;
+  --paper: #2c2319;
+  --paper-2: #3d3022;
   --ink: #eef0e8;
   --muted: #a8a490;
-  --accent: #43b9cc;
+  --accent: #e0962e;
   --accent-2: #ffb03a;
   --gold: #ffcf4d;
-  --jade: #35b6c9;
-  --jade-ink: #0d5e78;
-  --glass: rgba(10, 12, 20, .78);
+  --jade: #3a9a62;
+  --jade-ink: #67431e;
+  --glass: rgba(26, 17, 8, .8);
   --glass-line: rgba(216, 164, 78, .3);
   /* "Serif" cũ giờ là font bo tròn, vui eye kiểu Gunny cho tiêu đề. */
-  --serif: "Trebuchet MS", "Segoe UI", "Noto Sans", Arial, sans-serif;
+  --serif: "Baloo 2", "Trebuchet MS", "Segoe UI", "Noto Sans", Arial, sans-serif;
   --sans: "Segoe UI", "Noto Sans", Roboto, "Helvetica Neue", Arial, sans-serif;
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-t: env(safe-area-inset-top, 0px);
@@ -41,7 +45,7 @@
 
 html, body {
   margin: 0; height: 100%; overflow: hidden;
-  background: #050b28; color: var(--ink);
+  background: #23170a; color: var(--ink);
   font: 15px/1.45 var(--sans);
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior: none;
@@ -60,17 +64,17 @@ kbd { font: inherit; }
 #app::after {
   content: '';
   position: fixed; inset: 0; z-index: 2; pointer-events: none;
-  background: radial-gradient(ellipse 130% 105% at 50% 42%, transparent 58%, rgba(2, 6, 24, .34) 100%);
+  background: radial-gradient(ellipse 130% 105% at 50% 42%, transparent 58%, rgba(20, 13, 6, .34) 100%);
 }
-@media (prefers-reduced-motion: reduce) { #app::after { background: radial-gradient(ellipse 130% 105% at 50% 42%, transparent 58%, rgba(2, 6, 24, .3) 100%); } }
+@media (prefers-reduced-motion: reduce) { #app::after { background: radial-gradient(ellipse 130% 105% at 50% 42%, transparent 58%, rgba(20, 13, 6, .3) 100%); } }
 
 /* Nhãn tên trên đầu */
 .tag { display: flex; flex-direction: column; align-items: center; gap: 3px; pointer-events: none; }
 /* Nhãn tên nền gần trong suốt: pháp luân/hào quang đọc xuyên qua được, chữ bám
    bằng viền + bóng tối 4 hướng thay vì khối nền đặc đè lên hiệu ứng. */
-.tag-name { padding: 1px 10px; border: 1px solid var(--tag-accent, #9fc8ff); border-radius: 2px 9px; background: rgba(6, 10, 32, .42); color: #f2f8ff; font-size: 13px; font-weight: 600; white-space: nowrap; text-shadow: 0 1px 2px #050a1e, 1px 0 1px #050a1e, -1px 0 1px #050a1e, 0 -1px 1px #050a1e; }
-.tag-name.me { border-bottom-width: 2px; background: rgba(12, 21, 72, .55); }
-.tag-title { position: relative; padding: 3px 27px 5px; color: var(--tag-accent); font: 700 16px/1.4 var(--serif); white-space: nowrap; text-shadow: 0 1px 2px #050a1e, 1px 0 2px #050a1e, -1px 0 2px #050a1e, 0 0 6px #050a1e99; background: radial-gradient(ellipse, #060a1e55 15%, #060a1e2b 55%, transparent 72%); }
+.tag-name { padding: 1px 10px; border: 1px solid var(--tag-accent, #9fc8ff); border-radius: 2px 9px; background: rgba(29, 19, 9, .42); color: #f2f8ff; font-size: 13px; font-weight: 600; white-space: nowrap; text-shadow: 0 1px 2px #1b1208, 1px 0 1px #1b1208, -1px 0 1px #1b1208, 0 -1px 1px #1b1208; }
+.tag-name.me { border-bottom-width: 2px; background: rgba(65, 42, 19, .55); }
+.tag-title { position: relative; padding: 3px 27px 5px; color: var(--tag-accent); font: 700 16px/1.4 var(--serif); white-space: nowrap; text-shadow: 0 1px 2px #1b1208, 1px 0 2px #1b1208, -1px 0 2px #1b1208, 0 0 6px #1b120899; background: radial-gradient(ellipse, #1c120855 15%, #1c12082b 55%, transparent 72%); }
 .tag-title::before, .tag-title::after { content: ''; position: absolute; top: 50%; width: 20px; height: 7px; border-block: 1px solid currentColor; opacity: .85; }
 .tag-title::before { left: 0; border-radius: 80% 0; transform: rotate(-22deg); }
 .tag-title::after { right: 0; border-radius: 0 80%; transform: rotate(22deg); }
@@ -79,21 +83,21 @@ kbd { font: inherit; }
   text-shadow: none; -webkit-text-fill-color: transparent; background-clip: text; -webkit-background-clip: text;
   background-image: linear-gradient(100deg, var(--tag-accent) 25%, #fffbea 45%, var(--tag-accent) 65%);
   background-size: 250% 100%; letter-spacing: .04em;
-  filter: drop-shadow(0 1px 1px #050a1e) drop-shadow(0 0 4px color-mix(in srgb, var(--tag-accent) 75%, transparent));
+  filter: drop-shadow(0 1px 1px #1b1208) drop-shadow(0 0 4px color-mix(in srgb, var(--tag-accent) 75%, transparent));
   animation: tagVipShine 3.4s linear infinite;
 }
 @keyframes tagVipShine { from { background-position: 100% 0; } to { background-position: -150% 0; } }
 @media (prefers-reduced-motion: reduce) { .tag-title.vip { animation: none; background-position: 50% 0; } }
 /* Sư chú: huy hiệu cam-vàng kiểu Gunny thay ấn triện nâu. */
 .tag-name.abbot { background: linear-gradient(180deg, #ffab2e, #e07c12); border-color: #7a3c06; color: #fff6e0; }
-.tag-status { padding: 0 7px; border-radius: 8px; background: rgba(70, 207, 228, .92); color: #053043; font-size: 11px; white-space: nowrap; }
+.tag-status { padding: 0 7px; border-radius: 8px; background: rgba(70, 207, 228, .92); color: #382410; font-size: 11px; white-space: nowrap; }
 /* Nhãn nhỏ trên lời ước gần nhất: tác giả + số phúc, chỉ hiện cho 3 vật thể gần người chơi */
-.wish-mark { padding: 1px 8px; border-radius: 9px; background: rgba(10, 18, 54, .62); color: #ffe9c4; font-size: 11.5px; font-weight: 600; white-space: nowrap; pointer-events: none; }
+.wish-mark { padding: 1px 8px; border-radius: 9px; background: rgba(50, 32, 14, .62); color: #ffe9c4; font-size: 11.5px; font-weight: 600; white-space: nowrap; pointer-events: none; }
 /* Biểu tượng lơ lửng trên đầu NPC — cửa vào của minigame kiểu WWM */
 .npc-icon { font-size: 20px; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .5)); animation: npcBob 2.6s ease-in-out infinite; }
 /* Dùng translate riêng: transform do CSS2DRenderer ghi để đặt icon đúng vị trí 3D, animate transform sẽ đè mất. */
 @keyframes npcBob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -5px; } }
-.tag-bubble { max-width: 220px; padding: 6px 11px; border-radius: 13px; background: #fffdf6; color: #1a2a5e; font-size: 13.5px; line-height: 1.3; box-shadow: 0 3px 10px rgba(0, 0, 0, .35); text-align: center; overflow-wrap: anywhere; animation: pop .22s ease-out; }
+.tag-bubble { max-width: 220px; padding: 6px 11px; border-radius: 13px; background: #fffdf6; color: #573d21; font-size: 13.5px; line-height: 1.3; box-shadow: 0 3px 10px rgba(0, 0, 0, .35); text-align: center; overflow-wrap: anywhere; animation: pop .22s ease-out; }
 .tag-bubble.emoji { font-size: 27px; padding: 2px 9px; background: rgba(255, 253, 246, .9); }
 .meditating .tag-bubble { display: none; }
 @keyframes pop { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -102,17 +106,17 @@ kbd { font: inherit; }
 @keyframes floatUp { from { opacity: 0; transform: translate(-50%, -30%) scale(.7); } 25% { opacity: 1; } to { opacity: 0; transform: translate(-50%, -190%) scale(1.15); } }
 
 /* Nút chung: bóng nổi, viền navy đậm, chữ trắng đậm kiểu nút game. */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 18px; border: 2px solid #3a2410; border-radius: 12px; font-weight: 800; transition: transform .08s, filter .15s; touch-action: manipulation; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 18px; border: 2px solid #3a2410; border-radius: 12px; font-family: var(--serif); font-weight: 800; transition: transform .08s, filter .15s; touch-action: manipulation; }
 .btn:active { transform: translateY(1px); }
 .btn:disabled { opacity: .55; cursor: default; }
 .btn:focus-visible, .icon-btn:focus-visible, #actionBtn:focus-visible, .chip:focus-visible, .swatch:focus-visible, .place-card:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 /* Nút chính dùng mặt vàng chạm khắc thật (button-gold.png, không chữ in sẵn) — mọi nút hành động thống nhất kiểu Gunny. */
-.btn.primary { background: url("/ui/gunny/button-gold.png") center / 100% 100% no-repeat, linear-gradient(180deg, #ffd980, #f29418 60%, #e07c12); border-color: #7a3c06; box-shadow: inset 0 2px 0 rgba(255, 255, 255, .5), 0 3px 12px rgba(50, 24, 0, .45); color: #fff8ea; letter-spacing: .04em; text-shadow: 0 1px 0 #a35a10; }
+.btn.primary { background: url("/ui/gunny/button-gold.png") center / 100% 100% no-repeat, linear-gradient(180deg, #ffd980, #f29418 60%, #e07c12); border-color: #7a3c06; box-shadow: inset 0 2px 0 rgba(255, 255, 255, .5), 0 3px 12px rgba(50, 24, 0, .45); color: #fff8ea; letter-spacing: .04em; text-shadow: 1px 0 0 #7a3c06, -1px 0 0 #7a3c06, 0 1px 0 #7a3c06, 0 -1px 0 #7a3c06, 0 2px 3px rgba(60, 24, 0, .4); }
 .btn.primary:hover:not(:disabled) { filter: brightness(1.1); }
 .btn.big { padding: 13px 26px; font-size: 17px; width: 100%; }
-.btn.ghost { background: url("/ui/gunny/components/bar-beige.png") center / 100% 100% no-repeat, rgba(19, 31, 94, .55); border-color: #8a5a12; color: #5a3a10; text-shadow: none; }
+.btn.ghost { background: url("/ui/gunny/components/bar-beige.png") center / 100% 100% no-repeat, #e1dcbd; font-family: var(--serif); border-color: #8a5a12; color: #5a3a10; text-shadow: none; }
 .btn.small { padding: 4px 11px; font-size: 13px; }
-.btn.heart { background: #f2f7ff; border-color: #8a5a2a; color: #12245e; text-shadow: none; }
+.btn.heart { background: #f2f7ff; border-color: #8a5a2a; color: #56391a; text-shadow: none; }
 .muted { color: var(--muted); }
 .small { font-size: 13px; }
 .center { text-align: center; }
@@ -123,17 +127,15 @@ kbd { font: inherit; }
 #welcome::before { content: ''; position: absolute; inset: 0; background: url("/ui/gunny/welcome-bg.jpg") center / cover no-repeat; transition: opacity .35s ease; }
 /* Mở "Đổi trang phục" thì mờ dần nền tranh để thấy nhân vật xem trước trong cảnh. */
 #welcome:has(.welcome-more[open])::before { opacity: 0; }
-#welcome::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 130% 100% at 68% 45%, transparent 48%, rgba(3, 8, 30, .42) 100%); }
+#welcome::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 130% 100% at 68% 45%, transparent 48%, rgba(26, 17, 7, .42) 100%); }
 .welcome-card {
   position: relative;
   width: min(420px, 100%);
-  padding: 40px 32px 26px;
-  border: 0;
-  background-color: rgba(14, 22, 72, .95);
-  background-image: url("/ui/gunny/welcome-frame.png");
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  box-shadow: 0 16px 50px rgba(2, 6, 24, .6);
+  padding: 26px 24px 18px;
+  border: 16px solid transparent;
+  background: linear-gradient(180deg, var(--cream-1), var(--cream-2)) padding-box;
+  border-image: url("/ui/gunny/components/panel-frame-cream.png") 16 / 16px stretch;
+  box-shadow: 0 16px 50px rgba(30, 14, 0, .55);
   color: var(--ink);
   pointer-events: auto;
   max-height: calc(100dvh - 40px);
@@ -155,16 +157,13 @@ kbd { font: inherit; }
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6);
   user-select: none;
 }
-/* Tiêu đề chữ bong bóng: gradient cam-vàng, viền navy, đổ bóng đáy. */
+/* Tiêu đề chữ tròn đậm nâu cam, đổ bóng sáng nhẹ như tiêu đề panel kem Gunny. */
 .welcome-card h1 {
   margin: 0 0 6px; font: 800 34px/1.1 var(--serif); letter-spacing: .01em;
-  background: linear-gradient(180deg, #fff3c4 10%, #ffcf4d 45%, #ff9a1e 90%);
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-  -webkit-text-stroke: 1.5px #16236a;
-  filter: drop-shadow(0 2px 0 #101a4e) drop-shadow(0 4px 8px rgba(2, 6, 24, .5));
+  color: var(--title-ink); text-shadow: 0 1px 0 #fffbe8, 0 3px 4px rgba(120, 60, 10, .25);
 }
-.welcome-card h1::after { content: ''; display: block; width: 132px; height: 3px; margin-top: 9px; border-radius: 2px; background: linear-gradient(90deg, var(--gold), #ffe08a 45%, rgba(255, 207, 77, 0)); position: relative; }
-.field { display: block; margin: 0 0 14px; font: 700 14.5px/1.3 var(--sans); color: #f0e6cc; letter-spacing: .02em; }
+.welcome-card h1::after { content: ''; display: block; width: 132px; height: 3px; margin-top: 9px; border-radius: 2px; background: linear-gradient(90deg, #b86e0c, #d98a2e 45%, rgba(184, 110, 12, 0)); position: relative; }
+.field { display: block; margin: 0 0 14px; font: 700 14.5px/1.3 var(--sans); color: var(--ink); letter-spacing: .02em; }
 /* Ô nhập dùng ô kem viền vàng thật (components/input-field.png); chữ nâu đậm. */
 .field input { display: block; width: 100%; margin-top: 5px; padding: 10px 12px; border: 2px solid #8a5a12; border-radius: 8px; background: url("/ui/gunny/components/input-field.png") center / 100% 100% no-repeat, #f7ecd2; color: #3a1c06; }
 .swatches { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 6px; }
@@ -175,17 +174,20 @@ kbd { font: inherit; }
 .hat-list, .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .chip { padding: 6px 12px; border: 1px solid rgba(216, 164, 78, .45); border-radius: 9px; background: rgba(255, 255, 255, .08); color: #f0e6cc; font-size: 13.5px; transition: border-color .15s, background-color .15s; }
 .chip:hover { border-color: rgba(255, 207, 77, .8); }
-.chip.on { background: url("/ui/gunny/button-gold.png") center / 100% 100% no-repeat, linear-gradient(180deg, #ffd980, #e07c12); border-color: #7a3c06; color: #593515; text-shadow: 0 1px 0 #ffedb9; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 1px 4px rgba(4, 20, 60, .4); }
-.welcome-error, .form-error { min-height: 20px; margin: 4px 0 8px; color: #ff9a86; font-size: 13.5px; font-weight: 600; }
+.modal-card .chip, .ink-panel .chip, .welcome-card .chip { border-color: #b98a45; background: linear-gradient(180deg, #fffaf0, #efdcae); color: #5a3410; font: 700 13.5px var(--serif); }
+.modal-card .chip:hover, .ink-panel .chip:hover, .welcome-card .chip:hover { border-color: #d98a2e; }
+.modal-card .chip.on, .ink-panel .chip.on, .welcome-card .chip.on { border-color: #7a3c06; color: #593515; }
+.chip.on { background: url("/ui/gunny/button-gold.png") center / 100% 100% no-repeat, linear-gradient(180deg, #ffd980, #e07c12); border-color: #7a3c06; color: #593515; text-shadow: 0 1px 0 #ffedb9; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 1px 4px rgba(50, 32, 14, .4); }
+.welcome-error, .form-error { min-height: 20px; margin: 4px 0 8px; color: #b3341c; font-size: 13.5px; font-weight: 600; }
 .welcome-error:empty { display: none; }
 .welcome-card .field input#nameInput { margin-top: 14px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 /* Nút nhạc nền: icon tròn nhỏ cạnh huy hiệu, nhạc đang phát thì viền vàng. */
-.welcome-music { position: absolute; top: 12px; right: 66px; width: 32px; height: 32px; padding: 0; border: 2px solid rgba(216, 164, 78, .45); border-radius: 50%; background: rgba(10, 18, 54, .8); color: #f0e6cc; font-size: 15px; line-height: 1; }
-.welcome-music[aria-pressed="true"] { border-color: var(--gold); background: rgba(255, 207, 77, .2); }
+.welcome-music { position: absolute; top: 12px; right: 66px; width: 32px; height: 32px; padding: 0; border: 2px solid #b98a45; border-radius: 50%; background: linear-gradient(180deg, #fffaf0, #efdcae); color: #5a3410; font-size: 15px; line-height: 1; }
+.welcome-music[aria-pressed="true"] { border-color: #7a3c06; background: linear-gradient(180deg, #ffd980, #f29418); }
 .welcome-extras { display: flex; justify-content: flex-end; margin: 8px 0 2px; }
 .preset-chip { font-weight: 600; }
-.welcome-more summary { cursor: pointer; font: 700 14px var(--sans); color: #9fc4ff; }
+.welcome-more summary { cursor: pointer; font: 700 14px var(--serif); color: #8a3d0c; }
 
 /* HUD */
 #hud { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
@@ -204,47 +206,47 @@ kbd { font: inherit; }
 #onlineList li.me { color: var(--gold); }
 
 #toasts { position: absolute; top: calc(110px + var(--safe-t)); left: 12px; display: flex; flex-direction: column; gap: 4px; max-width: min(300px, 70vw); pointer-events: none !important; }
-.toast { padding: 4px 10px; border-left: 3px solid var(--gn-cyan); border-radius: 4px; background: linear-gradient(90deg, rgba(10, 12, 20, .85), rgba(10, 12, 20, .45) 78%, transparent); color: #e6eeff; font-size: 12.5px; line-height: 1.4; animation: toastIn .25s ease-out; transition: opacity .4s, transform .4s; text-shadow: 0 1px 2px #000; }
+.toast { padding: 4px 10px; border-left: 3px solid var(--gn-cyan); border-radius: 4px; background: linear-gradient(90deg, rgba(26, 17, 8, .85), rgba(26, 17, 8, .45) 78%, transparent); color: #e6eeff; font-size: 12.5px; line-height: 1.4; animation: toastIn .25s ease-out; transition: opacity .4s, transform .4s; text-shadow: 0 1px 2px #000; }
 .toast.out { opacity: 0; transform: translateX(-10px); }
 @keyframes toastIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
 
 /* Hàng nút menu: ô vuông bo tròn cyan-navy bóng nổi kiểu toolbar Gunny. */
 #menu { position: absolute; top: calc(12px + var(--safe-t)); right: 12px; display: flex; gap: 6px; }
 /* Nút icon HUD dùng khung vuông nâu viền vàng kép thật (components/icon-bg.png — asset.IM.iconBg). */
-.icon-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 40px; min-width: 40px; padding: 0 10px; border: 0; border-radius: 0; background: url("/ui/gunny/components/icon-bg.png") center / 100% 100% no-repeat, linear-gradient(180deg, #6e4213, #232b44 60%, #171d2e); box-shadow: 0 3px 8px rgba(2, 6, 24, .55); color: #ffe2a0; font-size: 17px; touch-action: manipulation; transition: color .15s, background .15s, filter .15s; }
+.icon-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 40px; min-width: 40px; padding: 0 10px; border: 0; border-radius: 0; background: url("/ui/gunny/components/icon-bg.png") center / 100% 100% no-repeat, linear-gradient(180deg, #6e4213, #413426 60%, #2c2319); box-shadow: 0 3px 8px rgba(20, 13, 6, .55); color: #ffe2a0; font-size: 17px; touch-action: manipulation; transition: color .15s, background .15s, filter .15s; }
 .icon-btn:hover, .icon-btn[aria-expanded="true"] { filter: brightness(1.18); color: #fff; }
 #menu .icon-btn { width: 40px; padding: 0; }
 /* Nhãn của nút icon là tooltip: vẫn nằm trong DOM nên trình đọc màn hình đọc được tên nút. */
-.icon-btn em { position: absolute; top: calc(100% + 6px); left: 50%; z-index: 5; transform: translateX(-50%); padding: 3px 8px; border: 1px solid rgba(216, 164, 78, .5); border-radius: 6px; background: rgba(5, 9, 32, .95); color: #f0e6cc; font: normal 600 12px/1.3 var(--sans); white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .12s; }
+.icon-btn em { position: absolute; top: calc(100% + 6px); left: 50%; z-index: 5; transform: translateX(-50%); padding: 3px 8px; border: 1px solid rgba(216, 164, 78, .5); border-radius: 6px; background: rgba(29, 19, 8, .95); color: #f0e6cc; font: normal 600 12px/1.3 var(--sans); white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .12s; }
 @media (hover: hover) { .icon-btn:hover em { opacity: 1; } }
 .icon-btn:focus-visible em { opacity: 1; }
 /* "Chơi gì?": la bàn nổi bật bằng vòng chỉ vàng quanh nút. */
-#menu #playBtn { color: var(--gold); box-shadow: inset 0 2px 0 rgba(255, 214, 130, .45), inset 0 0 0 2px rgba(255, 207, 77, .75), 0 3px 8px rgba(2, 6, 24, .55); border-radius: 50%; }
-#musicPanel { position: absolute; top: calc(64px + var(--safe-t)); right: 12px; width: min(360px, calc(100vw - 24px)); padding: 9px; border: 2px solid rgba(216, 164, 78, .35); border-radius: 14px; background: rgba(8, 14, 44, .94); color: #dbe8ff; box-shadow: 0 8px 28px rgba(2, 6, 24, .6); }
-.music-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; font-size: 13px; font-weight: 600; }
-.music-head button, .music-controls button { min-width: 44px; min-height: 40px; border: 2px solid #3a2410; border-radius: 9px; background: linear-gradient(180deg, #6e4213, #232b44); color: #f0e6cc; }
+#menu #playBtn { color: var(--gold); box-shadow: inset 0 2px 0 rgba(255, 214, 130, .45), inset 0 0 0 2px rgba(255, 207, 77, .75), 0 3px 8px rgba(20, 13, 6, .55); border-radius: 50%; }
+#musicPanel { position: absolute; top: calc(64px + var(--safe-t)); right: 12px; width: min(360px, calc(100vw - 24px)); padding: 4px 6px 8px; border: 14px solid transparent; background: linear-gradient(180deg, var(--cream-1), var(--cream-2)) padding-box; border-image: url("/ui/gunny/components/panel-frame-cream.png") 16 / 14px stretch; color: var(--ink); box-shadow: 0 8px 28px rgba(30, 14, 0, .5); }
+.music-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; font: 700 13.5px var(--serif); color: var(--title-ink); }
+.music-head button, .music-controls button { min-width: 44px; min-height: 40px; border: 2px solid #8a5a12; border-radius: 9px; background: linear-gradient(180deg, #fffaf0, #efdcae); color: #5a3410; font: 700 14px var(--serif); }
 .music-controls { display: flex; align-items: center; gap: 9px; }
 .music-controls label { white-space: nowrap; }
-.music-controls input { flex: 1; min-width: 60px; accent-color: var(--gold); }
+.music-controls input { flex: 1; min-width: 60px; accent-color: #d98a1e; }
 .music-controls output { min-width: 36px; text-align: right; font-variant-numeric: tabular-nums; }
-.music-controls #musicSound[aria-pressed="true"] { background: linear-gradient(180deg, #23aecd, #0e8aa8); color: #fff; }
+.music-controls #musicSound[aria-pressed="true"] { border-color: #7a3c06; background: linear-gradient(180deg, #ffd980, #f29418 60%, #e07c12); color: #4a2606; text-shadow: 0 1px 0 #ffedb9; }
 .music-head button:focus-visible, .music-controls button:focus-visible, .music-controls input:focus-visible, #musicBtn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 #musicPanel p { margin: 8px 2px 0; font-size: 12px; opacity: .82; }
 
-#banner { position: absolute; top: calc(64px + var(--safe-t)); left: 50%; transform: translateX(-50%); width: min(560px, calc(100vw - 24px)); padding: 9px 18px; border-radius: 14px; background: linear-gradient(180deg, rgba(19, 31, 94, .96), rgba(10, 17, 56, .96)); border: 2px solid rgba(255, 207, 77, .75); color: #fff; text-align: center; pointer-events: none !important; box-shadow: 0 8px 26px rgba(2, 6, 24, .5); }
+#banner { position: absolute; top: calc(64px + var(--safe-t)); left: 50%; transform: translateX(-50%); width: min(560px, calc(100vw - 24px)); padding: 9px 18px; border-radius: 14px; background: linear-gradient(180deg, rgba(87, 57, 27, .96), rgba(51, 33, 15, .96)); border: 2px solid rgba(255, 207, 77, .75); color: #fff; text-align: center; pointer-events: none !important; box-shadow: 0 8px 26px rgba(20, 13, 6, .5); }
 #banner p { margin: 0; }
 #bannerText { font-weight: 800; }
 #bannerSub { color: #ffd98a; font-size: 14px; font-variant-numeric: tabular-nums; }
-#banner.big #bannerText { font: 800 23px/1.3 var(--serif); color: var(--gold); text-shadow: 0 2px 0 #14245e, 0 4px 10px rgba(2, 6, 24, .5); }
+#banner.big #bannerText { font: 800 23px/1.3 var(--serif); color: var(--gold); text-shadow: 0 2px 0 #573a1b, 0 4px 10px rgba(20, 13, 6, .5); }
 
 /* Gợi ý tương tác: nút CTA cyan bóng nổi ở đáy, phím E là hình thoi vàng. */
-#actionBtn { position: absolute; left: 50%; bottom: calc(68px + var(--safe-b)); transform: translateX(-50%); display: inline-flex; align-items: center; gap: 9px; min-height: 40px; padding: 6px 18px 6px 9px; border: 2px solid #7a3c06; border-radius: 10px; background: url("/ui/gunny/button-gold.png") center / 100% 100% no-repeat, linear-gradient(180deg, #ffd980, #f29418 60%, #e07c12); color: #fff8ea; font: 800 15px var(--sans); letter-spacing: .04em; box-shadow: inset 0 2px 0 rgba(255, 255, 255, .5), 0 6px 18px rgba(2, 8, 40, .5); animation: pop .2s ease-out; touch-action: manipulation; text-shadow: 0 1px 0 #a35a10; }
+#actionBtn { position: absolute; left: 50%; bottom: calc(68px + var(--safe-b)); transform: translateX(-50%); display: inline-flex; align-items: center; gap: 9px; min-height: 40px; padding: 6px 18px 6px 9px; border: 2px solid #7a3c06; border-radius: 10px; background: url("/ui/gunny/button-gold.png") center / 100% 100% no-repeat, linear-gradient(180deg, #ffd980, #f29418 60%, #e07c12); color: #fff8ea; font: 800 15px var(--sans); letter-spacing: .04em; box-shadow: inset 0 2px 0 rgba(255, 255, 255, .5), 0 6px 18px rgba(33, 21, 9, .5); animation: pop .2s ease-out; touch-action: manipulation; text-shadow: 1px 0 0 #7a3c06, -1px 0 0 #7a3c06, 0 1px 0 #7a3c06, 0 -1px 0 #7a3c06, 0 2px 3px rgba(60, 24, 0, .4); }
 #actionBtn:hover { filter: brightness(1.1); }
 #actionBtn .key-hint { order: -1; min-width: 26px; height: 26px; line-height: 26px; border: 0; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); background: linear-gradient(180deg, #ffe08a, #ffb23d); color: #5a3405; font: 800 13px/26px var(--sans); text-shadow: none; }
 .key-hint { display: inline-block; min-width: 22px; padding: 0 6px; border-radius: 5px; background: rgba(255, 255, 255, .2); font-size: 13px; line-height: 22px; text-align: center; }
 
 /* Góc phải dưới: nút biểu cảm (mở hàng emoji) và nút chat, chỉ có icon. */
-#emojiBar { position: absolute; right: 12px; bottom: calc(62px + var(--safe-b)); display: none; gap: 2px; padding: 4px; border-radius: 12px; background: rgba(8, 14, 44, .92); border: 2px solid rgba(216, 164, 78, .4); z-index: 3; }
+#emojiBar { position: absolute; right: 12px; bottom: calc(62px + var(--safe-b)); display: none; gap: 2px; padding: 4px; border-radius: 12px; background: rgba(40, 26, 12, .92); border: 2px solid rgba(216, 164, 78, .4); z-index: 3; }
 .emoji-open #emojiBar { display: flex; }
 .emoji-btn { width: 38px; height: 38px; padding: 0; border: 0; border-radius: 8px; background: none; font-size: 21px; touch-action: manipulation; }
 .emoji-btn:hover { background: rgba(255, 255, 255, .14); }
@@ -253,7 +255,7 @@ kbd { font: inherit; }
 #chatBtn { position: absolute; right: 58px; bottom: calc(14px + var(--safe-b)); width: 40px; padding: 0; }
 #chatBtn em, #emojiToggle em { top: auto; bottom: calc(100% + 6px); left: auto; right: 0; transform: none; }
 /* Khung chat: nền log chat Gunny92 phủ lớp nâu ấm cho cùng tông tổng thể; chưa có tin nào thì không hiện khung trống. */
-#chatHistory { position: absolute; left: 12px; bottom: calc(14px + var(--safe-b)); width: var(--left-col); max-height: min(220px, 34dvh); display: flex; flex-direction: column; border: 0; border-radius: 0; background: linear-gradient(180deg, rgba(96, 62, 24, .5), rgba(70, 44, 16, .58)), url("/ui/gunny/components/chat-log.png") center / 100% 100% no-repeat, rgba(58, 38, 16, .9); box-shadow: 0 8px 22px rgba(2, 6, 24, .45); color: #f2e6cc; overflow: hidden; z-index: 2; }
+#chatHistory { position: absolute; left: 12px; bottom: calc(14px + var(--safe-b)); width: var(--left-col); max-height: min(220px, 34dvh); display: flex; flex-direction: column; border: 0; border-radius: 0; background: linear-gradient(180deg, rgba(96, 62, 24, .5), rgba(70, 44, 16, .58)), url("/ui/gunny/components/chat-log.png") center / 100% 100% no-repeat, rgba(58, 38, 16, .9); box-shadow: 0 8px 22px rgba(20, 13, 6, .45); color: #f2e6cc; overflow: hidden; z-index: 2; }
 #chatHistory:not(:has(li)) { display: none; }
 #chatMessages { min-height: 0; overflow-y: auto; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; scrollbar-color: rgba(216, 164, 78, .55) transparent; scrollbar-width: thin; }
 #chatMessages li:first-child { margin-top: auto; }
@@ -263,24 +265,24 @@ kbd { font: inherit; }
 #chatMessages .chat-channel { display: none; } /* chỉ có một kênh chung, không cần nhãn */
 #chatMessages strong { margin-right: 5px; color: var(--gold); font-weight: 800; }
 #chatMessages .chat-text { color: #f6ecd8; }
-#chatForm { position: absolute; left: 12px; bottom: calc(8px + var(--safe-b)); display: flex; gap: 0; width: var(--left-col); height: 40px; z-index: 2; border-radius: 0; box-shadow: 0 4px 14px rgba(2, 6, 24, .5); }
+#chatForm { position: absolute; left: 12px; bottom: calc(8px + var(--safe-b)); display: flex; gap: 0; width: var(--left-col); height: 40px; z-index: 2; border-radius: 0; box-shadow: 0 4px 14px rgba(20, 13, 6, .5); }
 #chatInput { flex: 1; min-width: 0; padding: 7px 10px; border: 0; border-radius: 0; outline: 0; background: linear-gradient(rgba(96, 62, 24, .45), rgba(96, 62, 24, .45)), url("/ui/gunny/components/chat-input.png") center / 100% 100% no-repeat, rgba(58, 38, 16, .92); color: #f6ecd8; font: 16px var(--sans); }
 #chatInput::placeholder { color: #d8bd94; opacity: 1; }
 #chatInput:focus-visible { outline: 2px solid var(--gold); outline-offset: -3px; }
-#chatForm button { min-width: 56px; padding: 0 10px; border: 2px solid #7a3c06; border-radius: 0; background: url("/ui/gunny/button-gold.png") center / 100% 100% no-repeat, linear-gradient(180deg, #ffd980, #e07c12); color: #fff8ea; font: 800 13px var(--sans); text-shadow: 0 1px 0 #a35a10; }
+#chatForm button { min-width: 56px; padding: 0 10px; border: 2px solid #7a3c06; border-radius: 0; background: url("/ui/gunny/button-gold.png") center / 100% 100% no-repeat, linear-gradient(180deg, #ffd980, #e07c12); color: #fff8ea; font: 800 13px var(--sans); text-shadow: 1px 0 0 #7a3c06, -1px 0 0 #7a3c06, 0 1px 0 #7a3c06, 0 -1px 0 #7a3c06, 0 2px 3px rgba(60, 24, 0, .4); }
 #chatForm button:hover { filter: brightness(1.1); }
 .chatting #chatHistory { bottom: calc(52px + var(--safe-b)); }
 
-#stick { position: absolute; left: 18px; bottom: calc(24px + var(--safe-b)); width: 124px; height: 124px; border-radius: 50%; background: radial-gradient(circle, rgba(5, 9, 32, .1), rgba(5, 9, 32, .38)); border: 1px solid rgba(216, 164, 78, .5); pointer-events: none !important; display: none; }
-.stick-knob { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; background: rgba(8, 14, 44, .6); border: 2px solid var(--gold); box-shadow: 0 2px 8px rgba(0, 0, 0, .5); }
+#stick { position: absolute; left: 18px; bottom: calc(24px + var(--safe-b)); width: 124px; height: 124px; border-radius: 50%; background: radial-gradient(circle, rgba(29, 19, 8, .1), rgba(29, 19, 8, .38)); border: 1px solid rgba(216, 164, 78, .5); pointer-events: none !important; display: none; }
+.stick-knob { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; background: rgba(40, 26, 12, .6); border: 2px solid var(--gold); box-shadow: 0 2px 8px rgba(0, 0, 0, .5); }
 
 /* Hướng dẫn: panel navy viền xanh, tiêu đề vàng. */
-.tutorial { position: absolute; left: 12px; bottom: calc(14px + var(--safe-b)); width: min(340px, var(--left-col)); padding: 13px 16px; border: 2px solid rgba(216, 164, 78, .45); border-radius: 12px; background: linear-gradient(180deg, #1c2132, #0d1747); color: var(--ink); box-shadow: 0 10px 30px rgba(2, 6, 24, .5); }
+.tutorial { position: absolute; left: 12px; bottom: calc(14px + var(--safe-b)); width: min(340px, var(--left-col)); padding: 8px 12px 10px; border: 14px solid transparent; background: linear-gradient(180deg, var(--cream-1), var(--cream-2)) padding-box; border-image: url("/ui/gunny/components/panel-frame-cream.png") 16 / 14px stretch; color: var(--ink); box-shadow: 0 10px 30px rgba(30, 14, 0, .5); }
 #hud:has(.tutorial) #chatHistory { display: none; }
 .touch .tutorial { left: 50%; bottom: auto; top: calc(108px + var(--safe-t)); transform: translateX(-50%); width: min(340px, calc(100vw - 24px)); }
-.tutorial h3 { margin: 2px 0 2px; font: 800 19px var(--serif); color: var(--gold); text-shadow: 0 2px 0 #14245e; }
+.tutorial h3 { margin: 2px 0 2px; font: 800 19px var(--serif); color: var(--title-ink); text-shadow: 0 1px 0 #fffbe8; }
 .tutorial p { margin: 0 0 9px; }
-.tut-count { font-size: 12px; font-weight: 600; color: var(--accent); }
+.tut-count { font-size: 12px; font-weight: 700; color: var(--muted); }
 .tut-actions { display: flex; justify-content: flex-end; gap: 7px; }
 .tut-actions .btn { padding: 6px 14px; }
 
@@ -289,33 +291,32 @@ kbd { font: inherit; }
 .ink-icon svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 
 /* Thẻ đọc lời ước */
-#wishReader { position: absolute; left: 50%; bottom: calc(136px + var(--safe-b)); transform: translateX(-50%); width: min(420px, calc(100vw - 24px)); padding: 12px 34px 12px 16px; border: 2px solid rgba(216, 164, 78, .45); border-radius: 14px; background: rgba(14, 22, 72, .96); color: var(--ink); box-shadow: 0 8px 26px rgba(2, 6, 24, .5); animation: pop .18s ease-out; }
-.reader-text { margin: 0 0 4px; font: 600 17px/1.35 var(--serif); color: #fff; overflow-wrap: anywhere; }
+#wishReader { position: absolute; left: 50%; bottom: calc(136px + var(--safe-b)); transform: translateX(-50%); width: min(420px, calc(100vw - 24px)); padding: 6px 28px 8px 10px; border: 14px solid transparent; background: linear-gradient(180deg, var(--cream-1), var(--cream-2)) padding-box; border-image: url("/ui/gunny/components/panel-frame-cream.png") 16 / 14px stretch; color: var(--ink); box-shadow: 0 8px 26px rgba(30, 14, 0, .5); animation: pop .18s ease-out; }
+.reader-text { margin: 0 0 4px; font: 700 17px/1.35 var(--serif); color: var(--ink); overflow-wrap: anywhere; }
 .reader-meta { margin: 0 0 8px; font-size: 12.5px; color: var(--muted); }
 .reader-x { position: absolute; top: 5px; right: 6px; width: 28px; height: 28px; padding: 0; border: 0; background: none; color: var(--muted); }
 #wishReader .btn.heart { padding: 3px 12px; }
 
 /* Minigame nhịp điệu kiểu lane rơi: cùng luật trên bàn phím và phím chạm. */
-#rhythmLayer { position: fixed; inset: 0; z-index: 5; display: flex; align-items: flex-end; justify-content: center; padding: 16px 12px calc(16px + var(--safe-b)); pointer-events: none; background: linear-gradient(transparent 35%, rgba(3, 8, 28, .65)); }
+#rhythmLayer { position: fixed; inset: 0; z-index: 5; display: flex; align-items: flex-end; justify-content: center; padding: 16px 12px calc(16px + var(--safe-b)); pointer-events: none; background: linear-gradient(transparent 35%, rgba(30, 16, 4, .55)); }
 #rhythmLayer:has(section:not([hidden])) { pointer-events: auto; }
 #rhythmLayer:not(:has(section:not([hidden]))) { display: none; }
-.rhythm-panel { --note: #ffd46e; width: min(560px, 100%); max-height: calc(100dvh - 24px - var(--safe-t)); overflow-y: auto; padding: 16px 18px 14px; color: #e6eeff; outline: none; }
+.rhythm-panel { --note: #ffd46e; width: min(560px, 100%); max-height: calc(100dvh - 24px - var(--safe-t)); overflow-y: auto; padding: 16px 18px 14px; color: var(--ink); outline: none; }
 .rhythm-panel.meditate { --note: #7fe3f0; }
 .rhythm-panel header, .rhythm-stats { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.rhythm-round, .rhythm-combo { font-size: 13px; color: #9fb4e4; font-variant-numeric: tabular-nums; }
+.rhythm-round, .rhythm-combo { font-size: 13px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
 .rhythm-stats { margin: 9px 0 7px; }
-.rhythm-lanes { display: block; width: 100%; border-radius: 8px; background: linear-gradient(180deg, rgba(255, 255, 255, .03), rgba(255, 255, 255, .05)); border: 1px solid rgba(216, 164, 78, .15); }
-.rhythm-feedback { min-height: 23px; margin: 8px 0 0; text-align: center; font-size: 14px; color: #f0e6cc; }
-.rhythm-feedback[data-grade=perfect] { color: #ffd23f; font-weight: 800; font-size: 19px; }
-.rhythm-feedback[data-grade=good] { color: #7fe3f0; font-weight: 700; font-size: 19px; }
-.rhythm-feedback[data-grade=miss] { color: #ff9a86; }
-.rhythm-status { margin: 6px 0 11px; color: #9fb4e4; font-size: 12px; text-align: center; max-height: 36px; overflow-y: auto; }
+.rhythm-lanes { display: block; width: 100%; border-radius: 8px; background: linear-gradient(180deg, #3a2412, #241408); border: 2px solid #7a3c06; box-shadow: inset 0 0 0 1px rgba(255, 214, 130, .25); }
+.rhythm-feedback { min-height: 23px; margin: 8px 0 0; text-align: center; font-size: 14px; color: var(--ink); }
+.rhythm-feedback[data-grade=perfect] { color: #c27300; font-weight: 800; font-size: 19px; }
+.rhythm-feedback[data-grade=good] { color: #1f8a9c; font-weight: 700; font-size: 19px; }
+.rhythm-feedback[data-grade=miss] { color: #b3341c; }
+.rhythm-status { margin: 6px 0 11px; color: var(--muted); font-size: 12px; text-align: center; max-height: 36px; overflow-y: auto; }
 .rhythm-controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.rhythm-arrow { min-height: 50px; padding: 4px; border: 2px solid #3a2410; border-radius: 10px; background: linear-gradient(180deg, #6e4213, #232b44); box-shadow: inset 0 2px 0 rgba(255, 214, 130, .4); color: #fff; font-size: 28px; touch-action: manipulation; }
-.rhythm-arrow:active { background: linear-gradient(180deg, #3a5cc8, #1e3490); }
+.rhythm-arrow { min-height: 50px; padding: 4px; border: 2px solid #3a2410; border-radius: 10px; background: linear-gradient(180deg, #8a5a22, #3a2412); box-shadow: inset 0 2px 0 rgba(255, 214, 130, .4); color: #fff; font-size: 28px; touch-action: manipulation; }
+.rhythm-arrow:active { background: linear-gradient(180deg, #e0a030, #a86a10); }
 .rhythm-actions { display: flex; justify-content: center; gap: 8px; margin-top: 12px; }
-.rhythm-panel .btn.ghost { color: #f0e6cc; border-color: rgba(216, 164, 78, .4); }
-.rhythm-panel button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.rhythm-panel button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .rhythm-playing #hud { display: none; }
 @media (max-width: 420px), (max-height: 560px) {
   .rhythm-panel { padding: 10px 12px 10px; }
@@ -326,94 +327,97 @@ kbd { font: inherit; }
    (components/panel-frame.png, ghép từ 9 tile bagAndInfo.bag.BG*Asset — xem SOURCES.json). */
 .ink-panel {
   position: relative;
-  border: 30px solid transparent;
+  border: 16px solid transparent;
   border-radius: 0;
-  background: linear-gradient(180deg, #1c2132, #101522) padding-box;
-  border-image: url("/ui/gunny/components/panel-frame.png") 38 / 30px stretch;
-  box-shadow: 0 16px 60px rgba(2, 6, 24, .6);
-  color: #e6eeff;
+  background: linear-gradient(180deg, var(--cream-1), var(--cream-2)) padding-box;
+  border-image: url("/ui/gunny/components/panel-frame-cream.png") 16 / 16px stretch;
+  box-shadow: 0 16px 60px rgba(30, 14, 0, .55);
+  color: var(--ink);
 }
-.ink-title { margin: 0; font: 800 22px/1.2 var(--serif); letter-spacing: .08em; background: linear-gradient(180deg, #fff3c4 15%, #ffcf4d 55%, #ff9a1e 95%); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: 1px #16236a; filter: drop-shadow(0 2px 0 #101a4e); }
+.ink-title { margin: 0; font: 800 22px/1.2 var(--serif); letter-spacing: .04em; color: var(--title-ink); text-shadow: 0 1px 0 #fffbe8, 0 2px 3px rgba(120, 60, 10, .25); }
 .ink-title .seal { margin-left: 8px; vertical-align: 3px; }
 /* Huy hiệu vàng bo tròn thay ấn triện son. */
 .seal { display: inline-grid; place-items: center; min-width: 30px; height: 30px; padding: 0 5px; border: 2px solid #8a5a12; border-radius: 9px; background: linear-gradient(180deg, #ffe08a, #ffb23d); color: #5a3405; font: 800 13px/1 var(--sans); letter-spacing: .1em; transform: rotate(5deg); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6); user-select: none; text-shadow: none; }
-.ink-sub { margin: 2px 0 0; font: italic 600 13.5px/1.3 var(--serif); color: #9fb4e4; letter-spacing: .05em; }
-.brush-line { height: 3px; margin: 9px 0 11px; border-radius: 2px; background: linear-gradient(90deg, rgba(216, 164, 78, 0), var(--gn-cyan) 25%, var(--gold) 55%, rgba(255, 207, 77, .25) 82%, rgba(255, 207, 77, 0)); }
+.ink-sub { margin: 2px 0 0; font: 700 13.5px/1.3 var(--serif); color: var(--muted); letter-spacing: .03em; }
+.brush-line { height: 3px; margin: 9px 0 11px; border-radius: 2px; background: linear-gradient(90deg, rgba(184, 110, 12, 0), #d98a2e 25%, #b86e0c 55%, rgba(184, 110, 12, .25) 82%, rgba(184, 110, 12, 0)); }
 /* Nút CTA cam: mặt ảnh bóng cam chép từ Gunny92 + gradient dự phòng. */
-.btn.gold { background: url("/ui/gunny/button-gold.png") center / cover no-repeat, linear-gradient(180deg, #ffd980, #f29418 60%, #e07c12); border: 2px solid #7a3c06; color: #fff8ea; letter-spacing: .05em; box-shadow: inset 0 2px 0 rgba(255, 255, 255, .5), 0 3px 12px rgba(50, 24, 0, .45); text-shadow: 0 1px 0 #a35a10; }
+.btn.gold { background: url("/ui/gunny/button-gold.png") center / cover no-repeat, linear-gradient(180deg, #ffd980, #f29418 60%, #e07c12); border: 2px solid #7a3c06; color: #fff8ea; letter-spacing: .05em; box-shadow: inset 0 2px 0 rgba(255, 255, 255, .5), 0 3px 12px rgba(50, 24, 0, .45); text-shadow: 1px 0 0 #7a3c06, -1px 0 0 #7a3c06, 0 1px 0 #7a3c06, 0 -1px 0 #7a3c06, 0 2px 3px rgba(60, 24, 0, .4); }
 .btn.gold:hover:not(:disabled) { filter: brightness(1.12); }
 .teu-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(255, 207, 77, .55); background: rgba(255, 207, 77, .12); color: #ffd98a; font: 600 13px/1.4 var(--sans); white-space: nowrap; }
 /* Icon tiền thật từ module shop (asset.shop.PayPanelMoneyIcon). */
+.modal-card .teu-chip, .ink-panel .teu-chip { border-color: #b98a45; background: rgba(184, 110, 12, .14); color: #7a4a12; font-weight: 800; }
 .teu-chip::before { content: ''; width: 18px; height: 16px; background: url("/ui/gunny/components/coin.png") center / contain no-repeat; }
 .rank-badge { display: inline-grid; place-items: center; min-width: 34px; height: 34px; border-radius: 8px; border: 1.5px solid currentColor; font: 800 19px var(--serif); transform: rotate(-4deg); }
-.rank-badge[data-rank=S] { color: #ffd23f; text-shadow: 0 0 10px rgba(255, 210, 63, .5); }
-.rank-badge[data-rank=A] { color: #7fe3f0; }
-.rank-badge[data-rank=B] { color: #9fc4ff; }
-.rank-badge[data-rank=C] { color: #9fb4e4; }
+.rank-badge[data-rank=S] { color: #c27300; text-shadow: 0 0 8px rgba(255, 210, 63, .45); }
+.rank-badge[data-rank=A] { color: #1f8a9c; }
+.rank-badge[data-rank=B] { color: #7a5c36; }
+.rank-badge[data-rank=C] { color: #8a7a5a; }
 
 /* Thẻ kết quả dùng chung cho câu cá và đố của sư chú. */
 @keyframes bitePulse { from { transform: scale(1); } to { transform: scale(1.22); } }
-.fish-card { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; padding: 10px 12px; border: 1px solid rgba(255, 207, 77, .45); border-radius: 10px; background: rgba(255, 207, 77, .08); animation: pop .25s ease-out; }
-.fish-name { font: 800 18px var(--serif); color: #ffd98a; }
-.fish-stars { color: #ffd23f; letter-spacing: 2px; }
-.fish-weight { color: #9fc4ff; font-variant-numeric: tabular-nums; }
+.fish-card { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; padding: 10px 12px; border: 1px solid #b98a45; border-radius: 10px; background: rgba(255, 252, 240, .6); animation: pop .25s ease-out; }
+.fish-name { font: 800 18px var(--serif); color: var(--title-ink); }
+.fish-stars { color: #d98a1e; letter-spacing: 2px; }
+.fish-weight { color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
 .fish-new { padding: 2px 8px; border-radius: 999px; background: rgba(70, 207, 228, .3); border: 1px solid rgba(127, 227, 240, .55); color: #bdf0f6; font-size: 12px; }
 
 /* Đố của sư chú */
-.riddle-stage .riddle-question { margin: 4px 0 12px; font: 600 18px/1.4 var(--serif); color: #fff; }
+.riddle-stage .riddle-question { margin: 4px 0 12px; font: 700 18px/1.4 var(--serif); color: var(--ink); }
 .riddle-input { width: 100%; padding: 10px 12px; border: 2px solid #8a5a12; border-radius: 8px; background: url("/ui/gunny/components/input-field.png") center / 100% 100% no-repeat, #f7ecd2; color: #3a1c06; }
 
 /* Hộp thoại: khung chạm khắc kem chép từ Gunny92 làm viền, ruột navy, tiêu đề bong bóng. */
 #modals:empty { display: none; }
-.modal { position: fixed; inset: 0; z-index: 8; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(3, 7, 26, .55); }
+.modal { position: fixed; inset: 0; z-index: 8; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(24, 12, 2, .5); }
+/* Ruột kem + khung gỗ cam: chính là panel 9-mảnh bank.9core của Gunny92 (panel-frame-cream.png). Token --ink/--muted/--paper
+   đổi sang tông giấy ở phạm vi này nên mọi con dùng var() tự sang chữ nâu trên nền kem. */
+.modal-card, .ink-panel, .welcome-card, #musicPanel, .tutorial, #wishReader {
+  --cream-1: #efebd0; --cream-2: #e1dcbd; --title-ink: #8a3d0c;
+  --paper: #f6f0d8; --paper-2: #ece4c4; --ink: #3d2208; --muted: #7a5c36;
+  --gold: #b86e0c; --accent: #c7650c; --accent-2: #d98a1e; --jade: #8a5a12; --jade-ink: #5a3405;
+  --glass-line: rgba(138, 90, 18, .35); --gn-line: rgba(138, 90, 18, .35);
+}
 .modal-card {
   display: flex; flex-direction: column; width: min(560px, 100%); max-height: calc(100dvh - 32px);
   padding: 12px;
-  border: 30px solid transparent;
+  border: 16px solid transparent;
   border-radius: 0;
-  background: linear-gradient(180deg, #1e2436, #101522) padding-box;
-  border-image: url("/ui/gunny/components/panel-frame.png") 38 / 30px stretch;
+  background: linear-gradient(180deg, var(--cream-1), var(--cream-2)) padding-box;
+  border-image: url("/ui/gunny/components/panel-frame-cream.png") 16 / 16px stretch;
   color: var(--ink);
-  box-shadow: 0 18px 54px rgba(2, 6, 24, .55);
+  box-shadow: 0 18px 54px rgba(30, 14, 0, .5);
   animation: pop .18s ease-out;
 }
 .modal-card.wide { width: min(760px, 100%); }
 /* Khung 9-mảnh từ ảnh thật: góc 30px giữ nguyên tỉ lệ, chỉ cạnh được kéo; màn nhỏ thì khung mỏng bớt. */
 @media (max-width: 650px) {
-  .ink-panel, .modal-card { border-width: 22px; border-image-width: 22px; }
+  .ink-panel, .modal-card { border-width: 14px; border-image-width: 14px; }
 }
 .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 6px; }
-.modal-head h2 {
-  margin: 0; font: 800 22px var(--serif); letter-spacing: .02em;
-  background: linear-gradient(180deg, #fff3c4 15%, #ffcf4d 55%, #ff9a1e 95%);
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-  -webkit-text-stroke: 1px #16236a;
-  filter: drop-shadow(0 2px 0 #101a4e);
-}
+.modal-head h2 { margin: 0; font: 800 24px/1.2 var(--serif); letter-spacing: .02em; color: var(--title-ink); text-shadow: 0 1px 0 #fffbe8, 0 2px 3px rgba(120, 60, 10, .25); }
 /* Nút đóng: nút X tròn đỏ viền vàng chép thật từ module quà tặng (surpriseRoulette.close). */
 .modal-x { width: 34px; height: 34px; border: 0; border-radius: 0; background: url("/ui/gunny/components/close-x.png") center / 100% 100% no-repeat; color: transparent; font-size: 0; font-weight: 800; box-shadow: 0 2px 5px rgba(0, 0, 0, .45); }
 .modal-x:hover { filter: brightness(1.15); }
-.modal-body { padding: 4px 20px 20px; overflow-y: auto; scrollbar-color: rgba(216, 164, 78, .5) transparent; scrollbar-width: thin; }
-.modal-body h3 { margin: 16px 0 6px; font: 800 17px var(--serif); color: #fff; text-shadow: 0 1px 0 #14245e, 1px 0 0 #14245e, -1px 0 0 #14245e, 0 -1px 0 #14245e; }
+.modal-body { padding: 4px 20px 20px; overflow-y: auto; scrollbar-color: rgba(138, 90, 18, .55) transparent; scrollbar-width: thin; }
+.modal-body h3 { margin: 16px 0 6px; font: 800 18px var(--serif); color: var(--title-ink); text-shadow: 0 1px 0 #fffbe8; }
 
 /* Hộp Đồ hoạ: mỗi mức một dòng bấm được cả dòng, dòng đang chọn viền vàng. */
 .graphics-options { display: grid; gap: 6px; margin: 4px 0 10px; padding: 0; border: 0; }
 .graphics-options legend { margin-bottom: 6px; font-weight: 600; font-size: 14px; }
 /* Dòng lựa chọn đồ hoạ dùng ô kem sáng (components/input-field.png) — gỗ khắc tối làm chìm chữ mô tả. */
 .graphics-option { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding: 8px 12px; border: 0; border-radius: 8px; background: url("/ui/gunny/components/input-field.png") center / 100% 100% no-repeat, rgba(255, 255, 255, .06); color: #3a1c06; cursor: pointer; }
-.graphics-option:has(input:checked) { border: 2px solid #d98a2e; box-shadow: 0 1px 4px rgba(2, 6, 24, .25); }
+.graphics-option:has(input:checked) { border: 2px solid #d98a2e; box-shadow: 0 1px 4px rgba(20, 13, 6, .25); }
 .graphics-option:has(input:focus-visible) { outline: 3px solid var(--gold); outline-offset: 2px; }
-.graphics-option input { margin: 3px 0 0; accent-color: #43b9cc; }
+.graphics-option input { margin: 3px 0 0; accent-color: #d98a2e; }
 .graphics-option span { display: grid; gap: 2px; }
 .graphics-option .muted { color: #7a5a34; }
 .graphics-option b { color: #3a1c06; }
 .graphics-option small { color: #7a5a34; font-size: 12.5px; line-height: 1.35; }
-.graphics-status { margin: 0 0 6px; font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; color: #9fb4e4; }
-.graphics-note { margin: 0; font-size: 12.5px; color: #e6d8b8; }
+.graphics-status { margin: 0 0 6px; font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; color: var(--muted); }
+.graphics-note { margin: 0; font-size: 12.5px; color: var(--muted); }
 
 .wish-box { position: relative; margin: 8px 0 4px; }
 .wish-input { display: block; width: 100%; padding: 10px 12px 24px; border: 2px solid #8a5a12; border-radius: 8px; background: url("/ui/gunny/components/input-field.png") center / 100% 100% no-repeat, #f7ecd2; color: #3a1c06; resize: vertical; min-height: 86px; }
-.wish-counter { position: absolute; right: 10px; bottom: 7px; font-size: 12px; color: #7d92c4; }
+.wish-counter { position: absolute; right: 10px; bottom: 7px; font-size: 12px; color: #7a5c36; }
 .label { margin: 12px 0 2px; font-weight: 600; font-size: 14px; }
 .place-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 6px 0 8px; }
 /* Thẻ địa điểm dùng ô kem viền đỏ thật (components/shop-cell.png) như lưới icon sảnh Gunny92; chọn thì viền vàng đậm. */
@@ -422,11 +426,11 @@ kbd { font: inherit; }
 .place-icon { font-size: 22px; }
 
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; margin-top: 4px; }
-.stat { padding: 8px 10px; border-radius: 10px; background: rgba(255, 255, 255, .07); text-align: center; }
+.stat { padding: 8px 10px; border-radius: 10px; background: rgba(255, 252, 240, .6); text-align: center; }
 .stat b { display: block; font: 800 25px var(--serif); color: var(--gold); }
 .stat span { font-size: 12px; color: var(--muted); }
 .book-list, .board-list { margin: 0; padding: 0; list-style: none; }
-.book-list li, .board-list li { padding: 9px 0; border-bottom: 1px solid rgba(216, 164, 78, .25); }
+.book-list li, .board-list li { padding: 9px 0; border-bottom: 1px solid rgba(138, 90, 18, .25); }
 .book-list p, .board-list p { margin: 0 0 2px; overflow-wrap: anywhere; }
 .meta { font-size: 12.5px; color: var(--muted); margin-bottom: 5px !important; }
 .board-scroll { max-height: min(62dvh, 560px); overflow-y: auto; }
@@ -448,16 +452,16 @@ kbd { font: inherit; }
 .fortune-stage .btn.big { user-select: none; -webkit-user-select: none; touch-action: none; }
 
 /* Biên lai: thẻ navy viền vàng. */
-.bl-card { width: 100%; padding: 13px 15px; border: 2px solid rgba(255, 207, 77, .6); border-radius: 10px; background: rgba(10, 17, 56, .92); animation: pop .3s ease-out; }
-.bl-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-bottom: 7px; border-bottom: 2px solid rgba(255, 207, 77, .55); color: var(--gold); }
+.bl-card { width: 100%; padding: 13px 15px; border: 2px solid #b98a45; border-radius: 10px; background: linear-gradient(180deg, #fffdf4, #f6ead0); animation: pop .3s ease-out; }
+.bl-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-bottom: 7px; border-bottom: 2px solid rgba(184, 110, 12, .55); color: var(--title-ink); }
 .bl-head b { font-size: 17px; letter-spacing: .03em; }
 .bl-head span { font-size: 12.5px; font-variant-numeric: tabular-nums; }
-.bl-row { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-bottom: 1px solid rgba(216, 164, 78, .25); font-size: 14px; }
-.bl-label { font-size: 12px; color: #8ea6d8; flex: none; }
+.bl-row { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-bottom: 1px solid rgba(138, 90, 18, .25); font-size: 14px; }
+.bl-label { font-size: 12px; color: var(--muted); flex: none; }
 .bl-value { text-align: right; font-weight: 600; overflow-wrap: anywhere; }
-.bl-goods { padding: 7px 0; border-bottom: 1px solid rgba(216, 164, 78, .25); }
+.bl-goods { padding: 7px 0; border-bottom: 1px solid rgba(138, 90, 18, .25); }
 .bl-goods p { margin: 3px 0 0; font: 800 18px/1.3 var(--serif); }
-.bl-foot { padding-top: 6px; font-size: 12px; color: #8ea6d8; }
+.bl-foot { padding-top: 6px; font-size: 12px; color: var(--muted); }
 
 .share-stage { display: flex; flex-direction: column; align-items: center; }
 .share-img { display: block; width: auto; height: auto; max-width: 100%; max-height: min(62dvh, 620px); border-radius: 8px; box-shadow: 0 6px 20px rgba(0, 0, 0, .25); }
@@ -473,7 +477,7 @@ kbd { font: inherit; }
 .touch #emojiToggle { display: inline-flex; position: absolute; right: auto; left: 62px; bottom: calc(160px + var(--safe-b)); width: 46px; padding: 0; justify-content: center; font-size: 19px; }
 .touch #emojiToggle[aria-expanded="true"] { filter: brightness(1.18); border-color: #8a5a2a; color: #fff; }
 .touch #emojiBar { display: none; left: 10px; right: auto; bottom: calc(206px + var(--safe-b)); z-index: 3; padding: 3px; gap: 0; }
-.touch.emoji-open #emojiBar { display: flex; background: rgba(8, 14, 44, .94); }
+.touch.emoji-open #emojiBar { display: flex; background: rgba(40, 26, 12, .94); }
 .touch.emoji-open #chatHistory { visibility: hidden; }
 .touch .emoji-btn { width: 40px; height: 40px; font-size: 20px; }
 .touch #chatHistory { left: 8px; bottom: calc(228px + var(--safe-b)); width: min(300px, calc(100vw - 80px)); max-height: min(170px, 24dvh); }
@@ -508,7 +512,7 @@ body:has(#onlineList:not([hidden])) #voicePanel { visibility: hidden; }
 /* Điện thoại dọc: thẻ chào nằm dưới, nhân vật ở trên. Padding đệm khung chạm khắc. */
 @media (orientation: portrait) {
   #welcome { align-items: flex-end; justify-content: center; padding: 12px; }
-  .welcome-card { padding: 30px 22px 20px; width: 100%; max-height: 66dvh; }
+  .welcome-card { padding: 22px 16px 14px; width: 100%; max-height: 66dvh; border-width: 14px; border-image-width: 14px; }
   .welcome-card h1 { font-size: 25px; margin-bottom: 8px; }
   .welcome-error { min-height: 0; margin: 2px 0 6px; }
   .field { margin-bottom: 8px; }
@@ -517,7 +521,7 @@ body:has(#onlineList:not([hidden])) #voicePanel { visibility: hidden; }
 }
 
 @media (max-height: 460px) and (orientation: landscape) {
-  .welcome-card { padding: 28px 20px 16px; width: 380px; }
+  .welcome-card { padding: 20px 18px 12px; width: 380px; }
   .welcome-card h1 { font-size: 23px; }
   .field { margin-bottom: 7px; }
   .swatches { grid-template-columns: repeat(10, 26px); }
@@ -542,7 +546,7 @@ body:has(#onlineList:not([hidden])) #voicePanel { visibility: hidden; }
   content: '安之錄';
   margin-left: 12px;
   font: 600 12px var(--sans);
-  color: rgba(255, 207, 77, .55);
+  color: rgba(138, 90, 18, .6);
   letter-spacing: .34em;
   vertical-align: 3px;
   -webkit-text-stroke: 0;
@@ -552,9 +556,9 @@ body:has(#onlineList:not([hidden])) #voicePanel { visibility: hidden; }
 /* Nét vàng loang dần dưới đầu sổ, đậm bên trái */
 .bookx .modal-head::after {
   content: ''; position: absolute; left: 26px; right: 26px; bottom: 0; height: 2px; border-radius: 2px;
-  background: linear-gradient(90deg, rgba(255, 207, 77, .95), rgba(255, 207, 77, .25) 62%, rgba(255, 207, 77, 0));
+  background: linear-gradient(90deg, rgba(184, 110, 12, .9), rgba(184, 110, 12, .25) 62%, rgba(184, 110, 12, 0));
 }
-.bookx .modal-x { color: #f0e6cc; }
+.bookx .modal-x { color: transparent; }
 .bookx .modal-body { padding: 12px 26px 22px; }
 /* Đầu mục: hoa thị vàng + con dấu chữ Hán mờ nghiêng nhẹ ở phải */
 .bookx .modal-body h3 {
@@ -567,8 +571,8 @@ body:has(#onlineList:not([hidden])) #voicePanel { visibility: hidden; }
   content: attr(data-hanzi);
   margin-left: auto;
   font: 600 14px/1 var(--sans);
-  color: rgba(159, 180, 228, .6);
-  border: 1px solid rgba(216, 164, 78, .4);
+  color: rgba(138, 90, 18, .7);
+  border: 1px solid rgba(138, 90, 18, .45);
   border-radius: 6px;
   padding: 3px 6px;
   transform: rotate(5deg);
@@ -577,26 +581,26 @@ body:has(#onlineList:not([hidden])) #voicePanel { visibility: hidden; }
 /* Dải số liệu: ô navy nổi, dòng kẻ mảnh chia cột */
 .bookx .stats {
   grid-template-columns: repeat(5, 1fr); gap: 0;
-  margin: 4px 0 0; border: 1px solid rgba(216, 164, 78, .35); border-radius: 10px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .03));
+  margin: 4px 0 0; border: 1px solid #b98a45; border-radius: 10px;
+  background: linear-gradient(180deg, #fffaf0, #f3e6c4);
   overflow: hidden;
 }
-.bookx .stat { padding: 10px 6px 8px; border-radius: 0; background: none; border-left: 1px solid rgba(216, 164, 78, .22); }
+.bookx .stat { padding: 10px 6px 8px; border-radius: 0; background: none; border-left: 1px solid rgba(138, 90, 18, .3); }
 .bookx .stat:nth-child(5n + 1) { border-left: 0; }
-.bookx .stat:nth-child(n + 6) { border-top: 1px solid rgba(216, 164, 78, .22); }
+.bookx .stat:nth-child(n + 6) { border-top: 1px solid rgba(138, 90, 18, .3); }
 .bookx .stat b { font: 800 22px/1.15 var(--serif); color: var(--gold); }
 .bookx .stat span { font-size: 11.5px; color: var(--muted); letter-spacing: .02em; }
 /* Sổ cá: hai cột, loài chưa bắt nhạt */
 .bookx .fish-book { display: grid; grid-template-columns: 1fr 1fr; column-gap: 20px; }
-.bookx .fish-book li { position: relative; display: grid; grid-template-columns: 62px 1fr; column-gap: 10px; align-items: center; padding: 7px 0; border-bottom: 1px dashed rgba(216, 164, 78, .3); }
+.bookx .fish-book li { position: relative; display: grid; grid-template-columns: 62px 1fr; column-gap: 10px; align-items: center; padding: 7px 0; border-bottom: 1px dashed rgba(138, 90, 18, .35); }
 .bookx .fish-book li:not(.caught) { opacity: .58; }
 /* Chân dung cá đặt trong ô kem thật (components/shop-cell.png) như ô sưu tập Gunny92. */
 .bookx .fish-book-art { grid-row: span 2; display: grid; place-items: center; width: 68px; padding: 4px 3px; border-radius: 6px; background: url("/ui/gunny/components/shop-cell.png") center / 100% 100% no-repeat; }
 .bookx .fish-book-art svg { display: block; width: 58px; height: auto; }
 .bookx .fish-book-art svg.dark { opacity: .35; }
-.bookx .fish-book li b { font: 700 14.5px var(--sans); color: #e6eeff; }
+.bookx .fish-book li b { font: 700 14.5px var(--sans); color: var(--ink); }
 .bookx .fish-book li:not(.caught) b { color: var(--muted); font-weight: 500; }
-.bookx .fish-book-stars { position: absolute; right: 0; top: 8px; color: #ffb23d; font-size: 12px; letter-spacing: 2px; }
+.bookx .fish-book-stars { position: absolute; right: 0; top: 8px; color: #d98a1e; font-size: 12px; letter-spacing: 2px; }
 .bookx .fish-book li small { display: block; grid-column: 2; margin-top: 1px; font-size: 12px; color: var(--muted); }
 /* Thẻ chia trang của sổ: chip navy, thẻ đang mở gạch chân vàng */
 .bookx-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 6px; }
@@ -622,7 +626,7 @@ body:has(#onlineList:not([hidden])) #voicePanel { visibility: hidden; }
   animation: bookx-breathe 1.2s ease-in-out infinite alternate;
 }
 @keyframes bookx-breathe { from { opacity: .7; } to { opacity: 1; } }
-.bookx-error { text-align: center; padding: 20px 0; color: #ffb3a0; }
+.bookx-error { text-align: center; padding: 20px 0; color: #b3341c; }
 @media (prefers-reduced-motion: reduce) {
   .bookx-seal { animation: none; }
 }

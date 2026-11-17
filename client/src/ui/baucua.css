@@ -11,9 +11,9 @@
   border: 2px solid #ffcf4d; border-radius: 12px;
   background:
     repeating-linear-gradient(0deg, rgba(255, 255, 255, .035) 0 2px, transparent 2px 6px),
-    radial-gradient(ellipse at 50% 0%, #1e3290, #101522 75%);
-  box-shadow: 0 14px 40px rgba(2, 6, 24, .55), inset 0 0 0 4px rgba(10, 20, 70, .9), inset 0 0 0 5px rgba(255, 207, 77, .55);
-  color: #f2f7ff; text-shadow: 0 1px 2px rgba(2, 6, 24, .45);
+    radial-gradient(ellipse at 50% 0%, #855829, #201912 75%);
+  box-shadow: 0 14px 40px rgba(20, 13, 6, .55), inset 0 0 0 4px rgba(62, 40, 18, .9), inset 0 0 0 5px rgba(255, 207, 77, .55);
+  color: #f2f7ff; text-shadow: 0 1px 2px rgba(20, 13, 6, .45);
 }
 .baucua-hud[hidden], .baucua-hud [hidden] { display: none !important; }
 
@@ -23,7 +23,7 @@
 .bc-history li.new { opacity: 1; background: rgba(255, 232, 168, .2); box-shadow: inset 0 0 0 1px #ffd46e; }
 
 /* Tấm bạt: một hàng sáu ô ngà viền vàng (màn hẹp thì 3×2), đúng thứ tự Nai Bầu Gà Cá Cua Tôm. */
-.baucua-mat { display: grid; grid-template-columns: repeat(6, 1fr); gap: 7px; padding: 7px; border: 2px solid rgba(255, 207, 77, .85); border-radius: 8px; background: rgba(8, 14, 44, .5); }
+.baucua-mat { display: grid; grid-template-columns: repeat(6, 1fr); gap: 7px; padding: 7px; border: 2px solid rgba(255, 207, 77, .85); border-radius: 8px; background: rgba(40, 26, 12, .5); }
 .baucua-tile {
   position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0;
   min-height: 92px; padding: 6px 4px 18px; border: 2px solid #c99a3c; border-radius: 8px;
@@ -43,13 +43,13 @@
 .baucua-tile.placed { border-color: #ffb703; }
 .baucua-tile.hit { border-color: #ffb703; background: radial-gradient(circle at 50% 38%, #fff6c9 0 34%, #ffe08a 35%); box-shadow: 0 0 18px rgba(255, 196, 60, .85); animation: baucuaHit .6s ease-out 2; }
 .baucua-tile.miss { filter: saturate(.5) brightness(.8); }
-.baucua-badge { position: absolute; top: 4px; left: 5px; padding: 0 7px; border-radius: 10px; background: #0d1747; color: #ffe8a8; font: 800 13px/20px var(--sans); font-style: normal; }
+.baucua-badge { position: absolute; top: 4px; left: 5px; padding: 0 7px; border-radius: 10px; background: #412a13; color: #ffe8a8; font: 800 13px/20px var(--sans); font-style: normal; }
 
 /* Chip mình đã đặt: đồng xu xếp chồng ở góc phải ô, kèm số. */
 .baucua-stack { position: absolute; right: 7px; top: 24px; display: flex; flex-direction: column-reverse; align-items: center; }
 .baucua-stack i { width: 26px; height: 9px; margin-top: -4px; border-radius: 50%; border: 1.5px solid rgba(0, 0, 0, .35); box-shadow: 0 1px 0 rgba(0, 0, 0, .3); }
 .baucua-hud.settled .baucua-stack { opacity: .55; }
-.baucua-stack em {position: absolute; top: -20px; padding: 0 5px; border-radius: 8px; background: #0d1747; color: #fff; font: 800 12px/17px var(--sans); font-style: normal; }
+.baucua-stack em {position: absolute; top: -20px; padding: 0 5px; border-radius: 8px; background: #412a13; color: #fff; font: 800 12px/17px var(--sans); font-style: normal; }
 .baucua-stack i.ivory, .baucua-chip.ivory { background: #f5f0e6; }
 .baucua-stack i.red, .baucua-chip.red { background: #c0392b; }
 .baucua-stack i.gold, .baucua-chip.gold { background: #e2a72e; }
@@ -60,7 +60,7 @@
   box-shadow: 0 0 0 2px rgba(0, 0, 0, .35), 0 3px 6px rgba(0, 0, 0, .4); cursor: pointer; touch-action: manipulation; transition: transform .1s;
 }
 .baucua-chip span { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; font: 900 15px var(--sans); color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .6); }
-.baucua-chip.ivory span { color: #12245e; text-shadow: none; }
+.baucua-chip.ivory span { color: #56391a; text-shadow: none; }
 .baucua-chip.on { transform: translateY(-4px) scale(1.08); box-shadow: 0 0 0 3px #ffe8a8, 0 6px 12px rgba(0, 0, 0, .45); }
 .baucua-chip:focus-visible { outline: 2px solid #ffe8a8; outline-offset: 3px; }
 .baucua-chip:disabled { opacity: .45; cursor: default; transform: none; }
@@ -81,8 +81,8 @@
 .baucua-die span { font-size: 50px; line-height: 1; }
 .baucua-die b { margin-top: 2px; font: 800 12px var(--serif); letter-spacing: .12em; text-transform: uppercase; color: var(--tile); }
 .baucua-reveal-result {
-  margin: 0; padding: 4px 22px; border: 2px solid #ffcf4d; border-radius: 999px; background: rgba(10, 17, 56, .94);
-  font: 800 32px/1.2 var(--serif); color: #fff; text-shadow: 0 2px 4px rgba(2, 6, 24, .6); box-shadow: 0 8px 22px rgba(2, 6, 24, .5);
+  margin: 0; padding: 4px 22px; border: 2px solid #ffcf4d; border-radius: 999px; background: rgba(51, 33, 15, .94);
+  font: 800 32px/1.2 var(--serif); color: #fff; text-shadow: 0 2px 4px rgba(20, 13, 6, .6); box-shadow: 0 8px 22px rgba(20, 13, 6, .5);
   animation: baucuaPop .45s .5s cubic-bezier(.2, 1.6, .4, 1) both;
 }
 .baucua-reveal-result:empty { display: none; }
@@ -95,7 +95,7 @@
 @keyframes baucuaHit { 50% { transform: scale(1.05); } }
 
 /* Nhãn nổi trên bàn trong cảnh 3D. */
-.baucua-label { display: flex; flex-direction: column; align-items: center; padding: 2px 10px 3px; border-radius: 8px; border: 1px solid rgba(255, 207, 77, .7); background: rgba(10, 17, 56, .85); color: #ffe8a8; text-align: center; pointer-events: none; white-space: nowrap; text-shadow: 0 1px 2px #000; }
+.baucua-label { display: flex; flex-direction: column; align-items: center; padding: 2px 10px 3px; border-radius: 8px; border: 1px solid rgba(255, 207, 77, .7); background: rgba(51, 33, 15, .85); color: #ffe8a8; text-align: center; pointer-events: none; white-space: nowrap; text-shadow: 0 1px 2px #000; }
 .baucua-label b { font: 700 14px var(--serif); letter-spacing: .08em; }
 .baucua-label small { font-size: 12px; color: #f2f7ff; }
 

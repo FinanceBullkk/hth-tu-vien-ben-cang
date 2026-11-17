@@ -8,8 +8,8 @@
   --vt-edge: #420600; --vt-glow: rgba(255, 170, 40, .95); --vt-haze: rgba(255, 110, 20, .55);
 }
 .tag[data-board="vua-cau-ca"] {
-  --vt-fill: linear-gradient(180deg, #ffffff 0%, #eafcff 22%, #a4e8ff 44%, #3ea4f2 50%, #2a84e4 72%, #0e48bc 100%);
-  --vt-edge: #021e40; --vt-glow: rgba(110, 220, 255, .95); --vt-haze: rgba(30, 140, 255, .55);
+  --vt-fill: linear-gradient(180deg, #ffffff 0%, #eafcff 22%, #a4e8ff 44%, #3ea4f2 50%, #2a84e4 72%, #9d662d 100%);
+  --vt-edge: #33210f; --vt-glow: rgba(110, 220, 255, .95); --vt-haze: rgba(30, 140, 255, .55);
 }
 /* Chữ nhỏ kiểu MMO 2D: font chân phương, viền đen 1px tám phía, nét cứng không nhoè (sắc trên mọi nền). */
 .tag[data-board] {

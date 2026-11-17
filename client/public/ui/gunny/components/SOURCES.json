@@ -257,41 +257,6 @@
       "sha256": "d7d0c853bd5799cff68bd3161d41515efe7e7b554d5875356046fdb3648e3e4c"
     },
     {
-      "file": "toolbar-bag.png",
-      "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\7_asset.toolbar.bagBtnAsset.png",
-      "sha256": "15d75ffd5b4fa502416eb4c582e4a4f09f652c71ef3049fb1de4e78f1d712ab6"
-    },
-    {
-      "file": "toolbar-shop.png",
-      "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\8_asset.toolbar.shopBtnAsset.png",
-      "sha256": "3c3df67b8348854c7664f0bd265b4de3e7482719a986e55177fee4bafb4e9e59"
-    },
-    {
-      "file": "toolbar-scroll.png",
-      "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\13_asset.toolbar.taskBtnAsset.png",
-      "sha256": "2861bf3c8dfa4cde8912b5cddf62918a00f5067fbc543770cb86522edada865f"
-    },
-    {
-      "file": "toolbar-gear.png",
-      "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\4_asset.toolbar.setBtnAsset.png",
-      "sha256": "990b3259c1e158fcf7f6c143024ed76cc082bbf6b26834a2ca02f47e7ee93799"
-    },
-    {
-      "file": "toolbar-mail.png",
-      "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\6_asset.toolbar.emailBtnAsset.png",
-      "sha256": "0becca9dadb7e90f3ab0ebc37c11bac9cab73c5dde79b298cc7ada4dcb05e8a7"
-    },
-    {
-      "file": "toolbar-sound-on.png",
-      "source": "D:\\hth-asset-library\\assets\\extracted\\littlegame-36011347e95b0e14\\images\\2_asset.littleGame.SoundOn.png",
-      "sha256": "70320d31445d2d547fc796abe383a90644a6337b67e185c7cfdcbecd3101aa04"
-    },
-    {
-      "file": "toolbar-sound-off.png",
-      "source": "D:\\hth-asset-library\\assets\\extracted\\littlegame-36011347e95b0e14\\images\\3_asset.littleGame.SoundOff.png",
-      "sha256": "a95f9d034af2b4dbddd569dc7a20c3b2f525e3c20c4ad4efc71c6de8ef414bd8"
-    },
-    {
       "file": "tab-trangbi.png",
       "source": "D:\\hth-asset-library\\assets\\extracted\\bagAndInfo-82fd5303c6746e30\\images\\49_bagAndInfo.bag.equipTabAsset2.png",
       "sha256": "f3066a668cb45fff3da7854249acd15d8ec0628b3fd3c871dbec99e8e80e9991"
@@ -315,11 +280,6 @@
       "file": "cart-row.png",
       "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\76_asset.shop.CartItemBg.png",
       "sha256": "b30a04b8fdd97b322a2d8b4ed2d7cffe815f3349edd8773bd7511ddfcdda31d9"
-    },
-    {
-      "file": "shop-card-money.png",
-      "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\61_asset.shop.GoodItemBgMoney.png",
-      "sha256": "eddcc19647dcf88b348bd6962a623f6aafecf3986fa92ed204a85f0629adfaff"
     },
     {
       "file": "shop-card-on.png",
@@ -360,6 +320,105 @@
       "source": "D:\\gunny3-export-tmp\\toolbar\\34_asset.toolbar.mailScale.png",
       "swf": "Gunn3.0 gunny/flash/ui/vietnam/swf/toolbar.swf",
       "sha256": "a7ca267f2c5f230c4c5ec25a2ae129212269f97eb6b37f0bf9f08690c6910a7a"
+    },
+    {
+      "file": "panel-frame-cream.png (tile 0)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bank-b26e49893b000efc\\images\\20_asset.consortion.bank.§9core1§.png",
+      "sha256": "e6f8d3aa6d26d522ebcc5b533a1179d612c5ff93ac3d7c41fb57811d8b312476",
+      "size": [
+        49,
+        49
+      ]
+    },
+    {
+      "file": "panel-frame-cream.png (tile 1)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bank-b26e49893b000efc\\images\\19_asset.consortion.bank.§9core2§.png",
+      "sha256": "9f6f6bf823e2e66d5be5e03e528beaef69ca04691a5ed2b1269476ab0bfc8644",
+      "size": [
+        49,
+        49
+      ]
+    },
+    {
+      "file": "panel-frame-cream.png (tile 2)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bank-b26e49893b000efc\\images\\18_asset.consortion.bank.§9core3§.png",
+      "sha256": "0ab04e4cce62353cc8a235ec93cc91953e98a3584b3ebd3249afb80dacfab0ac",
+      "size": [
+        49,
+        49
+      ]
+    },
+    {
+      "file": "panel-frame-cream.png (tile 3)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bank-b26e49893b000efc\\images\\17_asset.consortion.bank.§9core4§.jpg",
+      "sha256": "6dcde57580724e3769514bfa2d4c4957ca7f23e5cdff573f8c0c7df5c091023d",
+      "size": [
+        49,
+        49
+      ]
+    },
+    {
+      "file": "panel-frame-cream.png (tile 4)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bank-b26e49893b000efc\\images\\16_asset.consortion.bank.§9core5§.png",
+      "sha256": "15f0988adcc39ac036cbba8ee24653bfbee43046081a2f908cab79ba3fb04e9c",
+      "size": [
+        49,
+        49
+      ]
+    },
+    {
+      "file": "panel-frame-cream.png (tile 5)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bank-b26e49893b000efc\\images\\15_asset.consortion.bank.§9core6§.png",
+      "sha256": "c65b306146648f02ec501e693d5ea4c6811d4c1aa116bef2e9c73e21a31fcad6",
+      "size": [
+        49,
+        49
+      ]
+    },
+    {
+      "file": "panel-frame-cream.png (tile 6)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bank-b26e49893b000efc\\images\\14_asset.consortion.bank.§9core7§.png",
+      "sha256": "751157c3a95620e0c16a1a1a59aed4d4fc359b7d442511d46dbb4b0dd920b7f0",
+      "size": [
+        49,
+        49
+      ]
+    },
+    {
+      "file": "panel-frame-cream.png (tile 7)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bank-b26e49893b000efc\\images\\13_asset.consortion.bank.§9core8§.jpg",
+      "sha256": "11a32c361cdd1daea0f1423ea229ea2384fb1bbdb11b885ba857b96bf2133faa",
+      "size": [
+        49,
+        49
+      ]
+    },
+    {
+      "file": "panel-frame-cream.png (tile 8)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bank-b26e49893b000efc\\images\\12_asset.consortion.bank.§9core9§.png",
+      "sha256": "b9d7eb1e75b524ddeca25f127c75a74a3455b6afd08c7121e7878a34847bea97",
+      "size": [
+        49,
+        49
+      ]
+    },
+    {
+      "file": "panel-frame-cream.png",
+      "source": "composite: 16px corners + 17px edges cut from the 9 tiles above (bank.9core1..9), 49x49",
+      "sha256": "d3ccb79a5bbbee12603ae044c2e46e302abb37261e5c015efdfd91eb236bc680",
+      "size": [
+        49,
+        49
+      ]
+    },
+    {
+      "file": "shop-card-warm.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\61_asset.shop.GoodItemBgMoney.png (derived: tông cyan xoay sang cam, bản gốc shop-card-money không còn dùng)",
+      "sha256": "7af728ef1c47bbd4c5ff687970e88395d7334e35a3907870d23ef17bce33180d",
+      "size": [
+        234,
+        90
+      ]
     }
   ]
 }
