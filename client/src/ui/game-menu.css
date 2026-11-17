@@ -1,17 +1,16 @@
-/* Thanh menu góc phải theo kiểu game thùng đồ (tông navy-vàng của HUD): dải navy mờ viền chỉ vàng, icon minh hoạ nổi khối đứng tự do
-   (game-menu-icons.js), nhô lên khỏi mép trên của dải, đổ bóng xuống dải; nhãn chữ trắng viền đen dưới icon.
-   Di chuột thì icon phóng to, sáng lên, toả quầng vàng; bấm thì nhún xuống. "Chơi gì?" to hơn và luôn toả sáng.
+/* Thanh menu góc phải dựng lại theo dải menu Gunny92: nền xanh tím đậm, viền xanh sáng phát quầng,
+   nút icon tròn thật chép từ module ToolBar (toolbar-*.png) nổi trên dải; nhãn chữ trắng viền đen dưới icon.
    Ghi đè lớp "Mực tàu" trong style.css nên mọi selector bắt đầu bằng #hud #menu cho chắc thắng. */
 #hud #menu {
   --outline: 1px 1px 0 #060b24, -1px -1px 0 #060b24, 1px -1px 0 #060b24, -1px 1px 0 #060b24, 0 2px 3px rgba(0, 0, 0, .7);
-  align-items: flex-end; gap: 2px; margin-top: 10px; padding: 0 8px 3px; border: 0; border-radius: 14px 14px 12px 12px;
-  background: linear-gradient(180deg, rgba(30, 48, 130, .55) 0%, rgba(12, 20, 64, .86) 45%, rgba(6, 10, 36, .93) 100%);
-  box-shadow: inset 0 1px 0 rgba(160, 200, 255, .35), inset 0 0 0 1px rgba(148, 196, 240, .25), 0 6px 16px rgba(2, 6, 24, .5);
+  align-items: flex-end; gap: 2px; margin-top: 10px; padding: 0 8px 3px; border: 0; border-radius: 9px;
+  background: linear-gradient(180deg, rgba(52, 74, 178, .92) 0%, rgba(28, 38, 118, .94) 48%, rgba(12, 18, 62, .96) 100%);
+  box-shadow: inset 0 1px 0 rgba(150, 200, 255, .55), inset 0 0 0 1px rgba(80, 150, 240, .45), 0 0 0 2px rgba(47, 127, 214, .8), 0 0 16px rgba(60, 150, 240, .5), 0 6px 16px rgba(2, 6, 24, .5);
 }
 #hud #menu::before { display: none; }
 #hud #menu::after {
   left: 10px; right: 10px; top: 0; bottom: auto; height: 2px;
-  background: linear-gradient(90deg, transparent, #c98a2c 12%, #ffe9a8 50%, #c98a2c 88%, transparent); opacity: .9;
+  background: linear-gradient(90deg, transparent, rgba(90, 170, 250, .2) 8%, #7fc4ff 50%, rgba(90, 170, 250, .2) 92%, transparent); opacity: .95;
 }
 
 #hud #menu .icon-btn {
@@ -19,13 +18,14 @@
   border: 0; border-radius: 10px; background: none; color: #fff; filter: none;
 }
 #hud #menu .icon-btn:hover, #hud #menu .icon-btn[aria-expanded="true"] { background: none; color: #fff; }
-/* Icon nhô lên khỏi mép trên của dải. */
+/* Icon nhô lên khỏi mép trên của dải; ảnh tròn ToolBar lấp đầy ô như bản gốc. */
 #hud #menu .game-icon {
   display: block; width: 46px; height: 46px; margin-top: -14px;
   filter: drop-shadow(0 3px 1.5px rgba(0, 0, 0, .65)) drop-shadow(0 0 1px rgba(0, 0, 0, .8));
   transform-origin: 50% 85%; transition: transform .12s ease-out, filter .15s;
 }
 #hud #menu .game-icon svg { display: block; width: 100%; height: 100%; overflow: visible; }
+#hud #menu .game-icon img { display: block; width: 100%; height: 100%; object-fit: contain; border-radius: 10px; }
 #hud #menu .icon-btn:hover .game-icon, #hud #menu .icon-btn:focus-visible .game-icon {
   transform: translateY(-3px) scale(1.14);
   filter: brightness(1.12) drop-shadow(0 4px 2px rgba(0, 0, 0, .6)) drop-shadow(0 0 7px rgba(255, 214, 90, .9));
