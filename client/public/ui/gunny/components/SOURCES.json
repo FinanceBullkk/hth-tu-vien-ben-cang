@@ -240,6 +240,21 @@
       "file": "bar-beige.png",
       "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\138_asset.core.hideBgAsset.png",
       "sha256": "26346d95a34ffee3088768c66afefabe2ac42ba1570fa94d6185dcedd3696edb"
+    },
+    {
+      "file": "icon-bg.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\135_asset.IM.iconBg.png",
+      "sha256": "9afa135b271ddb55476c1cf66661369c9f60ef0b215bf7ef7af1ed10d8b21825"
+    },
+    {
+      "file": "chat-log.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\chat-8ccc7da2800245e1\\images\\64_asset.chat.OutputBg_01.png",
+      "sha256": "865f330bd34519ecd20d9fa1e89d222fab555423c35557efac714a8a1bf13cdc"
+    },
+    {
+      "file": "chat-input.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\chat-8ccc7da2800245e1\\images\\48_asset.chat.InputBg.png",
+      "sha256": "d7d0c853bd5799cff68bd3161d41515efe7e7b554d5875356046fdb3648e3e4c"
     }
   ]
 }
