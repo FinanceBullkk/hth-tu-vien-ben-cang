@@ -14,7 +14,7 @@
 
 /* Thanh lực: kim chạy qua lại, vùng Khá màu đồng, vùng Chuẩn vàng sáng ở đầu thanh; dưới là vạch máu của tảng đá. */
 .stone-meter { position: relative; flex: 1; display: grid; gap: 5px; min-width: 0; }
-.stone-power { position: relative; height: 16px; border-radius: 8px; background: linear-gradient(90deg, #131c56, #1b2c7e); border: 1px solid rgba(255, 226, 160, .5); overflow: hidden; }
+.stone-power { position: relative; height: 16px; border-radius: 8px; background: linear-gradient(90deg, #131c56, #232b44); border: 1px solid rgba(255, 226, 160, .5); overflow: hidden; }
 .stone-power.idle { opacity: .45; }
 .stone-zone { position: absolute; top: 0; bottom: 0; }
 .stone-zone.good { background: rgba(214, 140, 60, .55); }
@@ -33,7 +33,7 @@
 .stone-act {
   flex: none; display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 128px; min-height: 44px; padding: 6px 14px;
   border: 2px solid #e6c787; border-radius: 999px; cursor: pointer; touch-action: manipulation;
-  background: radial-gradient(circle at 50% 30%, #5a7ab8, #2b4aae 60%, #131c56); color: #fff6dc;
+  background: radial-gradient(circle at 50% 30%, #5a7ab8, #6e4213 60%, #131c56); color: #fff6dc;
   box-shadow: 0 4px 0 #060b24, 0 6px 14px rgba(2, 6, 24, .45); text-shadow: 0 1px 2px rgba(0, 0, 0, .6);
   transition: transform .08s, box-shadow .08s, filter .15s;
 }

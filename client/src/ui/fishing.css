@@ -29,7 +29,7 @@
 .fish-orders li.done span { text-decoration: line-through; text-decoration-thickness: 1px; }
 
 /* Sạp đồ câu: thẻ nhỏ góc phải, chữ không bóng cho dễ đọc */
-.fish-shop { position: absolute; top: calc(52px + var(--safe-t, 0px)); right: 12px; width: min(320px, calc(100vw - 32px)); padding: 12px 14px; border: 1px solid rgba(148, 196, 240, .45); border-radius: 10px; background: rgba(8, 14, 44, .92); text-shadow: none; animation: fishFade .2s ease-out; cursor: default; }
+.fish-shop { position: absolute; top: calc(52px + var(--safe-t, 0px)); right: 12px; width: min(320px, calc(100vw - 32px)); padding: 12px 14px; border: 1px solid rgba(216, 164, 78, .45); border-radius: 10px; background: rgba(8, 14, 44, .92); text-shadow: none; animation: fishFade .2s ease-out; cursor: default; }
 .fish-shop-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
 .fish-shop-head b { font-size: 17px; font-weight: 700; color: #ffd98a; }
 .fish-shop-close { padding: 0 6px; border: 0; background: none; color: inherit; font-size: 22px; line-height: 1; cursor: pointer; opacity: .7; }
@@ -132,7 +132,7 @@
 
 /* Sổ cá trong Sổ an */
 .fish-book { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px 14px; margin: 8px 0 0; padding: 0; list-style: none; }
-.fish-book li { display: grid; grid-template-columns: 1fr auto; column-gap: 8px; padding: 7px 0; border-bottom: 1px solid rgba(148, 196, 240, .25); }
+.fish-book li { display: grid; grid-template-columns: 1fr auto; column-gap: 8px; padding: 7px 0; border-bottom: 1px solid rgba(216, 164, 78, .25); }
 .fish-book b { font-weight: 600; color: var(--muted); overflow-wrap: anywhere; }
 .fish-book li.caught b { color: #e6eeff; }
 .fish-book-stars { color: #ffb23d; font-size: 12px; letter-spacing: 1px; }
