@@ -257,26 +257,6 @@
       "sha256": "d7d0c853bd5799cff68bd3161d41515efe7e7b554d5875356046fdb3648e3e4c"
     },
     {
-      "file": "toolbar-bag.png",
-      "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\7_asset.toolbar.bagBtnAsset.png",
-      "sha256": "15d75ffd5b4fa502416eb4c582e4a4f09f652c71ef3049fb1de4e78f1d712ab6"
-    },
-    {
-      "file": "toolbar-scroll.png",
-      "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\13_asset.toolbar.taskBtnAsset.png",
-      "sha256": "2861bf3c8dfa4cde8912b5cddf62918a00f5067fbc543770cb86522edada865f"
-    },
-    {
-      "file": "toolbar-gear.png",
-      "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\4_asset.toolbar.setBtnAsset.png",
-      "sha256": "990b3259c1e158fcf7f6c143024ed76cc082bbf6b26834a2ca02f47e7ee93799"
-    },
-    {
-      "file": "toolbar-mail.png",
-      "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\6_asset.toolbar.emailBtnAsset.png",
-      "sha256": "0becca9dadb7e90f3ab0ebc37c11bac9cab73c5dde79b298cc7ada4dcb05e8a7"
-    },
-    {
       "file": "tab-trangbi.png",
       "source": "D:\\hth-asset-library\\assets\\extracted\\bagAndInfo-82fd5303c6746e30\\images\\49_bagAndInfo.bag.equipTabAsset2.png",
       "sha256": "f3066a668cb45fff3da7854249acd15d8ec0628b3fd3c871dbec99e8e80e9991"
@@ -310,6 +290,36 @@
       "file": "shop-card-gift.png",
       "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\62_asset.shop.GoodItemBgGift.png",
       "sha256": "5caaadb1ee53bb64430cbb22b747cc6da61ee0ccfccbffa7738140dbadb99086"
+    },
+    {
+      "file": "g3-toolbar-bar.png",
+      "source": "D:\\gunny3-export-tmp\\toolbar\\45_asset.toolbar.toolBarBg.png",
+      "swf": "Gunn3.0 gunny/flash/ui/vietnam/swf/toolbar.swf",
+      "sha256": "3705dd36b36e7dc558c5b2740ef1435c0bf2d0c290c8ee3297414f60ef85ba42"
+    },
+    {
+      "file": "g3-bag.png",
+      "source": "D:\\gunny3-export-tmp\\toolbar\\48_asset.toolbar.bagScale.png",
+      "swf": "Gunn3.0 gunny/flash/ui/vietnam/swf/toolbar.swf",
+      "sha256": "08d5ddcdbfefa88c3a6a2d441035c3b250453b865d936ad9d5e55601d017c73f"
+    },
+    {
+      "file": "g3-shop.png",
+      "source": "D:\\gunny3-export-tmp\\toolbar\\13_asset.toolbar.shopScale.png",
+      "swf": "Gunn3.0 gunny/flash/ui/vietnam/swf/toolbar.swf",
+      "sha256": "7be5d26f090572701bdce39538060c21eb3a4540ecb649564c7f15b14f7ae9fc"
+    },
+    {
+      "file": "g3-book.png",
+      "source": "D:\\gunny3-export-tmp\\toolbar\\36_asset.toolbar.jobScale.png",
+      "swf": "Gunn3.0 gunny/flash/ui/vietnam/swf/toolbar.swf",
+      "sha256": "d94be234b2540bbc0406de41d3f2a7d6b900ce55d3df2954ceacc1cbfdff0cb0"
+    },
+    {
+      "file": "g3-mail.png",
+      "source": "D:\\gunny3-export-tmp\\toolbar\\34_asset.toolbar.mailScale.png",
+      "swf": "Gunn3.0 gunny/flash/ui/vietnam/swf/toolbar.swf",
+      "sha256": "a7ca267f2c5f230c4c5ec25a2ae129212269f97eb6b37f0bf9f08690c6910a7a"
     },
     {
       "file": "panel-frame-cream.png (tile 0)",
@@ -408,24 +418,6 @@
       "size": [
         234,
         90
-      ]
-    },
-    {
-      "file": "toolbar-turnto.png",
-      "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\3_asset.toolbar.turntoBtnAsset.png",
-      "sha256": "a74c58fdcd781629da9b27896ebd2fae9c43b376144f34d3138697d192b68c33",
-      "size": [
-        48,
-        48
-      ]
-    },
-    {
-      "file": "toolbar-people.png",
-      "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\5_asset.toolbar.imBtnAsset.png",
-      "sha256": "191dbd48348884a9a4915fac5d1f141e869fa9063bf6a0c488daab7c627c6cd9",
-      "size": [
-        48,
-        48
       ]
     }
   ]
