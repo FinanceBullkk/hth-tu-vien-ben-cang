@@ -18,7 +18,7 @@
 .trade-ready[hidden] { display: none; }
 .trade-their { cursor: default; }
 .trade-their:hover { transform: none; box-shadow: none; border-color: rgba(216, 164, 78, .45); }
-.trade-teu { display: flex; align-items: center; gap: 10px; margin-top: 10px; font: 600 13px var(--sans); color: #f0e6cc; }
+.trade-teu { display: flex; align-items: center; gap: 10px; margin-top: 10px; font: 600 13px var(--sans); color: var(--ink); }
 .trade-teu small { color: var(--muted); font-weight: 500; }
 .trade-teu-input {
   width: 92px; padding: 6px 8px; border: 2px solid #8a5a12; border-radius: 8px;

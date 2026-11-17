@@ -24,42 +24,42 @@
 @keyframes walletFloat { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-16px); } }
 
 /* ----- Bảng neo cạnh phải: nhân vật thử đồ vẫn hiện bên trái. Panel cao toàn màn nên dùng nền navy trơn, không khung bitmap. ----- */
-.modal.modal-dock { justify-content: flex-end; align-items: stretch; padding: 0; background: linear-gradient(90deg, transparent 40%, rgba(3, 7, 26, .35)); }
+.modal.modal-dock { justify-content: flex-end; align-items: stretch; padding: 0; background: linear-gradient(90deg, transparent 40%, rgba(24, 12, 2, .3)); }
 .modal-card.shopx {
-  width: min(430px, 100%); max-height: none; height: 100dvh; border-radius: 0; border-width: 0 0 0 1px;
-  background: linear-gradient(90deg, #171d2e, #0d1747);
-  border-left: 2px solid rgba(216, 164, 78, .5);
+  width: min(430px, 100%); max-height: none; height: 100dvh; border-radius: 0; border-width: 0 0 0 16px;
+  background: linear-gradient(90deg, var(--cream-1), var(--cream-2));
+  border-image: url("/ui/gunny/components/panel-frame-cream.png") 16 / 0 0 0 16px stretch;
   padding: 0;
   animation: shopIn .2s ease-out;
 }
 @keyframes shopIn { from { transform: translateX(24px); opacity: 0; } }
 .shopx .modal-head { padding: calc(14px + var(--safe-t)) 18px 8px; border-bottom: 2px solid transparent;
-  border-image: linear-gradient(90deg, rgba(255, 207, 77, .95), rgba(255, 207, 77, .2) 70%, transparent) 1; }
-.shopx .modal-head h2::after { content: '金寶'; margin-left: 10px; font: 600 12px var(--sans); color: rgba(255, 207, 77, .55); letter-spacing: .3em; }
+  border-image: linear-gradient(90deg, rgba(184, 110, 12, .9), rgba(184, 110, 12, .2) 70%, transparent) 1; }
+.shopx .modal-head h2::after { content: '金寶'; margin-left: 10px; font: 600 12px var(--sans); color: rgba(138, 90, 18, .6); letter-spacing: .3em; }
 .shopx .modal-body { display: flex; flex-direction: column; flex: 1; min-height: 0; padding: 0; overflow: hidden; }
 .shopx-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 18px 6px; }
 .shopx-head .chips { display: flex; gap: 6px; }
 .shopx-teu { font: 600 13px var(--sans); color: var(--muted); white-space: nowrap; }
 .shopx-teu b { font: 800 20px var(--serif); color: var(--gold); }
-.shopx-list { flex: 1; min-height: 0; overflow-y: auto; padding: 0 18px 12px; overscroll-behavior: contain; scrollbar-color: rgba(216, 164, 78, .5) transparent; scrollbar-width: thin; }
-.shopx-list h3 { display: flex; align-items: baseline; gap: 8px; margin: 16px 0 8px; font: 800 16px var(--serif); color: #fff; text-shadow: 0 1px 0 #14245e; }
+.shopx-list { flex: 1; min-height: 0; overflow-y: auto; padding: 0 18px 12px; overscroll-behavior: contain; scrollbar-color: rgba(138, 90, 18, .55) transparent; scrollbar-width: thin; }
+.shopx-list h3 { display: flex; align-items: baseline; gap: 8px; margin: 16px 0 8px; font: 800 17px var(--serif); color: var(--title-ink); text-shadow: 0 1px 0 #fffbe8; }
 .shopx-list h3::before { content: '❖'; color: var(--gold); font-size: 11px; }
-.shopx-list h3::after { content: attr(data-hanzi); margin-left: auto; padding: 2px 5px; border: 1px solid rgba(216, 164, 78, .4); border-radius: 6px; font: 600 13px/1 var(--sans); color: rgba(159, 180, 228, .6); transform: rotate(5deg); }
+.shopx-list h3::after { content: attr(data-hanzi); margin-left: auto; padding: 2px 5px; border: 1px solid rgba(138, 90, 18, .45); border-radius: 6px; font: 600 13px/1 var(--sans); color: rgba(138, 90, 18, .7); transform: rotate(5deg); }
 .shopx-list .muted.small { margin: 10px 0 0; }
 
 .shopx-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 /* Thẻ hàng dùng ảnh thật 3 trạng thái (components/shop-card-*.png — GoodItemBg Money/Selected/Gift):
-   thường = thanh cyan, đang chọn = thanh vàng, đã có = thanh xanh lá; VIP giữ mood sơn mài riêng. */
+   thường = thanh cam nhạt (shop-card-warm: bản xoay tông của Money), đang chọn = thanh vàng, đã có = thanh xanh lá; VIP giữ mood sơn mài riêng. */
 .shopx-card {
   display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 1px 10px;
   padding: 9px 10px; text-align: left;
   border: 0; border-radius: 6px;
-  background: url("/ui/gunny/components/shop-card-money.png") center / 100% 100% no-repeat, linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .04));
+  background: url("/ui/gunny/components/shop-card-warm.png") center / 100% 100% no-repeat, linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .04));
   transition: border-color .15s, transform .12s, box-shadow .15s;
 }
-.shopx-card:hover, .shopx-card:focus-visible { border-color: #d98a2e; transform: translateY(-1px); box-shadow: 0 6px 14px rgba(2, 6, 24, .3); }
+.shopx-card:hover, .shopx-card:focus-visible { border-color: #d98a2e; transform: translateY(-1px); box-shadow: 0 6px 14px rgba(20, 13, 6, .3); }
 .shopx-card:focus-visible { outline: 3px solid var(--gold); outline-offset: 1px; }
-.shopx-card.on { background-image: url("/ui/gunny/components/shop-card-on.png"), linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .04)); box-shadow: 0 2px 8px rgba(2, 6, 24, .25); }
+.shopx-card.on { background-image: url("/ui/gunny/components/shop-card-on.png"), linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .04)); box-shadow: 0 2px 8px rgba(20, 13, 6, .25); }
 .shopx-card.owned { background-image: url("/ui/gunny/components/shop-card-gift.png"), linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .04)); border-color: #1d7a5e; }
 .shopx-card.owned.on { border-color: #1d7a5e; box-shadow: 0 0 0 1.5px rgba(53, 182, 201, .6); }
 .shopx-card.poor:not(.on) { opacity: .72; }
@@ -89,7 +89,7 @@
   border: 1px solid var(--vip-line); background: var(--vip-bg); color: #fbefd2;
   box-shadow: inset 0 0 0 1px rgba(255, 214, 120, .22), 0 4px 14px rgba(40, 20, 0, .3);
 }
-.shopx-card.vip.vip-sea { --vip-bg: radial-gradient(120% 150% at 0% 0%, #0f5f78 0%, #0a2834 55%, #05121a 100%); --vip-line: #7fd6e4; --vip-ink: #c9f6ff; }
+.shopx-card.vip.vip-sea { --vip-bg: radial-gradient(120% 150% at 0% 0%, #0f5f78 0%, #301f0e 55%, #181007 100%); --vip-line: #7fd6e4; --vip-ink: #c9f6ff; }
 .shopx-card.vip::before {
   content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background: linear-gradient(110deg, transparent 38%, rgba(255, 232, 160, .2) 50%, transparent 62%) 150% 0 / 250% 100% no-repeat;
@@ -128,20 +128,20 @@
 
 .shopx-foot {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  padding: 10px 18px calc(12px + var(--safe-b)); border-top: 1px solid rgba(216, 164, 78, .3);
-  background: linear-gradient(180deg, rgba(255, 255, 255, .04), transparent);
+  padding: 10px 18px calc(12px + var(--safe-b)); border-top: 1px solid rgba(138, 90, 18, .35);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .35), transparent);
 }
 .shopx-status { margin: 0; font: italic 600 13.5px var(--serif); color: var(--muted); }
 .shopx-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
 /* ----- Món khoá ở màn chào ----- */
-.chip.locked { color: #8ea6d8; border-style: dashed; background: rgba(255, 255, 255, .04); }
+.chip.locked { color: #8a7a5a; border-style: dashed; background: rgba(255, 255, 255, .04); }
 .chip.locked .chip-price { margin-left: 4px; font-size: 11px; color: var(--muted); }
 
 @media (max-width: 560px) {
   /* Điện thoại: bảng trượt từ đáy lên, nửa trên vẫn thấy nhân vật. */
-  .modal.modal-dock { align-items: flex-end; justify-content: stretch; background: linear-gradient(180deg, transparent 30%, rgba(3, 7, 26, .35)); }
-  .modal-card.shopx { width: 100%; height: 58dvh; border-width: 1px 0 0; border-radius: 10px 10px 0 0; animation-name: shopUp; }
+  .modal.modal-dock { align-items: flex-end; justify-content: stretch; background: linear-gradient(180deg, transparent 30%, rgba(24, 12, 2, .3)); }
+  .modal-card.shopx { width: 100%; height: 58dvh; border-width: 16px 0 0; border-image-width: 16px 0 0; border-radius: 10px 10px 0 0; animation-name: shopUp; }
   .shopx .modal-head { padding-top: 12px; }
   @keyframes shopUp { from { transform: translateY(24px); opacity: 0; } }
 }

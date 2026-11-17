@@ -25,8 +25,8 @@
   box-sizing: border-box;
   border: 1px solid rgba(148, 196, 240, .6);
   border-radius: 8px 8px 0 0;
-  background: linear-gradient(180deg, #1b2c7e 0%, #101c54 55%, #0a1236 100%);
-  box-shadow: 0 0 0 1px #04081e, 0 10px 26px rgba(2, 6, 24, .65), inset 0 1px 0 rgba(160, 200, 255, .25);
+  background: linear-gradient(180deg, #744d25 0%, #4d3317 55%, #32200e 100%);
+  box-shadow: 0 0 0 1px #1a1108, 0 10px 26px rgba(20, 13, 6, .65), inset 0 1px 0 rgba(255, 214, 130, .3);
   pointer-events: auto;
 }
 .pk-skills::before, .pk-skills::after {
@@ -36,7 +36,7 @@
   width: 9px;
   height: 9px;
   border: 1px solid rgba(255, 207, 77, .8);
-  background: #101c54;
+  background: #4d3317;
   transform: translateY(-50%) rotate(45deg);
   pointer-events: none;
 }
@@ -53,8 +53,8 @@
   padding: 0;
   border: 2px solid #4f77b8;
   border-radius: 6px;
-  background: #0a1236;
-  box-shadow: inset 0 0 0 1px #04081e, 0 0 0 1px #04081e;
+  background: #32200e;
+  box-shadow: inset 0 0 0 1px #1a1108, 0 0 0 1px #1a1108;
   cursor: pointer;
   overflow: hidden;
   transition: border-color .12s, box-shadow .12s, transform .08s;
@@ -69,7 +69,7 @@
   pointer-events: none;
 }
 .vlcm-slot-btn:hover:not(:disabled),
-.vlcm-slot-btn:focus-visible { border-color: #ffcf4d; box-shadow: inset 0 0 0 1px #04081e, 0 0 0 1px #04081e, 0 0 12px rgba(255, 207, 77, .6); outline: none; }
+.vlcm-slot-btn:focus-visible { border-color: #ffcf4d; box-shadow: inset 0 0 0 1px #1a1108, 0 0 0 1px #1a1108, 0 0 12px rgba(255, 207, 77, .6); outline: none; }
 .vlcm-slot-btn:active:not(:disabled),
 .vlcm-slot-btn.key-pressed { transform: scale(.93); }
 .vlcm-slot-btn:disabled { cursor: not-allowed; }
@@ -77,7 +77,7 @@
 .vlcm-slot-btn { --kit-color: #9fc8ff; }
 .vlcm-slot-btn:not(:disabled) {
   border-color: color-mix(in srgb, var(--kit-color) 82%, #4f77b8);
-  box-shadow: inset 0 0 0 1px #04081e, 0 0 0 1px #04081e,
+  box-shadow: inset 0 0 0 1px #1a1108, 0 0 0 1px #1a1108,
     0 0 10px color-mix(in srgb, var(--kit-color) 55%, transparent),
     inset 0 0 7px color-mix(in srgb, var(--kit-color) 28%, transparent);
 }
@@ -97,7 +97,7 @@
   padding: 0 3px;
   border: 1px solid rgba(255, 207, 77, .65);
   border-radius: 3px;
-  background: rgba(5, 9, 32, .88);
+  background: rgba(29, 19, 8, .88);
   color: #ffd98a;
   font: 700 10px/13px var(--sans);
   text-align: center;
@@ -112,7 +112,7 @@
   z-index: 2;
   display: grid;
   place-items: center;
-  background: conic-gradient(transparent calc((1 - var(--cd, 1)) * 360deg), rgba(3, 7, 26, .8) 0);
+  background: conic-gradient(transparent calc((1 - var(--cd, 1)) * 360deg), rgba(22, 15, 7, .8) 0);
   color: #fff;
   pointer-events: none;
 }
@@ -132,9 +132,9 @@
   padding: 10px 12px;
   border: 1px solid rgba(148, 196, 240, .55);
   border-radius: 10px;
-  background: rgba(12, 20, 64, .94);
+  background: rgba(59, 38, 17, .94);
   color: #dbe8ff;
-  box-shadow: 0 8px 24px rgba(2, 6, 24, .8);
+  box-shadow: 0 8px 24px rgba(20, 13, 6, .8);
   font: 12px/1.4 system-ui, sans-serif;
   pointer-events: none;
 }
@@ -157,8 +157,8 @@
   border: 1px solid rgba(148, 196, 240, .6);
   border-top-color: rgba(148, 196, 240, .2);
   border-radius: 0 0 8px 8px;
-  background: #0a1236;
-  box-shadow: 0 0 0 1px #04081e, 0 8px 18px rgba(2, 6, 24, .55);
+  background: #32200e;
+  box-shadow: 0 0 0 1px #1a1108, 0 8px 18px rgba(20, 13, 6, .55);
   color: #e6eeff;
   pointer-events: none;
   user-select: none;
@@ -193,11 +193,11 @@
 .pk-bar-wrap {
   position: relative;
   height: 10px;
-  background: #060b24;
+  background: #211509;
   border: 1px solid rgba(148, 196, 240, .45);
   border-radius: 3px;
   overflow: hidden;
-  box-shadow: inset 0 2px 5px rgba(2, 6, 24, .9);
+  box-shadow: inset 0 2px 5px rgba(20, 13, 6, .9);
 }
 
 .pk-bar-wrap::after {
@@ -254,7 +254,7 @@
   margin: 0;
   padding: 1px 6px;
   border-radius: 4px;
-  background: rgba(10, 17, 56, .9);
+  background: rgba(51, 33, 15, .9);
   font: 700 11px/1.3 var(--sans);
   letter-spacing: .05em;
   color: #ffd98a;
@@ -283,10 +283,10 @@
   left: 50%;
   transform: translate(-50%, -50%) scale(0.7);
   padding: 14px 38px;
-  background: linear-gradient(180deg, rgba(19, 31, 94, 0.96) 0%, rgba(8, 14, 44, 0.98) 100%);
+  background: linear-gradient(180deg, rgba(87, 57, 27, 0.96) 0%, rgba(40, 26, 12, 0.98) 100%);
   border: 2px solid #ffcf4d;
   border-radius: 12px;
-  box-shadow: 0 18px 50px rgba(2, 6, 24, 0.95), 0 0 30px rgba(255, 207, 77, 0.45);
+  box-shadow: 0 18px 50px rgba(20, 13, 6, 0.95), 0 0 30px rgba(255, 207, 77, 0.45);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Georgia", serif;
   font-size: 24px;
   font-weight: 800;

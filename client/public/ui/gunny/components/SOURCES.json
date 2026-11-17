@@ -262,11 +262,6 @@
       "sha256": "15d75ffd5b4fa502416eb4c582e4a4f09f652c71ef3049fb1de4e78f1d712ab6"
     },
     {
-      "file": "toolbar-shop.png",
-      "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\8_asset.toolbar.shopBtnAsset.png",
-      "sha256": "3c3df67b8348854c7664f0bd265b4de3e7482719a986e55177fee4bafb4e9e59"
-    },
-    {
       "file": "toolbar-scroll.png",
       "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\13_asset.toolbar.taskBtnAsset.png",
       "sha256": "2861bf3c8dfa4cde8912b5cddf62918a00f5067fbc543770cb86522edada865f"
@@ -280,16 +275,6 @@
       "file": "toolbar-mail.png",
       "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\6_asset.toolbar.emailBtnAsset.png",
       "sha256": "0becca9dadb7e90f3ab0ebc37c11bac9cab73c5dde79b298cc7ada4dcb05e8a7"
-    },
-    {
-      "file": "toolbar-sound-on.png",
-      "source": "D:\\hth-asset-library\\assets\\extracted\\littlegame-36011347e95b0e14\\images\\2_asset.littleGame.SoundOn.png",
-      "sha256": "70320d31445d2d547fc796abe383a90644a6337b67e185c7cfdcbecd3101aa04"
-    },
-    {
-      "file": "toolbar-sound-off.png",
-      "source": "D:\\hth-asset-library\\assets\\extracted\\littlegame-36011347e95b0e14\\images\\3_asset.littleGame.SoundOff.png",
-      "sha256": "a95f9d034af2b4dbddd569dc7a20c3b2f525e3c20c4ad4efc71c6de8ef414bd8"
     },
     {
       "file": "tab-trangbi.png",
@@ -317,11 +302,6 @@
       "sha256": "b30a04b8fdd97b322a2d8b4ed2d7cffe815f3349edd8773bd7511ddfcdda31d9"
     },
     {
-      "file": "shop-card-money.png",
-      "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\61_asset.shop.GoodItemBgMoney.png",
-      "sha256": "eddcc19647dcf88b348bd6962a623f6aafecf3986fa92ed204a85f0629adfaff"
-    },
-    {
       "file": "shop-card-on.png",
       "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\60_asset.shop.GoodItemBgSelected.png",
       "sha256": "d883f917db47bc93cce064d5844de43251e5e3ba1f16f4277854c2c519f0e430"
@@ -330,6 +310,123 @@
       "file": "shop-card-gift.png",
       "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\62_asset.shop.GoodItemBgGift.png",
       "sha256": "5caaadb1ee53bb64430cbb22b747cc6da61ee0ccfccbffa7738140dbadb99086"
+    },
+    {
+      "file": "panel-frame-cream.png (tile 0)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bank-b26e49893b000efc\\images\\20_asset.consortion.bank.§9core1§.png",
+      "sha256": "e6f8d3aa6d26d522ebcc5b533a1179d612c5ff93ac3d7c41fb57811d8b312476",
+      "size": [
+        49,
+        49
+      ]
+    },
+    {
+      "file": "panel-frame-cream.png (tile 1)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bank-b26e49893b000efc\\images\\19_asset.consortion.bank.§9core2§.png",
+      "sha256": "9f6f6bf823e2e66d5be5e03e528beaef69ca04691a5ed2b1269476ab0bfc8644",
+      "size": [
+        49,
+        49
+      ]
+    },
+    {
+      "file": "panel-frame-cream.png (tile 2)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bank-b26e49893b000efc\\images\\18_asset.consortion.bank.§9core3§.png",
+      "sha256": "0ab04e4cce62353cc8a235ec93cc91953e98a3584b3ebd3249afb80dacfab0ac",
+      "size": [
+        49,
+        49
+      ]
+    },
+    {
+      "file": "panel-frame-cream.png (tile 3)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bank-b26e49893b000efc\\images\\17_asset.consortion.bank.§9core4§.jpg",
+      "sha256": "6dcde57580724e3769514bfa2d4c4957ca7f23e5cdff573f8c0c7df5c091023d",
+      "size": [
+        49,
+        49
+      ]
+    },
+    {
+      "file": "panel-frame-cream.png (tile 4)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bank-b26e49893b000efc\\images\\16_asset.consortion.bank.§9core5§.png",
+      "sha256": "15f0988adcc39ac036cbba8ee24653bfbee43046081a2f908cab79ba3fb04e9c",
+      "size": [
+        49,
+        49
+      ]
+    },
+    {
+      "file": "panel-frame-cream.png (tile 5)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bank-b26e49893b000efc\\images\\15_asset.consortion.bank.§9core6§.png",
+      "sha256": "c65b306146648f02ec501e693d5ea4c6811d4c1aa116bef2e9c73e21a31fcad6",
+      "size": [
+        49,
+        49
+      ]
+    },
+    {
+      "file": "panel-frame-cream.png (tile 6)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bank-b26e49893b000efc\\images\\14_asset.consortion.bank.§9core7§.png",
+      "sha256": "751157c3a95620e0c16a1a1a59aed4d4fc359b7d442511d46dbb4b0dd920b7f0",
+      "size": [
+        49,
+        49
+      ]
+    },
+    {
+      "file": "panel-frame-cream.png (tile 7)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bank-b26e49893b000efc\\images\\13_asset.consortion.bank.§9core8§.jpg",
+      "sha256": "11a32c361cdd1daea0f1423ea229ea2384fb1bbdb11b885ba857b96bf2133faa",
+      "size": [
+        49,
+        49
+      ]
+    },
+    {
+      "file": "panel-frame-cream.png (tile 8)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bank-b26e49893b000efc\\images\\12_asset.consortion.bank.§9core9§.png",
+      "sha256": "b9d7eb1e75b524ddeca25f127c75a74a3455b6afd08c7121e7878a34847bea97",
+      "size": [
+        49,
+        49
+      ]
+    },
+    {
+      "file": "panel-frame-cream.png",
+      "source": "composite: 16px corners + 17px edges cut from the 9 tiles above (bank.9core1..9), 49x49",
+      "sha256": "d3ccb79a5bbbee12603ae044c2e46e302abb37261e5c015efdfd91eb236bc680",
+      "size": [
+        49,
+        49
+      ]
+    },
+    {
+      "file": "shop-card-warm.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\61_asset.shop.GoodItemBgMoney.png (derived: tông cyan xoay sang cam, bản gốc shop-card-money không còn dùng)",
+      "sha256": "7af728ef1c47bbd4c5ff687970e88395d7334e35a3907870d23ef17bce33180d",
+      "size": [
+        234,
+        90
+      ]
+    },
+    {
+      "file": "toolbar-turnto.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\3_asset.toolbar.turntoBtnAsset.png",
+      "sha256": "a74c58fdcd781629da9b27896ebd2fae9c43b376144f34d3138697d192b68c33",
+      "size": [
+        48,
+        48
+      ]
+    },
+    {
+      "file": "toolbar-people.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\5_asset.toolbar.imBtnAsset.png",
+      "sha256": "191dbd48348884a9a4915fac5d1f141e869fa9063bf6a0c488daab7c627c6cd9",
+      "size": [
+        48,
+        48
+      ]
     }
   ]
 }

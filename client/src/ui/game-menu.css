@@ -2,10 +2,10 @@
    nút icon tròn thật chép từ module ToolBar (toolbar-*.png) nổi trên dải; nhãn chữ trắng viền đen dưới icon.
    Ghi đè lớp "Mực tàu" trong style.css nên mọi selector bắt đầu bằng #hud #menu cho chắc thắng. */
 #hud #menu {
-  --outline: 1px 1px 0 #060b24, -1px -1px 0 #060b24, 1px -1px 0 #060b24, -1px 1px 0 #060b24, 0 2px 3px rgba(0, 0, 0, .7);
+  --outline: 1px 1px 0 #211509, -1px -1px 0 #211509, 1px -1px 0 #211509, -1px 1px 0 #211509, 0 2px 3px rgba(0, 0, 0, .7);
   align-items: flex-end; gap: 2px; margin-top: 10px; padding: 0 8px 3px; border: 0; border-radius: 9px;
   background: linear-gradient(180deg, rgba(112, 76, 32, .92) 0%, rgba(84, 55, 23, .94) 48%, rgba(56, 36, 14, .96) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 214, 130, .5), inset 0 0 0 1px rgba(216, 164, 78, .4), 0 0 0 2px rgba(158, 108, 44, .85), 0 0 16px rgba(220, 160, 60, .35), 0 6px 16px rgba(2, 6, 24, .5);
+  box-shadow: inset 0 1px 0 rgba(255, 214, 130, .5), inset 0 0 0 1px rgba(216, 164, 78, .4), 0 0 0 2px rgba(158, 108, 44, .85), 0 0 16px rgba(220, 160, 60, .35), 0 6px 16px rgba(20, 13, 6, .5);
 }
 #hud #menu::before { display: none; }
 #hud #menu::after {
