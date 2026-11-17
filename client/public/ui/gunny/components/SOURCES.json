@@ -230,6 +230,16 @@
         32
       ],
       "format": "PNG"
+    },
+    {
+      "file": "input-field.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\196_asset.core.nameInputDropListTarget.BG.png",
+      "sha256": "6ab5dc2fc332cecfe4e395663e14a3eb66533e1161e3721f8b592143210ae90c"
+    },
+    {
+      "file": "bar-beige.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\138_asset.core.hideBgAsset.png",
+      "sha256": "26346d95a34ffee3088768c66afefabe2ac42ba1570fa94d6185dcedd3696edb"
     }
   ]
 }

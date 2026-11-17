@@ -106,10 +106,11 @@ kbd { font: inherit; }
 .btn:active { transform: translateY(1px); }
 .btn:disabled { opacity: .55; cursor: default; }
 .btn:focus-visible, .icon-btn:focus-visible, #actionBtn:focus-visible, .chip:focus-visible, .swatch:focus-visible, .place-card:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
-.btn.primary { background: linear-gradient(180deg, #5cdcf0, #23aecd 55%, #0e8aa8); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .55), inset 0 -4px 0 rgba(6, 60, 90, .3), 0 3px 10px rgba(2, 8, 40, .5); color: #fff; letter-spacing: .04em; text-shadow: 0 1px 0 #0b5c78; }
+/* Nút chính dùng mặt vàng chạm khắc thật (button-gold.png, không chữ in sẵn) — mọi nút hành động thống nhất kiểu Gunny. */
+.btn.primary { background: url("/ui/gunny/button-gold.png") center / 100% 100% no-repeat, linear-gradient(180deg, #ffd980, #f29418 60%, #e07c12); border-color: #7a3c06; box-shadow: inset 0 2px 0 rgba(255, 255, 255, .5), 0 3px 12px rgba(50, 24, 0, .45); color: #fff8ea; letter-spacing: .04em; text-shadow: 0 1px 0 #a35a10; }
 .btn.primary:hover:not(:disabled) { filter: brightness(1.1); }
 .btn.big { padding: 13px 26px; font-size: 17px; width: 100%; }
-.btn.ghost { background: rgba(19, 31, 94, .55); border-color: rgba(148, 196, 240, .5); color: #cfe2ff; text-shadow: none; }
+.btn.ghost { background: url("/ui/gunny/components/bar-beige.png") center / 100% 100% no-repeat, rgba(19, 31, 94, .55); border-color: #8a5a12; color: #5a3a10; text-shadow: none; }
 .btn.small { padding: 4px 11px; font-size: 13px; }
 .btn.heart { background: #f2f7ff; border-color: #7fa6d8; color: #12245e; text-shadow: none; }
 .muted { color: var(--muted); }
@@ -164,7 +165,8 @@ kbd { font: inherit; }
 }
 .welcome-card h1::after { content: ''; display: block; width: 132px; height: 3px; margin-top: 9px; border-radius: 2px; background: linear-gradient(90deg, var(--gold), #ffe08a 45%, rgba(255, 207, 77, 0)); position: relative; }
 .field { display: block; margin: 0 0 14px; font: 700 14.5px/1.3 var(--sans); color: #cfe2ff; letter-spacing: .02em; }
-.field input { display: block; width: 100%; margin-top: 5px; padding: 10px 12px; border: 2px solid #7fa6d8; border-radius: 10px; background: #f4f8ff; color: #12245e; }
+/* Ô nhập dùng ô kem viền vàng thật (components/input-field.png); chữ nâu đậm. */
+.field input { display: block; width: 100%; margin-top: 5px; padding: 10px 12px; border: 2px solid #8a5a12; border-radius: 8px; background: url("/ui/gunny/components/input-field.png") center / 100% 100% no-repeat, #f7ecd2; color: #3a1c06; }
 .swatches { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 6px; }
 .swatch { position: relative; aspect-ratio: 1; border: 3px solid transparent; border-radius: 50%; padding: 0; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .15); }
 .swatch.on { border-color: #fff; }
@@ -173,7 +175,7 @@ kbd { font: inherit; }
 .hat-list, .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .chip { padding: 6px 12px; border: 1px solid rgba(148, 196, 240, .45); border-radius: 9px; background: rgba(255, 255, 255, .08); color: #cfe2ff; font-size: 13.5px; transition: border-color .15s, background-color .15s; }
 .chip:hover { border-color: rgba(255, 207, 77, .8); }
-.chip.on { background: linear-gradient(180deg, #23aecd, #0e8aa8); border-color: #7fdcf0; color: #fff; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 1px 4px rgba(4, 20, 60, .4); }
+.chip.on { background: url("/ui/gunny/button-gold.png") center / 100% 100% no-repeat, linear-gradient(180deg, #ffd980, #e07c12); border-color: #7a3c06; color: #593515; text-shadow: 0 1px 0 #ffedb9; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 1px 4px rgba(4, 20, 60, .4); }
 .welcome-error, .form-error { min-height: 20px; margin: 4px 0 8px; color: #ff9a86; font-size: 13.5px; font-weight: 600; }
 .welcome-error:empty { display: none; }
 .welcome-card .field input#nameInput { margin-top: 14px; }
@@ -357,7 +359,7 @@ kbd { font: inherit; }
 
 /* Đố của sư chú */
 .riddle-stage .riddle-question { margin: 4px 0 12px; font: 600 18px/1.4 var(--serif); color: #fff; }
-.riddle-input { width: 100%; padding: 10px 12px; border: 2px solid #7fa6d8; border-radius: 10px; background: #f4f8ff; color: #12245e; }
+.riddle-input { width: 100%; padding: 10px 12px; border: 2px solid #8a5a12; border-radius: 8px; background: url("/ui/gunny/components/input-field.png") center / 100% 100% no-repeat, #f7ecd2; color: #3a1c06; }
 
 /* Hộp thoại: khung chạm khắc kem chép từ Gunny92 làm viền, ruột navy, tiêu đề bong bóng. */
 #modals:empty { display: none; }
@@ -405,7 +407,7 @@ kbd { font: inherit; }
 .graphics-note { margin: 0; font-size: 12.5px; color: var(--muted); }
 
 .wish-box { position: relative; margin: 8px 0 4px; }
-.wish-input { display: block; width: 100%; padding: 10px 12px 24px; border: 2px solid #7fa6d8; border-radius: 10px; background: #f4f8ff; color: #12245e; resize: vertical; min-height: 86px; }
+.wish-input { display: block; width: 100%; padding: 10px 12px 24px; border: 2px solid #8a5a12; border-radius: 8px; background: url("/ui/gunny/components/input-field.png") center / 100% 100% no-repeat, #f7ecd2; color: #3a1c06; resize: vertical; min-height: 86px; }
 .wish-counter { position: absolute; right: 10px; bottom: 7px; font-size: 12px; color: #7d92c4; }
 .label { margin: 12px 0 2px; font-weight: 600; font-size: 14px; }
 .place-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 6px 0 8px; }
@@ -591,7 +593,7 @@ body:has(#onlineList:not([hidden])) #voicePanel { visibility: hidden; }
 .bookx .fish-book li small { display: block; grid-column: 2; margin-top: 1px; font-size: 12px; color: var(--muted); }
 /* Thẻ chia trang của sổ: chip navy, thẻ đang mở gạch chân vàng */
 .bookx-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 6px; }
-.bookx-tabs .chip.on { background: var(--gn-navy-3); border-color: var(--gn-navy-3); color: var(--gold); box-shadow: inset 0 -2px 0 var(--gold); }
+.bookx-tabs .chip.on { color: #593515; text-shadow: 0 1px 0 #ffedb9; }
 .bookx-page > h3:first-child { margin-top: 12px; }
 /* Thanh tiến độ: nét vàng trên rãnh navy */
 .bookx-meter { height: 7px; margin: 2px 0 6px; border-radius: 4px; background: rgba(148, 196, 240, .18); overflow: hidden; }
@@ -625,3 +627,10 @@ body:has(#onlineList:not([hidden])) #voicePanel { visibility: hidden; }
   .bookx .fish-book { grid-template-columns: 1fr; }
   .bookx .modal-head h2::after { display: none; }
 }
+
+/* Thanh cuộn vàng đất: rãnh navy mờ, núm vàng bo tròn kiểu Gunny. */
+* { scrollbar-width: thin; scrollbar-color: #c98a2e rgba(6, 11, 36, .5); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: rgba(6, 11, 36, .5); }
+::-webkit-scrollbar-thumb { border-radius: 8px; background: linear-gradient(180deg, #ffd980, #d98a2e); border: 2px solid rgba(50, 24, 0, .5); }
+::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #ffe9b0, #e89a3e); }
