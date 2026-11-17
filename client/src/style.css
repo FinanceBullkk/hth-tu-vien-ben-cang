@@ -318,29 +318,16 @@ kbd { font: inherit; }
   .rhythm-controls { gap: 5px; }
 }
 
-/* === Panel hoạt động dùng chung: navy viền tinh thể, 4 góc chỉ vàng kiểu Gunny ===
-   Panel mới (câu cá, đố) và các panel minigame dùng chung bộ này. */
+/* === Panel hoạt động dùng chung: ruột navy, khung chạm khắc vàng 9-mảnh ghép từ ảnh thật
+   (components/panel-frame.png, ghép từ 9 tile bagAndInfo.bag.BG*Asset — xem SOURCES.json). */
 .ink-panel {
   position: relative;
-  border: 2px solid rgba(148, 196, 240, .5);
-  border-radius: 10px;
-  background: linear-gradient(180deg, #16226b, #0c1548);
-  box-shadow: 0 16px 60px rgba(2, 6, 24, .6), inset 0 2px 0 rgba(160, 200, 255, .25);
+  border: 30px solid transparent;
+  border-radius: 0;
+  background: linear-gradient(180deg, #16226b, #0c1548) padding-box;
+  border-image: url("/ui/gunny/components/panel-frame.png") 38 / 30px stretch;
+  box-shadow: 0 16px 60px rgba(2, 6, 24, .6);
   color: #e6eeff;
-}
-/* Bốn góc khung: hai nét vàng chữ L ở mỗi góc. */
-.ink-panel::before {
-  content: '';
-  position: absolute; inset: 5px; pointer-events: none;
-  background-image:
-    linear-gradient(var(--gold), var(--gold)), linear-gradient(var(--gold), var(--gold)),
-    linear-gradient(var(--gold), var(--gold)), linear-gradient(var(--gold), var(--gold)),
-    linear-gradient(var(--gold), var(--gold)), linear-gradient(var(--gold), var(--gold)),
-    linear-gradient(var(--gold), var(--gold)), linear-gradient(var(--gold), var(--gold));
-  background-repeat: no-repeat;
-  background-size: 22px 1.5px, 1.5px 22px, 22px 1.5px, 1.5px 22px, 22px 1.5px, 1.5px 22px, 22px 1.5px, 1.5px 22px;
-  background-position: 8px 8px, 8px 8px, calc(100% - 8px) 8px, calc(100% - 8px) 8px, 8px calc(100% - 8px), 8px calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) calc(100% - 8px);
-  opacity: .75;
 }
 .ink-title { margin: 0; font: 800 22px/1.2 var(--serif); letter-spacing: .08em; background: linear-gradient(180deg, #fff3c4 15%, #ffcf4d 55%, #ff9a1e 95%); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: 1px #16236a; filter: drop-shadow(0 2px 0 #101a4e); }
 .ink-title .seal { margin-left: 8px; vertical-align: 3px; }
@@ -352,6 +339,8 @@ kbd { font: inherit; }
 .btn.gold { background: url("/ui/gunny/button-gold.png") center / cover no-repeat, linear-gradient(180deg, #ffd980, #f29418 60%, #e07c12); border: 2px solid #7a3c06; color: #fff8ea; letter-spacing: .05em; box-shadow: inset 0 2px 0 rgba(255, 255, 255, .5), 0 3px 12px rgba(50, 24, 0, .45); text-shadow: 0 1px 0 #a35a10; }
 .btn.gold:hover:not(:disabled) { filter: brightness(1.12); }
 .teu-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(255, 207, 77, .55); background: rgba(255, 207, 77, .12); color: #ffd98a; font: 600 13px/1.4 var(--sans); white-space: nowrap; }
+/* Icon tiền thật từ module shop (asset.shop.PayPanelMoneyIcon). */
+.teu-chip::before { content: ''; width: 18px; height: 16px; background: url("/ui/gunny/components/coin.png") center / contain no-repeat; }
 .rank-badge { display: inline-grid; place-items: center; min-width: 34px; height: 34px; border-radius: 8px; border: 1.5px solid currentColor; font: 800 19px var(--serif); transform: rotate(-4deg); }
 .rank-badge[data-rank=S] { color: #ffd23f; text-shadow: 0 0 10px rgba(255, 210, 63, .5); }
 .rank-badge[data-rank=A] { color: #7fe3f0; }
@@ -374,21 +363,21 @@ kbd { font: inherit; }
 #modals:empty { display: none; }
 .modal { position: fixed; inset: 0; z-index: 8; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(3, 7, 26, .55); }
 .modal-card {
-  display: flex; flex-direction: column; width: min(460px, 100%); max-height: calc(100dvh - 32px);
+  display: flex; flex-direction: column; width: min(560px, 100%); max-height: calc(100dvh - 32px);
   padding: 12px;
-  border: 0; border-radius: 4px;
-  background:
-    url("/ui/gunny/frame-carved.png") 0 0 / 100% 100% no-repeat border-box,
-    linear-gradient(180deg, #17236d, #0c1548) padding-box;
+  border: 30px solid transparent;
+  border-radius: 0;
+  background: linear-gradient(180deg, #17236d, #0c1548) padding-box;
+  border-image: url("/ui/gunny/components/panel-frame.png") 38 / 30px stretch;
   color: var(--ink);
   box-shadow: 0 18px 54px rgba(2, 6, 24, .55);
   animation: pop .18s ease-out;
 }
-.modal-card.wide { width: min(680px, 100%); }
-/* Khung chạm khắc dày ~30px theo tỉ lệ ảnh; modal rộng thì khung phóng to, chừa padding đủ sâu để chữ không đè lên viền. */
-.modal-card.wide { padding: 16px; }
-.modal-card.wide .modal-head { padding-top: 22px; }
-.modal-card.wide .modal-head, .modal-card.wide .modal-body { padding-left: 26px; padding-right: 26px; }
+.modal-card.wide { width: min(760px, 100%); }
+/* Khung 9-mảnh từ ảnh thật: góc 30px giữ nguyên tỉ lệ, chỉ cạnh được kéo; màn nhỏ thì khung mỏng bớt. */
+@media (max-width: 650px) {
+  .ink-panel, .modal-card { border-width: 22px; border-image-width: 22px; }
+}
 .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 6px; }
 .modal-head h2 {
   margin: 0; font: 800 22px var(--serif); letter-spacing: .02em;
