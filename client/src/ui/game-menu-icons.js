@@ -185,7 +185,10 @@ export function gameIcon(name) {
     return span;
   }
   const body = ICONS[name];
-  if (body) span.innerHTML = `<svg viewBox="0 0 40 40" focusable="false">${body}</svg>`;
+  if (body) {
+    span.classList.add('game-icon-svg');
+    span.innerHTML = `<svg viewBox="0 0 40 40" focusable="false">${body}</svg>`;
+  }
   return span;
 }
 
