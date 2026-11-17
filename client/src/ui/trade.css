@@ -1,13 +1,14 @@
 /* Trạm giao thương: dùng khung neo phải và ô món của Sạp Kim Bảo (shop.css), thêm hàng người, ô TEU, dấu đã chốt. */
 .trade .modal-head h2::after { content: '交易'; }
 .trade-body > div > .muted.small:first-child { margin-top: 12px; }
+/* Hàng giao thương dùng thanh gỗ khắc thật (components/cart-row.png — asset.shop.CartItemBg) với ô vật phẩm bên trái; chữ nâu đậm. */
 .trade-row {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  padding: 8px 10px; margin-bottom: 6px;
-  border: 1px solid rgba(216, 164, 78, .4); border-radius: 10px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .04));
+  padding: 8px 12px; margin-bottom: 6px;
+  border: 0; border-radius: 6px;
+  background: url("/ui/gunny/components/cart-row.png") center / 100% 100% no-repeat, rgba(255, 255, 255, .06);
 }
-.trade-row b { font: 700 15px var(--sans); color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trade-row b { font: 700 15px var(--sans); color: #3a1c06; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .trade-row-actions { display: flex; gap: 6px; flex-shrink: 0; }
 .trade-row .btn { padding: 6px 12px; font-size: 13px; }
 .trade-ready {

@@ -310,6 +310,26 @@
       "file": "tab-daocu-on.png",
       "source": "D:\\hth-asset-library\\assets\\extracted\\bagAndInfo-82fd5303c6746e30\\images\\93_bagAndInfo.bag.propTabAsset1.png",
       "sha256": "960ccc34313a91ecb3242bd9d44b25c8337fc595e5f644362d0eba68e2e06316"
+    },
+    {
+      "file": "cart-row.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\76_asset.shop.CartItemBg.png",
+      "sha256": "b30a04b8fdd97b322a2d8b4ed2d7cffe815f3349edd8773bd7511ddfcdda31d9"
+    },
+    {
+      "file": "shop-card-money.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\61_asset.shop.GoodItemBgMoney.png",
+      "sha256": "eddcc19647dcf88b348bd6962a623f6aafecf3986fa92ed204a85f0629adfaff"
+    },
+    {
+      "file": "shop-card-on.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\60_asset.shop.GoodItemBgSelected.png",
+      "sha256": "d883f917db47bc93cce064d5844de43251e5e3ba1f16f4277854c2c519f0e430"
+    },
+    {
+      "file": "shop-card-gift.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\62_asset.shop.GoodItemBgGift.png",
+      "sha256": "5caaadb1ee53bb64430cbb22b747cc6da61ee0ccfccbffa7738140dbadb99086"
     }
   ]
 }
