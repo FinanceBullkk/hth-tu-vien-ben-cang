@@ -75,6 +75,8 @@
 .shopx-swatch.slot-weapon { background: linear-gradient(160deg, #39475a, #161d27); }
 .shopx-name { font: 700 14px/1.25 var(--sans); color: #fff; }
 .shopx-price { font-size: 12.5px; font-weight: 600; color: var(--gold); }
+/* Icon tiền thật từ module shop (asset.shop.PayPanelMoneyIcon). */
+.shopx-price::before { content: ''; display: inline-block; width: 14px; height: 13px; margin-right: 4px; vertical-align: -1px; background: url("/ui/gunny/components/coin.png") center / contain no-repeat; }
 .shopx-card.owned .shopx-name { color: #bdf0f6; }
 .shopx-card.owned .shopx-price { color: var(--jade); }
 
@@ -116,7 +118,7 @@
 .shopx-vip-progress { font: 600 11px var(--sans); color: color-mix(in srgb, var(--vip-ink) 85%, transparent); font-variant-numeric: tabular-nums; }
 .shopx-card.vip .shopx-price, .shopx-card.vip.owned .shopx-price { align-self: center; font: 800 16px var(--serif); color: var(--vip-ink); white-space: nowrap; }
 .shopx-card.vip.owned .shopx-price { color: #8fe0a8; }
-.shopx-card.vip.locked .shopx-price::before { content: '🔒 '; font-size: 12px; }
+.shopx-card.vip.locked .shopx-price::before { content: '🔒 '; font-size: 12px; background: none; }
 .shopx-card.vip.locked:not(.on), .shopx-card.vip.poor:not(.on) { opacity: .9; }
 
 /* Tủ đồ dùng lại chip + ô màu của màn chào. */

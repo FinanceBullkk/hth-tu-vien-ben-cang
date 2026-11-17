@@ -1,0 +1,135 @@
+{
+  "note": "Anh component trich tu thu vien HTH (nguan ban dau bo Gunny92). Chi dung noi bo; doi ten HTH khong xac nhan quyen so huu asset.",
+  "assets": [
+    {
+      "file": "panel-frame.png (tile 0)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bagAndInfo-82fd5303c6746e30\\images\\6_bagAndInfo.bag.BGLeftTopAsset.png",
+      "sha256": "1c87c81e9f2c1b3318948bf5bf3cd08c89d34bf011b023bfd42e092a5b2b6f63",
+      "size": [
+        38,
+        38
+      ]
+    },
+    {
+      "file": "panel-frame.png (tile 1)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bagAndInfo-82fd5303c6746e30\\images\\25_bagAndInfo.bag.BGTopCenterAsset.png",
+      "sha256": "10c5a6785fb6569f1bf9cce46100c89f014808c3dd152ada5961219f26fac569",
+      "size": [
+        38,
+        38
+      ]
+    },
+    {
+      "file": "panel-frame.png (tile 2)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bagAndInfo-82fd5303c6746e30\\images\\43_bagAndInfo.bag.BGRightTopAsset.png",
+      "sha256": "efe55970b990d07433fbf3071c9915ad47c2e8a97b64c29dc534f7317bcc8f5c",
+      "size": [
+        38,
+        38
+      ]
+    },
+    {
+      "file": "panel-frame.png (tile 3)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bagAndInfo-82fd5303c6746e30\\images\\71_bagAndInfo.bag.BGLeftCenterAsset.png",
+      "sha256": "a500218af9a5fe741564b604b01ac2fc488fd1b428d1f31c63094bc77af0c333",
+      "size": [
+        38,
+        38
+      ]
+    },
+    {
+      "file": "panel-frame.png (tile 4)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bagAndInfo-82fd5303c6746e30\\images\\70_bagAndInfo.bag.BGCenterAsset.png",
+      "sha256": "5901287a8091b8dc2dc24cb1f49ea21a3959742ef3e480215e384817d250a8b6",
+      "size": [
+        38,
+        38
+      ]
+    },
+    {
+      "file": "panel-frame.png (tile 5)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bagAndInfo-82fd5303c6746e30\\images\\72_bagAndInfo.bag.BGRightCenterAsset.png",
+      "sha256": "bce26c14239b1f68217c62cdd9eecb8bae6ceb26e4ee23dbff0b9681779c6df7",
+      "size": [
+        38,
+        38
+      ]
+    },
+    {
+      "file": "panel-frame.png (tile 6)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bagAndInfo-82fd5303c6746e30\\images\\10_bagAndInfo.bag.BGBottomLeftAsset.png",
+      "sha256": "9e36ddbafc4a681fc135a79be559dc0eb86b425e92bdeea6cfa9a3fb74894397",
+      "size": [
+        38,
+        38
+      ]
+    },
+    {
+      "file": "panel-frame.png (tile 7)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bagAndInfo-82fd5303c6746e30\\images\\12_bagAndInfo.bag.BGBottomCenterAsset.png",
+      "sha256": "4bee442aa1d403a91cf4180f9ed31a2bece1501a0ea1d4748d9bc703e95bd597",
+      "size": [
+        38,
+        38
+      ]
+    },
+    {
+      "file": "panel-frame.png (tile 8)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bagAndInfo-82fd5303c6746e30\\images\\13_bagAndInfo.bag.BGRightBottomAsset.png",
+      "sha256": "0f1e204feec28340392ec0373d51c7e98a10a9aef64ce7252d6033bb484c11ae",
+      "size": [
+        38,
+        38
+      ]
+    },
+    {
+      "file": "panel-frame.png",
+      "source": "composite of the 9 tiles above, 3x3 grid, 114x114",
+      "sha256": "cd05b3f353609856ab482777f7c3e3d649a44205f661b5a4b2bf84eea4d04e8b",
+      "size": [
+        114,
+        114
+      ]
+    },
+    {
+      "file": "slot.jpg",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bagAndInfo-82fd5303c6746e30\\images\\106_bagAndInfo.cell.bagCellBgAsset.jpg",
+      "sha256": "a81fea36a515b8343a244186c4f5da4317ced25a0e6e716a4a32b779bbaac44e",
+      "size": [
+        46,
+        46
+      ],
+      "format": "JPEG"
+    },
+    {
+      "file": "slot-hover.jpg",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bagAndInfo-82fd5303c6746e30\\images\\1_bagAndInfo.cell.bagCellOverBgAsset.jpg",
+      "sha256": "3bc791df4d525b05ef47d1b04b73e0b6854627ec06d4471489dfd67f03852bc2",
+      "size": [
+        46,
+        45
+      ],
+      "format": "JPEG"
+    },
+    {
+      "file": "coin.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\shop-73892b89977edd29\\images\\32_asset.shop.PayPanelMoneyIcon.png",
+      "sha256": "856c24c24f0bba567e8582a82e509333b13eab11b1fb9dcbc318dc3f3fe0c485",
+      "size": [
+        20,
+        18
+      ],
+      "format": "PNG"
+    },
+    {
+      "file": "shop-cell.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\shop-73892b89977edd29\\images\\12_asset.shop.ShopItemCellBg.png",
+      "sha256": "00adf6669a1551ca987098e7db383c1e10f6a4ced853e82428710ec45c45676a",
+      "size": [
+        80,
+        80
+      ],
+      "format": "PNG"
+    }
+  ]
+}

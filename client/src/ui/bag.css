@@ -7,13 +7,14 @@
   --line: #8e4f1c; --kem: #fbf0d6; --kem-2: #f0d8a6;
   --outline: 1px 1px 0 #4a1e04, -1px -1px 0 #4a1e04, 1px -1px 0 #4a1e04, -1px 1px 0 #4a1e04, 0 2px 2px rgba(0, 0, 0, .35);
   position: relative; width: max-content; max-width: calc(100vw - 16px); max-height: calc(100dvh - 16px);
-  padding: 0; border: 3px solid #5e2606; border-radius: 16px; color: #3a1c06;
-  background: linear-gradient(180deg, #ffc867 0%, #f19a30 7%, #de7b1f 55%, #c4621a 100%);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, .6), inset 0 3px 0 rgba(255, 236, 190, .8), inset 0 0 0 2px rgba(255, 205, 120, .45), inset 0 -4px 0 rgba(90, 35, 0, .35);
+  padding: 0; border: 30px solid transparent; border-radius: 0; color: #3a1c06;
+  background: linear-gradient(180deg, #ffc867 0%, #f19a30 7%, #de7b1f 55%, #c4621a 100%) padding-box;
+  border-image: url("/ui/gunny/components/panel-frame.png") 38 / 30px stretch;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .6);
   font-family: var(--sans);
 }
 /* Không có thanh tiêu đề: tên hai mặt giấy là tiêu đề; chữ "Túi đồ" vẫn còn cho trình đọc màn hình. */
-.bagx .modal-head { position: absolute; top: 6px; right: 8px; z-index: 6; padding: 0; }
+.bagx .modal-head { position: absolute; top: 36px; right: 38px; z-index: 6; padding: 0; }
 .bagx .modal-head h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .bagx .modal-x {
   width: 36px; height: 30px; border: 2px solid #5c0d06; border-radius: 7px; color: #fff; font-size: 16px; font-weight: 900;
@@ -47,7 +48,7 @@
 .bagx-gear {
   position: relative; display: grid; place-items: center; width: var(--side); height: var(--side); padding: 3px; overflow: hidden;
   border: 2px solid #cfa970; border-radius: 8px; cursor: pointer;
-  background: radial-gradient(circle at 50% 38%, #fffdf6, #f1dcb2 72%, #e4c68e); box-shadow: inset 0 1px 0 #fff, inset 0 -2px 4px rgba(150, 95, 35, .28);
+  background: url("/ui/gunny/components/slot.jpg") center / 100% 100% no-repeat; box-shadow: inset 0 1px 0 #fff, inset 0 -2px 4px rgba(150, 95, 35, .28);
 }
 .bagx-gear:not(.empty):not([data-rarity="1"]) { border-color: var(--rc); box-shadow: inset 0 0 10px color-mix(in srgb, var(--rc) 55%, transparent), inset 0 -2px 4px rgba(150, 95, 35, .2); }
 .bagx-gear.empty { cursor: default; opacity: .75; }
@@ -153,9 +154,10 @@
 .bagx-grid { display: grid; grid-template-columns: repeat(7, var(--slot)); grid-auto-rows: var(--slot); gap: 5px; align-content: start; }
 .bagx-slot {
   position: relative; display: grid; place-items: center; min-width: 0; padding: 3px; overflow: hidden; border: 2px solid #d3ae74; border-radius: 8px;
-  background: radial-gradient(circle at 50% 38%, #fffdf6 0%, #f4e2bc 70%, #e8cd97 100%); box-shadow: inset 0 1px 0 #fff, inset 0 -2px 4px rgba(150, 95, 35, .25);
+  background: url("/ui/gunny/components/slot.jpg") center / 100% 100% no-repeat; box-shadow: inset 0 1px 0 #fff, inset 0 -2px 4px rgba(150, 95, 35, .25);
 }
 .bagx-slot.filled { cursor: pointer; transition: transform .1s, filter .1s; }
+.bagx-slot.filled:hover { background-image: url("/ui/gunny/components/slot-hover.jpg"); }
 .bagx-slot.filled:not([data-rarity="1"]) { border-color: var(--rc); box-shadow: inset 0 1px 0 #fff, inset 0 0 12px color-mix(in srgb, var(--rc) 60%, transparent); }
 .bagx-slot.filled[data-rarity="5"]::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
@@ -250,8 +252,9 @@
 /* Màn hẹp: túi lên trước, ô co theo bề ngang, thẻ Cá / Đạo cụ nằm ngang trên lưới. */
 @media (max-width: 760px) {
   .modal:has(.bagx) { padding: 6px; }
-  .modal .modal-card.bagx { width: 100%; border-radius: 12px; }
-  .bagx .modal-body { padding: 32px 8px 8px; }
+  .modal .modal-card.bagx { width: 100%; border-radius: 0; border-width: 22px; border-image-width: 22px; }
+  .bagx .modal-head { top: 28px; right: 28px; }
+  .bagx .modal-body { padding: 58px 8px 8px; }
   .bagx-wrap { grid-template-columns: minmax(0, 1fr); gap: 34px; }
   .bagx-bag { order: -1; }
   .bagx-info { width: auto; min-width: 0; }
