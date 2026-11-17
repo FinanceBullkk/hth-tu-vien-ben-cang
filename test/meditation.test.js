@@ -63,17 +63,25 @@ test('thiền: server treo quá 15 giây không tính là thời gian ngồi', (
 
 test('thiền: không vượt trần mỗi ngày, sang ngày khác lại được nhận', () => {
   const { db, meditation, player, events } = setup();
-  const seated = meditation.sit(player);
-  sitFor(meditation, player, TEU.meditateEveryMs * (TEU.meditateDailyCap + 3));
-  assert.equal(db.shop.teu(PID), TEU.meditateDailyCap);
-  assert.equal(teuEvents(events).at(-1).today, TEU.meditateDailyCap);
-  assert.equal(db.teuToday(PID, 'meditate', localDate(seated.now, TZ)), TEU.meditateDailyCap);
-  // TEU kiếm ở trò khác không ăn vào trần thiền.
-  db.addTeu(PID, 5, 'fish', localDate(seated.now, TZ));
-  meditation.leave(player);
-  assert.equal(meditation.sit(player).teuToday, TEU.meditateDailyCap);
-  // Ngày hôm sau: phiên ngồi mới đếm lại từ 0.
-  player.qiAt += 24 * 3600_000;
-  sitFor(meditation, player, TEU.meditateEveryMs);
-  assert.equal(db.shop.teu(PID), TEU.meditateDailyCap + 5 + 1);
+  // Neo đầu phiên vào 12:00 ngày địa phương cố định: vòng 18 phút không bao giờ
+  // trượt qua nửa đêm thật khi bài test chạy gần 23:42–00:00 theo múi giờ cấu hình.
+  const realNow = Date.now;
+  Date.now = () => new Date('2026-06-15T12:00:00+07:00').getTime();
+  try {
+    const seated = meditation.sit(player);
+    sitFor(meditation, player, TEU.meditateEveryMs * (TEU.meditateDailyCap + 3));
+    assert.equal(db.shop.teu(PID), TEU.meditateDailyCap);
+    assert.equal(teuEvents(events).at(-1).today, TEU.meditateDailyCap);
+    assert.equal(db.teuToday(PID, 'meditate', localDate(seated.now, TZ)), TEU.meditateDailyCap);
+    // TEU kiếm ở trò khác không ăn vào trần thiền.
+    db.addTeu(PID, 5, 'fish', localDate(seated.now, TZ));
+    meditation.leave(player);
+    assert.equal(meditation.sit(player).teuToday, TEU.meditateDailyCap);
+    // Ngày hôm sau: phiên ngồi mới đếm lại từ 0.
+    player.qiAt += 24 * 3600_000;
+    sitFor(meditation, player, TEU.meditateEveryMs);
+    assert.equal(db.shop.teu(PID), TEU.meditateDailyCap + 5 + 1);
+  } finally {
+    Date.now = realNow;
+  }
 });
