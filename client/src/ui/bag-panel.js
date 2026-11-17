@@ -57,9 +57,9 @@ export function openBag(app, tab) {
   const info = h('section', { class: 'bagx-info' });
   const grid = h('div', { class: 'bagx-grid', role: 'listbox', 'aria-label': 'Ô túi đồ' });
   const tabs = {
-    equip: h('button', { type: 'button', class: 'bagx-tab' }, inkIcon('robe'), h('span', {}, 'Trang bị')),
+    equip: h('button', { type: 'button', class: 'bagx-tab tab-real' }, inkIcon('robe'), h('span', {}, 'Trang bị')),
     fish: h('button', { type: 'button', class: 'bagx-tab' }, inkIcon('fish'), h('span', {}, 'Cá')),
-    gear: h('button', { type: 'button', class: 'bagx-tab' }, inkIcon('bag'), h('span', {}, 'Đạo cụ')),
+    gear: h('button', { type: 'button', class: 'bagx-tab tab-real' }, inkIcon('bag'), h('span', {}, 'Đạo cụ')),
   };
   const sortBtn = h('button', { type: 'button', class: 'bagx-btn sort', title: 'Đổi cách xếp: mới câu, giá cao, phẩm chất' });
   const capEl = h('span', { class: 'bagx-cap' });
