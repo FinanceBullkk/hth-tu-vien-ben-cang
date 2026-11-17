@@ -211,7 +211,7 @@ kbd { font: inherit; }
 /* Hàng nút menu: ô vuông bo tròn cyan-navy bóng nổi kiểu toolbar Gunny. */
 #menu { position: absolute; top: calc(12px + var(--safe-t)); right: 12px; display: flex; gap: 6px; }
 /* Nút icon HUD dùng khung vuông nâu viền vàng kép thật (components/icon-bg.png — asset.IM.iconBg). */
-.icon-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 40px; min-width: 40px; padding: 0 10px; border: 0; border-radius: 0; background: url("/ui/gunny/components/icon-bg.png") center / 100% 100% no-repeat, linear-gradient(180deg, #6e4213, #16266e 60%, #101c54); box-shadow: 0 3px 8px rgba(2, 6, 24, .55); color: #ffe2a0; font-size: 17px; touch-action: manipulation; transition: color .15s, background .15s, filter .15s; }
+.icon-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 40px; min-width: 40px; padding: 0 10px; border: 0; border-radius: 0; background: url("/ui/gunny/components/icon-bg.png") center / 100% 100% no-repeat, linear-gradient(180deg, #6e4213, #232b44 60%, #171d2e); box-shadow: 0 3px 8px rgba(2, 6, 24, .55); color: #ffe2a0; font-size: 17px; touch-action: manipulation; transition: color .15s, background .15s, filter .15s; }
 .icon-btn:hover, .icon-btn[aria-expanded="true"] { filter: brightness(1.18); color: #fff; }
 #menu .icon-btn { width: 40px; padding: 0; }
 /* Nhãn của nút icon là tooltip: vẫn nằm trong DOM nên trình đọc màn hình đọc được tên nút. */
@@ -219,10 +219,10 @@ kbd { font: inherit; }
 @media (hover: hover) { .icon-btn:hover em { opacity: 1; } }
 .icon-btn:focus-visible em { opacity: 1; }
 /* "Chơi gì?": la bàn nổi bật bằng vòng chỉ vàng quanh nút. */
-#menu #playBtn { color: var(--gold); box-shadow: inset 0 2px 0 rgba(160, 200, 255, .45), inset 0 0 0 2px rgba(255, 207, 77, .75), 0 3px 8px rgba(2, 6, 24, .55); border-radius: 50%; }
+#menu #playBtn { color: var(--gold); box-shadow: inset 0 2px 0 rgba(255, 214, 130, .45), inset 0 0 0 2px rgba(255, 207, 77, .75), 0 3px 8px rgba(2, 6, 24, .55); border-radius: 50%; }
 #musicPanel { position: absolute; top: calc(64px + var(--safe-t)); right: 12px; width: min(360px, calc(100vw - 24px)); padding: 9px; border: 2px solid rgba(216, 164, 78, .35); border-radius: 14px; background: rgba(8, 14, 44, .94); color: #dbe8ff; box-shadow: 0 8px 28px rgba(2, 6, 24, .6); }
 .music-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; font-size: 13px; font-weight: 600; }
-.music-head button, .music-controls button { min-width: 44px; min-height: 40px; border: 2px solid #3a2410; border-radius: 9px; background: linear-gradient(180deg, #6e4213, #16266e); color: #f0e6cc; }
+.music-head button, .music-controls button { min-width: 44px; min-height: 40px; border: 2px solid #3a2410; border-radius: 9px; background: linear-gradient(180deg, #6e4213, #232b44); color: #f0e6cc; }
 .music-controls { display: flex; align-items: center; gap: 9px; }
 .music-controls label { white-space: nowrap; }
 .music-controls input { flex: 1; min-width: 60px; accent-color: var(--gold); }
@@ -311,7 +311,7 @@ kbd { font: inherit; }
 .rhythm-feedback[data-grade=miss] { color: #ff9a86; }
 .rhythm-status { margin: 6px 0 11px; color: #9fb4e4; font-size: 12px; text-align: center; max-height: 36px; overflow-y: auto; }
 .rhythm-controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.rhythm-arrow { min-height: 50px; padding: 4px; border: 2px solid #3a2410; border-radius: 10px; background: linear-gradient(180deg, #6e4213, #16266e); box-shadow: inset 0 2px 0 rgba(160, 200, 255, .4); color: #fff; font-size: 28px; touch-action: manipulation; }
+.rhythm-arrow { min-height: 50px; padding: 4px; border: 2px solid #3a2410; border-radius: 10px; background: linear-gradient(180deg, #6e4213, #232b44); box-shadow: inset 0 2px 0 rgba(255, 214, 130, .4); color: #fff; font-size: 28px; touch-action: manipulation; }
 .rhythm-arrow:active { background: linear-gradient(180deg, #3a5cc8, #1e3490); }
 .rhythm-actions { display: flex; justify-content: center; gap: 8px; margin-top: 12px; }
 .rhythm-panel .btn.ghost { color: #f0e6cc; border-color: rgba(216, 164, 78, .4); }
