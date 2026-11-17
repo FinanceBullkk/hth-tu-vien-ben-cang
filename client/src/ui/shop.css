@@ -61,18 +61,16 @@
 .shopx-card.owned { background: linear-gradient(180deg, rgba(53, 182, 201, .16), rgba(53, 182, 201, .08)); border-color: rgba(53, 182, 201, .55); }
 .shopx-card.owned.on { border-color: var(--jade); box-shadow: inset 0 0 0 1.5px rgba(53, 182, 201, .6); }
 .shopx-card.poor:not(.on) { opacity: .72; }
+/* Ô hàng thật (asset.shop.ShopItemCellBg): ô kem viền đỏ mảnh, biểu vật phẩm chữ nâu đậm. */
 .shopx-swatch {
   grid-row: 1 / span 2; width: 34px; height: 34px; border-radius: 8px;
   display: grid; place-items: center;
-  background: var(--sw, #101c54); color: #ffd98a; font: 700 17px/1 var(--sans);
-  box-shadow: inset 0 0 0 2px rgba(244, 248, 255, .5), inset 0 0 0 3.5px rgba(6, 11, 36, .35), 0 2px 5px rgba(6, 11, 36, .4);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, .55);
+  background: url("/ui/gunny/components/shop-cell.png") center / 100% 100% no-repeat; color: #7a4a12; font: 700 17px/1 var(--sans);
+  box-shadow: 0 2px 5px rgba(6, 11, 36, .4);
+  text-shadow: none;
 }
-.shopx-card.owned .shopx-swatch { color: #bdf0f6; }
-.shopx-swatch.slot-effect { background: radial-gradient(circle at 50% 38%, var(--sw, #2b4aae), #060b24 78%); }
+.shopx-card.owned .shopx-swatch { color: #7a4a12; }
 .shopx-head .chip.on { background: var(--gn-navy-3); border-color: var(--gn-navy-3); color: var(--gold); box-shadow: inset 0 -2px 0 var(--gold); }
-.shopx-swatch.slot-attire { background: linear-gradient(160deg, #8a3a1c, #3a160e); }
-.shopx-swatch.slot-weapon { background: linear-gradient(160deg, #39475a, #161d27); }
 .shopx-name { font: 700 14px/1.25 var(--sans); color: #fff; }
 .shopx-price { font-size: 12.5px; font-weight: 600; color: var(--gold); }
 /* Icon tiền thật từ module shop (asset.shop.PayPanelMoneyIcon). */

@@ -130,6 +130,106 @@
         80
       ],
       "format": "PNG"
+    },
+    {
+      "file": "guide-tip.png (piece 1)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\212_asset.core.GuideBg_1.png",
+      "sha256": "a6b8cc0dd0f7a5f58a7168b05c5fb504e20dee7dc3716414f024ce4bfadc0591",
+      "size": [
+        95,
+        75
+      ]
+    },
+    {
+      "file": "guide-tip.png (piece 4)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\209_asset.core.GuideBg_4.png",
+      "sha256": "12e114ce5ea680117ec3fd367fe91f125538ca42058e82aabe229b7b0d804c56",
+      "size": [
+        95,
+        15
+      ]
+    },
+    {
+      "file": "guide-tip.png (piece 3)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\210_asset.core.GuideBg_3.png",
+      "sha256": "28778288cad129255080af4e3269d6dc4c8c4670444e15f7db53f00e0446c465",
+      "size": [
+        95,
+        75
+      ]
+    },
+    {
+      "file": "guide-tip.png (piece 2)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\211_asset.core.GuideBg_2.png",
+      "sha256": "3a62e06e4ba2c3d9e0c30593b4be2e07ac8556090289adc887a49582ca960e56",
+      "size": [
+        18,
+        75
+      ]
+    },
+    {
+      "file": "guide-tip.png (piece 5)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\208_asset.core.GuideBg_5.png",
+      "sha256": "7f70f303ef34705a4d97f8a537fb92266cf6cbc9413ed0429cd8b717c2dab13f",
+      "size": [
+        18,
+        15
+      ]
+    },
+    {
+      "file": "guide-tip.png (piece 8)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\205_asset.core.GuideBg_8.png",
+      "sha256": "e9da38075585533321388e6f1401d01f669a0c369a1d44da80388a6726309934",
+      "size": [
+        18,
+        75
+      ]
+    },
+    {
+      "file": "guide-tip.png (piece 7)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\206_asset.core.GuideBg_7.png",
+      "sha256": "a1dc964307e1f87b58252e4be68c223374bd938e26562d6cd1d2d5b3d62ee8bd",
+      "size": [
+        95,
+        75
+      ]
+    },
+    {
+      "file": "guide-tip.png (piece 6)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\207_asset.core.GuideBg_6.png",
+      "sha256": "39bc4f16a629784dd84c534b57492123ffc7e3f91b1e138bceb8c030a777311a",
+      "size": [
+        95,
+        15
+      ]
+    },
+    {
+      "file": "guide-tip.png (piece 9)",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\core-bee0d9db5fd6cfc8\\images\\204_asset.core.GuideBg_9.png",
+      "sha256": "ef3c0dd458db3b0e0bc5af9de5bb97a4c1e58b32b019168bd2262a0ea8c0dbb4",
+      "size": [
+        95,
+        75
+      ]
+    },
+    {
+      "file": "guide-tip.png",
+      "source": "composite of the 9 GuideBg pieces above, 285x225, border-image slice 75 95 75 95",
+      "sha256": "70528c3cc668fa2fa8985f8e04605abbaf3f30f97983b67607c1692b274b40d8",
+      "size": [
+        285,
+        225
+      ]
+    },
+    {
+      "file": "close-x.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\awardSystem-20850dc3752e89fd\\images\\99_asset.awardSystem.surpriseRoulette.close.png",
+      "sha256": "b7d4c44fc6f39e72290ef1664b5d09f683845a4dde610a2434e422706f35499b",
+      "size": [
+        32,
+        32
+      ],
+      "format": "PNG"
     }
   ]
 }

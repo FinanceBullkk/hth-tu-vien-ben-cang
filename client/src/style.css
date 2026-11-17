@@ -386,7 +386,8 @@ kbd { font: inherit; }
   -webkit-text-stroke: 1px #16236a;
   filter: drop-shadow(0 2px 0 #101a4e);
 }
-.modal-x { width: 34px; height: 34px; border: 2px solid #0a1c52; border-radius: 50%; background: linear-gradient(180deg, #5cdcf0, #0e8aa8); color: #fff; font-size: 16px; font-weight: 800; box-shadow: inset 0 2px 0 rgba(255, 255, 255, .5); }
+/* Nút đóng: nút X tròn đỏ viền vàng chép thật từ module quà tặng (surpriseRoulette.close). */
+.modal-x { width: 34px; height: 34px; border: 0; border-radius: 0; background: url("/ui/gunny/components/close-x.png") center / 100% 100% no-repeat; color: transparent; font-size: 0; font-weight: 800; box-shadow: 0 2px 5px rgba(0, 0, 0, .45); }
 .modal-x:hover { filter: brightness(1.15); }
 .modal-body { padding: 4px 20px 20px; overflow-y: auto; scrollbar-color: rgba(148, 196, 240, .5) transparent; scrollbar-width: thin; }
 .modal-body h3 { margin: 16px 0 6px; font: 800 17px var(--serif); color: #fff; text-shadow: 0 1px 0 #14245e, 1px 0 0 #14245e, -1px 0 0 #14245e, 0 -1px 0 #14245e; }
