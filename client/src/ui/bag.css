@@ -183,6 +183,26 @@
 .bagx-tab.on { border-color: var(--line); background: linear-gradient(180deg, #fff6dc, #f2d79d); color: #7a3808; text-shadow: 0 1px 0 #fff; }
 .bagx-tab.on .ink-icon { filter: none; }
 
+/* Tab dọc kiểu Gunny92 (desktop): "Trang bị" và "Đạo cụ" dùng ảnh thật của Gunny92
+   (equipTabAsset / propTabAsset — bản sáng = đang chọn, bản tối = không chọn, chữ in sẵn khớp chữ HTH);
+   tab Cá không có bản sạch nên dựng CSS cùng tông, chữ viết dọc cho đồng bộ. Màn hẹp giữ tab ngang cũ. */
+@media (min-width: 761px) {
+  .bagx-mid { grid-template-columns: auto 40px; }
+  .bagx-tabs { grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .bagx-tab { padding: 0; border: 1px solid rgba(216, 181, 124, .55); border-radius: 6px; background: linear-gradient(180deg, #a4713a, #6e4213); box-shadow: none; align-items: center; }
+  .bagx-tab .ink-icon { display: none; }
+  .bagx-tab > span { writing-mode: vertical-rl; text-orientation: mixed; font-size: 15px; letter-spacing: 3px; }
+  .bagx-tab.on { border-color: #8a5a12; background: linear-gradient(180deg, #f6d79d, #d9a860); color: #5e370e; text-shadow: 0 1px 0 #fff; }
+  .bagx-tab.tab-real { position: relative; background: url("/ui/gunny/components/tab-trangbi.png") center / 100% 100% no-repeat, linear-gradient(180deg, #a4713a, #6e4213); border-color: transparent; }
+  .bagx-tab.tab-real.on { background-image: url("/ui/gunny/components/tab-trangbi-on.png"), linear-gradient(180deg, #a4713a, #6e4213); }
+  .bagx-tab.tab-real:nth-child(3) { background-image: url("/ui/gunny/components/tab-daocu.png"), linear-gradient(180deg, #a4713a, #6e4213); }
+  .bagx-tab.tab-real:nth-child(3).on { background-image: url("/ui/gunny/components/tab-daocu-on.png"), linear-gradient(180deg, #a4713a, #6e4213); }
+  /* Ảnh đã có chữ: ẩn nhãn và icon SVG khỏi hình ảnh nhưng giữ cho trình đọc màn hình. */
+  .bagx-tab.tab-real > .ink-icon, .bagx-tab.tab-real > span {
+    position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
+}
+
 .bagx-foot { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: center; margin-top: auto; padding-top: 10px; }
 .bagx-coin { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px 4px 6px; border: 2px solid #8a5a2a; border-radius: 18px; background: #3a1c08; color: #ffd23a; }
 .bagx-coin b { color: #fff; font-size: 16px; font-weight: 900; font-variant-numeric: tabular-nums; }

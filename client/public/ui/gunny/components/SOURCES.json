@@ -290,6 +290,26 @@
       "file": "toolbar-sound-off.png",
       "source": "D:\\hth-asset-library\\assets\\extracted\\littlegame-36011347e95b0e14\\images\\3_asset.littleGame.SoundOff.png",
       "sha256": "a95f9d034af2b4dbddd569dc7a20c3b2f525e3c20c4ad4efc71c6de8ef414bd8"
+    },
+    {
+      "file": "tab-trangbi.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bagAndInfo-82fd5303c6746e30\\images\\49_bagAndInfo.bag.equipTabAsset2.png",
+      "sha256": "f3066a668cb45fff3da7854249acd15d8ec0628b3fd3c871dbec99e8e80e9991"
+    },
+    {
+      "file": "tab-trangbi-on.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bagAndInfo-82fd5303c6746e30\\images\\47_bagAndInfo.bag.equipTabAsset1.png",
+      "sha256": "ddf2f3bf735753910c2a87eaf04f628a64925aa2176664790b3d46959be6f39e"
+    },
+    {
+      "file": "tab-daocu.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bagAndInfo-82fd5303c6746e30\\images\\94_bagAndInfo.bag.propTabAsset2.png",
+      "sha256": "ae9f6e457f229fcd6cbc45406251fc7415ee3f3e7fc5b998d20e8b44d7b53863"
+    },
+    {
+      "file": "tab-daocu-on.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\bagAndInfo-82fd5303c6746e30\\images\\93_bagAndInfo.bag.propTabAsset1.png",
+      "sha256": "960ccc34313a91ecb3242bd9d44b25c8337fc595e5f644362d0eba68e2e06316"
     }
   ]
 }
