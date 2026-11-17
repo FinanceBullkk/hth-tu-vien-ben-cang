@@ -157,16 +157,14 @@ function mountDefs() {
   document.body.prepend(holder);
 }
 
-/** Nút trên dải menu có ảnh tròn thật chép từ module ToolBar của Gunny92 (cùng nguồn, xem SOURCES.json);
-   nút không có ảnh sạch (không in sẵn chữ) giữ icon SVG tự vẽ bên dưới. */
+/** Nút trên dải menu: 4 icon phẳng thật từ toolbar.swf của Gunn3.0 (g3-*.png, xem SOURCES.json);
+   nút không có bản sạch (la bàn, chân thú, máy ảnh, nhạc, bánh răng, loa) giữ icon SVG tự vẽ —
+   cả 10 đều là glyph phẳng nổi trên dải bar chạm khắc như bản gốc. */
 const IMG_ICONS = {
-  bag: '/ui/gunny/components/toolbar-bag.png',
-  shop: '/ui/gunny/components/toolbar-shop.png',
-  book: '/ui/gunny/components/toolbar-scroll.png',
-  sliders: '/ui/gunny/components/toolbar-gear.png',
-  wish: '/ui/gunny/components/toolbar-mail.png',
-  sound: '/ui/gunny/components/toolbar-sound-on.png',
-  mute: '/ui/gunny/components/toolbar-sound-off.png',
+  bag: '/ui/gunny/components/g3-bag.png',
+  shop: '/ui/gunny/components/g3-shop.png',
+  book: '/ui/gunny/components/g3-book.png',
+  wish: '/ui/gunny/components/g3-mail.png',
 };
 
 /** Icon minh hoạ: span.game-icon chứa SVG 40x40, hoặc ảnh tròn thật nếu có trong IMG_ICONS. Tên lạ thì trả ô trống để nút vẫn bấm được. */
