@@ -192,13 +192,14 @@ kbd { font: inherit; }
 #hud > * { pointer-events: auto; }
 
 /* Cụm số người online: chip navy viền xanh. */
-#presence { position: absolute; top: calc(12px + var(--safe-t)); left: 12px; max-width: min(320px, 60vw); padding: 4px 10px; border: 2px solid rgba(148, 196, 240, .4); border-radius: 10px; background: rgba(8, 14, 44, .62); color: #dbe8ff; font-size: 14px; text-shadow: 0 1px 2px #000; }
+/* Chip đếm người góc trái: nền nâu ấm viền vàng đất, đồng bộ tông Gunny92. */
+#presence { position: absolute; top: calc(12px + var(--safe-t)); left: 12px; max-width: min(320px, 60vw); padding: 4px 10px; border: 2px solid rgba(216, 164, 78, .5); border-radius: 10px; background: rgba(58, 38, 16, .72); color: #f2e4c8; font-size: 14px; text-shadow: 0 1px 2px #000; }
 #presence b { color: var(--gold); }
 #onlineBtn { display: inline-flex; align-items: center; gap: 5px; padding: 0; border: 0; background: none; color: inherit; font-weight: 700; }
 .presence-icon { font-size: 15px; }
 .visits { display: none; margin: 6px 0 0; font-size: 12px; opacity: .85; }
+#onlineList { margin: 7px 0 2px; padding: 6px 0 0 0; border-top: 1px solid rgba(216, 164, 78, .4); list-style: none; max-height: 34vh; overflow-y: auto; }
 #presence:has(#onlineList:not([hidden])) .visits { display: block; }
-#onlineList { margin: 7px 0 2px; padding: 6px 0 0 0; border-top: 1px solid var(--glass-line); list-style: none; max-height: 34vh; overflow-y: auto; }
 #onlineList li { padding: 1px 0; overflow-wrap: anywhere; }
 #onlineList li.me { color: var(--gold); }
 
@@ -251,20 +252,20 @@ kbd { font: inherit; }
 #emojiToggle[aria-expanded="true"] { filter: brightness(1.18); border-color: #7fa6d8; color: #fff; }
 #chatBtn { position: absolute; right: 58px; bottom: calc(14px + var(--safe-b)); width: 40px; padding: 0; }
 #chatBtn em, #emojiToggle em { top: auto; bottom: calc(100% + 6px); left: auto; right: 0; transform: none; }
-/* Khung chat navy mờ; chưa có tin nào thì không hiện khung trống. */
-#chatHistory { position: absolute; left: 12px; bottom: calc(14px + var(--safe-b)); width: var(--left-col); max-height: min(220px, 34dvh); display: flex; flex-direction: column; border: 0; border-radius: 0; background: url("/ui/gunny/components/chat-log.png") center / 100% 100% no-repeat, linear-gradient(180deg, rgba(8, 14, 44, .5), rgba(8, 14, 44, .85)); box-shadow: 0 8px 22px rgba(2, 6, 24, .45); color: #e6eeff; overflow: hidden; z-index: 2; }
+/* Khung chat: nền log chat Gunny92 phủ lớp nâu ấm cho cùng tông tổng thể; chưa có tin nào thì không hiện khung trống. */
+#chatHistory { position: absolute; left: 12px; bottom: calc(14px + var(--safe-b)); width: var(--left-col); max-height: min(220px, 34dvh); display: flex; flex-direction: column; border: 0; border-radius: 0; background: linear-gradient(180deg, rgba(96, 62, 24, .5), rgba(70, 44, 16, .58)), url("/ui/gunny/components/chat-log.png") center / 100% 100% no-repeat, rgba(58, 38, 16, .9); box-shadow: 0 8px 22px rgba(2, 6, 24, .45); color: #f2e6cc; overflow: hidden; z-index: 2; }
 #chatHistory:not(:has(li)) { display: none; }
-#chatMessages { min-height: 0; overflow-y: auto; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; scrollbar-color: rgba(148, 196, 240, .55) transparent; scrollbar-width: thin; }
+#chatMessages { min-height: 0; overflow-y: auto; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; scrollbar-color: rgba(216, 164, 78, .55) transparent; scrollbar-width: thin; }
 #chatMessages li:first-child { margin-top: auto; }
 #chatMessages li { display: block; padding: 3px 8px; overflow-wrap: anywhere; font: 600 13px/1.35 var(--sans); text-shadow: 0 1px 2px #000b; }
-#chatMessages li:nth-child(even) { background: rgba(148, 196, 240, .07); }
-#chatMessages time { margin-right: 5px; color: #8ea6d8; font-size: 11px; font-variant-numeric: tabular-nums; }
+#chatMessages li:nth-child(even) { background: rgba(255, 207, 77, .08); }
+#chatMessages time { margin-right: 5px; color: #d8b98a; font-size: 11px; font-variant-numeric: tabular-nums; }
 #chatMessages .chat-channel { display: none; } /* chỉ có một kênh chung, không cần nhãn */
 #chatMessages strong { margin-right: 5px; color: var(--gold); font-weight: 800; }
-#chatMessages .chat-text { color: #f2f7ff; }
+#chatMessages .chat-text { color: #f6ecd8; }
 #chatForm { position: absolute; left: 12px; bottom: calc(8px + var(--safe-b)); display: flex; gap: 0; width: var(--left-col); height: 40px; z-index: 2; border-radius: 0; box-shadow: 0 4px 14px rgba(2, 6, 24, .5); }
-#chatInput { flex: 1; min-width: 0; padding: 7px 10px; border: 0; border-radius: 0; outline: 0; background: url("/ui/gunny/components/chat-input.png") center / 100% 100% no-repeat, rgba(8, 14, 44, .92); color: #f2f7ff; font: 16px var(--sans); }
-#chatInput::placeholder { color: #9fb4d8; opacity: 1; }
+#chatInput { flex: 1; min-width: 0; padding: 7px 10px; border: 0; border-radius: 0; outline: 0; background: linear-gradient(rgba(96, 62, 24, .45), rgba(96, 62, 24, .45)), url("/ui/gunny/components/chat-input.png") center / 100% 100% no-repeat, rgba(58, 38, 16, .92); color: #f6ecd8; font: 16px var(--sans); }
+#chatInput::placeholder { color: #d8bd94; opacity: 1; }
 #chatInput:focus-visible { outline: 2px solid var(--gold); outline-offset: -3px; }
 #chatForm button { min-width: 56px; padding: 0 10px; border: 2px solid #7a3c06; border-radius: 0; background: url("/ui/gunny/button-gold.png") center / 100% 100% no-repeat, linear-gradient(180deg, #ffd980, #e07c12); color: #fff8ea; font: 800 13px var(--sans); text-shadow: 0 1px 0 #a35a10; }
 #chatForm button:hover { filter: brightness(1.1); }
