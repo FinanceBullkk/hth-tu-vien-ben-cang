@@ -38,7 +38,7 @@
 .fish-shop-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid rgba(255, 207, 77, .18); }
 .fish-shop-row b { display: block; font-size: 15px; font-weight: 600; }
 .fish-shop-row small { display: block; font-size: 12px; line-height: 1.35; opacity: .75; }
-.fish-shop-row button { flex: none; padding: 6px 10px; border: 2px solid #0a1c52; border-radius: 7px; background: linear-gradient(180deg, #5cdcf0, #0e8aa8); color: #fff; font: 700 inherit; font-size: 13.5px; cursor: pointer; text-shadow: 0 1px 0 #0b5c78; }
+.fish-shop-row button { flex: none; padding: 6px 10px; border: 2px solid #7a3c06; border-radius: 7px; background: url("/ui/gunny/button-gold.png") center / 100% 100% no-repeat, linear-gradient(180deg, #ffd980, #e07c12); color: #fff8ea; font: 700 inherit; font-size: 13.5px; cursor: pointer; text-shadow: 0 1px 0 #a35a10; }
 .fish-shop-row button:hover:not(:disabled) { filter: brightness(1.12); }
 .fish-shop-row button:disabled { opacity: .45; cursor: not-allowed; }
 .fish-shop-owned { flex: none; font-size: 13px; color: #bff0d6; }
@@ -99,10 +99,11 @@
 /* Menu Chơi gì? */
 /* Lưới ô icon: biểu tượng lớn + tên ngắn, mô tả trong tooltip. */
 .place-grid-menu { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 0; padding: 0; list-style: none; }
-.place-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 100%; aspect-ratio: 1; padding: 8px 4px; border: 1px solid rgba(148, 196, 240, .45); border-radius: 10px; background: linear-gradient(180deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .04)); color: inherit; font: inherit; text-align: center; cursor: pointer; transition: border-color .15s, transform .12s, box-shadow .15s; }
-.place-tile:hover, .place-tile:focus-visible { border-color: var(--gold); transform: translateY(-1px); box-shadow: 0 6px 14px rgba(2, 6, 24, .3); }
-.place-tile .ink-icon { width: 32px; height: 32px; color: #ffd98a; }
-.place-tile b { font: 700 14px/1.2 var(--sans); color: #fff; }
+/* Ô địa điểm dùng ô kem viền đỏ thật (components/shop-cell.png) như lưới icon sảnh Gunny92; icon và chữ chuyển nâu cho nổi trên nền kem. */
+.place-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 100%; aspect-ratio: 1; padding: 8px 4px; border: 1px solid rgba(138, 90, 18, .6); border-radius: 10px; background: url("/ui/gunny/components/shop-cell.png") center / 100% 100% no-repeat, #f7ecd2; color: #5e370e; font: inherit; text-align: center; cursor: pointer; transition: border-color .15s, transform .12s, box-shadow .15s; }
+.place-tile:hover, .place-tile:focus-visible { border-color: #d98a2e; transform: translateY(-1px); box-shadow: 0 6px 14px rgba(2, 6, 24, .3); }
+.place-tile .ink-icon { width: 32px; height: 32px; color: #8a5a12; }
+.place-tile b { font: 700 14px/1.2 var(--sans); color: #5e370e; }
 @media (max-width: 480px) { .place-grid-menu { grid-template-columns: repeat(3, 1fr); } }
 .place-veil { position: fixed; inset: 0; z-index: 30; background: #04081e; opacity: 0; pointer-events: none; transition: opacity .24s ease; }
 .place-veil.on { opacity: 1; }

@@ -213,13 +213,13 @@
 .bagx-quick { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; padding-top: 8px; border-top: 1px dashed rgba(142, 79, 28, .5); }
 .bagx-quick[hidden] { display: none; }
 .bagx-quick > span { color: #7a3808; font-size: 13px; font-weight: 800; white-space: nowrap; }
-.bagx-select { min-width: 0; height: 34px; padding: 0 6px; border: 2px solid #c58a46; border-radius: 7px; background: #fffaf0; color: #2a1404; font: 600 13px var(--sans); }
+.bagx-select { min-width: 0; height: 34px; padding: 0 6px; border: 2px solid #8a5a12; border-radius: 8px; background: url("/ui/gunny/components/input-field.png") center / 100% 100% no-repeat, #f7ecd2; color: #3a1c06; font: 600 13px var(--sans); }
 .bagx-quick .bagx-btn { margin-left: auto; }
 .bagx-btn {
-  min-height: 36px; padding: 5px 14px; border: 2px solid #2f3c52; border-radius: 8px; color: #fff; font: 800 13.5px var(--sans); white-space: nowrap; cursor: pointer;
-  background: linear-gradient(180deg, #c3cfde, #8396b0 50%, #5d6f8a); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .55), 0 2px 0 rgba(0, 0, 0, .3); text-shadow: 0 1px 1px rgba(0, 0, 0, .55);
+  min-height: 36px; padding: 5px 14px; border: 2px solid #7a3c06; border-radius: 8px; color: #fff8ea; font: 800 13.5px var(--sans); white-space: nowrap; cursor: pointer;
+  background: url("/ui/gunny/button-gold.png") center / 100% 100% no-repeat, linear-gradient(180deg, #ffd980, #e07c12); box-shadow: 0 2px 0 rgba(0, 0, 0, .3); text-shadow: 0 1px 0 #a35a10;
 }
-.bagx-btn.sort { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-height: 32px; padding: 2px 12px; border-color: #3e1470; line-height: 1.1; background: linear-gradient(180deg, #d8a8ff, #a05ce8 50%, #7432c4); }
+.bagx-btn.sort { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-height: 32px; padding: 2px 12px; border-color: #7a3c06; line-height: 1.1; }
 .bagx-btn.sort small { font-size: 10.5px; font-weight: 700; opacity: .92; }
 .bagx-btn.warm { border-color: #6b2c04; background: linear-gradient(180deg, #ffd27a, #f39a2a 50%, #d06d10); }
 .bagx-btn.hot { border-color: #5c0d06; background: linear-gradient(180deg, #ff7a5c, #e0341c 50%, #a8170a); }
