@@ -399,14 +399,17 @@ kbd { font: inherit; }
 /* Hộp Đồ hoạ: mỗi mức một dòng bấm được cả dòng, dòng đang chọn viền vàng. */
 .graphics-options { display: grid; gap: 6px; margin: 4px 0 10px; padding: 0; border: 0; }
 .graphics-options legend { margin-bottom: 6px; font-weight: 600; font-size: 14px; }
-.graphics-option { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding: 8px 10px; border: 1px solid rgba(216, 164, 78, .4); border-radius: 10px; background: rgba(255, 255, 255, .06); cursor: pointer; }
-.graphics-option:has(input:checked) { border-color: var(--gold); background: rgba(255, 207, 77, .12); box-shadow: inset 0 0 0 1px var(--gold); }
+/* Dòng lựa chọn đồ hoạ dùng ô kem sáng (components/input-field.png) — gỗ khắc tối làm chìm chữ mô tả. */
+.graphics-option { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding: 8px 12px; border: 0; border-radius: 8px; background: url("/ui/gunny/components/input-field.png") center / 100% 100% no-repeat, rgba(255, 255, 255, .06); color: #3a1c06; cursor: pointer; }
+.graphics-option:has(input:checked) { border: 2px solid #d98a2e; box-shadow: 0 1px 4px rgba(2, 6, 24, .25); }
 .graphics-option:has(input:focus-visible) { outline: 3px solid var(--gold); outline-offset: 2px; }
 .graphics-option input { margin: 3px 0 0; accent-color: #43b9cc; }
 .graphics-option span { display: grid; gap: 2px; }
-.graphics-option small { color: var(--muted); font-size: 12.5px; line-height: 1.35; }
+.graphics-option .muted { color: #7a5a34; }
+.graphics-option b { color: #3a1c06; }
+.graphics-option small { color: #7a5a34; font-size: 12.5px; line-height: 1.35; }
 .graphics-status { margin: 0 0 6px; font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; color: #9fb4e4; }
-.graphics-note { margin: 0; font-size: 12.5px; color: var(--muted); }
+.graphics-note { margin: 0; font-size: 12.5px; color: #e6d8b8; }
 
 .wish-box { position: relative; margin: 8px 0 4px; }
 .wish-input { display: block; width: 100%; padding: 10px 12px 24px; border: 2px solid #8a5a12; border-radius: 8px; background: url("/ui/gunny/components/input-field.png") center / 100% 100% no-repeat, #f7ecd2; color: #3a1c06; resize: vertical; min-height: 86px; }
