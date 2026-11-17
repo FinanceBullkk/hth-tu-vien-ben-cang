@@ -46,7 +46,7 @@
 }
 #hud #menu .icon-btn em {
   position: static; transform: none; z-index: auto; margin-top: -1px; padding: 0; border: 0; background: none; opacity: 1;
-  color: #fff; font: 800 11px/1.15 var(--sans); letter-spacing: .01em; text-shadow: var(--outline); pointer-events: none;
+  color: #fff; font: 800 11.5px/1.15 var(--serif); letter-spacing: .01em; text-shadow: var(--outline); pointer-events: none;
 }
 #hud #menu .icon-btn:hover em, #hud #menu .icon-btn[aria-expanded="true"] em { color: #ffe27a; }
 

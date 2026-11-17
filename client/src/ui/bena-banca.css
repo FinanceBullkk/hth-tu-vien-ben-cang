@@ -106,7 +106,7 @@
 .bena-foot { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; }
 .bena-cta {
   flex: 1 1 220px; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 46px; padding: 8px 10px 8px 16px;
-  border: 2px solid #7a3c06; border-radius: 10px; background: url("/ui/gunny/button-gold.png") center / 100% 100% no-repeat, linear-gradient(180deg, #ffd980, #f29418 60%, #e07c12); color: #fff8ea; font: 800 17px var(--serif); text-shadow: 0 1px 0 #a35a10;
+  border: 2px solid #7a3c06; border-radius: 10px; background: url("/ui/gunny/button-gold.png") center / 100% 100% no-repeat, linear-gradient(180deg, #ffd980, #f29418 60%, #e07c12); color: #fff8ea; font: 800 17px var(--serif); text-shadow: 1px 0 0 #7a3c06, -1px 0 0 #7a3c06, 0 1px 0 #7a3c06, 0 -1px 0 #7a3c06, 0 2px 3px rgba(60, 24, 0, .4);
   box-shadow: 0 3px 8px rgba(60, 30, 0, .35), inset 0 2px 0 rgba(255, 255, 255, .5); touch-action: manipulation;
 }
 .bena-cta b { display: inline-flex; align-items: center; gap: 4px; padding: 4px 11px; border-radius: 999px; background: rgba(43, 20, 16, .88); color: #ffd56a; font-size: 15px; font-variant-numeric: tabular-nums; }

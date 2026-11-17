@@ -33,7 +33,7 @@
 .stone-act {
   flex: none; display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 128px; min-height: 44px; padding: 6px 14px;
   border: 2px solid #e6c787; border-radius: 999px; cursor: pointer; touch-action: manipulation;
-  background: radial-gradient(circle at 50% 30%, #5a7ab8, #6e4213 60%, #4f351a); color: #fff6dc;
+  background: radial-gradient(circle at 50% 30%, #b8873a, #6e4213 60%, #4f351a); color: #fff6dc;
   box-shadow: 0 4px 0 #211509, 0 6px 14px rgba(20, 13, 6, .45); text-shadow: 0 1px 2px rgba(0, 0, 0, .6);
   transition: transform .08s, box-shadow .08s, filter .15s;
 }
@@ -51,7 +51,7 @@
 .stone-odds th, .stone-odds td { padding: 2px 6px; text-align: center; border-bottom: 1px solid rgba(255, 220, 140, .15); }
 .stone-odds th { font-weight: 600; color: #e7c98a; }
 .stone-odds td:first-child, .stone-odds th:first-child { text-align: left; white-space: nowrap; }
-.stone-odds small { color: #9fb4e4; }
+.stone-odds small { color: #e0c898; }
 .stone-dot { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 2px; transform: rotate(45deg); box-shadow: 0 0 4px currentColor; }
 
 /* Màn ngọc: bậc hiếm nhỏ phía trên, tên ngọc to theo màu ngọc, số TEU. Đặt cao hơn màn kết quả chung để không che viên ngọc

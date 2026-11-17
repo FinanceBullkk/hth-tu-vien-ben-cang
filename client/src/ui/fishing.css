@@ -38,7 +38,7 @@
 .fish-shop-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid rgba(255, 207, 77, .18); }
 .fish-shop-row b { display: block; font-size: 15px; font-weight: 600; }
 .fish-shop-row small { display: block; font-size: 12px; line-height: 1.35; opacity: .75; }
-.fish-shop-row button { flex: none; padding: 6px 10px; border: 2px solid #7a3c06; border-radius: 7px; background: url("/ui/gunny/button-gold.png") center / 100% 100% no-repeat, linear-gradient(180deg, #ffd980, #e07c12); color: #fff8ea; font: 700 inherit; font-size: 13.5px; cursor: pointer; text-shadow: 0 1px 0 #a35a10; }
+.fish-shop-row button { flex: none; padding: 6px 10px; border: 2px solid #7a3c06; border-radius: 7px; background: url("/ui/gunny/button-gold.png") center / 100% 100% no-repeat, linear-gradient(180deg, #ffd980, #e07c12); color: #fff8ea; font: 700 inherit; font-size: 13.5px; cursor: pointer; text-shadow: 1px 0 0 #7a3c06, -1px 0 0 #7a3c06, 0 1px 0 #7a3c06, 0 -1px 0 #7a3c06, 0 2px 3px rgba(60, 24, 0, .4); }
 .fish-shop-row button:hover:not(:disabled) { filter: brightness(1.12); }
 .fish-shop-row button:disabled { opacity: .45; cursor: not-allowed; }
 .fish-shop-owned { flex: none; font-size: 13px; color: #bff0d6; }

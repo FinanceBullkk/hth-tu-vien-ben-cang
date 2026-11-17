@@ -19,7 +19,7 @@
 .crh-mine { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #ffe9b8; }
 .crh-wallet { white-space: nowrap; }
 .crh-teu { color: #ffd46b; font-size: 16px; }
-.crh-btn { padding: 5px 10px; border-radius: 8px; border: 2px solid #3a2410; background: linear-gradient(180deg, #23aecd, #0e8aa8); color: #fff; font: 700 13px var(--sans); cursor: pointer; white-space: nowrap; text-shadow: 0 1px 0 #66421d; }
+.crh-btn { padding: 5px 10px; border-radius: 8px; border: 2px solid #3a2410; background: linear-gradient(180deg, #ffd980, #f29418 60%, #e07c12); border-color: #7a3c06; color: #fff8ea; font: 800 13px var(--sans); cursor: pointer; white-space: nowrap; text-shadow: 0 1px 0 #66421d; }
 .crh-btn.ghost { background: transparent; }
 .crh-btn:disabled { opacity: .4; cursor: default; }
 .crh-msg { margin: 0; min-height: 1.2em; font-size: 13px; color: #d8cfb6; }

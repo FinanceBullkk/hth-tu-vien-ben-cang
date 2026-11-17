@@ -143,7 +143,7 @@
   border: 2px solid #e9c46a; border-radius: 8px; font: 800 16px var(--serif); letter-spacing: .06em; color: #fff; cursor: pointer;
   box-shadow: 0 3px 8px rgba(0, 0, 0, .4); touch-action: manipulation;
 }
-.xd-action.hit { background: linear-gradient(180deg, #23aecd, #0e8aa8); }
+.xd-action.hit { background: linear-gradient(180deg, #7fd06a, #2a7a3a); }
 .xd-action.stand { background: linear-gradient(180deg, #d0451c, #8a2410); }
 .xd-action:disabled { opacity: .4; cursor: default; }
 .xd-action span { font-size: 18px; line-height: 1; }
