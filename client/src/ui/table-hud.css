@@ -10,7 +10,7 @@
   background: conic-gradient(#ffd46e calc(var(--p, 0) * 360deg), rgba(0, 0, 0, .35) 0);
   box-shadow: 0 4px 12px rgba(0, 0, 0, .5), 0 0 0 2px var(--gold);
 }
-.tbl-ring::before { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #1e3290, #0c1548); }
+.tbl-ring::before { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #1e3290, #101522); }
 .tbl-ring b { position: relative; font: 900 24px/1 var(--serif); color: var(--ink); font-variant-numeric: tabular-nums; }
 .tbl-ring.idle b::before { content: '⏳'; font-size: 20px; }
 .tbl-ring.urgent { background: conic-gradient(#ff7b5c calc(var(--p, 0) * 360deg), rgba(0, 0, 0, .35) 0); }

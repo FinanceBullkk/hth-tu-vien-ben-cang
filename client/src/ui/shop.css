@@ -4,7 +4,7 @@
 #walletBtn {
   position: relative; display: inline-flex; align-items: center; gap: 5px;
   margin-top: 4px; padding: 3px 10px 3px 4px; border: 0; border-left: 2px solid rgba(255, 207, 77, .85);
-  background: linear-gradient(90deg, rgba(6, 11, 36, .72), rgba(6, 11, 36, 0));
+  background: linear-gradient(90deg, rgba(10, 12, 20, .72), rgba(10, 12, 20, 0));
   color: #e6eeff; font: 700 15px/1.2 var(--sans); text-shadow: 0 1px 2px #000;
   touch-action: manipulation;
 }
@@ -27,8 +27,8 @@
 .modal.modal-dock { justify-content: flex-end; align-items: stretch; padding: 0; background: linear-gradient(90deg, transparent 40%, rgba(3, 7, 26, .35)); }
 .modal-card.shopx {
   width: min(430px, 100%); max-height: none; height: 100dvh; border-radius: 0; border-width: 0 0 0 1px;
-  background: linear-gradient(90deg, #131f5e, #0d1747);
-  border-left: 2px solid rgba(148, 196, 240, .5);
+  background: linear-gradient(90deg, #171d2e, #0d1747);
+  border-left: 2px solid rgba(216, 164, 78, .5);
   padding: 0;
   animation: shopIn .2s ease-out;
 }
@@ -41,17 +41,17 @@
 .shopx-head .chips { display: flex; gap: 6px; }
 .shopx-teu { font: 600 13px var(--sans); color: var(--muted); white-space: nowrap; }
 .shopx-teu b { font: 800 20px var(--serif); color: var(--gold); }
-.shopx-list { flex: 1; min-height: 0; overflow-y: auto; padding: 0 18px 12px; overscroll-behavior: contain; scrollbar-color: rgba(148, 196, 240, .5) transparent; scrollbar-width: thin; }
+.shopx-list { flex: 1; min-height: 0; overflow-y: auto; padding: 0 18px 12px; overscroll-behavior: contain; scrollbar-color: rgba(216, 164, 78, .5) transparent; scrollbar-width: thin; }
 .shopx-list h3 { display: flex; align-items: baseline; gap: 8px; margin: 16px 0 8px; font: 800 16px var(--serif); color: #fff; text-shadow: 0 1px 0 #14245e; }
 .shopx-list h3::before { content: '❖'; color: var(--gold); font-size: 11px; }
-.shopx-list h3::after { content: attr(data-hanzi); margin-left: auto; padding: 2px 5px; border: 1px solid rgba(148, 196, 240, .4); border-radius: 6px; font: 600 13px/1 var(--sans); color: rgba(159, 180, 228, .6); transform: rotate(5deg); }
+.shopx-list h3::after { content: attr(data-hanzi); margin-left: auto; padding: 2px 5px; border: 1px solid rgba(216, 164, 78, .4); border-radius: 6px; font: 600 13px/1 var(--sans); color: rgba(159, 180, 228, .6); transform: rotate(5deg); }
 .shopx-list .muted.small { margin: 10px 0 0; }
 
 .shopx-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .shopx-card {
   display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 1px 10px;
   padding: 9px 10px; text-align: left;
-  border: 1px solid rgba(148, 196, 240, .45); border-radius: 10px;
+  border: 1px solid rgba(216, 164, 78, .45); border-radius: 10px;
   background: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .04));
   transition: border-color .15s, transform .12s, box-shadow .15s;
 }
@@ -66,7 +66,7 @@
   grid-row: 1 / span 2; width: 34px; height: 34px; border-radius: 8px;
   display: grid; place-items: center;
   background: url("/ui/gunny/components/shop-cell.png") center / 100% 100% no-repeat; color: #7a4a12; font: 700 17px/1 var(--sans);
-  box-shadow: 0 2px 5px rgba(6, 11, 36, .4);
+  box-shadow: 0 2px 5px rgba(10, 12, 20, .4);
   text-shadow: none;
 }
 .shopx-card.owned .shopx-swatch { color: #7a4a12; }
@@ -126,7 +126,7 @@
 
 .shopx-foot {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  padding: 10px 18px calc(12px + var(--safe-b)); border-top: 1px solid rgba(148, 196, 240, .3);
+  padding: 10px 18px calc(12px + var(--safe-b)); border-top: 1px solid rgba(216, 164, 78, .3);
   background: linear-gradient(180deg, rgba(255, 255, 255, .04), transparent);
 }
 .shopx-status { margin: 0; font: italic 600 13.5px var(--serif); color: var(--muted); }

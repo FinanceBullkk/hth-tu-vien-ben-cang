@@ -7,7 +7,7 @@
 }
 .pet { display: flex; flex-direction: column; gap: 12px; }
 .pet h3 { margin: 0; }
-.pet .btn:not(.primary) { background: linear-gradient(180deg, #2b4aae, #16266e 60%, #101c54); border-color: #0a1c52; color: #e6eeff; box-shadow: inset 0 2px 0 rgba(160, 200, 255, .45); }
+.pet .btn:not(.primary) { background: linear-gradient(180deg, #6e4213, #16266e 60%, #101c54); border-color: #3a2410; color: #e6eeff; box-shadow: inset 0 2px 0 rgba(160, 200, 255, .45); }
 .pet .btn.on { background: linear-gradient(180deg, #ffd980, #f29418 60%, #e07c12); border-color: #7a3c06; color: #fff8ea; text-shadow: 0 1px 0 #7a3c06; }
 .pet-top { display: grid; grid-template-columns: 1fr 210px; gap: 12px; }
 
@@ -83,7 +83,7 @@
 @keyframes petEggPop { 0% { transform: scale(1); filter: brightness(1); } 40% { transform: scale(1.18); filter: brightness(2.2); } 100% { transform: scale(.2); opacity: 0; } }
 
 /* Cho ăn */
-.pet-feed { padding: 10px 12px; border-radius: 12px; background: rgba(6, 11, 36, .55); box-shadow: inset 0 0 0 2px rgba(148, 196, 240, .35); }
+.pet-feed { padding: 10px 12px; border-radius: 12px; background: rgba(10, 12, 20, .55); box-shadow: inset 0 0 0 2px rgba(216, 164, 78, .35); }
 .pet-feed-hint, .pet-feed-empty { margin: 0 0 8px; font-size: 13px; color: #c9d6f5; }
 .pet-feed-empty { margin: 0; }
 .pet-feed-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; max-height: 190px; overflow-y: auto; }

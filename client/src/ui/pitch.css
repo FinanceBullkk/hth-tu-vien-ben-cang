@@ -48,9 +48,9 @@
 }
 
 .pitch-card { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(400px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow-y: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 9px; color: #e6eeff; text-shadow: none; }
-.pitch-card .btn:not(.ghost) { background: linear-gradient(180deg, #5cdcf0, #0e8aa8); border-color: #0a1c52; color: #fff; text-shadow: 0 1px 0 #0b5c78; }
+.pitch-card .btn:not(.ghost) { background: linear-gradient(180deg, #5cdcf0, #0e8aa8); border-color: #3a2410; color: #fff; text-shadow: 0 1px 0 #0b5c78; }
 .pitch-card p { margin: 0; font-size: 13.5px; line-height: 1.4; }
-.pitch-opponent { display: flex; flex-direction: column; gap: 1px; padding: 9px 12px; border: 1px solid rgba(148, 196, 240, .35); border-radius: 10px; background: rgba(255, 255, 255, .06); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.pitch-opponent { display: flex; flex-direction: column; gap: 1px; padding: 9px 12px; border: 1px solid rgba(216, 164, 78, .35); border-radius: 10px; background: rgba(255, 255, 255, .06); color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .pitch-opponent:hover, .pitch-opponent:focus-visible { border-color: #ffd46e; background: rgba(255, 212, 110, .12); }
 .pitch-opponent small { font-size: 12px; opacity: .8; }
 
