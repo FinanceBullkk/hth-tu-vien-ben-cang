@@ -255,6 +255,41 @@
       "file": "chat-input.png",
       "source": "D:\\hth-asset-library\\assets\\extracted\\chat-8ccc7da2800245e1\\images\\48_asset.chat.InputBg.png",
       "sha256": "d7d0c853bd5799cff68bd3161d41515efe7e7b554d5875356046fdb3648e3e4c"
+    },
+    {
+      "file": "toolbar-bag.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\7_asset.toolbar.bagBtnAsset.png",
+      "sha256": "15d75ffd5b4fa502416eb4c582e4a4f09f652c71ef3049fb1de4e78f1d712ab6"
+    },
+    {
+      "file": "toolbar-shop.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\8_asset.toolbar.shopBtnAsset.png",
+      "sha256": "3c3df67b8348854c7664f0bd265b4de3e7482719a986e55177fee4bafb4e9e59"
+    },
+    {
+      "file": "toolbar-scroll.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\13_asset.toolbar.taskBtnAsset.png",
+      "sha256": "2861bf3c8dfa4cde8912b5cddf62918a00f5067fbc543770cb86522edada865f"
+    },
+    {
+      "file": "toolbar-gear.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\4_asset.toolbar.setBtnAsset.png",
+      "sha256": "990b3259c1e158fcf7f6c143024ed76cc082bbf6b26834a2ca02f47e7ee93799"
+    },
+    {
+      "file": "toolbar-mail.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\ToolBar-131fc1028cb9e716\\images\\6_asset.toolbar.emailBtnAsset.png",
+      "sha256": "0becca9dadb7e90f3ab0ebc37c11bac9cab73c5dde79b298cc7ada4dcb05e8a7"
+    },
+    {
+      "file": "toolbar-sound-on.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\littlegame-36011347e95b0e14\\images\\2_asset.littleGame.SoundOn.png",
+      "sha256": "70320d31445d2d547fc796abe383a90644a6337b67e185c7cfdcbecd3101aa04"
+    },
+    {
+      "file": "toolbar-sound-off.png",
+      "source": "D:\\hth-asset-library\\assets\\extracted\\littlegame-36011347e95b0e14\\images\\3_asset.littleGame.SoundOff.png",
+      "sha256": "a95f9d034af2b4dbddd569dc7a20c3b2f525e3c20c4ad4efc71c6de8ef414bd8"
     }
   ]
 }
